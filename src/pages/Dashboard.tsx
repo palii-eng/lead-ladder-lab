@@ -33,23 +33,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Top bar */}
-      <div className="bg-secondary border-b border-border text-center py-1.5 text-xs text-muted-foreground flex items-center justify-center gap-4">
-        <span>
-          Заряджено в{' '}
-          <a href="https://ads-school.online/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
-            Ads School
-          </a>
-        </span>
-        <span className="text-border">|</span>
-        <span>
-          Створено в{' '}
-          <a href="https://ai.ads-wind.com/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
-            ADS WindAI Lab
-          </a>
-        </span>
-      </div>
-
       {/* Header */}
       <header className="border-b border-border sticky top-0 z-50 bg-card">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
@@ -60,6 +43,21 @@ const Dashboard: React.FC = () => {
             <h1 className="text-xl font-extrabold text-foreground tracking-tight">
               SmartFunnel AI
             </h1>
+          </div>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span>
+              ⚡ Заряджено в{' '}
+              <a href="https://ads-school.online/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+                Ads School
+              </a>
+            </span>
+            <span className="text-border">|</span>
+            <span>
+              🛠 Створено в{' '}
+              <a href="https://ai.ads-wind.com/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+                ADS WindAI Lab
+              </a>
+            </span>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
