@@ -31,7 +31,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({ icon, title, index, isActive, isCom
               ? 'w-16 h-16 text-2xl border-border/50 bg-muted opacity-40'
               : 'w-16 h-16 text-2xl border-border bg-card hover:border-primary/40 hover:scale-105 cursor-pointer'
             }`}
-          style={isActive ? { animation: 'breathe 30s ease-in-out infinite' } : undefined}
+          style={isActive ? { animation: 'breathe 3s ease-in-out infinite' } : undefined}
         >
           {icon}
         </div>
