@@ -549,39 +549,84 @@ const ScenarioBuilder: React.FC = () => {
           const real = calcMetrics(scenario.decomposition.realistic);
           const bad = calcMetrics(scenario.decomposition.bad);
           const pos = calcMetrics(scenario.decomposition.positive);
+          const channelLabel = CHANNELS.find(c => c.value === scenario.channel)?.label || scenario.channel || '—';
           return (
             <div className="space-y-4">
-              <h3 className="text-base font-extrabold text-foreground">🏆 Результат</h3>
-              <div className="space-y-3">
-                {[
-                  { label: 'Поганий', m: bad, border: 'border-destructive/40' },
-                  { label: 'Реалістичний', m: real, border: 'border-primary/40' },
-                  { label: 'Позитивний', m: pos, border: 'border-success/40' },
-                ].map(s => (
-                  <div key={s.label} className={`bg-secondary rounded-lg p-3 border-l-4 ${s.border}`}>
-                    <h4 className="font-bold text-foreground text-sm mb-1">{s.label}</h4>
-                    <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
-                      <span>Ліди: <b className="text-foreground">{s.m.leads}</b></span>
-                      <span>Продажі: <b className="text-foreground">{s.m.sales}</b></span>
-                      <span>ROMI: <b className={s.m.romi >= 0 ? 'text-success' : 'text-destructive'}>{s.m.romi}%</b></span>
-                    </div>
-                    <div className="text-xs mt-1">
-                      <span className="text-muted-foreground">Прибуток: </span>
-                      <b className={s.m.profit >= 0 ? 'text-success' : 'text-destructive'}>{s.m.profit.toLocaleString()} ₴</b>
-                    </div>
+              <h3 className="text-base font-extrabold text-foreground">🏆 Підсумок воронки</h3>
+
+              {/* Summary of what was done */}
+              <div className="bg-secondary rounded-lg p-3 space-y-2">
+                <h4 className="font-bold text-foreground text-sm mb-2">📌 Що було зроблено</h4>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-muted-foreground">Ніша:</span>
+                    <p className="font-semibold text-foreground">{scenario.niche || '—'}</p>
                   </div>
-                ))}
+                  <div>
+                    <span className="text-muted-foreground">Канал:</span>
+                    <p className="font-semibold text-foreground">{channelLabel}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Бюджет:</span>
+                    <p className="font-semibold text-foreground">{scenario.decomposition.realistic.budget.toLocaleString()} ₴</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Ліди йдуть у:</span>
+                    <p className="font-semibold text-foreground">{scenario.leadDestinations.join(', ') || '—'}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Інтеграція:</span>
+                    <p className="font-semibold text-foreground">{scenario.integrationMethod || '—'}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Email-база:</span>
+                    <p className="font-semibold text-foreground">{scenario.retention.emailCount || 0} контактів</p>
+                  </div>
+                </div>
               </div>
+
+              {/* Expected results */}
+              <div>
+                <h4 className="font-bold text-foreground text-sm mb-2">📊 Очікувані результати</h4>
+                <div className="space-y-2">
+                  {[
+                    { label: 'Поганий', m: bad, border: 'border-destructive/40' },
+                    { label: 'Реалістичний', m: real, border: 'border-primary/40' },
+                    { label: 'Позитивний', m: pos, border: 'border-success/40' },
+                  ].map(s => (
+                    <div key={s.label} className={`bg-secondary rounded-lg p-3 border-l-4 ${s.border}`}>
+                      <h4 className="font-bold text-foreground text-sm mb-1">{s.label}</h4>
+                      <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+                        <span>Ліди: <b className="text-foreground">{s.m.leads}</b></span>
+                        <span>Продажі: <b className="text-foreground">{s.m.sales}</b></span>
+                        <span>ROMI: <b className={s.m.romi >= 0 ? 'text-success' : 'text-destructive'}>{s.m.romi}%</b></span>
+                      </div>
+                      <div className="text-xs mt-1">
+                        <span className="text-muted-foreground">Прибуток: </span>
+                        <b className={s.m.profit >= 0 ? 'text-success' : 'text-destructive'}>{s.m.profit.toLocaleString()} ₴</b>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recommendations */}
               <div className="bg-secondary rounded-lg p-3">
-                <h4 className="font-bold text-foreground text-sm mb-2">📋 Рекомендації</h4>
-                <ul className="space-y-1 text-xs text-muted-foreground">
-                  {real.romi < 0 && <li>⚠️ ROMI від'ємний — оптимізуйте CPL</li>}
-                  {real.romi >= 0 && real.romi < 100 && <li>📈 Є потенціал оптимізації конверсії</li>}
-                  {real.romi >= 100 && <li>✅ Відмінний ROMI! Масштабуйте</li>}
-                  <li>💡 Обробка ліда: до 5 хвилин</li>
-                  <li>🔄 Використовуйте retention-канали</li>
+                <h4 className="font-bold text-foreground text-sm mb-2">💡 Рекомендації</h4>
+                <ul className="space-y-1.5 text-xs text-muted-foreground">
+                  {real.romi < 0 && <li>⚠️ ROMI від'ємний — зменшіть CPL або збільшіть середній чек</li>}
+                  {real.romi >= 0 && real.romi < 50 && <li>📉 ROMI низький — оптимізуйте конверсію та середній чек</li>}
+                  {real.romi >= 50 && real.romi < 100 && <li>📈 Є потенціал — тестуйте нові креативи та аудиторії</li>}
+                  {real.romi >= 100 && <li>✅ Відмінний ROMI! Масштабуйте бюджет поступово</li>}
+                  <li>⏱️ Обробляйте ліди протягом 5 хвилин — це підвищує конверсію на 80%</li>
+                  <li>🔄 Налаштуйте follow-up через 24 та 72 години</li>
+                  <li>📧 Збирайте email-базу з першого дня для retention</li>
+                  {scenario.retention.emailCount > 0 && <li>📬 Запустіть welcome-серію з 3-5 листів для нових контактів</li>}
+                  {real.leads > 50 && <li>🤖 Автоматизуйте обробку лідів через {scenario.integrationMethod || 'CRM-інтеграцію'}</li>}
+                  <li>📊 Аналізуйте результати щотижня та коригуйте бюджет</li>
                 </ul>
               </div>
+
               <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
                 onClick={() => { update({ status: 'completed' }); navigate('/'); }}>
                 <Check className="w-4 h-4" /> Завершити
@@ -622,18 +667,18 @@ const ScenarioBuilder: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col bg-muted overflow-hidden">
-      {/* Top bar */}
-      <div className="bg-secondary border-b border-border text-center py-1.5 text-xs text-muted-foreground flex items-center justify-center gap-4 flex-shrink-0">
+      {/* Top bar - branding */}
+      <div className="bg-primary/5 border-b border-primary/20 text-center py-2 text-xs text-foreground flex items-center justify-center gap-4 flex-shrink-0">
         <span>
-          Заряджено в{' '}
-          <a href="https://ads-school.online/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+          ⚡ Заряджено в{' '}
+          <a href="https://ads-school.online/" target="_blank" rel="noopener noreferrer" className="font-bold text-primary hover:underline">
             Ads School
           </a>
         </span>
         <span className="text-border">|</span>
         <span>
-          Створено в{' '}
-          <a href="https://ai.ads-wind.com/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+          🛠 Створено в{' '}
+          <a href="https://ai.ads-wind.com/" target="_blank" rel="noopener noreferrer" className="font-bold text-primary hover:underline">
             ADS WindAI Lab
           </a>
         </span>
