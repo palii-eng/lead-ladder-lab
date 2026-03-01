@@ -184,6 +184,11 @@ const ScenarioBuilder: React.FC = () => {
     }
   };
 
+  const isStepUnlocked = (i: number): boolean => {
+    if (i === 0) return true;
+    return isStepCompleted(i - 1);
+  };
+
   const renderPanel = () => {
     if (activeStep === null) return null;
 
@@ -465,7 +470,7 @@ const ScenarioBuilder: React.FC = () => {
     };
 
     return (
-      <div ref={panelRef} className="animate-scale-in bg-card border border-border rounded-2xl shadow-lg w-[380px] max-h-[calc(100vh-220px)] overflow-y-auto flex-shrink-0">
+      <div ref={panelRef} className="bg-card border border-border rounded-2xl shadow-lg w-[400px] max-h-full overflow-y-auto">
         <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between rounded-t-2xl z-10">
           <div className="flex items-center gap-2">
             <span className="text-xl">{STEPS[activeStep].icon}</span>
@@ -497,6 +502,23 @@ const ScenarioBuilder: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col bg-muted overflow-hidden">
+      {/* Top bar */}
+      <div className="bg-secondary border-b border-border text-center py-1.5 text-xs text-muted-foreground flex items-center justify-center gap-4 flex-shrink-0">
+        <span>
+          Заряджено в{' '}
+          <a href="https://ads-school.online/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+            Ads School
+          </a>
+        </span>
+        <span className="text-border">|</span>
+        <span>
+          Створено в{' '}
+          <a href="https://ai.ads-wind.com/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+            ADS WindAI Lab
+          </a>
+        </span>
+      </div>
+
       {/* Header */}
       <header className="border-b border-border bg-card flex-shrink-0 z-20">
         <div className="px-6 py-3 flex items-center gap-4">
@@ -516,11 +538,11 @@ const ScenarioBuilder: React.FC = () => {
       </header>
 
       {/* Canvas area */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 relative overflow-hidden">
         {/* Flow canvas */}
         <div
           ref={canvasWrapperRef}
-          className={`flex-1 overflow-hidden relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          className={`w-full h-full overflow-hidden relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -551,8 +573,9 @@ const ScenarioBuilder: React.FC = () => {
                     isActive={activeStep === i}
                     isCompleted={isStepCompleted(i)}
                     isLast={i === STEPS.length - 1}
+                    isLocked={!isStepUnlocked(i)}
                     onClick={() => {
-                      if (!wasDragged.current) {
+                      if (!wasDragged.current && isStepUnlocked(i)) {
                         setActiveStep(activeStep === i ? null : i);
                       }
                     }}
@@ -563,11 +586,17 @@ const ScenarioBuilder: React.FC = () => {
           </div>
         </div>
 
-        {/* Side panel */}
+        {/* Popup panel overlay */}
         {activeStep !== null && (
-          <div className="border-l border-border bg-background p-4 overflow-y-auto">
-            {renderPanel()}
-          </div>
+          <>
+            <div
+              className="absolute inset-0 bg-foreground/5 z-30"
+              onClick={() => setActiveStep(null)}
+            />
+            <div className="absolute right-6 top-6 bottom-6 z-40 animate-slide-in-right">
+              {renderPanel()}
+            </div>
+          </>
         )}
       </div>
     </div>
