@@ -779,23 +779,23 @@ const ScenarioBuilder: React.FC = () => {
               {scenario.retention.emailCount > 0 && savedSteps.has(6) && (
                 <svg
                   className="absolute pointer-events-none"
-                  style={{ bottom: '-30px', right: '160px', width: '300px', height: '60px' }}
-                  viewBox="0 0 300 60"
+                  style={{ bottom: '-10px', left: '50%', transform: 'translateX(-22%)', width: '340px', height: '70px' }}
+                  viewBox="0 0 340 70"
                 >
                   <defs>
-                    <marker id="arrow-return" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                      <polygon points="0 0, 8 3, 0 6" fill="hsl(45, 93%, 47%)" />
+                    <marker id="arrow-return" markerWidth="10" markerHeight="8" refX="0" refY="4" orient="auto">
+                      <polygon points="10 0, 0 4, 10 8" fill="hsl(36, 100%, 50%)" />
                     </marker>
                   </defs>
                   <path
-                    d="M 280 5 C 280 50, 20 50, 20 5"
+                    d="M 310 5 C 310 55, 30 55, 30 5"
                     fill="none"
-                    stroke="hsl(45, 93%, 47%)"
-                    strokeWidth="2"
-                    strokeDasharray="6 3"
+                    stroke="hsl(36, 100%, 50%)"
+                    strokeWidth="2.5"
+                    strokeDasharray="8 4"
                     markerEnd="url(#arrow-return)"
                   />
-                  <text x="150" y="52" textAnchor="middle" fill="hsl(45, 93%, 47%)" fontSize="10" fontWeight="600">
+                  <text x="170" y="58" textAnchor="middle" fill="hsl(36, 100%, 45%)" fontSize="11" fontWeight="700">
                     Retention loop
                   </text>
                 </svg>
