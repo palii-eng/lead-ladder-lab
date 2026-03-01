@@ -11,6 +11,7 @@ import { ArrowLeft, Check, Download, Info, Loader2, Megaphone, MousePointerClick
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import adsSchoolLogo from '@/assets/ads-school-logo.png';
 
 const STEPS = [
   { title: 'Вибір ніші', icon: '🎯' },
@@ -440,10 +441,10 @@ const ScenarioBuilder: React.FC = () => {
   const AdschoolVideoButton: React.FC<{ step: number }> = ({ step }) => (
     <button
       onClick={() => { setVideoDialogStep(step); setVideoDialogOpen(true); }}
-      className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-[10px] font-bold ring-2 ring-primary/30 hover:scale-110 transition-transform flex-shrink-0"
+      className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary/30 hover:scale-110 transition-transform flex-shrink-0"
       title="Відео від AdsSchool"
     >
-      <span className="leading-none">AS</span>
+      <img src={adsSchoolLogo} alt="Ads School" className="w-full h-full object-cover" />
     </button>
   );
 
@@ -632,32 +633,9 @@ const ScenarioBuilder: React.FC = () => {
           ];
           return (
             <div className="space-y-4">
-              {/* Lead type tabs if multiple */}
-              {hasMultipleLeadTypes && (
-                <div className="flex gap-1 flex-wrap">
-                  {(scenario.leadTypes || []).map(lt => {
-                    const ltInfo = LEAD_TYPES.find(l => l.value === lt);
-                    return (
-                      <button key={lt} onClick={() => setActiveLeadType(lt)}
-                        className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                          activeLeadType === lt
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-secondary text-secondary-foreground'
-                        }`}>
-                        {ltInfo?.icon} {ltInfo?.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-foreground">
                   META AD CALCULATOR
-                  {hasMultipleLeadTypes && activeLeadType && (
-                    <span className="text-xs font-normal text-muted-foreground ml-2">
-                      — {LEAD_TYPES.find(l => l.value === activeLeadType)?.label}
-                    </span>
-                  )}
                 </h3>
                 <Button variant="secondary" size="sm" onClick={fillBenchmarks} className="gap-1 text-xs">
                   <Sparkles className="w-3 h-3" /> Авто
@@ -1195,7 +1173,7 @@ const ScenarioBuilder: React.FC = () => {
         <DialogContent className="bg-card border-border">
           <DialogHeader>
             <DialogTitle className="text-foreground font-bold flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-xs font-bold">AS</div>
+              <img src={adsSchoolLogo} alt="Ads School" className="w-8 h-8 rounded-full object-cover" />
               Відео від AdsSchool — {STEPS[videoDialogStep]?.title}
             </DialogTitle>
           </DialogHeader>
