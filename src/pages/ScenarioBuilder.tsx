@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useScenarios, Scenario, DecompositionScenario, DecompositionSet, createDefaultDecompSet } from '@/context/ScenariosContext';
+import { useScenarios, Scenario, DecompositionScenario, DecompositionSet, createDefaultDecompSet, createDefaultBranchData, BranchData } from '@/context/ScenariosContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -233,24 +233,39 @@ const ScenarioBuilder: React.FC = () => {
   const update = (u: Partial<Scenario>) => updateScenario(id!, u);
 
   const hasMultipleLeadTypes = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1;
-  
+  const isBranching = hasMultipleLeadTypes && savedSteps.has(2);
+
+  // Helper: get branch data for active lead type
+  const getBranch = (lt?: string): BranchData => {
+    const key = lt || activeLeadType;
+    return scenario.branchData?.[key] || createDefaultBranchData();
+  };
+
+  const updateBranch = (fields: Partial<BranchData>) => {
+    if (!activeLeadType) return;
+    const current = getBranch();
+    update({
+      branchData: {
+        ...scenario.branchData,
+        [activeLeadType]: { ...current, ...fields },
+      },
+    });
+  };
+
   const getActiveDecompSet = (): DecompositionSet => {
-    if (hasMultipleLeadTypes && activeLeadType) {
-      return scenario.decompositionsByType[activeLeadType] || createDefaultDecompSet();
+    if (isBranching && activeLeadType) {
+      return getBranch().decomposition;
     }
     return scenario.decomposition;
   };
 
   const updateDecomp = (type: 'bad' | 'realistic' | 'positive', field: keyof DecompositionScenario, value: number) => {
-    if (hasMultipleLeadTypes && activeLeadType) {
-      const currentByType = scenario.decompositionsByType[activeLeadType] || createDefaultDecompSet();
-      update({
-        decompositionsByType: {
-          ...scenario.decompositionsByType,
-          [activeLeadType]: {
-            ...currentByType,
-            [type]: { ...currentByType[type], [field]: value },
-          },
+    if (isBranching && activeLeadType) {
+      const branch = getBranch();
+      updateBranch({
+        decomposition: {
+          ...branch.decomposition,
+          [type]: { ...branch.decomposition[type], [field]: value },
         },
       });
     } else {
@@ -288,14 +303,9 @@ const ScenarioBuilder: React.FC = () => {
       positive: make({ cpm: 0.7, ctr: 1.5, cpl: 0.6, conv: 1.6 }, baseBudget),
     });
 
-    if (hasMultipleLeadTypes && activeLeadType) {
-      const currentSet = scenario.decompositionsByType[activeLeadType] || createDefaultDecompSet();
-      update({
-        decompositionsByType: {
-          ...scenario.decompositionsByType,
-          [activeLeadType]: makeSet(currentSet.realistic.budget || 10000),
-        },
-      });
+    if (isBranching && activeLeadType) {
+      const branch = getBranch();
+      updateBranch({ decomposition: makeSet(branch.decomposition.realistic.budget || 10000) });
     } else {
       update({
         decomposition: makeSet(scenario.decomposition.realistic.budget || 10000),
@@ -306,37 +316,50 @@ const ScenarioBuilder: React.FC = () => {
   const toggleLeadType = (lt: string) => {
     const current = scenario.leadTypes || [];
     const newTypes = current.includes(lt) ? current.filter(t => t !== lt) : [...current, lt];
-    const newDecompsByType = { ...(scenario.decompositionsByType || {}) };
-    // Add default decomp for new types
+    const newBranchData = { ...(scenario.branchData || {}) };
+    // Add default branch data for new types
     newTypes.forEach(t => {
-      if (!newDecompsByType[t]) newDecompsByType[t] = createDefaultDecompSet();
+      if (!newBranchData[t]) newBranchData[t] = createDefaultBranchData();
     });
-    // Remove decomps for removed types
-    Object.keys(newDecompsByType).forEach(k => {
-      if (!newTypes.includes(k)) delete newDecompsByType[k];
+    // Remove data for removed types
+    Object.keys(newBranchData).forEach(k => {
+      if (!newTypes.includes(k)) delete newBranchData[k];
     });
-    update({ leadTypes: newTypes, decompositionsByType: newDecompsByType });
+    update({ leadTypes: newTypes, branchData: newBranchData });
     if (newTypes.length > 0 && !newTypes.includes(activeLeadType)) {
       setActiveLeadType(newTypes[0]);
     }
   };
 
   const toggleLeadDest = (dest: string) => {
-    const current = scenario.leadDestinations;
-    update({ leadDestinations: current.includes(dest) ? current.filter(d => d !== dest) : [...current, dest] });
+    if (isBranching && activeLeadType) {
+      const branch = getBranch();
+      const current = branch.leadDestinations;
+      updateBranch({ leadDestinations: current.includes(dest) ? current.filter(d => d !== dest) : [...current, dest] });
+    } else {
+      const current = scenario.leadDestinations;
+      update({ leadDestinations: current.includes(dest) ? current.filter(d => d !== dest) : [...current, dest] });
+    }
   };
+
+  // Get the right lead destinations for current context
+  const currentLeadDestinations = isBranching && activeLeadType ? getBranch().leadDestinations : scenario.leadDestinations;
+  const currentIntegrationMethod = isBranching && activeLeadType ? getBranch().integrationMethod : scenario.integrationMethod;
+  const currentCompanyDescription = isBranching && activeLeadType ? getBranch().companyDescription : scenario.companyDescription;
+  const currentRetention = isBranching && activeLeadType ? getBranch().retention : scenario.retention;
 
   const activeDecompSet = getActiveDecompSet();
   const currentDecomp = activeDecompSet[decompTab];
   const metrics = calcMetrics(currentDecomp);
 
   const retentionCalc = (rate: number) => {
-    const r = scenario.retention;
+    const r = currentRetention;
     const total = r.emailCount;
     const opens = Math.round(total * rate);
     const clicks = Math.round(opens * 0.15);
     const conversions = Math.round(clicks * 0.05);
-    const revenue = conversions * (scenario.decomposition.realistic.averageCheck || 2000);
+    const decompSet = isBranching && activeLeadType ? getBranch().decomposition : scenario.decomposition;
+    const revenue = conversions * (decompSet.realistic.averageCheck || 2000);
     return { total, opens, clicks, conversions, revenue };
   };
 
@@ -348,16 +371,36 @@ const ScenarioBuilder: React.FC = () => {
       case 3: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
           return s.leadTypes.every(lt => {
-            const set = s.decompositionsByType?.[lt];
-            return set && set.realistic.cpl > 0;
+            const branch = s.branchData?.[lt];
+            return branch && branch.decomposition.realistic.cpl > 0;
           });
         }
         return s.decomposition.realistic.cpl > 0;
       }
-      case 4: return s.leadDestinations.length > 0;
-      case 5: return !!s.integrationMethod;
-      case 6: return !!s.companyDescription;
-      case 7: return s.retention.emailCount > 0;
+      case 4: {
+        if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
+          return s.leadTypes.every(lt => (s.branchData?.[lt]?.leadDestinations?.length || 0) > 0);
+        }
+        return s.leadDestinations.length > 0;
+      }
+      case 5: {
+        if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
+          return s.leadTypes.every(lt => !!s.branchData?.[lt]?.integrationMethod);
+        }
+        return !!s.integrationMethod;
+      }
+      case 6: {
+        if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
+          return s.leadTypes.every(lt => !!s.branchData?.[lt]?.companyDescription);
+        }
+        return !!s.companyDescription;
+      }
+      case 7: {
+        if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
+          return s.leadTypes.every(lt => (s.branchData?.[lt]?.retention?.emailCount || 0) > 0);
+        }
+        return s.retention.emailCount > 0;
+      }
       case 8: return s.status === 'completed';
       default: return false;
     }
@@ -715,11 +758,14 @@ const ScenarioBuilder: React.FC = () => {
           return (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground">Куди надходять ліди?</h3>
+              {isBranching && activeLeadType && (
+                <Badge variant="secondary" className="text-xs">{LEAD_TYPES.find(l => l.value === activeLeadType)?.icon} {LEAD_TYPES.find(l => l.value === activeLeadType)?.label}</Badge>
+              )}
               <div className="grid gap-2">
                 {LEAD_DESTINATIONS.map(d => (
                   <button key={d} onClick={() => toggleLeadDest(d)}
                     className={`p-2.5 rounded-lg border text-left text-sm transition-all ${
-                      scenario.leadDestinations.includes(d)
+                      currentLeadDestinations.includes(d)
                         ? 'border-primary bg-accent text-accent-foreground font-semibold'
                         : 'border-border bg-card text-foreground hover:border-primary/40'
                     }`}>
@@ -735,11 +781,20 @@ const ScenarioBuilder: React.FC = () => {
           return (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground">Спосіб інтеграції</h3>
+              {isBranching && activeLeadType && (
+                <Badge variant="secondary" className="text-xs">{LEAD_TYPES.find(l => l.value === activeLeadType)?.icon} {LEAD_TYPES.find(l => l.value === activeLeadType)?.label}</Badge>
+              )}
               <div className="grid gap-2">
                 {INTEGRATIONS.map(i => (
-                  <button key={i} onClick={() => update({ integrationMethod: i })}
+                  <button key={i} onClick={() => {
+                    if (isBranching && activeLeadType) {
+                      updateBranch({ integrationMethod: i });
+                    } else {
+                      update({ integrationMethod: i });
+                    }
+                  }}
                     className={`p-3 rounded-lg border text-left text-sm transition-all ${
-                      scenario.integrationMethod === i
+                      currentIntegrationMethod === i
                         ? 'border-primary bg-accent text-accent-foreground font-semibold'
                         : 'border-border bg-card text-foreground hover:border-primary/40'
                     }`}>
@@ -755,14 +810,23 @@ const ScenarioBuilder: React.FC = () => {
           return (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground">Продажі</h3>
+              {isBranching && activeLeadType && (
+                <Badge variant="secondary" className="text-xs">{LEAD_TYPES.find(l => l.value === activeLeadType)?.icon} {LEAD_TYPES.find(l => l.value === activeLeadType)?.label}</Badge>
+              )}
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Про компанію</label>
-                <Textarea value={scenario.companyDescription}
-                  onChange={e => update({ companyDescription: e.target.value })}
+                <Textarea value={currentCompanyDescription}
+                  onChange={e => {
+                    if (isBranching && activeLeadType) {
+                      updateBranch({ companyDescription: e.target.value });
+                    } else {
+                      update({ companyDescription: e.target.value });
+                    }
+                  }}
                   placeholder="Опишіть компанію, продукт, ЦА..."
                   rows={3} className="bg-secondary border-border text-foreground text-sm placeholder:text-muted-foreground resize-none" />
               </div>
-              {scenario.companyDescription && (
+              {currentCompanyDescription && (
                 <div className="space-y-3">
                   {[
                     { icon: '📞', title: 'Скрипт дзвінка', filename: 'script-call.txt' },
@@ -786,12 +850,22 @@ const ScenarioBuilder: React.FC = () => {
           return (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground">Retention — база</h3>
+              {isBranching && activeLeadType && (
+                <Badge variant="secondary" className="text-xs">{LEAD_TYPES.find(l => l.value === activeLeadType)?.icon} {LEAD_TYPES.find(l => l.value === activeLeadType)?.label}</Badge>
+              )}
               
               {/* Email - active */}
               <div>
                 <label className="text-xs text-muted-foreground mb-0.5 block">📧 Email-база</label>
-                <Input type="number" value={scenario.retention.emailCount || ''}
-                  onChange={e => update({ retention: { ...scenario.retention, emailCount: parseInt(e.target.value) || 0 } })}
+                <Input type="number" value={currentRetention.emailCount || ''}
+                  onChange={e => {
+                    const val = parseInt(e.target.value) || 0;
+                    if (isBranching && activeLeadType) {
+                      updateBranch({ retention: { ...currentRetention, emailCount: val } });
+                    } else {
+                      update({ retention: { ...scenario.retention, emailCount: val } });
+                    }
+                  }}
                   className="bg-secondary border-border text-foreground h-9 text-sm"
                   placeholder="Кількість контактів" />
               </div>
@@ -811,7 +885,7 @@ const ScenarioBuilder: React.FC = () => {
                 </div>
               ))}
 
-              {scenario.retention.emailCount > 0 && (
+              {currentRetention.emailCount > 0 && (
                 <div className="space-y-2">
                   {[
                     { label: '😟 Поганий', rate: 0.1 },
@@ -839,9 +913,10 @@ const ScenarioBuilder: React.FC = () => {
         }
 
         case 8: {
-          const real = calcMetrics(scenario.decomposition.realistic);
-          const bad = calcMetrics(scenario.decomposition.bad);
-          const pos = calcMetrics(scenario.decomposition.positive);
+          const decompSet = isBranching && activeLeadType ? getBranch().decomposition : scenario.decomposition;
+          const real = calcMetrics(decompSet.realistic);
+          const bad = calcMetrics(decompSet.bad);
+          const pos = calcMetrics(decompSet.positive);
           const channelLabel = CAMPAIGN_GOALS.find(c => c.value === scenario.channel)?.label || scenario.channel || '—';
           const sourceLabel = LEAD_SOURCES.find(s => s.value === scenario.leadSource)?.label || scenario.leadSource || '—';
           return (
@@ -866,19 +941,19 @@ const ScenarioBuilder: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-muted-foreground">Бюджет:</span>
-                    <p className="font-semibold text-foreground">{scenario.decomposition.realistic.budget.toLocaleString()} ₴</p>
+                    <p className="font-semibold text-foreground">{decompSet.realistic.budget.toLocaleString()} ₴</p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Ліди йдуть у:</span>
-                    <p className="font-semibold text-foreground">{scenario.leadDestinations.join(', ') || '—'}</p>
+                    <p className="font-semibold text-foreground">{currentLeadDestinations.join(', ') || '—'}</p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Інтеграція:</span>
-                    <p className="font-semibold text-foreground">{scenario.integrationMethod || '—'}</p>
+                    <p className="font-semibold text-foreground">{currentIntegrationMethod || '—'}</p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Email-база:</span>
-                    <p className="font-semibold text-foreground">{scenario.retention.emailCount || 0} контактів</p>
+                    <p className="font-semibold text-foreground">{currentRetention.emailCount || 0} контактів</p>
                   </div>
                 </div>
               </div>
@@ -919,8 +994,8 @@ const ScenarioBuilder: React.FC = () => {
                   <li>⏱️ Обробляйте ліди протягом 5 хвилин — це підвищує конверсію на 80%</li>
                   <li>🔄 Налаштуйте follow-up через 24 та 72 години</li>
                   <li>📧 Збирайте email-базу з першого дня для retention</li>
-                  {scenario.retention.emailCount > 0 && <li>📬 Запустіть welcome-серію з 3-5 листів для нових контактів</li>}
-                  {real.leads > 50 && <li>🤖 Автоматизуйте обробку лідів через {scenario.integrationMethod || 'CRM-інтеграцію'}</li>}
+                  {currentRetention.emailCount > 0 && <li>📬 Запустіть welcome-серію з 3-5 листів для нових контактів</li>}
+                  {real.leads > 50 && <li>🤖 Автоматизуйте обробку лідів через {currentIntegrationMethod || 'CRM-інтеграцію'}</li>}
                   <li>📊 Аналізуйте результати щотижня та коригуйте бюджет</li>
                 </ul>
               </div>
@@ -1039,9 +1114,8 @@ const ScenarioBuilder: React.FC = () => {
                       return ltLabels ? `${base}\n${ltLabels}` : base;
                     }
                     case 3: {
-                      const decompSet = branchLeadType && shouldBranch
-                        ? (scenario.decompositionsByType?.[branchLeadType] || scenario.decomposition)
-                        : scenario.decomposition;
+                      const branch = branchLeadType && shouldBranch ? scenario.branchData?.[branchLeadType] : null;
+                      const decompSet = branch ? branch.decomposition : scenario.decomposition;
                       const bad = calcMetrics(decompSet.bad);
                       const real = calcMetrics(decompSet.realistic);
                       const pos = calcMetrics(decompSet.positive);
@@ -1052,8 +1126,15 @@ const ScenarioBuilder: React.FC = () => {
                         `🟢 ${pos.leads} лідів → ${pos.revenue.toLocaleString()}₴ → ${pos.romi}%`,
                       ].join('\n');
                     }
-                    case 4: return scenario.leadDestinations.length > 0 ? scenario.leadDestinations.join('\n') : '';
-                    case 5: return scenario.integrationMethod || '';
+                    case 4: {
+                      const branch = branchLeadType && shouldBranch ? scenario.branchData?.[branchLeadType] : null;
+                      const dests = branch ? branch.leadDestinations : scenario.leadDestinations;
+                      return dests.length > 0 ? dests.join('\n') : '';
+                    }
+                    case 5: {
+                      const branch = branchLeadType && shouldBranch ? scenario.branchData?.[branchLeadType] : null;
+                      return (branch ? branch.integrationMethod : scenario.integrationMethod) || '';
+                    }
                     default: return '';
                   }
                 };
