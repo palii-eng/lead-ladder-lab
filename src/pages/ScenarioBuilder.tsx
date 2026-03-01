@@ -242,12 +242,18 @@ const ScenarioBuilder: React.FC = () => {
       setAiTipsLoading(false);
     }
   }, [scenario, toast]);
-  const [savedSteps, setSavedSteps] = useState<Set<number>>(() => {
-    // Pre-populate with already completed steps
-    const set = new Set<number>();
+  // savedSteps tracks global steps + per-branch steps (key format: "step" or "step:branchType")
+  const [savedSteps, setSavedSteps] = useState<Set<string>>(() => {
+    const set = new Set<string>();
     if (scenario) {
       for (let i = 0; i < STEPS.length; i++) {
-        if (isStepCompletedStatic(scenario, i)) set.add(i);
+        if (isStepCompletedStatic(scenario, i)) set.add(String(i));
+        // Also check per-branch completion
+        if (scenario.channel === 'leads' && scenario.leadTypes?.length > 1 && i >= 3) {
+          scenario.leadTypes.forEach(lt => {
+            if (isStepCompletedForBranch(scenario, i, lt)) set.add(`${i}:${lt}`);
+          });
+        }
       }
     }
     return set;
@@ -310,7 +316,7 @@ const ScenarioBuilder: React.FC = () => {
   const update = (u: Partial<Scenario>) => updateScenario(id!, u);
 
   const hasMultipleLeadTypes = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1;
-  const isBranching = hasMultipleLeadTypes && savedSteps.has(2);
+  const isBranching = hasMultipleLeadTypes && savedSteps.has('2');
 
   // Helper: get branch data for active lead type
   const getBranch = (lt?: string): BranchData => {
@@ -440,6 +446,20 @@ const ScenarioBuilder: React.FC = () => {
     return { total, opens, clicks, conversions, revenue };
   };
 
+  // Check if a specific step is filled for a specific branch
+  function isStepCompletedForBranch(s: Scenario, i: number, lt: string): boolean {
+    const branch = s.branchData?.[lt];
+    if (!branch) return false;
+    switch (i) {
+      case 3: return branch.decomposition.realistic.cpl > 0;
+      case 4: return (branch.leadDestinations?.length || 0) > 0;
+      case 5: return !!branch.integrationMethod;
+      case 6: return !!branch.companyDescription;
+      case 7: return (branch.retention?.emailCount || 0) > 0;
+      default: return false;
+    }
+  }
+
   function isStepCompletedStatic(s: Scenario, i: number): boolean {
     switch (i) {
       case 0: return !!s.niche;
@@ -447,34 +467,31 @@ const ScenarioBuilder: React.FC = () => {
       case 2: return !!s.channel && (s.channel !== 'leads' || (s.leadTypes && s.leadTypes.length > 0));
       case 3: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
-          return s.leadTypes.every(lt => {
-            const branch = s.branchData?.[lt];
-            return branch && branch.decomposition.realistic.cpl > 0;
-          });
+          return s.leadTypes.every(lt => isStepCompletedForBranch(s, 3, lt));
         }
         return s.decomposition.realistic.cpl > 0;
       }
       case 4: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
-          return s.leadTypes.every(lt => (s.branchData?.[lt]?.leadDestinations?.length || 0) > 0);
+          return s.leadTypes.every(lt => isStepCompletedForBranch(s, 4, lt));
         }
         return s.leadDestinations.length > 0;
       }
       case 5: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
-          return s.leadTypes.every(lt => !!s.branchData?.[lt]?.integrationMethod);
+          return s.leadTypes.every(lt => isStepCompletedForBranch(s, 5, lt));
         }
         return !!s.integrationMethod;
       }
       case 6: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
-          return s.leadTypes.every(lt => !!s.branchData?.[lt]?.companyDescription);
+          return s.leadTypes.every(lt => isStepCompletedForBranch(s, 6, lt));
         }
         return !!s.companyDescription;
       }
       case 7: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
-          return s.leadTypes.every(lt => (s.branchData?.[lt]?.retention?.emailCount || 0) > 0);
+          return s.leadTypes.every(lt => isStepCompletedForBranch(s, 7, lt));
         }
         return s.retention.emailCount > 0;
       }
@@ -483,19 +500,45 @@ const ScenarioBuilder: React.FC = () => {
     }
   }
 
-  const isStepCompleted = (i: number): boolean => isStepCompletedStatic(scenario, i) && savedSteps.has(i);
-
-  const isStepUnlocked = (i: number): boolean => {
-    if (i === 0) return true;
-    return isStepCompleted(i - 1);
+  // For shared steps (0-2) use global key, for branch steps (3+) use branch-specific key
+  const isStepCompleted = (i: number, branchLeadType?: string): boolean => {
+    if (i < 3 || !isBranching) {
+      return isStepCompletedStatic(scenario, i) && savedSteps.has(String(i));
+    }
+    // Branch-specific: check this specific branch
+    const lt = branchLeadType || activeLeadType;
+    if (!lt) return false;
+    return isStepCompletedForBranch(scenario, i, lt) && savedSteps.has(`${i}:${lt}`);
   };
 
-  const canSaveStep = (i: number): boolean => {
-    return isStepCompletedStatic(scenario, i);
+  const isStepUnlocked = (i: number, branchLeadType?: string): boolean => {
+    if (i === 0) return true;
+    if (i <= 2) return isStepCompleted(i - 1);
+    // For branch steps (3+), check previous step in the same branch
+    if (i === 3) return isStepCompleted(2); // step 2 is shared
+    return isStepCompleted(i - 1, branchLeadType);
+  };
+
+  const canSaveStep = (i: number, branchLeadType?: string): boolean => {
+    if (i < 3 || !isBranching) {
+      return isStepCompletedStatic(scenario, i);
+    }
+    const lt = branchLeadType || activeLeadType;
+    if (!lt) return false;
+    return isStepCompletedForBranch(scenario, i, lt);
   };
 
   const handleSaveStep = (step: number) => {
-    setSavedSteps(prev => new Set(prev).add(step));
+    setSavedSteps(prev => {
+      const next = new Set(prev);
+      if (step < 3 || !isBranching) {
+        next.add(String(step));
+      } else {
+        // Save for current active lead type
+        if (activeLeadType) next.add(`${step}:${activeLeadType}`);
+      }
+      return next;
+    });
     // Auto-open next step
     if (step < STEPS.length - 1) {
       setActiveStep(step + 1);
@@ -571,7 +614,7 @@ const ScenarioBuilder: React.FC = () => {
   const SaveButton: React.FC<{ step: number }> = ({ step }) => (
     <Button
       onClick={() => handleSaveStep(step)}
-      disabled={!canSaveStep(step)}
+      disabled={!canSaveStep(step, activeLeadType)}
       className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold mt-4"
     >
       <Save className="w-4 h-4" /> Зберегти та продовжити
@@ -1177,7 +1220,7 @@ const ScenarioBuilder: React.FC = () => {
               {/* Check if we need branching */}
               {(() => {
                 const leadTypes = scenario.leadTypes || [];
-                const shouldBranch = scenario.channel === 'leads' && leadTypes.length > 1 && savedSteps.has(2);
+                const shouldBranch = scenario.channel === 'leads' && leadTypes.length > 1 && savedSteps.has('2');
                 const BRANCH_STEPS = STEPS.slice(3); // steps 3-8
 
                 const getSubtitleForStep = (i: number, branchLeadType?: string) => {
@@ -1218,11 +1261,11 @@ const ScenarioBuilder: React.FC = () => {
 
                 const renderNode = (stepIdx: number, branchLeadType?: string, isLastInRow = false) => {
                   const s = STEPS[stepIdx];
-                  const subtitle = (isStepCompleted(stepIdx) || isStepCompletedStatic(scenario, stepIdx)) 
+                  const subtitle = (isStepCompleted(stepIdx, branchLeadType) || (branchLeadType ? isStepCompletedForBranch(scenario, stepIdx, branchLeadType) : isStepCompletedStatic(scenario, stepIdx))) 
                     ? getSubtitleForStep(stepIdx, branchLeadType) : '';
                   
                   // Check if decomposition is completed for this branch to show AI hint
-                  const showAiHint = stepIdx === 3 && isStepCompletedStatic(scenario, 3);
+                  const showAiHint = stepIdx === 3 && (branchLeadType ? isStepCompletedForBranch(scenario, 3, branchLeadType) : isStepCompletedStatic(scenario, 3));
 
                   return (
                     <div key={`${stepIdx}-${branchLeadType || 'main'}`} className="flex items-start" data-flow-node data-step-index={stepIdx}>
@@ -1234,12 +1277,12 @@ const ScenarioBuilder: React.FC = () => {
                             : s.title}
                           index={stepIdx}
                           isActive={activeStep === stepIdx && (!shouldBranch || stepIdx < 3 || activeLeadType === branchLeadType)}
-                          isCompleted={isStepCompleted(stepIdx)}
+                          isCompleted={isStepCompleted(stepIdx, branchLeadType)}
                           isLast={isLastInRow}
-                          isLocked={!isStepUnlocked(stepIdx)}
+                          isLocked={!isStepUnlocked(stepIdx, branchLeadType)}
                           subtitle={subtitle}
                           onClick={() => {
-                            if (!wasDragged.current && isStepUnlocked(stepIdx)) {
+                            if (!wasDragged.current && isStepUnlocked(stepIdx, branchLeadType)) {
                               if (branchLeadType) setActiveLeadType(branchLeadType);
                               setActiveStep(activeStep === stepIdx && activeLeadType === branchLeadType ? null : stepIdx);
                             }
@@ -1270,7 +1313,7 @@ const ScenarioBuilder: React.FC = () => {
                       <div className="flex items-start gap-0 px-12 py-8">
                         {STEPS.map((_, i) => renderNode(i, undefined, i === STEPS.length - 1))}
                       </div>
-                      {scenario.retention.emailCount > 0 && savedSteps.has(7) && <RetentionArrow />}
+                      {scenario.retention.emailCount > 0 && savedSteps.has('7') && <RetentionArrow />}
                     </>
                   );
                 }
