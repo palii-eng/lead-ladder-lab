@@ -86,14 +86,14 @@ export default {
         },
         "breathe": {
           "0%, 100%": { transform: "scale(1)" },
-          "50%": { transform: "scale(1.03)" },
+          "50%": { transform: "scale(1.02)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
-        "breathe": "breathe 6s ease-in-out infinite",
+        "breathe": "breathe 8s ease-in-out infinite",
       },
     },
   },
