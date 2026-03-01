@@ -253,6 +253,70 @@ const ScenarioBuilder: React.FC = () => {
     }
   };
 
+  const RetentionArrow: React.FC = () => {
+    const [coords, setCoords] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+
+    useEffect(() => {
+      const container = document.getElementById('flow-container');
+      if (!container) return;
+      const salesNode = container.querySelector('[data-step-index="5"] button') as HTMLElement;
+      const retentionNode = container.querySelector('[data-step-index="6"] button') as HTMLElement;
+      if (!salesNode || !retentionNode) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const salesRect = salesNode.getBoundingClientRect();
+      const retentionRect = retentionNode.getBoundingClientRect();
+
+      setCoords({
+        x1: salesRect.left + salesRect.width / 2 - containerRect.left,
+        y1: salesRect.top + salesRect.height / 2 - containerRect.top,
+        x2: retentionRect.left + retentionRect.width / 2 - containerRect.left,
+        y2: retentionRect.top + retentionRect.height / 2 - containerRect.top,
+      });
+    }, [activeStep]);
+
+    if (!coords) return null;
+
+    const padding = 20;
+    const svgLeft = Math.min(coords.x1, coords.x2) - padding;
+    const svgWidth = Math.abs(coords.x2 - coords.x1) + padding * 2;
+    const curveDepth = 80;
+    const svgHeight = curveDepth + 50;
+
+    const lx1 = coords.x1 - svgLeft;
+    const lx2 = coords.x2 - svgLeft;
+
+    return (
+      <svg
+        className="absolute pointer-events-none"
+        style={{
+          left: `${svgLeft}px`,
+          top: `${coords.y1 + 32}px`,
+          width: `${svgWidth}px`,
+          height: `${svgHeight}px`,
+        }}
+        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+      >
+        <defs>
+          <marker id="arrow-return" markerWidth="10" markerHeight="8" refX="0" refY="4" orient="auto">
+            <polygon points="10 0, 0 4, 10 8" fill="hsl(36, 100%, 50%)" />
+          </marker>
+        </defs>
+        <path
+          d={`M ${lx2} 0 C ${lx2} ${curveDepth}, ${lx1} ${curveDepth}, ${lx1} 0`}
+          fill="none"
+          stroke="hsl(36, 100%, 50%)"
+          strokeWidth="2.5"
+          strokeDasharray="8 4"
+          markerEnd="url(#arrow-return)"
+        />
+        <text x={(lx1 + lx2) / 2} y={curveDepth + 16} textAnchor="middle" fill="hsl(36, 100%, 42%)" fontSize="11" fontWeight="700">
+          Retention loop
+        </text>
+      </svg>
+    );
+  };
+
   const AdschoolVideoButton: React.FC<{ step: number }> = ({ step }) => (
     <button
       onClick={() => { setVideoDialogStep(step); setVideoDialogOpen(true); }}
@@ -727,7 +791,7 @@ const ScenarioBuilder: React.FC = () => {
               transition: isDragging ? 'none' : 'transform 0.1s ease-out',
             }}
           >
-            <div className="relative">
+            <div className="relative" id="flow-container">
               <div className="flex items-start gap-0 px-12 py-8">
                 {STEPS.map((s, i) => {
                   const getSubtitle = () => {
@@ -754,7 +818,7 @@ const ScenarioBuilder: React.FC = () => {
                     }
                   };
                   return (
-                    <div key={i} data-flow-node>
+                    <div key={i} data-flow-node data-step-index={i}>
                       <FlowNode
                         icon={s.icon}
                         title={s.title}
@@ -775,30 +839,9 @@ const ScenarioBuilder: React.FC = () => {
                 })}
               </div>
 
-              {/* Retention → Sales return arrow */}
+              {/* Retention → Sales return arrow (from step 6 bottom to step 5 bottom) */}
               {scenario.retention.emailCount > 0 && savedSteps.has(6) && (
-                <svg
-                  className="absolute pointer-events-none"
-                  style={{ bottom: '-10px', left: '50%', transform: 'translateX(-22%)', width: '340px', height: '70px' }}
-                  viewBox="0 0 340 70"
-                >
-                  <defs>
-                    <marker id="arrow-return" markerWidth="10" markerHeight="8" refX="0" refY="4" orient="auto">
-                      <polygon points="10 0, 0 4, 10 8" fill="hsl(36, 100%, 50%)" />
-                    </marker>
-                  </defs>
-                  <path
-                    d="M 310 5 C 310 55, 30 55, 30 5"
-                    fill="none"
-                    stroke="hsl(36, 100%, 50%)"
-                    strokeWidth="2.5"
-                    strokeDasharray="8 4"
-                    markerEnd="url(#arrow-return)"
-                  />
-                  <text x="170" y="58" textAnchor="middle" fill="hsl(36, 100%, 45%)" fontSize="11" fontWeight="700">
-                    Retention loop
-                  </text>
-                </svg>
+                <RetentionArrow />
               )}
             </div>
           </div>
