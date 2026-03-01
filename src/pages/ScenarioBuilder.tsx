@@ -727,51 +727,79 @@ const ScenarioBuilder: React.FC = () => {
               transition: isDragging ? 'none' : 'transform 0.1s ease-out',
             }}
           >
-            <div className="flex items-start gap-0 px-12 py-8">
-              {STEPS.map((s, i) => {
-                const getSubtitle = () => {
-                  switch (i) {
-                    case 0: return scenario.niche || '';
-                    case 1: {
-                      const label = CHANNELS.find(c => c.value === scenario.channel)?.label || '';
-                      return seoEnabled ? (label ? `${label} + SEO` : 'SEO') : label;
+            <div className="relative">
+              <div className="flex items-start gap-0 px-12 py-8">
+                {STEPS.map((s, i) => {
+                  const getSubtitle = () => {
+                    switch (i) {
+                      case 0: return scenario.niche || '';
+                      case 1: {
+                        const label = CHANNELS.find(c => c.value === scenario.channel)?.label || '';
+                        return seoEnabled ? (label ? `${label} + SEO` : 'SEO') : label;
+                      }
+                      case 2: {
+                        const bad = calcMetrics(scenario.decomposition.bad);
+                        const real = calcMetrics(scenario.decomposition.realistic);
+                        const pos = calcMetrics(scenario.decomposition.positive);
+                        if (real.revenue <= 0 && bad.revenue <= 0 && pos.revenue <= 0) return '';
+                        return [
+                          `🟡 ${bad.leads} лідів → ${bad.revenue.toLocaleString()}₴ → ${bad.romi}%`,
+                          `🔵 ${real.leads} лідів → ${real.revenue.toLocaleString()}₴ → ${real.romi}%`,
+                          `🟢 ${pos.leads} лідів → ${pos.revenue.toLocaleString()}₴ → ${pos.romi}%`,
+                        ].join('\n');
+                      }
+                      case 3: return scenario.leadDestinations.length > 0 ? scenario.leadDestinations[0] : '';
+                      case 4: return scenario.integrationMethod || '';
+                      default: return '';
                     }
-                    case 2: {
-                      const bad = calcMetrics(scenario.decomposition.bad);
-                      const real = calcMetrics(scenario.decomposition.realistic);
-                      const pos = calcMetrics(scenario.decomposition.positive);
-                      if (real.revenue <= 0 && bad.revenue <= 0 && pos.revenue <= 0) return '';
-                      return [
-                        `🟡 ${bad.leads} лідів → ${bad.revenue.toLocaleString()}₴ → ${bad.romi}%`,
-                        `🔵 ${real.leads} лідів → ${real.revenue.toLocaleString()}₴ → ${real.romi}%`,
-                        `🟢 ${pos.leads} лідів → ${pos.revenue.toLocaleString()}₴ → ${pos.romi}%`,
-                      ].join('\n');
-                    }
-                    case 3: return scenario.leadDestinations.length > 0 ? scenario.leadDestinations[0] : '';
-                    case 4: return scenario.integrationMethod || '';
-                    default: return '';
-                  }
-                };
-                return (
-                  <div key={i} data-flow-node>
-                    <FlowNode
-                      icon={s.icon}
-                      title={s.title}
-                      index={i}
-                      isActive={activeStep === i}
-                      isCompleted={isStepCompleted(i)}
-                      isLast={i === STEPS.length - 1}
-                      isLocked={!isStepUnlocked(i)}
-                      subtitle={isStepCompleted(i) || isStepCompletedStatic(scenario, i) ? getSubtitle() : ''}
-                      onClick={() => {
-                        if (!wasDragged.current && isStepUnlocked(i)) {
-                          setActiveStep(activeStep === i ? null : i);
-                        }
-                      }}
-                    />
-                  </div>
-                );
-              })}
+                  };
+                  return (
+                    <div key={i} data-flow-node>
+                      <FlowNode
+                        icon={s.icon}
+                        title={s.title}
+                        index={i}
+                        isActive={activeStep === i}
+                        isCompleted={isStepCompleted(i)}
+                        isLast={i === STEPS.length - 1}
+                        isLocked={!isStepUnlocked(i)}
+                        subtitle={isStepCompleted(i) || isStepCompletedStatic(scenario, i) ? getSubtitle() : ''}
+                        onClick={() => {
+                          if (!wasDragged.current && isStepUnlocked(i)) {
+                            setActiveStep(activeStep === i ? null : i);
+                          }
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Retention → Sales return arrow */}
+              {scenario.retention.emailCount > 0 && savedSteps.has(6) && (
+                <svg
+                  className="absolute pointer-events-none"
+                  style={{ bottom: '-30px', right: '160px', width: '300px', height: '60px' }}
+                  viewBox="0 0 300 60"
+                >
+                  <defs>
+                    <marker id="arrow-return" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                      <polygon points="0 0, 8 3, 0 6" fill="hsl(45, 93%, 47%)" />
+                    </marker>
+                  </defs>
+                  <path
+                    d="M 280 5 C 280 50, 20 50, 20 5"
+                    fill="none"
+                    stroke="hsl(45, 93%, 47%)"
+                    strokeWidth="2"
+                    strokeDasharray="6 3"
+                    markerEnd="url(#arrow-return)"
+                  />
+                  <text x="150" y="52" textAnchor="middle" fill="hsl(45, 93%, 47%)" fontSize="10" fontWeight="600">
+                    Retention loop
+                  </text>
+                </svg>
+              )}
             </div>
           </div>
         </div>
