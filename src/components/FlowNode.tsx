@@ -41,9 +41,13 @@ const FlowNode: React.FC<FlowNodeProps> = ({ icon, title, index, isActive, isCom
         </span>
         {/* Subtitle showing selected value */}
         {subtitle && (
-          <span className="text-[9px] text-primary font-medium max-w-[140px] text-center leading-tight truncate bg-primary/10 px-2 py-0.5 rounded-full">
-            {subtitle}
-          </span>
+          <div className="flex flex-col items-center gap-0.5 mt-0.5">
+            {subtitle.split('\n').map((line, idx) => (
+              <span key={idx} className="text-[9px] text-primary font-medium max-w-[180px] text-center leading-tight whitespace-nowrap bg-primary/10 px-2 py-0.5 rounded-full">
+                {line}
+              </span>
+            ))}
+          </div>
         )}
       </button>
 
