@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useScenarios, Scenario, DecompositionScenario } from '@/context/ScenariosContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ArrowRight, Check, Info, Play, Sparkles } from 'lucide-react';
+import FlowNode from '@/components/FlowNode';
+import { ArrowLeft, Check, Info, Play, Sparkles, X, Zap } from 'lucide-react';
 
 const STEPS = [
   { title: 'Вибір ніші', icon: '🎯' },
@@ -33,9 +34,7 @@ const LEAD_DESTINATIONS = [
   'Власна CRM', 'Kommo', 'HubSpot', 'SalesDrive', 'Pipedrive',
   'Google Таблиця', 'Telegram-чат з менеджером', 'Інша',
 ];
-
 const CRM_OPTIONS = ['KeyCRM', 'Trello', 'SalesDrive', 'Pipedrive', 'Інша'];
-
 const INTEGRATIONS = ['Пряма інтеграція', 'Webhook', 'Make', 'ApiX-Drive'];
 
 const BENCHMARKS: Record<string, Partial<DecompositionScenario>> = {
@@ -49,14 +48,12 @@ const BENCHMARKS: Record<string, Partial<DecompositionScenario>> = {
 };
 
 const calcMetrics = (d: DecompositionScenario) => {
-  const impressions = d.budget / (d.cpm || 1) * 1000;
-  const clicks = impressions * ((d.ctr || 0) / 100);
   const leads = d.cpl > 0 ? d.budget / d.cpl : 0;
   const sales = leads * ((d.conversionRate || 0) / 100);
   const revenue = sales * (d.averageCheck || 0);
   const profit = revenue - d.budget;
   const romi = d.budget > 0 ? ((revenue - d.budget) / d.budget) * 100 : 0;
-  return { impressions: Math.round(impressions), clicks: Math.round(clicks), leads: Math.round(leads), sales: Math.round(sales * 10) / 10, revenue: Math.round(revenue), profit: Math.round(profit), romi: Math.round(romi) };
+  return { leads: Math.round(leads), sales: Math.round(sales * 10) / 10, revenue: Math.round(revenue), profit: Math.round(profit), romi: Math.round(romi) };
 };
 
 const ScenarioBuilder: React.FC = () => {
@@ -64,7 +61,20 @@ const ScenarioBuilder: React.FC = () => {
   const navigate = useNavigate();
   const { getScenario, updateScenario } = useScenarios();
   const scenario = getScenario(id!);
+  const [activeStep, setActiveStep] = useState<number | null>(0);
   const [decompTab, setDecompTab] = useState<'bad' | 'realistic' | 'positive'>('realistic');
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Scroll active node into view
+  useEffect(() => {
+    if (activeStep !== null && canvasRef.current) {
+      const nodes = canvasRef.current.querySelectorAll('[data-flow-node]');
+      if (nodes[activeStep]) {
+        nodes[activeStep].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+  }, [activeStep]);
 
   if (!scenario) {
     return (
@@ -77,11 +87,7 @@ const ScenarioBuilder: React.FC = () => {
     );
   }
 
-  const step = scenario.currentStep;
   const update = (u: Partial<Scenario>) => updateScenario(id!, u);
-  const setStep = (s: number) => update({ currentStep: s });
-  const next = () => { if (step < STEPS.length - 1) setStep(step + 1); };
-  const prev = () => { if (step > 0) setStep(step - 1); };
 
   const updateDecomp = (type: 'bad' | 'realistic' | 'positive', field: keyof DecompositionScenario, value: number) => {
     update({
@@ -95,26 +101,26 @@ const ScenarioBuilder: React.FC = () => {
   const fillBenchmarks = () => {
     const ch = scenario.channel || 'other';
     const bench = BENCHMARKS[ch] || BENCHMARKS.other;
-    const makeBad = (b: Partial<DecompositionScenario>) => ({
-      ...scenario.decomposition.bad, ...b,
-      cpm: (b.cpm || 7) * 1.5, ctr: (b.ctr || 1) * 0.6,
-      cpl: (b.cpl || 35) * 1.8, conversionRate: (b.conversionRate || 5) * 0.4,
-      budget: scenario.decomposition.bad.budget || 10000,
-      cpc: ((b.cpm || 7) * 1.5) / (((b.ctr || 1) * 0.6) / 100) / 1000,
+    const make = (mult: { cpm: number; ctr: number; cpl: number; conv: number }, budget: number) => {
+      const d: DecompositionScenario = {
+        cpm: (bench.cpm || 7) * mult.cpm,
+        ctr: (bench.ctr || 1) * mult.ctr,
+        cpc: 0,
+        cpl: (bench.cpl || 35) * mult.cpl,
+        conversionRate: (bench.conversionRate || 5) * mult.conv,
+        averageCheck: bench.averageCheck || 3000,
+        budget,
+      };
+      d.cpc = d.cpm / ((d.ctr || 1) / 100) / 1000;
+      return d;
+    };
+    update({
+      decomposition: {
+        bad: make({ cpm: 1.5, ctr: 0.6, cpl: 1.8, conv: 0.4 }, scenario.decomposition.bad.budget || 10000),
+        realistic: make({ cpm: 1, ctr: 1, cpl: 1, conv: 1 }, scenario.decomposition.realistic.budget || 10000),
+        positive: make({ cpm: 0.7, ctr: 1.5, cpl: 0.6, conv: 1.6 }, scenario.decomposition.positive.budget || 10000),
+      },
     });
-    const makeReal = (b: Partial<DecompositionScenario>) => ({
-      ...scenario.decomposition.realistic, ...b,
-      budget: scenario.decomposition.realistic.budget || 10000,
-      cpc: (b.cpm || 7) / (((b.ctr || 1)) / 100) / 1000,
-    });
-    const makePos = (b: Partial<DecompositionScenario>) => ({
-      ...scenario.decomposition.positive, ...b,
-      cpm: (b.cpm || 7) * 0.7, ctr: (b.ctr || 1) * 1.5,
-      cpl: (b.cpl || 35) * 0.6, conversionRate: (b.conversionRate || 5) * 1.6,
-      budget: scenario.decomposition.positive.budget || 10000,
-      cpc: ((b.cpm || 7) * 0.7) / (((b.ctr || 1) * 1.5) / 100) / 1000,
-    });
-    update({ decomposition: { bad: makeBad(bench) as DecompositionScenario, realistic: makeReal(bench) as DecompositionScenario, positive: makePos(bench) as DecompositionScenario } });
   };
 
   const toggleLeadDest = (dest: string) => {
@@ -135,353 +141,388 @@ const ScenarioBuilder: React.FC = () => {
     return { total, opens, clicks, conversions, revenue };
   };
 
-  const renderStep = () => {
-    switch (step) {
-      case 0:
-        return (
-          <div className="space-y-6 animate-fade-in">
-            <h3 className="text-lg font-bold text-foreground">Вкажіть нішу вашого бізнесу</h3>
-            <Input
-              value={scenario.niche}
-              onChange={e => update({ niche: e.target.value })}
-              placeholder="Наприклад: Стоматологія, Кав'ярня, SaaS..."
-              className="bg-secondary border-border text-foreground text-lg py-6 placeholder:text-muted-foreground"
-            />
-            <Button variant="secondary" onClick={() => {
-              const niches = ['Стоматологія', 'Фітнес-студія', 'Онлайн-школа', 'eCommerce', 'SaaS', 'Ресторан', 'Нерухомість', 'Юридичні послуги'];
-              update({ niche: niches[Math.floor(Math.random() * niches.length)] });
-            }} className="gap-2">
-              <Sparkles className="w-4 h-4" /> Обрати випадкову
-            </Button>
-          </div>
-        );
-
-      case 1:
-        return (
-          <div className="space-y-4 animate-fade-in">
-            <h3 className="text-lg font-bold text-foreground">Оберіть спосіб запуску реклами</h3>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {CHANNELS.map(ch => (
-                <button key={ch.value} disabled={ch.soon} onClick={() => update({ channel: ch.value })}
-                  className={`p-4 rounded-xl border text-left transition-all ${
-                    scenario.channel === ch.value
-                      ? 'border-primary bg-accent text-accent-foreground font-semibold'
-                      : 'border-border bg-card text-foreground hover:border-primary/40'
-                  } ${ch.soon ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-                  <span className="font-medium">{ch.label}</span>
-                  {ch.soon && <Badge className="ml-2 bg-warning text-warning-foreground text-xs">Вже скоро</Badge>}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-
-      case 2: {
-        const decompLabels = { bad: '😟 Поганий', realistic: '📊 Реалістичний', positive: '🚀 Позитивний' };
-        const fields: { key: keyof DecompositionScenario; label: string; suffix: string }[] = [
-          { key: 'budget', label: 'Бюджет', suffix: '₴' },
-          { key: 'cpm', label: 'CPM', suffix: '₴' },
-          { key: 'ctr', label: 'CTR', suffix: '%' },
-          { key: 'cpc', label: 'CPC', suffix: '₴' },
-          { key: 'cpl', label: 'CPL', suffix: '₴' },
-          { key: 'conversionRate', label: 'Конверсія в продаж', suffix: '%' },
-          { key: 'averageCheck', label: 'Середній чек', suffix: '₴' },
-        ];
-        return (
-          <div className="space-y-5 animate-fade-in">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <h3 className="text-lg font-bold text-foreground">Декомпозиція</h3>
-              <Button variant="secondary" size="sm" onClick={fillBenchmarks} className="gap-2">
-                <Sparkles className="w-4 h-4" /> Заповнити автоматично
-              </Button>
-            </div>
-            <div className="flex gap-2">
-              {(Object.keys(decompLabels) as Array<'bad' | 'realistic' | 'positive'>).map(key => (
-                <button key={key} onClick={() => setDecompTab(key)}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                    decompTab === key ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-muted'
-                  }`}>
-                  {decompLabels[key]}
-                </button>
-              ))}
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {fields.map(f => (
-                <div key={f.key}>
-                  <label className="text-sm text-muted-foreground mb-1 block">{f.label} ({f.suffix})</label>
-                  <Input type="number" value={currentDecomp[f.key] || ''}
-                    onChange={e => updateDecomp(decompTab, f.key, parseFloat(e.target.value) || 0)}
-                    className="bg-secondary border-border text-foreground" />
-                </div>
-              ))}
-            </div>
-            <div className="glass-card p-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-              {[
-                { label: 'Ліди', value: metrics.leads },
-                { label: 'Продажі', value: metrics.sales },
-                { label: 'Дохід', value: `${metrics.revenue.toLocaleString()} ₴` },
-                { label: 'ROMI', value: `${metrics.romi}%`, color: metrics.romi > 0 ? 'text-success' : 'text-destructive' },
-              ].map(m => (
-                <div key={m.label}>
-                  <div className="text-xs text-muted-foreground">{m.label}</div>
-                  <div className={`text-xl font-bold ${(m as any).color || 'text-foreground'}`}>{m.value}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      }
-
-      case 3:
-        return (
-          <div className="space-y-5 animate-fade-in">
-            <h3 className="text-lg font-bold text-foreground">Куди надходять ліди?</h3>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {LEAD_DESTINATIONS.map(d => (
-                <button key={d} onClick={() => toggleLeadDest(d)}
-                  className={`p-3 rounded-xl border text-left text-sm transition-all ${
-                    scenario.leadDestinations.includes(d)
-                      ? 'border-primary bg-accent text-accent-foreground font-semibold'
-                      : 'border-border bg-card text-foreground hover:border-primary/40'
-                  }`}>
-                  {d}
-                </button>
-              ))}
-            </div>
-            {scenario.leadDestinations.includes('Власна CRM') && (
-              <div className="space-y-2 pt-2">
-                <label className="text-sm text-muted-foreground">Оберіть CRM</label>
-                <div className="flex flex-wrap gap-2">
-                  {CRM_OPTIONS.map(c => (
-                    <button key={c} onClick={() => update({ crmSystem: c })}
-                      className={`px-3 py-1.5 rounded-lg text-sm border transition-all ${
-                        scenario.crmSystem === c ? 'border-primary bg-accent text-accent-foreground font-semibold' : 'border-border bg-card text-foreground'
-                      }`}>
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-5 animate-fade-in">
-            <h3 className="text-lg font-bold text-foreground">Спосіб інтеграції</h3>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {INTEGRATIONS.map(i => (
-                <button key={i} onClick={() => update({ integrationMethod: i })}
-                  className={`p-4 rounded-xl border text-left transition-all ${
-                    scenario.integrationMethod === i
-                      ? 'border-primary bg-accent text-accent-foreground font-semibold'
-                      : 'border-border bg-card text-foreground hover:border-primary/40'
-                  }`}>
-                  {i}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-
-      case 5:
-        return (
-          <div className="space-y-5 animate-fade-in">
-            <h3 className="text-lg font-bold text-foreground">Продажі</h3>
-            <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">Розкажіть про компанію</label>
-              <Textarea value={scenario.companyDescription}
-                onChange={e => update({ companyDescription: e.target.value })}
-                placeholder="Опишіть вашу компанію, продукт, цільову аудиторію..."
-                rows={4} className="bg-secondary border-border text-foreground placeholder:text-muted-foreground resize-none" />
-            </div>
-            {scenario.companyDescription && (
-              <div className="space-y-4">
-                <div className="glass-card p-4">
-                  <h4 className="font-semibold text-foreground mb-2">📞 Скрипт дзвінка</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Вітаю! Мене звати [Ім'я], компанія "{scenario.niche || 'ваша компанія'}".
-                    Ви залишали заявку на [послугу]. Чи зручно вам зараз поговорити?
-                  </p>
-                </div>
-                <div className="glass-card p-4">
-                  <h4 className="font-semibold text-foreground mb-2">💬 Скрипт переписки</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Доброго дня! Дякуємо за звернення до "{scenario.niche || 'нас'}".
-                    Бачу, що вас цікавить [послуга]. Давайте підберемо найкращий варіант для вас...
-                  </p>
-                </div>
-                <div className="glass-card p-4">
-                  <h4 className="font-semibold text-foreground mb-2">🔄 Follow-up</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Доброго дня! Нагадую про вашу заявку. Чи встигли ви обдумати пропозицію?
-                  </p>
-                </div>
-                <Button variant="secondary" className="gap-2 w-full" disabled>
-                  📦 Завантажити повний пакет
-                  <Badge className="bg-warning text-warning-foreground text-xs">Pro</Badge>
-                </Button>
-              </div>
-            )}
-          </div>
-        );
-
-      case 6: {
-        const fields = [
-          { key: 'emailCount' as const, label: 'Email' },
-          { key: 'telegramCount' as const, label: 'Telegram' },
-          { key: 'smsCount' as const, label: 'SMS' },
-          { key: 'pushCount' as const, label: 'Push' },
-        ];
-        const total = scenario.retention.emailCount + scenario.retention.telegramCount + scenario.retention.smsCount + scenario.retention.pushCount;
-        const scenarios3 = [
-          { label: '😟 Поганий', rate: 0.1 },
-          { label: '📊 Реалістичний', rate: 0.2 },
-          { label: '🚀 Оптимістичний', rate: 0.35 },
-        ];
-        return (
-          <div className="space-y-5 animate-fade-in">
-            <h3 className="text-lg font-bold text-foreground">Retention — наявна база</h3>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {fields.map(f => (
-                <div key={f.key}>
-                  <label className="text-sm text-muted-foreground mb-1 block">{f.label} (кількість)</label>
-                  <Input type="number" value={scenario.retention[f.key] || ''}
-                    onChange={e => update({ retention: { ...scenario.retention, [f.key]: parseInt(e.target.value) || 0 } })}
-                    className="bg-secondary border-border text-foreground" />
-                </div>
-              ))}
-            </div>
-            {total > 0 && (
-              <div className="grid gap-4 lg:grid-cols-3">
-                {scenarios3.map(s => {
-                  const r = retentionCalc(s.rate);
-                  return (
-                    <div key={s.label} className="glass-card p-4 space-y-2">
-                      <h4 className="font-semibold text-foreground">{s.label}</h4>
-                      <div className="text-sm space-y-1 text-muted-foreground">
-                        <p>Open Rate: <span className="text-foreground">{Math.round(s.rate * 100)}%</span></p>
-                        <p>Відкриття: <span className="text-foreground">{r.opens}</span></p>
-                        <p>Кліки: <span className="text-foreground">{r.clicks}</span></p>
-                        <p>Конверсії: <span className="text-foreground">{r.conversions}</span></p>
-                        <p>Дохід: <span className="text-foreground font-bold">{r.revenue.toLocaleString()} ₴</span></p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        );
-      }
-
-      case 7: {
-        const real = calcMetrics(scenario.decomposition.realistic);
-        const bad = calcMetrics(scenario.decomposition.bad);
-        const pos = calcMetrics(scenario.decomposition.positive);
-        return (
-          <div className="space-y-6 animate-fade-in">
-            <h3 className="text-xl font-extrabold text-foreground">🏆 Фінальний результат</h3>
-            <div className="grid gap-4 sm:grid-cols-3">
-              {[
-                { label: 'Поганий', m: bad, borderClass: 'border-destructive/40' },
-                { label: 'Реалістичний', m: real, borderClass: 'border-primary/40' },
-                { label: 'Позитивний', m: pos, borderClass: 'border-success/40' },
-              ].map(s => (
-                <div key={s.label} className={`glass-card p-5 border-2 ${s.borderClass}`}>
-                  <h4 className="font-bold text-foreground mb-3">{s.label}</h4>
-                  <div className="space-y-2 text-sm">
-                    <p className="text-muted-foreground">Ліди: <span className="text-foreground font-medium">{s.m.leads}</span></p>
-                    <p className="text-muted-foreground">Продажі: <span className="text-foreground font-medium">{s.m.sales}</span></p>
-                    <p className="text-muted-foreground">Дохід: <span className="text-foreground font-medium">{s.m.revenue.toLocaleString()} ₴</span></p>
-                    <p className="text-muted-foreground">Прибуток: <span className={`font-bold ${s.m.profit >= 0 ? 'text-success' : 'text-destructive'}`}>{s.m.profit.toLocaleString()} ₴</span></p>
-                    <p className="text-muted-foreground">ROMI: <span className={`font-bold text-lg ${s.m.romi >= 0 ? 'text-success' : 'text-destructive'}`}>{s.m.romi}%</span></p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="glass-card p-5 space-y-3">
-              <h4 className="font-bold text-foreground">📋 Рекомендації</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                {real.romi < 0 && <li>⚠️ Реалістичний ROMI від'ємний — переглядньте воронку або зменшіть CPL</li>}
-                {real.romi >= 0 && real.romi < 100 && <li>📈 ROMI помірний — є потенціал для оптимізації конверсії</li>}
-                {real.romi >= 100 && <li>✅ Відмінний ROMI! Рекомендуємо масштабувати бюджет</li>}
-                <li>💡 Рекомендована швидкість обробки ліда: до 5 хвилин</li>
-                <li>🔄 Використовуйте retention-канали для повторних продажів</li>
-                {scenario.retention.emailCount > 0 && <li>📧 Наявна email-база дає додатковий потенціал доходу</li>}
-              </ul>
-            </div>
-            <Button className="w-full py-6 text-lg gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
-              onClick={() => { update({ status: 'completed' }); navigate('/'); }}>
-              <Check className="w-5 h-5" /> Завершити сценарій
-            </Button>
-          </div>
-        );
-      }
-
-      default: return null;
+  const isStepCompleted = (i: number): boolean => {
+    switch (i) {
+      case 0: return !!scenario.niche;
+      case 1: return !!scenario.channel;
+      case 2: return scenario.decomposition.realistic.cpl > 0;
+      case 3: return scenario.leadDestinations.length > 0;
+      case 4: return !!scenario.integrationMethod;
+      case 5: return !!scenario.companyDescription;
+      case 6: return (scenario.retention.emailCount + scenario.retention.telegramCount + scenario.retention.smsCount + scenario.retention.pushCount) > 0;
+      case 7: return scenario.status === 'completed';
+      default: return false;
     }
   };
 
+  const renderPanel = () => {
+    if (activeStep === null) return null;
+
+    const stepContent = () => {
+      switch (activeStep) {
+        case 0:
+          return (
+            <div className="space-y-5">
+              <h3 className="text-base font-bold text-foreground">Вкажіть нішу вашого бізнесу</h3>
+              <Input
+                value={scenario.niche}
+                onChange={e => update({ niche: e.target.value })}
+                placeholder="Наприклад: Стоматологія, Кав'ярня, SaaS..."
+                className="bg-secondary border-border text-foreground text-base py-5 placeholder:text-muted-foreground"
+              />
+              <Button variant="secondary" size="sm" onClick={() => {
+                const niches = ['Стоматологія', 'Фітнес-студія', 'Онлайн-школа', 'eCommerce', 'SaaS', 'Ресторан', 'Нерухомість', 'Юридичні послуги'];
+                update({ niche: niches[Math.floor(Math.random() * niches.length)] });
+              }} className="gap-2">
+                <Sparkles className="w-4 h-4" /> Обрати випадкову
+              </Button>
+            </div>
+          );
+
+        case 1:
+          return (
+            <div className="space-y-4">
+              <h3 className="text-base font-bold text-foreground">Оберіть спосіб запуску</h3>
+              <div className="grid gap-2">
+                {CHANNELS.map(ch => (
+                  <button key={ch.value} disabled={ch.soon} onClick={() => update({ channel: ch.value })}
+                    className={`p-3 rounded-lg border text-left text-sm transition-all ${
+                      scenario.channel === ch.value
+                        ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                        : 'border-border bg-card text-foreground hover:border-primary/40'
+                    } ${ch.soon ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <span>{ch.label}</span>
+                    {ch.soon && <Badge className="ml-2 bg-warning text-warning-foreground text-xs">Скоро</Badge>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+
+        case 2: {
+          const decompLabels = { bad: '😟 Поганий', realistic: '📊 Реалістичний', positive: '🚀 Позитивний' };
+          const fields: { key: keyof DecompositionScenario; label: string; suffix: string }[] = [
+            { key: 'budget', label: 'Бюджет', suffix: '₴' },
+            { key: 'cpm', label: 'CPM', suffix: '₴' },
+            { key: 'ctr', label: 'CTR', suffix: '%' },
+            { key: 'cpc', label: 'CPC', suffix: '₴' },
+            { key: 'cpl', label: 'CPL', suffix: '₴' },
+            { key: 'conversionRate', label: 'Конверсія', suffix: '%' },
+            { key: 'averageCheck', label: 'Сер. чек', suffix: '₴' },
+          ];
+          return (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-foreground">Декомпозиція</h3>
+                <Button variant="secondary" size="sm" onClick={fillBenchmarks} className="gap-1 text-xs">
+                  <Sparkles className="w-3 h-3" /> Авто
+                </Button>
+              </div>
+              <div className="flex gap-1">
+                {(Object.keys(decompLabels) as Array<'bad' | 'realistic' | 'positive'>).map(key => (
+                  <button key={key} onClick={() => setDecompTab(key)}
+                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                      decompTab === key ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+                    }`}>
+                    {decompLabels[key]}
+                  </button>
+                ))}
+              </div>
+              <div className="grid gap-3 grid-cols-2">
+                {fields.map(f => (
+                  <div key={f.key}>
+                    <label className="text-xs text-muted-foreground mb-0.5 block">{f.label} ({f.suffix})</label>
+                    <Input type="number" value={currentDecomp[f.key] || ''}
+                      onChange={e => updateDecomp(decompTab, f.key, parseFloat(e.target.value) || 0)}
+                      className="bg-secondary border-border text-foreground h-9 text-sm" />
+                  </div>
+                ))}
+              </div>
+              <div className="bg-secondary rounded-lg p-3 grid grid-cols-2 gap-3 text-center">
+                {[
+                  { label: 'Ліди', value: metrics.leads },
+                  { label: 'Продажі', value: metrics.sales },
+                  { label: 'Дохід', value: `${metrics.revenue.toLocaleString()} ₴` },
+                  { label: 'ROMI', value: `${metrics.romi}%`, color: metrics.romi > 0 ? 'text-success' : 'text-destructive' },
+                ].map(m => (
+                  <div key={m.label}>
+                    <div className="text-[10px] text-muted-foreground uppercase">{m.label}</div>
+                    <div className={`text-base font-bold ${(m as any).color || 'text-foreground'}`}>{m.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+        case 3:
+          return (
+            <div className="space-y-4">
+              <h3 className="text-base font-bold text-foreground">Куди надходять ліди?</h3>
+              <div className="grid gap-2">
+                {LEAD_DESTINATIONS.map(d => (
+                  <button key={d} onClick={() => toggleLeadDest(d)}
+                    className={`p-2.5 rounded-lg border text-left text-sm transition-all ${
+                      scenario.leadDestinations.includes(d)
+                        ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                        : 'border-border bg-card text-foreground hover:border-primary/40'
+                    }`}>
+                    {d}
+                  </button>
+                ))}
+              </div>
+              {scenario.leadDestinations.includes('Власна CRM') && (
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground">CRM</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {CRM_OPTIONS.map(c => (
+                      <button key={c} onClick={() => update({ crmSystem: c })}
+                        className={`px-2.5 py-1 rounded-md text-xs border transition-all ${
+                          scenario.crmSystem === c ? 'border-primary bg-accent text-accent-foreground font-semibold' : 'border-border bg-card text-foreground'
+                        }`}>
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+
+        case 4:
+          return (
+            <div className="space-y-4">
+              <h3 className="text-base font-bold text-foreground">Спосіб інтеграції</h3>
+              <div className="grid gap-2">
+                {INTEGRATIONS.map(i => (
+                  <button key={i} onClick={() => update({ integrationMethod: i })}
+                    className={`p-3 rounded-lg border text-left text-sm transition-all ${
+                      scenario.integrationMethod === i
+                        ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                        : 'border-border bg-card text-foreground hover:border-primary/40'
+                    }`}>
+                    {i}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+
+        case 5:
+          return (
+            <div className="space-y-4">
+              <h3 className="text-base font-bold text-foreground">Продажі</h3>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Про компанію</label>
+                <Textarea value={scenario.companyDescription}
+                  onChange={e => update({ companyDescription: e.target.value })}
+                  placeholder="Опишіть компанію, продукт, ЦА..."
+                  rows={3} className="bg-secondary border-border text-foreground text-sm placeholder:text-muted-foreground resize-none" />
+              </div>
+              {scenario.companyDescription && (
+                <div className="space-y-3">
+                  {[
+                    { icon: '📞', title: 'Скрипт дзвінка', text: `Вітаю! Компанія "${scenario.niche || '...'}". Ви залишали заявку...` },
+                    { icon: '💬', title: 'Скрипт переписки', text: `Доброго дня! Дякуємо за звернення до "${scenario.niche || 'нас'}"...` },
+                    { icon: '🔄', title: 'Follow-up', text: 'Нагадую про вашу заявку. Чи обдумали пропозицію?' },
+                  ].map(s => (
+                    <div key={s.title} className="bg-secondary rounded-lg p-3">
+                      <h4 className="font-semibold text-foreground text-sm mb-1">{s.icon} {s.title}</h4>
+                      <p className="text-xs text-muted-foreground">{s.text}</p>
+                    </div>
+                  ))}
+                  <Button variant="secondary" size="sm" className="gap-2 w-full text-xs" disabled>
+                    📦 Повний пакет <Badge className="bg-warning text-warning-foreground text-[10px]">Pro</Badge>
+                  </Button>
+                </div>
+              )}
+            </div>
+          );
+
+        case 6: {
+          const fields = [
+            { key: 'emailCount' as const, label: 'Email' },
+            { key: 'telegramCount' as const, label: 'Telegram' },
+            { key: 'smsCount' as const, label: 'SMS' },
+            { key: 'pushCount' as const, label: 'Push' },
+          ];
+          const total = scenario.retention.emailCount + scenario.retention.telegramCount + scenario.retention.smsCount + scenario.retention.pushCount;
+          return (
+            <div className="space-y-4">
+              <h3 className="text-base font-bold text-foreground">Retention — база</h3>
+              <div className="grid gap-3 grid-cols-2">
+                {fields.map(f => (
+                  <div key={f.key}>
+                    <label className="text-xs text-muted-foreground mb-0.5 block">{f.label}</label>
+                    <Input type="number" value={scenario.retention[f.key] || ''}
+                      onChange={e => update({ retention: { ...scenario.retention, [f.key]: parseInt(e.target.value) || 0 } })}
+                      className="bg-secondary border-border text-foreground h-9 text-sm" />
+                  </div>
+                ))}
+              </div>
+              {total > 0 && (
+                <div className="space-y-2">
+                  {[
+                    { label: '😟 Поганий', rate: 0.1 },
+                    { label: '📊 Реалістичний', rate: 0.2 },
+                    { label: '🚀 Оптимістичний', rate: 0.35 },
+                  ].map(s => {
+                    const r = retentionCalc(s.rate);
+                    return (
+                      <div key={s.label} className="bg-secondary rounded-lg p-3">
+                        <h4 className="font-semibold text-foreground text-sm">{s.label}</h4>
+                        <div className="text-xs text-muted-foreground mt-1 grid grid-cols-2 gap-1">
+                          <span>Open: {Math.round(s.rate * 100)}%</span>
+                          <span>Кліки: {r.clicks}</span>
+                          <span>Конверсії: {r.conversions}</span>
+                          <span className="font-bold text-foreground">Дохід: {r.revenue.toLocaleString()} ₴</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        case 7: {
+          const real = calcMetrics(scenario.decomposition.realistic);
+          const bad = calcMetrics(scenario.decomposition.bad);
+          const pos = calcMetrics(scenario.decomposition.positive);
+          return (
+            <div className="space-y-4">
+              <h3 className="text-base font-extrabold text-foreground">🏆 Результат</h3>
+              <div className="space-y-3">
+                {[
+                  { label: 'Поганий', m: bad, border: 'border-destructive/40' },
+                  { label: 'Реалістичний', m: real, border: 'border-primary/40' },
+                  { label: 'Позитивний', m: pos, border: 'border-success/40' },
+                ].map(s => (
+                  <div key={s.label} className={`bg-secondary rounded-lg p-3 border-l-4 ${s.border}`}>
+                    <h4 className="font-bold text-foreground text-sm mb-1">{s.label}</h4>
+                    <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+                      <span>Ліди: <b className="text-foreground">{s.m.leads}</b></span>
+                      <span>Продажі: <b className="text-foreground">{s.m.sales}</b></span>
+                      <span>ROMI: <b className={s.m.romi >= 0 ? 'text-success' : 'text-destructive'}>{s.m.romi}%</b></span>
+                    </div>
+                    <div className="text-xs mt-1">
+                      <span className="text-muted-foreground">Прибуток: </span>
+                      <b className={s.m.profit >= 0 ? 'text-success' : 'text-destructive'}>{s.m.profit.toLocaleString()} ₴</b>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-secondary rounded-lg p-3">
+                <h4 className="font-bold text-foreground text-sm mb-2">📋 Рекомендації</h4>
+                <ul className="space-y-1 text-xs text-muted-foreground">
+                  {real.romi < 0 && <li>⚠️ ROMI від'ємний — оптимізуйте CPL</li>}
+                  {real.romi >= 0 && real.romi < 100 && <li>📈 Є потенціал оптимізації конверсії</li>}
+                  {real.romi >= 100 && <li>✅ Відмінний ROMI! Масштабуйте</li>}
+                  <li>💡 Обробка ліда: до 5 хвилин</li>
+                  <li>🔄 Використовуйте retention-канали</li>
+                </ul>
+              </div>
+              <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
+                onClick={() => { update({ status: 'completed' }); navigate('/'); }}>
+                <Check className="w-4 h-4" /> Завершити
+              </Button>
+            </div>
+          );
+        }
+
+        default: return null;
+      }
+    };
+
+    return (
+      <div ref={panelRef} className="animate-scale-in bg-card border border-border rounded-2xl shadow-lg w-[380px] max-h-[calc(100vh-220px)] overflow-y-auto flex-shrink-0">
+        <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between rounded-t-2xl z-10">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">{STEPS[activeStep].icon}</span>
+            <div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                Крок {activeStep + 1} з {STEPS.length}
+              </div>
+              <h2 className="text-sm font-extrabold text-foreground">{STEPS[activeStep].title}</h2>
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
+            <button className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground transition-colors">
+              <Info className="w-4 h-4" />
+            </button>
+            <button className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground transition-colors">
+              <Play className="w-4 h-4" />
+            </button>
+            <button onClick={() => setActiveStep(null)} className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground transition-colors ml-1">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+        <div className="p-4">
+          {stepContent()}
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen flex flex-col bg-muted overflow-hidden">
       {/* Header */}
-      <header className="border-b border-border sticky top-0 z-50 bg-card">
-        <div className="container mx-auto px-6 py-3 flex items-center gap-4">
+      <header className="border-b border-border bg-card flex-shrink-0 z-20">
+        <div className="px-6 py-3 flex items-center gap-4">
           <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="gap-2 text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="w-4 h-4" /> Dashboard
+            <ArrowLeft className="w-4 h-4" />
           </Button>
-          <div className="h-5 w-px bg-border" />
-          <h1 className="font-bold text-foreground truncate">{scenario.name}</h1>
+          <div className="flex items-center gap-2">
+            <Zap className="w-5 h-5 text-primary" />
+            <h1 className="font-bold text-foreground truncate">{scenario.name}</h1>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <Badge variant="secondary" className="text-xs">
+              {scenario.status === 'completed' ? '✅ Завершено' : '📝 Чернетка'}
+            </Badge>
+          </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-6 py-6 max-w-4xl">
-        {/* Step indicators */}
-        <div className="flex items-center gap-1 mb-8 overflow-x-auto pb-2">
-          {STEPS.map((s, i) => (
-            <button key={i} onClick={() => setStep(i)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all ${
-                i === step ? 'bg-primary text-primary-foreground font-semibold'
-                : i < step ? 'bg-accent text-accent-foreground'
-                : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-              }`}>
-              <span>{s.icon}</span>
-              <span className="hidden sm:inline">{s.title}</span>
-            </button>
-          ))}
-        </div>
+      {/* Canvas area */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Flow canvas */}
+        <div className="flex-1 overflow-auto relative">
+          {/* Grid background */}
+          <div className="absolute inset-0 opacity-30" style={{
+            backgroundImage: 'radial-gradient(circle, hsl(0 0% 80%) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }} />
 
-        {/* Step content */}
-        <div className="glass-card p-6 sm:p-8 mb-6">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="text-2xl">{STEPS[step].icon}</span>
-            <div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Крок {step + 1} з {STEPS.length}</div>
-              <h2 className="text-xl font-extrabold text-foreground">{STEPS[step].title}</h2>
-            </div>
-            <div className="ml-auto flex gap-2">
-              <Button variant="ghost" size="sm" className="text-muted-foreground gap-1">
-                <Info className="w-4 h-4" /> <span className="hidden sm:inline">Пояснення</span>
-              </Button>
-              <Button variant="ghost" size="sm" className="text-muted-foreground gap-1">
-                <Play className="w-4 h-4" /> <span className="hidden sm:inline">Відео</span>
-              </Button>
+          {/* Flow nodes - centered */}
+          <div
+            ref={canvasRef}
+            className="relative min-h-full flex items-center justify-center px-12 py-8"
+          >
+            <div className="flex items-start gap-0">
+              {STEPS.map((s, i) => (
+                <div key={i} data-flow-node>
+                  <FlowNode
+                    icon={s.icon}
+                    title={s.title}
+                    index={i}
+                    isActive={activeStep === i}
+                    isCompleted={isStepCompleted(i)}
+                    isLast={i === STEPS.length - 1}
+                    onClick={() => setActiveStep(activeStep === i ? null : i)}
+                  />
+                </div>
+              ))}
             </div>
           </div>
-          {renderStep()}
         </div>
 
-        {/* Navigation */}
-        {step < STEPS.length - 1 && (
-          <div className="flex justify-between">
-            <Button variant="secondary" onClick={prev} disabled={step === 0} className="gap-2">
-              <ArrowLeft className="w-4 h-4" /> Назад
-            </Button>
-            <Button onClick={next} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
-              Далі <ArrowRight className="w-4 h-4" />
-            </Button>
+        {/* Side panel */}
+        {activeStep !== null && (
+          <div className="border-l border-border bg-background p-4 overflow-y-auto">
+            {renderPanel()}
           </div>
         )}
       </div>
