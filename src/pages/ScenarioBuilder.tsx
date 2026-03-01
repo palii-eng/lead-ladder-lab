@@ -382,9 +382,9 @@ const ScenarioBuilder: React.FC = () => {
               </div>
               <div className="flex gap-1">
                 {([
-                  { key: 'bad' as const, label: '😟 Поганий', bg: 'bg-warning text-warning-foreground', inactive: 'bg-warning/20 text-warning-foreground' },
-                  { key: 'realistic' as const, label: '📊 Реалістичний', bg: 'bg-primary text-primary-foreground', inactive: 'bg-primary/20 text-primary' },
-                  { key: 'positive' as const, label: '🚀 Позитивний', bg: 'bg-success text-success-foreground', inactive: 'bg-success/20 text-success' },
+                  { key: 'bad' as const, label: '🟡 Поганий', bg: 'bg-warning text-warning-foreground', inactive: 'bg-secondary text-secondary-foreground' },
+                  { key: 'realistic' as const, label: '🔵 Реалістичний', bg: 'bg-primary text-primary-foreground', inactive: 'bg-secondary text-secondary-foreground' },
+                  { key: 'positive' as const, label: '🟢 Позитивний', bg: 'bg-success text-success-foreground', inactive: 'bg-secondary text-secondary-foreground' },
                 ]).map(tab => (
                   <button key={tab.key} onClick={() => setDecompTab(tab.key)}
                     className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
