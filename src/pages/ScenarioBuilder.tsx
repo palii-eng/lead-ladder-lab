@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FlowNode from '@/components/FlowNode';
-import { ArrowLeft, Check, Info, Play, Sparkles, X, Zap } from 'lucide-react';
+import { ArrowLeft, Check, Download, Info, Play, Save, Sparkles, X, Zap } from 'lucide-react';
 
 const STEPS = [
   { title: 'Вибір ніші', icon: '🎯' },
@@ -18,6 +19,37 @@ const STEPS = [
   { title: 'Retention', icon: '🔄' },
   { title: 'Результат', icon: '🏆' },
 ];
+
+const STEP_VIDEOS: Record<number, { title: string; url: string }[]> = {
+  0: [
+    { title: 'Як обрати нішу для реклами', url: 'https://ads-school.online/' },
+    { title: 'Аналіз конкурентів', url: 'https://ads-school.online/' },
+  ],
+  1: [
+    { title: 'Огляд рекламних каналів', url: 'https://ads-school.online/' },
+    { title: 'SEO vs PPC: що обрати', url: 'https://ads-school.online/' },
+  ],
+  2: [
+    { title: 'Як рахувати декомпозицію', url: 'https://ads-school.online/' },
+    { title: 'Бенчмарки по нішах', url: 'https://ads-school.online/' },
+  ],
+  3: [
+    { title: 'Куди направляти ліди', url: 'https://ads-school.online/' },
+  ],
+  4: [
+    { title: 'Інтеграція CRM з рекламою', url: 'https://ads-school.online/' },
+  ],
+  5: [
+    { title: 'Скрипти продажів', url: 'https://ads-school.online/' },
+    { title: 'Follow-up стратегії', url: 'https://ads-school.online/' },
+  ],
+  6: [
+    { title: 'Email-маркетинг для retention', url: 'https://ads-school.online/' },
+  ],
+  7: [
+    { title: 'Аналіз результатів', url: 'https://ads-school.online/' },
+  ],
+};
 
 const CHANNELS = [
   { value: 'leadgen', label: 'Лідогенерація' },
@@ -31,10 +63,9 @@ const CHANNELS = [
 ];
 
 const LEAD_DESTINATIONS = [
-  'Власна CRM', 'Kommo', 'HubSpot', 'SalesDrive', 'Pipedrive',
+  'Kommo', 'HubSpot', 'SalesDrive', 'Pipedrive', 'KeyCRM', 'Trello',
   'Google Таблиця', 'Telegram-чат з менеджером', 'Інша',
 ];
-const CRM_OPTIONS = ['KeyCRM', 'Trello', 'SalesDrive', 'Pipedrive', 'Інша'];
 const INTEGRATIONS = ['Пряма інтеграція', 'Webhook', 'Make', 'ApiX-Drive'];
 
 const BENCHMARKS: Record<string, Partial<DecompositionScenario>> = {
@@ -63,19 +94,36 @@ const ScenarioBuilder: React.FC = () => {
   const scenario = getScenario(id!);
   const [activeStep, setActiveStep] = useState<number | null>(0);
   const [decompTab, setDecompTab] = useState<'bad' | 'realistic' | 'positive'>('realistic');
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+  const [videoDialogStep, setVideoDialogStep] = useState(0);
   const canvasRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
+
+  // SEO organic state
+  const [seoEnabled, setSeoEnabled] = useState(false);
+  const [seoLeads, setSeoLeads] = useState('');
+  const [seoAvgCheck, setSeoAvgCheck] = useState('');
+
+  // Saved steps tracking (local to session, persisted via scenario completion check)
+  const [savedSteps, setSavedSteps] = useState<Set<number>>(() => {
+    // Pre-populate with already completed steps
+    const set = new Set<number>();
+    if (scenario) {
+      for (let i = 0; i < STEPS.length; i++) {
+        if (isStepCompletedStatic(scenario, i)) set.add(i);
+      }
+    }
+    return set;
+  });
 
   // Drag-scroll state
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const wasDragged = useRef(false);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Only left click, ignore if clicking on interactive elements
     if (e.button !== 0) return;
     const target = e.target as HTMLElement;
     if (target.closest('button') || target.closest('input') || target.closest('textarea') || target.closest('[data-flow-node] button')) return;
@@ -162,7 +210,7 @@ const ScenarioBuilder: React.FC = () => {
 
   const retentionCalc = (rate: number) => {
     const r = scenario.retention;
-    const total = r.emailCount + r.telegramCount + r.smsCount + r.pushCount;
+    const total = r.emailCount;
     const opens = Math.round(total * rate);
     const clicks = Math.round(opens * 0.15);
     const conversions = Math.round(clicks * 0.05);
@@ -170,24 +218,60 @@ const ScenarioBuilder: React.FC = () => {
     return { total, opens, clicks, conversions, revenue };
   };
 
-  const isStepCompleted = (i: number): boolean => {
+  function isStepCompletedStatic(s: Scenario, i: number): boolean {
     switch (i) {
-      case 0: return !!scenario.niche;
-      case 1: return !!scenario.channel;
-      case 2: return scenario.decomposition.realistic.cpl > 0;
-      case 3: return scenario.leadDestinations.length > 0;
-      case 4: return !!scenario.integrationMethod;
-      case 5: return !!scenario.companyDescription;
-      case 6: return (scenario.retention.emailCount + scenario.retention.telegramCount + scenario.retention.smsCount + scenario.retention.pushCount) > 0;
-      case 7: return scenario.status === 'completed';
+      case 0: return !!s.niche;
+      case 1: return !!s.channel;
+      case 2: return s.decomposition.realistic.cpl > 0;
+      case 3: return s.leadDestinations.length > 0;
+      case 4: return !!s.integrationMethod;
+      case 5: return !!s.companyDescription;
+      case 6: return s.retention.emailCount > 0;
+      case 7: return s.status === 'completed';
       default: return false;
     }
-  };
+  }
+
+  const isStepCompleted = (i: number): boolean => isStepCompletedStatic(scenario, i) && savedSteps.has(i);
 
   const isStepUnlocked = (i: number): boolean => {
     if (i === 0) return true;
     return isStepCompleted(i - 1);
   };
+
+  const canSaveStep = (i: number): boolean => {
+    return isStepCompletedStatic(scenario, i);
+  };
+
+  const handleSaveStep = (step: number) => {
+    setSavedSteps(prev => new Set(prev).add(step));
+    // Auto-open next step
+    if (step < STEPS.length - 1) {
+      setActiveStep(step + 1);
+    } else {
+      setActiveStep(null);
+    }
+  };
+
+  const AdschoolVideoButton: React.FC<{ step: number }> = ({ step }) => (
+    <button
+      onClick={() => { setVideoDialogStep(step); setVideoDialogOpen(true); }}
+      className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-[10px] font-bold ring-2 ring-primary/30 hover:scale-110 transition-transform flex-shrink-0"
+      title="Відео від AdsSchool"
+    >
+      <span className="leading-none">AS</span>
+    </button>
+  );
+
+  const SaveButton: React.FC<{ step: number }> = ({ step }) => (
+    <Button
+      onClick={() => handleSaveStep(step)}
+      disabled={!canSaveStep(step)}
+      className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold mt-4"
+    >
+      <Save className="w-4 h-4" /> Зберегти та продовжити
+    </Button>
+  );
 
   const renderPanel = () => {
     if (activeStep === null) return null;
@@ -208,15 +292,17 @@ const ScenarioBuilder: React.FC = () => {
                 const niches = ['Стоматологія', 'Фітнес-студія', 'Онлайн-школа', 'eCommerce', 'SaaS', 'Ресторан', 'Нерухомість', 'Юридичні послуги'];
                 update({ niche: niches[Math.floor(Math.random() * niches.length)] });
               }} className="gap-2">
-                <Sparkles className="w-4 h-4" /> Обрати випадкову
+                <Sparkles className="w-4 h-4" /> Згенерувати автоматично
               </Button>
+              <SaveButton step={0} />
             </div>
           );
 
         case 1:
           return (
             <div className="space-y-4">
-              <h3 className="text-base font-bold text-foreground">Оберіть спосіб запуску</h3>
+              <h3 className="text-base font-bold text-foreground">Оберіть рекламне джерело</h3>
+              <p className="text-xs text-muted-foreground">Оберіть один обов'язковий канал:</p>
               <div className="grid gap-2">
                 {CHANNELS.map(ch => (
                   <button key={ch.value} disabled={ch.soon} onClick={() => update({ channel: ch.value })}
@@ -230,6 +316,48 @@ const ScenarioBuilder: React.FC = () => {
                   </button>
                 ))}
               </div>
+
+              {/* SEO organic option */}
+              <div className="border-t border-border pt-4">
+                <p className="text-xs text-muted-foreground mb-2">Додаткова опція:</p>
+                <button
+                  onClick={() => setSeoEnabled(!seoEnabled)}
+                  className={`w-full p-3 rounded-lg border text-left text-sm transition-all ${
+                    seoEnabled
+                      ? 'border-success bg-success/10 text-foreground font-semibold'
+                      : 'border-border bg-card text-foreground hover:border-success/40'
+                  }`}
+                >
+                  🌿 SEO — органіка
+                  <span className="text-xs text-muted-foreground ml-2">(опціонально)</span>
+                </button>
+                {seoEnabled && (
+                  <div className="mt-3 space-y-3 p-3 bg-secondary rounded-lg">
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Скільки продажів зараз з органіки?</label>
+                      <Input
+                        type="number"
+                        value={seoLeads}
+                        onChange={e => setSeoLeads(e.target.value)}
+                        placeholder="Наприклад: 10"
+                        className="bg-card border-border text-foreground h-9 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Середній чек з органіки (₴)</label>
+                      <Input
+                        type="number"
+                        value={seoAvgCheck}
+                        onChange={e => setSeoAvgCheck(e.target.value)}
+                        placeholder="Наприклад: 2000"
+                        className="bg-card border-border text-foreground h-9 text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <SaveButton step={1} />
             </div>
           );
 
@@ -285,6 +413,7 @@ const ScenarioBuilder: React.FC = () => {
                   </div>
                 ))}
               </div>
+              <SaveButton step={2} />
             </div>
           );
         }
@@ -305,21 +434,7 @@ const ScenarioBuilder: React.FC = () => {
                   </button>
                 ))}
               </div>
-              {scenario.leadDestinations.includes('Власна CRM') && (
-                <div className="space-y-2">
-                  <label className="text-xs text-muted-foreground">CRM</label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {CRM_OPTIONS.map(c => (
-                      <button key={c} onClick={() => update({ crmSystem: c })}
-                        className={`px-2.5 py-1 rounded-md text-xs border transition-all ${
-                          scenario.crmSystem === c ? 'border-primary bg-accent text-accent-foreground font-semibold' : 'border-border bg-card text-foreground'
-                        }`}>
-                        {c}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <SaveButton step={3} />
             </div>
           );
 
@@ -339,6 +454,7 @@ const ScenarioBuilder: React.FC = () => {
                   </button>
                 ))}
               </div>
+              <SaveButton step={4} />
             </div>
           );
 
@@ -356,45 +472,53 @@ const ScenarioBuilder: React.FC = () => {
               {scenario.companyDescription && (
                 <div className="space-y-3">
                   {[
-                    { icon: '📞', title: 'Скрипт дзвінка', text: `Вітаю! Компанія "${scenario.niche || '...'}". Ви залишали заявку...` },
-                    { icon: '💬', title: 'Скрипт переписки', text: `Доброго дня! Дякуємо за звернення до "${scenario.niche || 'нас'}"...` },
-                    { icon: '🔄', title: 'Follow-up', text: 'Нагадую про вашу заявку. Чи обдумали пропозицію?' },
+                    { icon: '📞', title: 'Скрипт дзвінка', filename: 'script-call.txt' },
+                    { icon: '💬', title: 'Скрипт переписки', filename: 'script-chat.txt' },
+                    { icon: '🔄', title: 'Follow-up', filename: 'follow-up.txt' },
                   ].map(s => (
-                    <div key={s.title} className="bg-secondary rounded-lg p-3">
-                      <h4 className="font-semibold text-foreground text-sm mb-1">{s.icon} {s.title}</h4>
-                      <p className="text-xs text-muted-foreground">{s.text}</p>
+                    <div key={s.title} className="bg-secondary rounded-lg p-3 flex items-center justify-between">
+                      <span className="font-semibold text-foreground text-sm">{s.icon} {s.title}</span>
+                      <Button variant="secondary" size="sm" className="gap-1.5 text-xs">
+                        <Download className="w-3 h-3" /> Завантажити
+                      </Button>
                     </div>
                   ))}
-                  <Button variant="secondary" size="sm" className="gap-2 w-full text-xs" disabled>
-                    📦 Повний пакет <Badge className="bg-warning text-warning-foreground text-[10px]">Pro</Badge>
-                  </Button>
                 </div>
               )}
+              <SaveButton step={5} />
             </div>
           );
 
         case 6: {
-          const fields = [
-            { key: 'emailCount' as const, label: 'Email' },
-            { key: 'telegramCount' as const, label: 'Telegram' },
-            { key: 'smsCount' as const, label: 'SMS' },
-            { key: 'pushCount' as const, label: 'Push' },
-          ];
-          const total = scenario.retention.emailCount + scenario.retention.telegramCount + scenario.retention.smsCount + scenario.retention.pushCount;
           return (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground">Retention — база</h3>
-              <div className="grid gap-3 grid-cols-2">
-                {fields.map(f => (
-                  <div key={f.key}>
-                    <label className="text-xs text-muted-foreground mb-0.5 block">{f.label}</label>
-                    <Input type="number" value={scenario.retention[f.key] || ''}
-                      onChange={e => update({ retention: { ...scenario.retention, [f.key]: parseInt(e.target.value) || 0 } })}
-                      className="bg-secondary border-border text-foreground h-9 text-sm" />
-                  </div>
-                ))}
+              
+              {/* Email - active */}
+              <div>
+                <label className="text-xs text-muted-foreground mb-0.5 block">📧 Email-база</label>
+                <Input type="number" value={scenario.retention.emailCount || ''}
+                  onChange={e => update({ retention: { ...scenario.retention, emailCount: parseInt(e.target.value) || 0 } })}
+                  className="bg-secondary border-border text-foreground h-9 text-sm"
+                  placeholder="Кількість контактів" />
               </div>
-              {total > 0 && (
+
+              {/* Disabled channels */}
+              {[
+                { label: '💬 Telegram-база', key: 'telegramCount' },
+                { label: '📱 SMS', key: 'smsCount' },
+              ].map(ch => (
+                <div key={ch.key} className="opacity-50">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <label className="text-xs text-muted-foreground">{ch.label}</label>
+                    <Badge className="bg-warning text-warning-foreground text-[10px]">Скоро</Badge>
+                  </div>
+                  <Input type="number" disabled placeholder="Недоступно наразі"
+                    className="bg-muted border-border text-muted-foreground h-9 text-sm cursor-not-allowed" />
+                </div>
+              ))}
+
+              {scenario.retention.emailCount > 0 && (
                 <div className="space-y-2">
                   {[
                     { label: '😟 Поганий', rate: 0.1 },
@@ -416,6 +540,7 @@ const ScenarioBuilder: React.FC = () => {
                   })}
                 </div>
               )}
+              <SaveButton step={6} />
             </div>
           );
         }
@@ -482,12 +607,7 @@ const ScenarioBuilder: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <button className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground transition-colors">
-              <Info className="w-4 h-4" />
-            </button>
-            <button className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground transition-colors">
-              <Play className="w-4 h-4" />
-            </button>
+            <AdschoolVideoButton step={activeStep} />
             <button onClick={() => setActiveStep(null)} className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground transition-colors ml-1">
               <X className="w-4 h-4" />
             </button>
@@ -539,7 +659,6 @@ const ScenarioBuilder: React.FC = () => {
 
       {/* Canvas area */}
       <div className="flex-1 relative overflow-hidden">
-        {/* Flow canvas */}
         <div
           ref={canvasWrapperRef}
           className={`w-full h-full overflow-hidden relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
@@ -547,14 +666,12 @@ const ScenarioBuilder: React.FC = () => {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
         >
-          {/* Grid background */}
           <div className="absolute inset-0 opacity-30" style={{
             backgroundImage: 'radial-gradient(circle, hsl(0 0% 80%) 1px, transparent 1px)',
             backgroundSize: '24px 24px',
             backgroundPosition: `${canvasOffset.x % 24}px ${canvasOffset.y % 24}px`,
           }} />
 
-          {/* Flow nodes - draggable */}
           <div
             ref={canvasRef}
             className="relative min-h-full flex items-center justify-center select-none"
@@ -599,6 +716,34 @@ const ScenarioBuilder: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Video dialog */}
+      <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground font-bold flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-xs font-bold">AS</div>
+              Відео від AdsSchool — {STEPS[videoDialogStep]?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            {(STEP_VIDEOS[videoDialogStep] || []).map((v, i) => (
+              <a
+                key={i}
+                href={v.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all"
+              >
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  <Play className="w-5 h-5" />
+                </div>
+                <span className="text-sm font-medium text-foreground">{v.title}</span>
+              </a>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
