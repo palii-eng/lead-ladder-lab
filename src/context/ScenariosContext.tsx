@@ -12,6 +12,14 @@ export interface DecompositionScenario {
   budget: number;
 }
 
+export interface BranchData {
+  decomposition: DecompositionSet;
+  leadDestinations: string[];
+  integrationMethod: string;
+  companyDescription: string;
+  retention: RetentionData;
+}
+
 export interface RetentionData {
   emailCount: number;
   telegramCount: number;
@@ -44,6 +52,7 @@ export interface Scenario {
   integrationMethod: string;
   companyDescription: string;
   retention: RetentionData;
+  branchData: Record<string, BranchData>;
 }
 
 const defaultDecomp: DecompositionScenario = {
@@ -55,6 +64,14 @@ export const createDefaultDecompSet = (): DecompositionSet => ({
   bad: { ...defaultDecomp },
   realistic: { ...defaultDecomp },
   positive: { ...defaultDecomp },
+});
+
+export const createDefaultBranchData = (): BranchData => ({
+  decomposition: createDefaultDecompSet(),
+  leadDestinations: [],
+  integrationMethod: '',
+  companyDescription: '',
+  retention: { emailCount: 0, telegramCount: 0, smsCount: 0, pushCount: 0 },
 });
 
 export const createDefaultScenario = (name: string, description: string): Scenario => ({
@@ -76,6 +93,7 @@ export const createDefaultScenario = (name: string, description: string): Scenar
   integrationMethod: '',
   companyDescription: '',
   retention: { emailCount: 0, telegramCount: 0, smsCount: 0, pushCount: 0 },
+  branchData: {},
 });
 
 interface ScenariosContextType {
