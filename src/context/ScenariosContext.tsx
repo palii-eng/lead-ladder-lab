@@ -22,6 +22,7 @@ export interface Scenario {
   name: string;
   description: string;
   niche: string;
+  leadSource: string;
   channel: string;
   status: 'draft' | 'completed';
   createdAt: string;
@@ -49,6 +50,7 @@ export const createDefaultScenario = (name: string, description: string): Scenar
   name,
   description,
   niche: '',
+  leadSource: '',
   channel: '',
   status: 'draft',
   createdAt: new Date().toISOString(),

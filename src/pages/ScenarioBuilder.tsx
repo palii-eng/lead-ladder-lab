@@ -7,11 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FlowNode from '@/components/FlowNode';
-import { ArrowLeft, Check, Download, Info, Play, Save, Sparkles, X, Zap } from 'lucide-react';
+import { ArrowLeft, Check, Download, Info, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap } from 'lucide-react';
 
 const STEPS = [
   { title: 'Вибір ніші', icon: '🎯' },
-  { title: 'Спосіб запуску', icon: '🚀' },
+  { title: 'Джерело лідгену', icon: '📡' },
+  { title: 'Ціль оптимізації', icon: '🚀' },
   { title: 'Декомпозиція', icon: '📊' },
   { title: 'Куди йдуть ліди', icon: '📥' },
   { title: 'Інтеграція', icon: '🔗' },
@@ -26,41 +27,48 @@ const STEP_VIDEOS: Record<number, { title: string; url: string }[]> = {
     { title: 'Аналіз конкурентів', url: 'https://ads-school.online/' },
   ],
   1: [
+    { title: 'Огляд рекламних платформ', url: 'https://ads-school.online/' },
+  ],
+  2: [
     { title: 'Огляд рекламних каналів', url: 'https://ads-school.online/' },
     { title: 'SEO vs PPC: що обрати', url: 'https://ads-school.online/' },
   ],
-  2: [
+  3: [
     { title: 'Як рахувати декомпозицію', url: 'https://ads-school.online/' },
     { title: 'Бенчмарки по нішах', url: 'https://ads-school.online/' },
   ],
-  3: [
+  4: [
     { title: 'Куди направляти ліди', url: 'https://ads-school.online/' },
   ],
-  4: [
+  5: [
     { title: 'Інтеграція CRM з рекламою', url: 'https://ads-school.online/' },
   ],
-  5: [
+  6: [
     { title: 'Скрипти продажів', url: 'https://ads-school.online/' },
     { title: 'Follow-up стратегії', url: 'https://ads-school.online/' },
   ],
-  6: [
+  7: [
     { title: 'Email-маркетинг для retention', url: 'https://ads-school.online/' },
   ],
-  7: [
+  8: [
     { title: 'Аналіз результатів', url: 'https://ads-school.online/' },
   ],
 };
-
-const CHANNELS = [
-  { value: 'leadgen', label: 'Лідогенерація' },
-  { value: 'quiz', label: 'Квіз' },
-  { value: 'direct', label: 'Direct' },
-  { value: 'traffic', label: 'Трафік на сайт' },
-  { value: 'ppc', label: 'PPC' },
-  { value: 'tiktok', label: 'Реклама в TikTok' },
-  { value: 'linkedin', label: 'Реклама в LinkedIn', soon: true },
-  { value: 'other', label: 'Інший варіант' },
+const LEAD_SOURCES = [
+  { value: 'meta', label: 'Meta реклама', icon: '📘' },
+  { value: 'tiktok', label: 'TikTok реклама', icon: '🎵', soon: true },
+  { value: 'google', label: 'Google реклама', icon: '🔍', soon: true },
 ];
+
+const CAMPAIGN_GOALS = [
+  { value: 'awareness', label: 'Упізнаваність', Icon: Megaphone },
+  { value: 'traffic', label: 'Трафік', Icon: MousePointerClick },
+  { value: 'engagement', label: 'Взаємодія', Icon: MessageCircle },
+  { value: 'leads', label: 'Ліди', Icon: Filter },
+  { value: 'app_promotion', label: 'Просування додатка', Icon: Users },
+  { value: 'sales', label: 'Продажі', Icon: ShoppingBag },
+];
+
 
 const LEAD_DESTINATIONS = [
   'Kommo', 'HubSpot', 'SalesDrive', 'Pipedrive', 'KeyCRM', 'Trello',
@@ -69,12 +77,12 @@ const LEAD_DESTINATIONS = [
 const INTEGRATIONS = ['Пряма інтеграція', 'Webhook', 'Make', 'ApiX-Drive'];
 
 const BENCHMARKS: Record<string, Partial<DecompositionScenario>> = {
-  leadgen: { cpm: 8, ctr: 1.2, cpc: 6.67, cpl: 45, conversionRate: 5, averageCheck: 3000 },
-  quiz: { cpm: 6, ctr: 2.5, cpc: 2.4, cpl: 25, conversionRate: 8, averageCheck: 2500 },
-  direct: { cpm: 10, ctr: 0.8, cpc: 12.5, cpl: 60, conversionRate: 3, averageCheck: 5000 },
-  traffic: { cpm: 5, ctr: 1.5, cpc: 3.33, cpl: 35, conversionRate: 4, averageCheck: 2000 },
-  ppc: { cpm: 15, ctr: 3.5, cpc: 4.29, cpl: 30, conversionRate: 6, averageCheck: 4000 },
-  tiktok: { cpm: 4, ctr: 1.8, cpc: 2.22, cpl: 20, conversionRate: 4, averageCheck: 1500 },
+  awareness: { cpm: 5, ctr: 1.5, cpc: 3.33, cpl: 40, conversionRate: 3, averageCheck: 2500 },
+  traffic: { cpm: 6, ctr: 2.0, cpc: 3.0, cpl: 30, conversionRate: 4, averageCheck: 2000 },
+  engagement: { cpm: 7, ctr: 1.8, cpc: 3.89, cpl: 35, conversionRate: 5, averageCheck: 2500 },
+  leads: { cpm: 8, ctr: 1.2, cpc: 6.67, cpl: 45, conversionRate: 5, averageCheck: 3000 },
+  app_promotion: { cpm: 6, ctr: 2.5, cpc: 2.4, cpl: 25, conversionRate: 8, averageCheck: 1500 },
+  sales: { cpm: 10, ctr: 1.0, cpc: 10.0, cpl: 50, conversionRate: 6, averageCheck: 4000 },
   other: { cpm: 7, ctr: 1.5, cpc: 4.67, cpl: 35, conversionRate: 5, averageCheck: 3000 },
 };
 
@@ -221,13 +229,14 @@ const ScenarioBuilder: React.FC = () => {
   function isStepCompletedStatic(s: Scenario, i: number): boolean {
     switch (i) {
       case 0: return !!s.niche;
-      case 1: return !!s.channel;
-      case 2: return s.decomposition.realistic.cpl > 0;
-      case 3: return s.leadDestinations.length > 0;
-      case 4: return !!s.integrationMethod;
-      case 5: return !!s.companyDescription;
-      case 6: return s.retention.emailCount > 0;
-      case 7: return s.status === 'completed';
+      case 1: return !!s.leadSource;
+      case 2: return !!s.channel;
+      case 3: return s.decomposition.realistic.cpl > 0;
+      case 4: return s.leadDestinations.length > 0;
+      case 5: return !!s.integrationMethod;
+      case 6: return !!s.companyDescription;
+      case 7: return s.retention.emailCount > 0;
+      case 8: return s.status === 'completed';
       default: return false;
     }
   }
@@ -259,8 +268,8 @@ const ScenarioBuilder: React.FC = () => {
     useEffect(() => {
       const container = document.getElementById('flow-container');
       if (!container) return;
-      const salesNode = container.querySelector('[data-step-index="5"] button') as HTMLElement;
-      const retentionNode = container.querySelector('[data-step-index="6"] button') as HTMLElement;
+      const salesNode = container.querySelector('[data-step-index="6"] button') as HTMLElement;
+      const retentionNode = container.querySelector('[data-step-index="7"] button') as HTMLElement;
       if (!salesNode || !retentionNode) return;
 
       const containerRect = container.getBoundingClientRect();
@@ -355,18 +364,43 @@ const ScenarioBuilder: React.FC = () => {
         case 1:
           return (
             <div className="space-y-4">
-              <h3 className="text-base font-bold text-foreground">Оберіть рекламне джерело</h3>
-              <p className="text-xs text-muted-foreground">Оберіть один обов'язковий канал:</p>
+              <h3 className="text-base font-bold text-foreground">Оберіть джерело лідгену</h3>
+              <p className="text-xs text-muted-foreground">Оберіть рекламну платформу:</p>
               <div className="grid gap-2">
-                {CHANNELS.map(ch => (
-                  <button key={ch.value} disabled={ch.soon} onClick={() => update({ channel: ch.value })}
-                    className={`p-3 rounded-lg border text-left text-sm transition-all ${
-                      scenario.channel === ch.value
+                {LEAD_SOURCES.map(src => (
+                  <button key={src.value} disabled={src.soon} onClick={() => update({ leadSource: src.value })}
+                    className={`p-3 rounded-lg border text-left text-sm transition-all flex items-center gap-3 ${
+                      scenario.leadSource === src.value
                         ? 'border-primary bg-accent text-accent-foreground font-semibold'
                         : 'border-border bg-card text-foreground hover:border-primary/40'
-                    } ${ch.soon ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-                    <span>{ch.label}</span>
-                    {ch.soon && <Badge className="ml-2 bg-warning text-warning-foreground text-xs">Скоро</Badge>}
+                    } ${src.soon ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <span className="text-xl">{src.icon}</span>
+                    <span>{src.label}</span>
+                    {src.soon && <Badge className="ml-auto bg-warning text-warning-foreground text-xs">Скоро</Badge>}
+                  </button>
+                ))}
+              </div>
+              <SaveButton step={1} />
+            </div>
+          );
+
+        case 2:
+          return (
+            <div className="space-y-4">
+              <h3 className="text-base font-bold text-foreground">Оберіть ціль оптимізації</h3>
+              <p className="text-xs text-muted-foreground">Виберіть ціль кампанії:</p>
+              <div className="grid gap-2">
+                {CAMPAIGN_GOALS.map(goal => (
+                  <button key={goal.value} onClick={() => update({ channel: goal.value })}
+                    className={`p-4 rounded-lg border text-left text-sm transition-all flex items-center gap-4 ${
+                      scenario.channel === goal.value
+                        ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                        : 'border-border bg-card text-foreground hover:border-primary/40'
+                    } cursor-pointer`}>
+                    <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
+                      <goal.Icon className="w-5 h-5 text-foreground" />
+                    </div>
+                    <span className="font-medium">{goal.label}</span>
                   </button>
                 ))}
               </div>
@@ -411,11 +445,11 @@ const ScenarioBuilder: React.FC = () => {
                 )}
               </div>
 
-              <SaveButton step={1} />
+              <SaveButton step={2} />
             </div>
           );
 
-        case 2: {
+        case 3: {
           const decompLabels = { bad: '😟 Поганий', realistic: '📊 Реалістичний', positive: '🚀 Позитивний' };
           const fields: { key: keyof DecompositionScenario; label: string; suffix: string }[] = [
             { key: 'budget', label: 'Бюджет', suffix: '₴' },
@@ -471,12 +505,12 @@ const ScenarioBuilder: React.FC = () => {
                   </div>
                 ))}
               </div>
-              <SaveButton step={2} />
+              <SaveButton step={3} />
             </div>
           );
         }
 
-        case 3:
+        case 4:
           return (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground">Куди надходять ліди?</h3>
@@ -492,11 +526,11 @@ const ScenarioBuilder: React.FC = () => {
                   </button>
                 ))}
               </div>
-              <SaveButton step={3} />
+              <SaveButton step={4} />
             </div>
           );
 
-        case 4:
+        case 5:
           return (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground">Спосіб інтеграції</h3>
@@ -512,11 +546,11 @@ const ScenarioBuilder: React.FC = () => {
                   </button>
                 ))}
               </div>
-              <SaveButton step={4} />
+              <SaveButton step={5} />
             </div>
           );
 
-        case 5:
+        case 6:
           return (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground">Продажі</h3>
@@ -543,11 +577,11 @@ const ScenarioBuilder: React.FC = () => {
                   ))}
                 </div>
               )}
-              <SaveButton step={5} />
+              <SaveButton step={6} />
             </div>
           );
 
-        case 6: {
+        case 7: {
           return (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground">Retention — база</h3>
@@ -598,16 +632,17 @@ const ScenarioBuilder: React.FC = () => {
                   })}
                 </div>
               )}
-              <SaveButton step={6} />
+              <SaveButton step={7} />
             </div>
           );
         }
 
-        case 7: {
+        case 8: {
           const real = calcMetrics(scenario.decomposition.realistic);
           const bad = calcMetrics(scenario.decomposition.bad);
           const pos = calcMetrics(scenario.decomposition.positive);
-          const channelLabel = CHANNELS.find(c => c.value === scenario.channel)?.label || scenario.channel || '—';
+          const channelLabel = CAMPAIGN_GOALS.find(c => c.value === scenario.channel)?.label || scenario.channel || '—';
+          const sourceLabel = LEAD_SOURCES.find(s => s.value === scenario.leadSource)?.label || scenario.leadSource || '—';
           return (
             <div className="space-y-4">
               <h3 className="text-base font-extrabold text-foreground">🏆 Підсумок воронки</h3>
@@ -621,7 +656,11 @@ const ScenarioBuilder: React.FC = () => {
                     <p className="font-semibold text-foreground">{scenario.niche || '—'}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Канал:</span>
+                    <span className="text-muted-foreground">Джерело:</span>
+                    <p className="font-semibold text-foreground">{sourceLabel}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Ціль:</span>
                     <p className="font-semibold text-foreground">{channelLabel}</p>
                   </div>
                   <div>
@@ -787,11 +826,12 @@ const ScenarioBuilder: React.FC = () => {
                   const getSubtitle = () => {
                     switch (i) {
                       case 0: return scenario.niche || '';
-                      case 1: {
-                        const label = CHANNELS.find(c => c.value === scenario.channel)?.label || '';
+                      case 1: return LEAD_SOURCES.find(s => s.value === scenario.leadSource)?.label || '';
+                      case 2: {
+                        const label = CAMPAIGN_GOALS.find(c => c.value === scenario.channel)?.label || '';
                         return seoEnabled ? (label ? `${label} + SEO` : 'SEO') : label;
                       }
-                      case 2: {
+                      case 3: {
                         const bad = calcMetrics(scenario.decomposition.bad);
                         const real = calcMetrics(scenario.decomposition.realistic);
                         const pos = calcMetrics(scenario.decomposition.positive);
@@ -802,8 +842,8 @@ const ScenarioBuilder: React.FC = () => {
                           `🟢 ${pos.leads} лідів → ${pos.revenue.toLocaleString()}₴ → ${pos.romi}%`,
                         ].join('\n');
                       }
-                      case 3: return scenario.leadDestinations.length > 0 ? scenario.leadDestinations[0] : '';
-                      case 4: return scenario.integrationMethod || '';
+                      case 4: return scenario.leadDestinations.length > 0 ? scenario.leadDestinations[0] : '';
+                      case 5: return scenario.integrationMethod || '';
                       default: return '';
                     }
                   };
@@ -830,7 +870,7 @@ const ScenarioBuilder: React.FC = () => {
               </div>
 
               {/* Retention → Sales return arrow (from step 6 bottom to step 5 bottom) */}
-              {scenario.retention.emailCount > 0 && savedSteps.has(6) && (
+              {scenario.retention.emailCount > 0 && savedSteps.has(7) && (
                 <RetentionArrow />
               )}
             </div>
