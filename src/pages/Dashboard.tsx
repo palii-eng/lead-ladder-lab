@@ -43,8 +43,8 @@ const Dashboard: React.FC = () => {
             <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-primary">
               <Zap className="w-5 h-5 text-primary-foreground" />
             </div>
-            <h1 className="text-xl font-extrabold text-foreground tracking-tight uppercase">
-              Маркетинговий Тренажер
+            <h1 className="text-xl font-extrabold text-foreground tracking-tight">
+              SmartFunnel AI
             </h1>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
