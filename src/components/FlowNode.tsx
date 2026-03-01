@@ -8,10 +8,11 @@ interface FlowNodeProps {
   isCompleted: boolean;
   isLast: boolean;
   isLocked: boolean;
+  subtitle?: string;
   onClick: () => void;
 }
 
-const FlowNode: React.FC<FlowNodeProps> = ({ icon, title, index, isActive, isCompleted, isLast, isLocked, onClick }) => {
+const FlowNode: React.FC<FlowNodeProps> = ({ icon, title, index, isActive, isCompleted, isLast, isLocked, subtitle, onClick }) => {
   return (
     <div className="flex items-center flex-shrink-0">
       {/* Node */}
@@ -38,6 +39,12 @@ const FlowNode: React.FC<FlowNodeProps> = ({ icon, title, index, isActive, isCom
         }`}>
           {title}
         </span>
+        {/* Subtitle showing selected value */}
+        {subtitle && (
+          <span className="text-[10px] text-primary font-medium max-w-[90px] text-center leading-tight truncate bg-primary/10 px-2 py-0.5 rounded-full">
+            {subtitle}
+          </span>
+        )}
       </button>
 
       {/* Connector line */}
