@@ -742,9 +742,9 @@ const ScenarioBuilder: React.FC = () => {
                       const pos = calcMetrics(scenario.decomposition.positive);
                       if (real.revenue <= 0 && bad.revenue <= 0 && pos.revenue <= 0) return '';
                       return [
-                        `😟 ${bad.leads} лідів → ${bad.revenue.toLocaleString()}₴ → ${bad.romi}%`,
-                        `📊 ${real.leads} лідів → ${real.revenue.toLocaleString()}₴ → ${real.romi}%`,
-                        `🚀 ${pos.leads} лідів → ${pos.revenue.toLocaleString()}₴ → ${pos.romi}%`,
+                        `🟡 ${bad.leads} лідів → ${bad.revenue.toLocaleString()}₴ → ${bad.romi}%`,
+                        `🔵 ${real.leads} лідів → ${real.revenue.toLocaleString()}₴ → ${real.romi}%`,
+                        `🟢 ${pos.leads} лідів → ${pos.revenue.toLocaleString()}₴ → ${pos.romi}%`,
                       ].join('\n');
                     }
                     case 3: return scenario.leadDestinations.length > 0 ? scenario.leadDestinations[0] : '';
