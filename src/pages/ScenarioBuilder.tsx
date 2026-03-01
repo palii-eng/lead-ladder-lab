@@ -290,20 +290,18 @@ const ScenarioBuilder: React.FC = () => {
         }}
         viewBox={`0 0 ${coords.x2 - coords.x1} 16`}
       >
-        <defs>
-          <marker id="arrow-return" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
-            <polygon points="0 0, 10 4, 0 8" fill="hsl(36, 100%, 50%)" />
-          </marker>
-        </defs>
         <line
-          x1="12"
+          x1={coords.x2 - coords.x1}
           y1="8"
-          x2={coords.x2 - coords.x1}
+          x2="28"
           y2="8"
           stroke="hsl(36, 100%, 50%)"
           strokeWidth="2.5"
           strokeDasharray="8 4"
-          markerStart="url(#arrow-return)"
+        />
+        <polygon
+          points="12,8 28,2 28,14"
+          fill="hsl(36, 100%, 50%)"
         />
       </svg>
     );
