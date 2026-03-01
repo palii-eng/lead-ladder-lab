@@ -144,6 +144,11 @@ const ScenarioBuilder: React.FC = () => {
   const [salesRecText, setSalesRecText] = useState('');
   const [salesRecLoading, setSalesRecLoading] = useState(false);
   const [salesRecTitle, setSalesRecTitle] = useState('');
+  // Cache for AI-generated content: key → text
+  const aiCacheRef = useRef<Record<string, string>>({});
+  // AI conclusion for result step
+  const [aiConclusionText, setAiConclusionText] = useState('');
+  const [aiConclusionLoading, setAiConclusionLoading] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
@@ -178,10 +183,19 @@ const ScenarioBuilder: React.FC = () => {
 
   const fetchCampaignTips = useCallback(async (branchLeadType?: string) => {
     if (!scenario) return;
-    setAiTipsLoading(true);
-    setAiTipsText('');
+    const cacheKey = `campaign-tips:${branchLeadType || 'main'}`;
     setAiTipsBranchType(branchLeadType);
     setAiTipsOpen(true);
+
+    // Return cached result if available
+    if (aiCacheRef.current[cacheKey]) {
+      setAiTipsText(aiCacheRef.current[cacheKey]);
+      setAiTipsLoading(false);
+      return;
+    }
+
+    setAiTipsLoading(true);
+    setAiTipsText('');
 
     const isBr = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && branchLeadType;
     const branch = isBr ? scenario.branchData?.[branchLeadType!] : null;
@@ -241,6 +255,7 @@ const ScenarioBuilder: React.FC = () => {
           }
         }
       }
+      if (fullText) aiCacheRef.current[cacheKey] = fullText;
     } catch (e: any) {
       toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати рекомендації', variant: 'destructive' });
     } finally {
@@ -250,10 +265,19 @@ const ScenarioBuilder: React.FC = () => {
 
   const fetchSalesRecommendation = useCallback(async (recType: string, title: string) => {
     if (!scenario) return;
-    setSalesRecLoading(true);
-    setSalesRecText('');
+    const cacheKey = `sales:${recType}:${activeLeadType || 'main'}`;
     setSalesRecTitle(title);
     setSalesRecOpen(true);
+
+    // Return cached result if available
+    if (aiCacheRef.current[cacheKey]) {
+      setSalesRecText(aiCacheRef.current[cacheKey]);
+      setSalesRecLoading(false);
+      return;
+    }
+
+    setSalesRecLoading(true);
+    setSalesRecText('');
 
     const isBr = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && activeLeadType;
     const branch = isBr ? scenario.branchData?.[activeLeadType] : null;
@@ -322,10 +346,97 @@ const ScenarioBuilder: React.FC = () => {
           }
         }
       }
+      if (fullText) aiCacheRef.current[cacheKey] = fullText;
     } catch (e: any) {
       toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати рекомендації', variant: 'destructive' });
     } finally {
       setSalesRecLoading(false);
+    }
+  }, [scenario, activeLeadType, toast]);
+
+  const fetchAiConclusion = useCallback(async () => {
+    if (!scenario) return;
+    const cacheKey = `conclusion:${activeLeadType || 'main'}`;
+    if (aiCacheRef.current[cacheKey]) {
+      setAiConclusionText(aiCacheRef.current[cacheKey]);
+      return;
+    }
+
+    setAiConclusionLoading(true);
+    setAiConclusionText('');
+
+    const isBr = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && activeLeadType;
+    const branch = isBr ? scenario.branchData?.[activeLeadType] : null;
+    const decompSet = branch ? branch.decomposition : scenario.decomposition;
+    const dests = branch ? branch.leadDestinations : scenario.leadDestinations;
+    const intMethod = branch ? branch.integrationMethod : scenario.integrationMethod;
+    const compDesc = branch ? branch.companyDescription : scenario.companyDescription;
+    const ret = branch ? branch.retention : scenario.retention;
+
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sales-recommendations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          type: 'conclusion',
+          niche: scenario.niche,
+          channel: scenario.channel,
+          leadType: activeLeadType || (scenario.leadTypes?.[0] || ''),
+          companyDescription: compDesc,
+          decomposition: decompSet,
+          leadDestinations: dests,
+          integrationMethod: intMethod,
+          retention: ret,
+        }),
+      });
+
+      if (!resp.ok || !resp.body) {
+        const err = await resp.json().catch(() => ({ error: 'Помилка' }));
+        toast({ title: 'AI помилка', description: err.error || 'Не вдалося отримати висновок', variant: 'destructive' });
+        setAiConclusionLoading(false);
+        return;
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIdx: number;
+        while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
+          let line = buffer.slice(0, newlineIdx);
+          buffer = buffer.slice(newlineIdx + 1);
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.startsWith(':') || line.trim() === '') continue;
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              fullText += content;
+              setAiConclusionText(fullText);
+            }
+          } catch {
+            buffer = line + '\n' + buffer;
+            break;
+          }
+        }
+      }
+      if (fullText) aiCacheRef.current[cacheKey] = fullText;
+    } catch (e: any) {
+      toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати висновок', variant: 'destructive' });
+    } finally {
+      setAiConclusionLoading(false);
     }
   }, [scenario, activeLeadType, toast]);
 
@@ -1227,6 +1338,40 @@ const ScenarioBuilder: React.FC = () => {
                   {real.leads > 50 && <li>🤖 Автоматизуйте обробку лідів через {currentIntegrationMethod || 'CRM-інтеграцію'}</li>}
                   <li>📊 Аналізуйте результати щотижня та коригуйте бюджет</li>
                 </ul>
+              </div>
+
+              {/* AI Conclusion */}
+              <div className="bg-secondary rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-bold text-foreground text-sm">🤖 AI Висновок</h4>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={fetchAiConclusion}
+                    disabled={aiConclusionLoading}
+                    className="gap-1 text-xs"
+                  >
+                    {aiConclusionLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                    {aiConclusionText ? 'Показати' : 'Згенерувати'}
+                  </Button>
+                </div>
+                {aiConclusionLoading && !aiConclusionText && (
+                  <div className="flex items-center gap-2 text-muted-foreground text-xs py-4 justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Генерую висновок...</span>
+                  </div>
+                )}
+                {aiConclusionText && (
+                  <div className="prose prose-sm max-w-none text-foreground text-xs leading-relaxed max-h-80 overflow-y-auto">
+                    <ReactMarkdown>{aiConclusionText}</ReactMarkdown>
+                  </div>
+                )}
+                {aiConclusionLoading && aiConclusionText && (
+                  <div className="flex items-center gap-1 text-muted-foreground text-xs mt-1">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>Друкую...</span>
+                  </div>
+                )}
               </div>
 
               <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
