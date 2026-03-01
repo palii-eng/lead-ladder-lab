@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FlowNode from '@/components/FlowNode';
 import { ArrowLeft, Check, Download, Info, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap } from 'lucide-react';
+import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 
 const STEPS = [
   { title: 'Вибір ніші', icon: '🎯' },
@@ -55,9 +56,9 @@ const STEP_VIDEOS: Record<number, { title: string; url: string }[]> = {
   ],
 };
 const LEAD_SOURCES = [
-  { value: 'meta', label: 'Meta реклама', icon: '📘' },
-  { value: 'tiktok', label: 'TikTok реклама', icon: '🎵', soon: true },
-  { value: 'google', label: 'Google реклама', icon: '🔍', soon: true },
+  { value: 'meta', label: 'Meta реклама', LogoComponent: 'meta' as const },
+  { value: 'tiktok', label: 'TikTok реклама', LogoComponent: 'tiktok' as const, soon: true },
+  { value: 'google', label: 'Google реклама', LogoComponent: 'google' as const, soon: true },
 ];
 
 const CAMPAIGN_GOALS = [
@@ -77,22 +78,42 @@ const LEAD_DESTINATIONS = [
 const INTEGRATIONS = ['Пряма інтеграція', 'Webhook', 'Make', 'ApiX-Drive'];
 
 const BENCHMARKS: Record<string, Partial<DecompositionScenario>> = {
-  awareness: { cpm: 5, ctr: 1.5, cpc: 3.33, cpl: 40, conversionRate: 3, averageCheck: 2500 },
-  traffic: { cpm: 6, ctr: 2.0, cpc: 3.0, cpl: 30, conversionRate: 4, averageCheck: 2000 },
-  engagement: { cpm: 7, ctr: 1.8, cpc: 3.89, cpl: 35, conversionRate: 5, averageCheck: 2500 },
-  leads: { cpm: 8, ctr: 1.2, cpc: 6.67, cpl: 45, conversionRate: 5, averageCheck: 3000 },
-  app_promotion: { cpm: 6, ctr: 2.5, cpc: 2.4, cpl: 25, conversionRate: 8, averageCheck: 1500 },
-  sales: { cpm: 10, ctr: 1.0, cpc: 10.0, cpl: 50, conversionRate: 6, averageCheck: 4000 },
-  other: { cpm: 7, ctr: 1.5, cpc: 4.67, cpl: 35, conversionRate: 5, averageCheck: 3000 },
+  awareness: { cpm: 5, ctr: 1.5, cpc: 3.33, cpl: 40, landingConversion: 50, conversionRate: 3, averageCheck: 2500, marginality: 30 },
+  traffic: { cpm: 6, ctr: 2.0, cpc: 3.0, cpl: 30, landingConversion: 50, conversionRate: 4, averageCheck: 2000, marginality: 30 },
+  engagement: { cpm: 7, ctr: 1.8, cpc: 3.89, cpl: 35, landingConversion: 50, conversionRate: 5, averageCheck: 2500, marginality: 30 },
+  leads: { cpm: 8, ctr: 1.2, cpc: 6.67, cpl: 45, landingConversion: 50, conversionRate: 5, averageCheck: 3000, marginality: 32 },
+  app_promotion: { cpm: 6, ctr: 2.5, cpc: 2.4, cpl: 25, landingConversion: 50, conversionRate: 8, averageCheck: 1500, marginality: 30 },
+  sales: { cpm: 10, ctr: 1.0, cpc: 10.0, cpl: 50, landingConversion: 50, conversionRate: 6, averageCheck: 4000, marginality: 32 },
+  other: { cpm: 7, ctr: 1.5, cpc: 4.67, cpl: 35, landingConversion: 50, conversionRate: 5, averageCheck: 3000, marginality: 30 },
 };
 
 const calcMetrics = (d: DecompositionScenario) => {
-  const leads = d.cpl > 0 ? d.budget / d.cpl : 0;
+  const impressions = d.cpm > 0 ? (d.budget / d.cpm) * 1000 : 0;
+  const clicks = impressions * ((d.ctr || 0) / 100);
+  const cpc = clicks > 0 ? d.budget / clicks : 0;
+  const leads = clicks * ((d.landingConversion || 0) / 100);
   const sales = leads * ((d.conversionRate || 0) / 100);
   const revenue = sales * (d.averageCheck || 0);
-  const profit = revenue - d.budget;
+  const profitPerSale = (d.averageCheck || 0) * ((d.marginality || 0) / 100);
+  const totalProfit = sales * profitPerSale;
+  const cpa = sales > 0 ? d.budget / sales : 0;
+  const roas = d.budget > 0 ? (revenue / d.budget) * 100 : 0;
+  const netIncome = totalProfit - d.budget;
   const romi = d.budget > 0 ? ((revenue - d.budget) / d.budget) * 100 : 0;
-  return { leads: Math.round(leads), sales: Math.round(sales * 10) / 10, revenue: Math.round(revenue), profit: Math.round(profit), romi: Math.round(romi) };
+  return {
+    impressions: Math.round(impressions),
+    clicks: Math.round(clicks),
+    cpc: Math.round(cpc * 100) / 100,
+    leads: Math.round(leads),
+    sales: Math.round(sales * 10) / 10,
+    revenue: Math.round(revenue),
+    profitPerSale: Math.round(profitPerSale),
+    totalProfit: Math.round(totalProfit),
+    cpa: Math.round(cpa * 100) / 100,
+    roas: Math.round(roas * 100) / 100,
+    netIncome: Math.round(netIncome),
+    romi: Math.round(romi),
+  };
 };
 
 const ScenarioBuilder: React.FC = () => {
@@ -192,8 +213,10 @@ const ScenarioBuilder: React.FC = () => {
         ctr: (bench.ctr || 1) * mult.ctr,
         cpc: 0,
         cpl: (bench.cpl || 35) * mult.cpl,
+        landingConversion: bench.landingConversion || 50,
         conversionRate: (bench.conversionRate || 5) * mult.conv,
         averageCheck: bench.averageCheck || 3000,
+        marginality: bench.marginality || 30,
         budget,
       };
       d.cpc = d.cpm / ((d.ctr || 1) / 100) / 1000;
@@ -367,18 +390,23 @@ const ScenarioBuilder: React.FC = () => {
               <h3 className="text-base font-bold text-foreground">Оберіть джерело лідгену</h3>
               <p className="text-xs text-muted-foreground">Оберіть рекламну платформу:</p>
               <div className="grid gap-2">
-                {LEAD_SOURCES.map(src => (
-                  <button key={src.value} disabled={src.soon} onClick={() => update({ leadSource: src.value })}
-                    className={`p-3 rounded-lg border text-left text-sm transition-all flex items-center gap-3 ${
-                      scenario.leadSource === src.value
-                        ? 'border-primary bg-accent text-accent-foreground font-semibold'
-                        : 'border-border bg-card text-foreground hover:border-primary/40'
-                    } ${src.soon ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-                    <span className="text-xl">{src.icon}</span>
-                    <span>{src.label}</span>
-                    {src.soon && <Badge className="ml-auto bg-warning text-warning-foreground text-xs">Скоро</Badge>}
-                  </button>
-                ))}
+                {LEAD_SOURCES.map(src => {
+                  const LogoIcon = src.LogoComponent === 'meta' ? MetaIcon : src.LogoComponent === 'tiktok' ? TikTokIcon : GoogleIcon;
+                  return (
+                    <button key={src.value} disabled={src.soon} onClick={() => update({ leadSource: src.value })}
+                      className={`p-3 rounded-lg border text-left text-sm transition-all flex items-center gap-3 ${
+                        scenario.leadSource === src.value
+                          ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                          : 'border-border bg-card text-foreground hover:border-primary/40'
+                      } ${src.soon ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                      <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+                        <LogoIcon className="w-5 h-5" />
+                      </div>
+                      <span>{src.label}</span>
+                      {src.soon && <Badge className="ml-auto bg-warning text-warning-foreground text-xs">Скоро</Badge>}
+                    </button>
+                  );
+                })}
               </div>
               <SaveButton step={1} />
             </div>
@@ -450,29 +478,28 @@ const ScenarioBuilder: React.FC = () => {
           );
 
         case 3: {
-          const decompLabels = { bad: '😟 Поганий', realistic: '📊 Реалістичний', positive: '🚀 Позитивний' };
-          const fields: { key: keyof DecompositionScenario; label: string; suffix: string }[] = [
-            { key: 'budget', label: 'Бюджет', suffix: '₴' },
+          const inputFields: { key: keyof DecompositionScenario; label: string; suffix: string }[] = [
+            { key: 'budget', label: 'FB Ad Бюджет', suffix: '₴' },
             { key: 'cpm', label: 'CPM', suffix: '₴' },
-            { key: 'ctr', label: 'CTR', suffix: '%' },
-            { key: 'cpc', label: 'CPC', suffix: '₴' },
-            { key: 'cpl', label: 'CPL', suffix: '₴' },
-            { key: 'conversionRate', label: 'Конверсія', suffix: '%' },
-            { key: 'averageCheck', label: 'Сер. чек', suffix: '₴' },
+            { key: 'ctr', label: 'Ad CTR', suffix: '%' },
+            { key: 'landingConversion', label: 'Конверсія перегляду → заявка', suffix: '%' },
+            { key: 'conversionRate', label: 'Конверсія заявки → покупка', suffix: '%' },
+            { key: 'averageCheck', label: 'Середній чек', suffix: '₴' },
+            { key: 'marginality', label: 'Маржинальність', suffix: '%' },
           ];
           return (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-foreground">Декомпозиція</h3>
+                <h3 className="text-base font-bold text-foreground">META AD CALCULATOR</h3>
                 <Button variant="secondary" size="sm" onClick={fillBenchmarks} className="gap-1 text-xs">
                   <Sparkles className="w-3 h-3" /> Авто
                 </Button>
               </div>
               <div className="flex gap-1">
                 {([
-                  { key: 'bad' as const, label: '🟡 Поганий', bg: 'bg-warning text-warning-foreground', inactive: 'bg-secondary text-secondary-foreground' },
-                  { key: 'realistic' as const, label: '🔵 Реалістичний', bg: 'bg-primary text-primary-foreground', inactive: 'bg-secondary text-secondary-foreground' },
-                  { key: 'positive' as const, label: '🟢 Позитивний', bg: 'bg-success text-success-foreground', inactive: 'bg-secondary text-secondary-foreground' },
+                  { key: 'bad' as const, label: '😟 Гірший', bg: 'bg-warning text-warning-foreground', inactive: 'bg-secondary text-secondary-foreground' },
+                  { key: 'realistic' as const, label: '🔵 Оптимальний', bg: 'bg-primary text-primary-foreground', inactive: 'bg-secondary text-secondary-foreground' },
+                  { key: 'positive' as const, label: '🟢 Кращий', bg: 'bg-success text-success-foreground', inactive: 'bg-secondary text-secondary-foreground' },
                 ]).map(tab => (
                   <button key={tab.key} onClick={() => setDecompTab(tab.key)}
                     className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
@@ -482,29 +509,57 @@ const ScenarioBuilder: React.FC = () => {
                   </button>
                 ))}
               </div>
-              <div className="grid gap-3 grid-cols-2">
-                {fields.map(f => (
-                  <div key={f.key}>
-                    <label className="text-xs text-muted-foreground mb-0.5 block">{f.label} ({f.suffix})</label>
+
+              {/* Input fields */}
+              <div className="space-y-2">
+                {inputFields.map(f => (
+                  <div key={f.key} className="flex items-center justify-between gap-3">
+                    <label className="text-xs text-muted-foreground font-semibold whitespace-nowrap">{f.label} ({f.suffix})</label>
                     <Input type="number" value={currentDecomp[f.key] || ''}
                       onChange={e => updateDecomp(decompTab, f.key, parseFloat(e.target.value) || 0)}
-                      className="bg-secondary border-border text-foreground h-9 text-sm" />
+                      className="bg-secondary border-border text-foreground h-8 text-sm w-28 text-right" />
                   </div>
                 ))}
               </div>
-              <div className="bg-secondary rounded-lg p-3 grid grid-cols-2 gap-3 text-center">
+
+              {/* Calculated metrics table */}
+              <div className="border border-border rounded-lg overflow-hidden">
+                <div className="bg-primary/10 px-3 py-1.5">
+                  <span className="text-xs font-bold text-primary">Розраховані метрики</span>
+                </div>
+                <div className="divide-y divide-border">
+                  {[
+                    { label: 'Покази', value: metrics.impressions.toLocaleString() },
+                    { label: 'Кліки', value: metrics.clicks.toLocaleString() },
+                    { label: 'CPC', value: `${metrics.cpc.toFixed(2)} ₴` },
+                    { label: 'Всі заявки (ліди)', value: metrics.leads.toLocaleString() },
+                    { label: 'Всі продажі', value: metrics.sales.toString() },
+                    { label: 'CPA', value: `${metrics.cpa.toFixed(2)} ₴` },
+                    { label: 'Чистий прибуток з 1 продажу', value: `${metrics.profitPerSale.toLocaleString()} ₴` },
+                  ].map(row => (
+                    <div key={row.label} className="flex items-center justify-between px-3 py-1.5 text-xs">
+                      <span className="text-muted-foreground">{row.label}</span>
+                      <span className="font-semibold text-foreground">{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Results highlight */}
+              <div className="bg-accent rounded-lg p-3 space-y-2">
+                <h4 className="text-xs font-bold text-foreground uppercase">Підсумок</h4>
                 {[
-                  { label: 'Ліди', value: metrics.leads },
-                  { label: 'Продажі', value: metrics.sales },
-                  { label: 'Дохід', value: `${metrics.revenue.toLocaleString()} ₴` },
-                  { label: 'ROMI', value: `${metrics.romi}%`, color: metrics.romi > 0 ? 'text-success' : 'text-destructive' },
-                ].map(m => (
-                  <div key={m.label}>
-                    <div className="text-[10px] text-muted-foreground uppercase">{m.label}</div>
-                    <div className={`text-base font-bold ${(m as any).color || 'text-foreground'}`}>{m.value}</div>
+                  { label: 'Прибуток', value: `${metrics.totalProfit.toLocaleString()} ₴`, color: metrics.totalProfit > 0 ? 'text-success' : 'text-destructive' },
+                  { label: 'ROAS', value: `${metrics.roas.toFixed(2)}%`, color: metrics.roas > 100 ? 'text-success' : 'text-destructive' },
+                  { label: 'Чистий дохід', value: `${metrics.netIncome.toLocaleString()} ₴`, color: metrics.netIncome > 0 ? 'text-success' : 'text-destructive' },
+                ].map(row => (
+                  <div key={row.label} className="flex items-center justify-between text-sm">
+                    <span className="font-bold text-foreground">{row.label}</span>
+                    <span className={`font-extrabold ${row.color}`}>{row.value}</span>
                   </div>
                 ))}
               </div>
+
               <SaveButton step={3} />
             </div>
           );
@@ -699,8 +754,8 @@ const ScenarioBuilder: React.FC = () => {
                         <span>ROMI: <b className={s.m.romi >= 0 ? 'text-success' : 'text-destructive'}>{s.m.romi}%</b></span>
                       </div>
                       <div className="text-xs mt-1">
-                        <span className="text-muted-foreground">Прибуток: </span>
-                        <b className={s.m.profit >= 0 ? 'text-success' : 'text-destructive'}>{s.m.profit.toLocaleString()} ₴</b>
+                        <span className="text-muted-foreground">Чистий дохід: </span>
+                        <b className={s.m.netIncome >= 0 ? 'text-success' : 'text-destructive'}>{s.m.netIncome.toLocaleString()} ₴</b>
                       </div>
                     </div>
                   ))}
