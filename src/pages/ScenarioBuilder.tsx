@@ -193,7 +193,7 @@ const ScenarioBuilder: React.FC = () => {
     };
     update({
       decomposition: {
-        bad: make({ cpm: 1.5, ctr: 0.6, cpl: 1.8, conv: 0.4 }, scenario.decomposition.bad.budget || 10000),
+        bad: make({ cpm: 1.3, ctr: 0.7, cpl: 1.5, conv: 0.65 }, scenario.decomposition.bad.budget || 10000),
         realistic: make({ cpm: 1, ctr: 1, cpl: 1, conv: 1 }, scenario.decomposition.realistic.budget || 10000),
         positive: make({ cpm: 0.7, ctr: 1.5, cpl: 0.6, conv: 1.6 }, scenario.decomposition.positive.budget || 10000),
       },
@@ -726,24 +726,40 @@ const ScenarioBuilder: React.FC = () => {
             }}
           >
             <div className="flex items-start gap-0 px-12 py-8">
-              {STEPS.map((s, i) => (
-                <div key={i} data-flow-node>
-                  <FlowNode
-                    icon={s.icon}
-                    title={s.title}
-                    index={i}
-                    isActive={activeStep === i}
-                    isCompleted={isStepCompleted(i)}
-                    isLast={i === STEPS.length - 1}
-                    isLocked={!isStepUnlocked(i)}
-                    onClick={() => {
-                      if (!wasDragged.current && isStepUnlocked(i)) {
-                        setActiveStep(activeStep === i ? null : i);
-                      }
-                    }}
-                  />
-                </div>
-              ))}
+              {STEPS.map((s, i) => {
+                const getSubtitle = () => {
+                  switch (i) {
+                    case 0: return scenario.niche || '';
+                    case 1: return CHANNELS.find(c => c.value === scenario.channel)?.label || '';
+                    case 2: {
+                      const m = calcMetrics(scenario.decomposition.realistic);
+                      return m.revenue > 0 ? `${m.revenue.toLocaleString()} ₴` : '';
+                    }
+                    case 3: return scenario.leadDestinations.length > 0 ? scenario.leadDestinations[0] : '';
+                    case 4: return scenario.integrationMethod || '';
+                    default: return '';
+                  }
+                };
+                return (
+                  <div key={i} data-flow-node>
+                    <FlowNode
+                      icon={s.icon}
+                      title={s.title}
+                      index={i}
+                      isActive={activeStep === i}
+                      isCompleted={isStepCompleted(i)}
+                      isLast={i === STEPS.length - 1}
+                      isLocked={!isStepUnlocked(i)}
+                      subtitle={isStepCompleted(i) || isStepCompletedStatic(scenario, i) ? getSubtitle() : ''}
+                      onClick={() => {
+                        if (!wasDragged.current && isStepUnlocked(i)) {
+                          setActiveStep(activeStep === i ? null : i);
+                        }
+                      }}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
