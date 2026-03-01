@@ -268,51 +268,43 @@ const ScenarioBuilder: React.FC = () => {
       const retentionRect = retentionNode.getBoundingClientRect();
 
       setCoords({
-        x1: salesRect.left + salesRect.width / 2 - containerRect.left,
+        x1: salesRect.right - containerRect.left,
         y1: salesRect.top + salesRect.height / 2 - containerRect.top,
-        x2: retentionRect.left + retentionRect.width / 2 - containerRect.left,
+        x2: retentionRect.left - containerRect.left,
         y2: retentionRect.top + retentionRect.height / 2 - containerRect.top,
       });
     }, [activeStep]);
 
     if (!coords) return null;
 
-    const padding = 20;
-    const svgLeft = Math.min(coords.x1, coords.x2) - padding;
-    const svgWidth = Math.abs(coords.x2 - coords.x1) + padding * 2;
-    const curveDepth = 80;
-    const svgHeight = curveDepth + 50;
-
-    const lx1 = coords.x1 - svgLeft;
-    const lx2 = coords.x2 - svgLeft;
+    const y = (coords.y1 + coords.y2) / 2 + 12;
 
     return (
       <svg
         className="absolute pointer-events-none"
         style={{
-          left: `${svgLeft}px`,
-          top: `${coords.y1 + 32}px`,
-          width: `${svgWidth}px`,
-          height: `${svgHeight}px`,
+          left: `${coords.x1}px`,
+          top: `${y}px`,
+          width: `${coords.x2 - coords.x1}px`,
+          height: '16px',
         }}
-        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+        viewBox={`0 0 ${coords.x2 - coords.x1} 16`}
       >
         <defs>
           <marker id="arrow-return" markerWidth="10" markerHeight="8" refX="0" refY="4" orient="auto">
             <polygon points="10 0, 0 4, 10 8" fill="hsl(36, 100%, 50%)" />
           </marker>
         </defs>
-        <path
-          d={`M ${lx2} 0 C ${lx2} ${curveDepth}, ${lx1} ${curveDepth}, ${lx1} 0`}
-          fill="none"
+        <line
+          x1={coords.x2 - coords.x1}
+          y1="8"
+          x2="12"
+          y2="8"
           stroke="hsl(36, 100%, 50%)"
           strokeWidth="2.5"
           strokeDasharray="8 4"
           markerEnd="url(#arrow-return)"
         />
-        <text x={(lx1 + lx2) / 2} y={curveDepth + 16} textAnchor="middle" fill="hsl(36, 100%, 42%)" fontSize="11" fontWeight="700">
-          Retention loop
-        </text>
       </svg>
     );
   };
