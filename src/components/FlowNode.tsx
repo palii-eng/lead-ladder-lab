@@ -7,30 +7,34 @@ interface FlowNodeProps {
   isActive: boolean;
   isCompleted: boolean;
   isLast: boolean;
+  isLocked: boolean;
   onClick: () => void;
 }
 
-const FlowNode: React.FC<FlowNodeProps> = ({ icon, title, index, isActive, isCompleted, isLast, onClick }) => {
+const FlowNode: React.FC<FlowNodeProps> = ({ icon, title, index, isActive, isCompleted, isLast, isLocked, onClick }) => {
   return (
     <div className="flex items-center flex-shrink-0">
       {/* Node */}
       <button
         onClick={onClick}
-        className={`relative flex flex-col items-center gap-2 group transition-all duration-200`}
+        disabled={isLocked}
+        className={`relative flex flex-col items-center gap-2 group transition-all duration-200 ${isLocked ? 'cursor-not-allowed' : ''}`}
       >
         <div
-          className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl border-2 transition-all duration-300 cursor-pointer
+          className={`rounded-full flex items-center justify-center border-2 transition-all duration-300
             ${isActive
-              ? 'border-primary bg-primary/10 shadow-[0_0_20px_hsl(232_55%_49%/0.2)] scale-110'
+              ? 'w-[84px] h-[84px] text-3xl border-primary bg-primary/10 shadow-[0_0_24px_hsl(232_55%_49%/0.25)] animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]'
               : isCompleted
-              ? 'border-success bg-success/10'
-              : 'border-border bg-card hover:border-primary/40 hover:scale-105'
+              ? 'w-16 h-16 text-2xl border-success bg-success/10'
+              : isLocked
+              ? 'w-16 h-16 text-2xl border-border/50 bg-muted opacity-40'
+              : 'w-16 h-16 text-2xl border-border bg-card hover:border-primary/40 hover:scale-105 cursor-pointer'
             }`}
         >
           {icon}
         </div>
         <span className={`text-xs font-semibold max-w-[80px] text-center leading-tight transition-colors ${
-          isActive ? 'text-primary' : isCompleted ? 'text-foreground' : 'text-muted-foreground'
+          isActive ? 'text-primary font-bold' : isCompleted ? 'text-foreground' : isLocked ? 'text-muted-foreground/40' : 'text-muted-foreground'
         }`}>
           {title}
         </span>
