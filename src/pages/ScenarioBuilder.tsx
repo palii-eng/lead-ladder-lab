@@ -65,16 +65,45 @@ const ScenarioBuilder: React.FC = () => {
   const [decompTab, setDecompTab] = useState<'bad' | 'realistic' | 'positive'>('realistic');
   const canvasRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const canvasWrapperRef = useRef<HTMLDivElement>(null);
 
-  // Scroll active node into view
-  useEffect(() => {
-    if (activeStep !== null && canvasRef.current) {
-      const nodes = canvasRef.current.querySelectorAll('[data-flow-node]');
-      if (nodes[activeStep]) {
-        nodes[activeStep].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-      }
+  // Drag-scroll state
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const wasDragged = useRef(false);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Only left click, ignore if clicking on interactive elements
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('input') || target.closest('textarea') || target.closest('[data-flow-node] button')) return;
+    setIsDragging(true);
+    wasDragged.current = false;
+    setDragStart({ x: e.clientX - canvasOffset.x, y: e.clientY - canvasOffset.y });
+    e.preventDefault();
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    const newX = e.clientX - dragStart.x;
+    const newY = e.clientY - dragStart.y;
+    if (Math.abs(newX - canvasOffset.x) > 3 || Math.abs(newY - canvasOffset.y) > 3) {
+      wasDragged.current = true;
     }
-  }, [activeStep]);
+    setCanvasOffset({ x: newX, y: newY });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    const handleGlobalMouseUp = () => setIsDragging(false);
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, []);
 
   if (!scenario) {
     return (
@@ -489,19 +518,30 @@ const ScenarioBuilder: React.FC = () => {
       {/* Canvas area */}
       <div className="flex-1 flex overflow-hidden">
         {/* Flow canvas */}
-        <div className="flex-1 overflow-auto relative">
+        <div
+          ref={canvasWrapperRef}
+          className={`flex-1 overflow-hidden relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+        >
           {/* Grid background */}
           <div className="absolute inset-0 opacity-30" style={{
             backgroundImage: 'radial-gradient(circle, hsl(0 0% 80%) 1px, transparent 1px)',
             backgroundSize: '24px 24px',
+            backgroundPosition: `${canvasOffset.x % 24}px ${canvasOffset.y % 24}px`,
           }} />
 
-          {/* Flow nodes - centered */}
+          {/* Flow nodes - draggable */}
           <div
             ref={canvasRef}
-            className="relative min-h-full flex items-center justify-center px-12 py-8"
+            className="relative min-h-full flex items-center justify-center select-none"
+            style={{
+              transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px)`,
+              transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+            }}
           >
-            <div className="flex items-start gap-0">
+            <div className="flex items-start gap-0 px-12 py-8">
               {STEPS.map((s, i) => (
                 <div key={i} data-flow-node>
                   <FlowNode
@@ -511,7 +551,11 @@ const ScenarioBuilder: React.FC = () => {
                     isActive={activeStep === i}
                     isCompleted={isStepCompleted(i)}
                     isLast={i === STEPS.length - 1}
-                    onClick={() => setActiveStep(activeStep === i ? null : i)}
+                    onClick={() => {
+                      if (!wasDragged.current) {
+                        setActiveStep(activeStep === i ? null : i);
+                      }
+                    }}
                   />
                 </div>
               ))}
