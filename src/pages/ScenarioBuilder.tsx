@@ -191,7 +191,7 @@ const ScenarioBuilder: React.FC = () => {
 
   // Initialize activeLeadType when entering decomposition
   useEffect(() => {
-    if (activeStep === 3 && scenario?.channel === 'leads' && scenario.leadTypes.length > 0 && !scenario.leadTypes.includes(activeLeadType)) {
+    if (activeStep === 3 && scenario?.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0 && !scenario.leadTypes?.includes(activeLeadType)) {
       setActiveLeadType(scenario.leadTypes[0]);
     }
   }, [activeStep, scenario?.channel, scenario?.leadTypes, activeLeadType]);
@@ -209,7 +209,7 @@ const ScenarioBuilder: React.FC = () => {
 
   const update = (u: Partial<Scenario>) => updateScenario(id!, u);
 
-  const hasMultipleLeadTypes = scenario.channel === 'leads' && scenario.leadTypes.length > 1;
+  const hasMultipleLeadTypes = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1;
   
   const getActiveDecompSet = (): DecompositionSet => {
     if (hasMultipleLeadTypes && activeLeadType) {
@@ -281,9 +281,9 @@ const ScenarioBuilder: React.FC = () => {
   };
 
   const toggleLeadType = (lt: string) => {
-    const current = scenario.leadTypes;
+    const current = scenario.leadTypes || [];
     const newTypes = current.includes(lt) ? current.filter(t => t !== lt) : [...current, lt];
-    const newDecompsByType = { ...scenario.decompositionsByType };
+    const newDecompsByType = { ...(scenario.decompositionsByType || {}) };
     // Add default decomp for new types
     newTypes.forEach(t => {
       if (!newDecompsByType[t]) newDecompsByType[t] = createDefaultDecompSet();
@@ -517,13 +517,13 @@ const ScenarioBuilder: React.FC = () => {
                     {LEAD_TYPES.map(lt => (
                       <button key={lt.value} onClick={() => toggleLeadType(lt.value)}
                         className={`p-3 rounded-lg border text-left text-sm transition-all flex items-center gap-3 ${
-                          scenario.leadTypes.includes(lt.value)
+                          (scenario.leadTypes || []).includes(lt.value)
                             ? 'border-primary bg-accent text-accent-foreground font-semibold'
                             : 'border-border bg-card text-foreground hover:border-primary/40'
                         } cursor-pointer`}>
                         <span className="text-lg">{lt.icon}</span>
                         <span>{lt.label}</span>
-                        {scenario.leadTypes.includes(lt.value) && <Check className="w-4 h-4 ml-auto text-primary" />}
+                        {(scenario.leadTypes || []).includes(lt.value) && <Check className="w-4 h-4 ml-auto text-primary" />}
                       </button>
                     ))}
                   </div>
@@ -589,7 +589,7 @@ const ScenarioBuilder: React.FC = () => {
               {/* Lead type tabs if multiple */}
               {hasMultipleLeadTypes && (
                 <div className="flex gap-1 flex-wrap">
-                  {scenario.leadTypes.map(lt => {
+                  {(scenario.leadTypes || []).map(lt => {
                     const ltInfo = LEAD_TYPES.find(l => l.value === lt);
                     return (
                       <button key={lt} onClick={() => setActiveLeadType(lt)}
