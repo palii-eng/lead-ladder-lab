@@ -5,8 +5,10 @@ export interface DecompositionScenario {
   ctr: number;
   cpc: number;
   cpl: number;
+  landingConversion: number;
   conversionRate: number;
   averageCheck: number;
+  marginality: number;
   budget: number;
 }
 
@@ -41,8 +43,8 @@ export interface Scenario {
 }
 
 const defaultDecomp: DecompositionScenario = {
-  cpm: 0, ctr: 0, cpc: 0, cpl: 0,
-  conversionRate: 0, averageCheck: 0, budget: 10000,
+  cpm: 0, ctr: 0, cpc: 0, cpl: 0, landingConversion: 0,
+  conversionRate: 0, averageCheck: 0, marginality: 0, budget: 10000,
 };
 
 export const createDefaultScenario = (name: string, description: string): Scenario => ({
