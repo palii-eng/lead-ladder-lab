@@ -1048,7 +1048,6 @@ const ScenarioBuilder: React.FC = () => {
               {(() => {
                 const leadTypes = scenario.leadTypes || [];
                 const shouldBranch = scenario.channel === 'leads' && leadTypes.length > 1 && savedSteps.has(2);
-                const SHARED_STEPS = shouldBranch ? 3 : STEPS.length; // steps 0-2 shared, rest per-branch
                 const BRANCH_STEPS = STEPS.slice(3); // steps 3-8
 
                 const getSubtitleForStep = (i: number, branchLeadType?: string) => {
@@ -1121,52 +1120,70 @@ const ScenarioBuilder: React.FC = () => {
                   );
                 }
 
-                // Branching layout
-                const branchGap = 140; // vertical spacing between branches
-                const totalBranches = leadTypes.length;
-                const topOffset = -((totalBranches - 1) * branchGap) / 2;
+                // Make.com-style branching layout
+                const branchRowHeight = 160; // height per branch row
 
                 return (
-                  <div className="px-12 py-8">
-                    {/* Shared steps row */}
-                    <div className="flex items-start gap-0" style={{ marginBottom: `${branchGap * (totalBranches - 1) / 2 + 40}px` }}>
+                  <div className="px-12 py-8 flex items-start">
+                    {/* Shared steps (0, 1, 2) — vertically centered */}
+                    <div className="flex items-start gap-0 flex-shrink-0" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
                       {STEPS.slice(0, 3).map((_, i) => renderNode(i, undefined, false))}
-                      {/* Branch connector placeholder — after last shared node */}
-                      <div className="flex items-center" style={{ height: '64px' }}>
-                        <svg width="40" height={branchGap * totalBranches + 40} viewBox={`0 0 40 ${branchGap * totalBranches + 40}`} className="flex-shrink-0 mx-1 overflow-visible"
-                          style={{ transform: `translateY(${topOffset - 20}px)` }}>
-                          {leadTypes.map((_, brIdx) => {
-                            const y = (branchGap * totalBranches) / 2 + 20 + (brIdx - (totalBranches - 1) / 2) * branchGap;
-                            return (
-                              <g key={brIdx}>
-                                <line x1="0" y1={(branchGap * totalBranches) / 2 + 20} x2="20" y2={y}
-                                  stroke="hsl(142, 71%, 45%)" strokeWidth="2" strokeDasharray="6 3" />
-                                <line x1="20" y1={y} x2="40" y2={y}
-                                  stroke="hsl(142, 71%, 45%)" strokeWidth="2" strokeDasharray="6 3" />
-                                <polygon points={`34,${y - 4} 40,${y} 34,${y + 4}`} fill="hsl(142, 71%, 45%)" />
-                              </g>
-                            );
-                          })}
-                        </svg>
-                      </div>
                     </div>
 
-                    {/* Branch rows */}
-                    <div className="relative" style={{ marginTop: `-${branchGap * (totalBranches - 1) / 2 + 60}px`, marginLeft: '380px' }}>
-                      {leadTypes.map((lt, brIdx) => {
-                        const yOffset = (brIdx - (totalBranches - 1) / 2) * branchGap;
-                        return (
-                          <div key={lt} className="flex items-start gap-0" style={{ transform: `translateY(${yOffset}px)`, marginBottom: brIdx < totalBranches - 1 ? '0px' : '0' }}>
-                            {/* Branch label */}
-                            <div className="flex items-center mr-2" style={{ height: '64px' }}>
-                              <Badge className="bg-primary/10 text-primary text-[10px] whitespace-nowrap">
-                                {LEAD_TYPES.find(l => l.value === lt)?.icon} {LEAD_TYPES.find(l => l.value === lt)?.label}
-                              </Badge>
-                            </div>
+                    {/* Router node — the branching point */}
+                    <div className="flex flex-col items-center flex-shrink-0" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
+                      <div className="flex items-center" style={{ height: '64px' }}>
+                        <div className="w-14 h-14 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center shadow-md">
+                          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="10" r="3" className="fill-primary" />
+                            <line x1="10" y1="10" x2="3" y2="3" className="stroke-primary" strokeWidth="2" />
+                            <line x1="10" y1="10" x2="17" y2="3" className="stroke-primary" strokeWidth="2" />
+                            <line x1="10" y1="10" x2="3" y2="17" className="stroke-primary" strokeWidth="2" />
+                            <line x1="10" y1="10" x2="17" y2="17" className="stroke-primary" strokeWidth="2" />
+                          </svg>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-primary mt-1">Router</span>
+                    </div>
+
+                    {/* Branch lines + branch rows */}
+                    <div className="relative flex-shrink-0">
+                      {/* SVG connector lines from router to each branch */}
+                      <svg 
+                        className="absolute left-0 top-0 pointer-events-none overflow-visible" 
+                        width="80" 
+                        height={leadTypes.length * branchRowHeight}
+                        viewBox={`0 0 80 ${leadTypes.length * branchRowHeight}`}
+                      >
+                        {leadTypes.map((_, brIdx) => {
+                          const centerY = ((leadTypes.length - 1) * branchRowHeight) / 2 + 32;
+                          const branchY = brIdx * branchRowHeight + 32;
+                          return (
+                            <g key={brIdx}>
+                              <path
+                                d={`M 0,${centerY} C 30,${centerY} 30,${branchY} 60,${branchY}`}
+                                stroke="hsl(var(--primary))"
+                                strokeWidth="2"
+                                strokeDasharray="6 3"
+                                fill="none"
+                              />
+                              <polygon
+                                points={`60,${branchY - 4} 72,${branchY} 60,${branchY + 4}`}
+                                fill="hsl(var(--primary))"
+                              />
+                            </g>
+                          );
+                        })}
+                      </svg>
+
+                      {/* Branch rows */}
+                      <div className="flex flex-col" style={{ marginLeft: '80px' }}>
+                        {leadTypes.map((lt, brIdx) => (
+                          <div key={lt} className="flex items-start gap-0" style={{ height: `${branchRowHeight}px` }}>
                             {BRANCH_STEPS.map((_, bi) => renderNode(bi + 3, lt, bi === BRANCH_STEPS.length - 1))}
                           </div>
-                        );
-                      })}
+                        ))}
+                      </div>
                     </div>
                   </div>
                 );
