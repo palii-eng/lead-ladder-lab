@@ -37,24 +37,26 @@ const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border/50 backdrop-blur-md sticky top-0 z-50 bg-background/80">
+      <header className="border-b border-border sticky top-0 z-50 bg-card">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'var(--gradient-primary)' }}>
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-primary">
               <Zap className="w-5 h-5 text-primary-foreground" />
             </div>
-            <h1 className="text-xl font-bold text-foreground tracking-tight">Маркетинговий Тренажер</h1>
+            <h1 className="text-xl font-extrabold text-foreground tracking-tight uppercase">
+              Маркетинговий Тренажер
+            </h1>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2" style={{ background: 'var(--gradient-primary)' }}>
+              <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
                 <Plus className="w-4 h-4" />
                 Створити сценарій
               </Button>
             </DialogTrigger>
             <DialogContent className="bg-card border-border">
               <DialogHeader>
-                <DialogTitle className="text-foreground">Новий сценарій</DialogTitle>
+                <DialogTitle className="text-foreground font-bold">Новий сценарій</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-2">
                 <div>
@@ -63,7 +65,7 @@ const Dashboard: React.FC = () => {
                     value={name}
                     onChange={e => setName(e.target.value)}
                     placeholder="Наприклад: Запуск реклами для кав'ярні"
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
+                    className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
                   />
                 </div>
                 <div>
@@ -73,10 +75,10 @@ const Dashboard: React.FC = () => {
                     onChange={e => setDesc(e.target.value)}
                     placeholder="Необов'язково"
                     rows={3}
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground resize-none"
+                    className="bg-secondary border-border text-foreground placeholder:text-muted-foreground resize-none"
                   />
                 </div>
-                <Button onClick={handleCreate} className="w-full" style={{ background: 'var(--gradient-primary)' }}>
+                <Button onClick={handleCreate} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
                   Створити
                 </Button>
               </div>
@@ -89,14 +91,14 @@ const Dashboard: React.FC = () => {
       <main className="container mx-auto px-6 py-8">
         {scenarios.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 animate-fade-in">
-            <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 bg-muted">
-              <LayoutDashboard className="w-10 h-10 text-muted-foreground" />
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 bg-accent">
+              <LayoutDashboard className="w-10 h-10 text-accent-foreground" />
             </div>
-            <h2 className="text-2xl font-semibold text-foreground mb-2">Немає сценаріїв</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Немає сценаріїв</h2>
             <p className="text-muted-foreground mb-8 text-center max-w-md">
               Створіть свій перший маркетинговий сценарій та побудуйте повну воронку продажів
             </p>
-            <Button onClick={() => setOpen(true)} className="gap-2" style={{ background: 'var(--gradient-primary)' }}>
+            <Button onClick={() => setOpen(true)} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
               <Plus className="w-4 h-4" />
               Створити перший сценарій
             </Button>
@@ -108,12 +110,12 @@ const Dashboard: React.FC = () => {
               return (
                 <div
                   key={s.id}
-                  className="glass-card p-5 flex flex-col gap-4 animate-slide-up hover:border-primary/30 transition-colors"
+                  className="glass-card p-5 flex flex-col gap-4 animate-slide-up transition-shadow"
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground truncate">{s.name}</h3>
+                      <h3 className="font-bold text-foreground truncate">{s.name}</h3>
                       {s.description && (
                         <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{s.description}</p>
                       )}
@@ -128,32 +130,31 @@ const Dashboard: React.FC = () => {
 
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="text-muted-foreground">Ніша</span>
+                      <span className="text-muted-foreground text-xs">Ніша</span>
                       <p className="text-foreground font-medium truncate">{s.niche || '—'}</p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Канал</span>
+                      <span className="text-muted-foreground text-xs">Канал</span>
                       <p className="text-foreground font-medium truncate">{s.channel || '—'}</p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">ROMI</span>
+                      <span className="text-muted-foreground text-xs">ROMI</span>
                       <p className={`font-bold ${romi !== null && romi > 0 ? 'text-success' : romi !== null && romi < 0 ? 'text-destructive' : 'text-foreground'}`}>
                         {romi !== null ? `${romi}%` : '—'}
                       </p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Створено</span>
+                      <span className="text-muted-foreground text-xs">Створено</span>
                       <p className="text-foreground font-medium">
                         {new Date(s.createdAt).toLocaleDateString('uk-UA')}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex gap-2 mt-auto pt-2 border-t border-border/50">
+                  <div className="flex gap-2 mt-auto pt-3 border-t border-border">
                     <Button
                       size="sm"
-                      className="flex-1 gap-1.5"
-                      style={{ background: 'var(--gradient-primary)' }}
+                      className="flex-1 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
                       onClick={() => navigate(`/scenario/${s.id}`)}
                     >
                       <ExternalLink className="w-3.5 h-3.5" />

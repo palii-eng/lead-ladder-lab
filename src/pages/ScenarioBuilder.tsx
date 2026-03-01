@@ -1,11 +1,11 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useScenarios, Scenario, DecompositionScenario } from '@/context/ScenariosContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ArrowRight, Check, Info, Play, Sparkles, ChevronDown, Zap } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Info, Play, Sparkles } from 'lucide-react';
 
 const STEPS = [
   { title: 'Вибір ніші', icon: '🎯' },
@@ -65,7 +65,6 @@ const ScenarioBuilder: React.FC = () => {
   const { getScenario, updateScenario } = useScenarios();
   const scenario = getScenario(id!);
   const [decompTab, setDecompTab] = useState<'bad' | 'realistic' | 'positive'>('realistic');
-  const [customNiche, setCustomNiche] = useState('');
 
   if (!scenario) {
     return (
@@ -96,40 +95,31 @@ const ScenarioBuilder: React.FC = () => {
   const fillBenchmarks = () => {
     const ch = scenario.channel || 'other';
     const bench = BENCHMARKS[ch] || BENCHMARKS.other;
-    const bad: DecompositionScenario = {
-      ...scenario.decomposition.bad,
-      ...bench,
-      cpm: (bench.cpm || 7) * 1.5,
-      ctr: (bench.ctr || 1) * 0.6,
-      cpl: (bench.cpl || 35) * 1.8,
-      conversionRate: (bench.conversionRate || 5) * 0.4,
+    const makeBad = (b: Partial<DecompositionScenario>) => ({
+      ...scenario.decomposition.bad, ...b,
+      cpm: (b.cpm || 7) * 1.5, ctr: (b.ctr || 1) * 0.6,
+      cpl: (b.cpl || 35) * 1.8, conversionRate: (b.conversionRate || 5) * 0.4,
       budget: scenario.decomposition.bad.budget || 10000,
-    };
-    bad.cpc = bad.cpm / ((bad.ctr || 1) / 100) / 1000;
-    const realistic: DecompositionScenario = {
-      ...scenario.decomposition.realistic,
-      ...bench,
+      cpc: ((b.cpm || 7) * 1.5) / (((b.ctr || 1) * 0.6) / 100) / 1000,
+    });
+    const makeReal = (b: Partial<DecompositionScenario>) => ({
+      ...scenario.decomposition.realistic, ...b,
       budget: scenario.decomposition.realistic.budget || 10000,
-    };
-    realistic.cpc = realistic.cpm / ((realistic.ctr || 1) / 100) / 1000;
-    const positive: DecompositionScenario = {
-      ...scenario.decomposition.positive,
-      ...bench,
-      cpm: (bench.cpm || 7) * 0.7,
-      ctr: (bench.ctr || 1) * 1.5,
-      cpl: (bench.cpl || 35) * 0.6,
-      conversionRate: (bench.conversionRate || 5) * 1.6,
+      cpc: (b.cpm || 7) / (((b.ctr || 1)) / 100) / 1000,
+    });
+    const makePos = (b: Partial<DecompositionScenario>) => ({
+      ...scenario.decomposition.positive, ...b,
+      cpm: (b.cpm || 7) * 0.7, ctr: (b.ctr || 1) * 1.5,
+      cpl: (b.cpl || 35) * 0.6, conversionRate: (b.conversionRate || 5) * 1.6,
       budget: scenario.decomposition.positive.budget || 10000,
-    };
-    positive.cpc = positive.cpm / ((positive.ctr || 1) / 100) / 1000;
-    update({ decomposition: { bad, realistic, positive } });
+      cpc: ((b.cpm || 7) * 0.7) / (((b.ctr || 1) * 1.5) / 100) / 1000,
+    });
+    update({ decomposition: { bad: makeBad(bench) as DecompositionScenario, realistic: makeReal(bench) as DecompositionScenario, positive: makePos(bench) as DecompositionScenario } });
   };
 
   const toggleLeadDest = (dest: string) => {
     const current = scenario.leadDestinations;
-    update({
-      leadDestinations: current.includes(dest) ? current.filter(d => d !== dest) : [...current, dest],
-    });
+    update({ leadDestinations: current.includes(dest) ? current.filter(d => d !== dest) : [...current, dest] });
   };
 
   const currentDecomp = scenario.decomposition[decompTab];
@@ -150,45 +140,34 @@ const ScenarioBuilder: React.FC = () => {
       case 0:
         return (
           <div className="space-y-6 animate-fade-in">
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-foreground">Вкажіть нішу вашого бізнесу</h3>
-              <Input
-                value={scenario.niche}
-                onChange={e => update({ niche: e.target.value })}
-                placeholder="Наприклад: Стоматологія, Кав'ярня, SaaS..."
-                className="bg-muted border-border text-foreground text-lg py-6 placeholder:text-muted-foreground"
-              />
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  const niches = ['Стоматологія', 'Фітнес-студія', 'Онлайн-школа', 'eCommerce', 'SaaS', 'Ресторан', 'Нерухомість', 'Юридичні послуги'];
-                  update({ niche: niches[Math.floor(Math.random() * niches.length)] });
-                }}
-                className="gap-2"
-              >
-                <Sparkles className="w-4 h-4" />
-                Обрати випадкову
-              </Button>
-            </div>
+            <h3 className="text-lg font-bold text-foreground">Вкажіть нішу вашого бізнесу</h3>
+            <Input
+              value={scenario.niche}
+              onChange={e => update({ niche: e.target.value })}
+              placeholder="Наприклад: Стоматологія, Кав'ярня, SaaS..."
+              className="bg-secondary border-border text-foreground text-lg py-6 placeholder:text-muted-foreground"
+            />
+            <Button variant="secondary" onClick={() => {
+              const niches = ['Стоматологія', 'Фітнес-студія', 'Онлайн-школа', 'eCommerce', 'SaaS', 'Ресторан', 'Нерухомість', 'Юридичні послуги'];
+              update({ niche: niches[Math.floor(Math.random() * niches.length)] });
+            }} className="gap-2">
+              <Sparkles className="w-4 h-4" /> Обрати випадкову
+            </Button>
           </div>
         );
 
       case 1:
         return (
           <div className="space-y-4 animate-fade-in">
-            <h3 className="text-lg font-semibold text-foreground">Оберіть спосіб запуску реклами</h3>
+            <h3 className="text-lg font-bold text-foreground">Оберіть спосіб запуску реклами</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               {CHANNELS.map(ch => (
-                <button
-                  key={ch.value}
-                  disabled={ch.soon}
-                  onClick={() => update({ channel: ch.value })}
+                <button key={ch.value} disabled={ch.soon} onClick={() => update({ channel: ch.value })}
                   className={`p-4 rounded-xl border text-left transition-all ${
                     scenario.channel === ch.value
-                      ? 'border-primary bg-accent text-accent-foreground'
-                      : 'border-border bg-card hover:border-primary/40 text-foreground'
-                  } ${ch.soon ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                >
+                      ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                      : 'border-border bg-card text-foreground hover:border-primary/40'
+                  } ${ch.soon ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
                   <span className="font-medium">{ch.label}</span>
                   {ch.soon && <Badge className="ml-2 bg-warning text-warning-foreground text-xs">Вже скоро</Badge>}
                 </button>
@@ -211,21 +190,17 @@ const ScenarioBuilder: React.FC = () => {
         return (
           <div className="space-y-5 animate-fade-in">
             <div className="flex items-center justify-between flex-wrap gap-3">
-              <h3 className="text-lg font-semibold text-foreground">Декомпозиція</h3>
+              <h3 className="text-lg font-bold text-foreground">Декомпозиція</h3>
               <Button variant="secondary" size="sm" onClick={fillBenchmarks} className="gap-2">
-                <Sparkles className="w-4 h-4" />
-                Заповнити автоматично
+                <Sparkles className="w-4 h-4" /> Заповнити автоматично
               </Button>
             </div>
             <div className="flex gap-2">
               {(Object.keys(decompLabels) as Array<'bad' | 'realistic' | 'positive'>).map(key => (
-                <button
-                  key={key}
-                  onClick={() => setDecompTab(key)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    decompTab === key ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                  }`}
-                >
+                <button key={key} onClick={() => setDecompTab(key)}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    decompTab === key ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-muted'
+                  }`}>
                   {decompLabels[key]}
                 </button>
               ))}
@@ -234,12 +209,9 @@ const ScenarioBuilder: React.FC = () => {
               {fields.map(f => (
                 <div key={f.key}>
                   <label className="text-sm text-muted-foreground mb-1 block">{f.label} ({f.suffix})</label>
-                  <Input
-                    type="number"
-                    value={currentDecomp[f.key] || ''}
+                  <Input type="number" value={currentDecomp[f.key] || ''}
                     onChange={e => updateDecomp(decompTab, f.key, parseFloat(e.target.value) || 0)}
-                    className="bg-muted border-border text-foreground"
-                  />
+                    className="bg-secondary border-border text-foreground" />
                 </div>
               ))}
             </div>
@@ -263,18 +235,15 @@ const ScenarioBuilder: React.FC = () => {
       case 3:
         return (
           <div className="space-y-5 animate-fade-in">
-            <h3 className="text-lg font-semibold text-foreground">Куди надходять ліди?</h3>
+            <h3 className="text-lg font-bold text-foreground">Куди надходять ліди?</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               {LEAD_DESTINATIONS.map(d => (
-                <button
-                  key={d}
-                  onClick={() => toggleLeadDest(d)}
+                <button key={d} onClick={() => toggleLeadDest(d)}
                   className={`p-3 rounded-xl border text-left text-sm transition-all ${
                     scenario.leadDestinations.includes(d)
-                      ? 'border-primary bg-accent text-accent-foreground'
+                      ? 'border-primary bg-accent text-accent-foreground font-semibold'
                       : 'border-border bg-card text-foreground hover:border-primary/40'
-                  }`}
-                >
+                  }`}>
                   {d}
                 </button>
               ))}
@@ -284,13 +253,10 @@ const ScenarioBuilder: React.FC = () => {
                 <label className="text-sm text-muted-foreground">Оберіть CRM</label>
                 <div className="flex flex-wrap gap-2">
                   {CRM_OPTIONS.map(c => (
-                    <button
-                      key={c}
-                      onClick={() => update({ crmSystem: c })}
+                    <button key={c} onClick={() => update({ crmSystem: c })}
                       className={`px-3 py-1.5 rounded-lg text-sm border transition-all ${
-                        scenario.crmSystem === c ? 'border-primary bg-accent text-accent-foreground' : 'border-border bg-card text-foreground'
-                      }`}
-                    >
+                        scenario.crmSystem === c ? 'border-primary bg-accent text-accent-foreground font-semibold' : 'border-border bg-card text-foreground'
+                      }`}>
                       {c}
                     </button>
                   ))}
@@ -303,18 +269,15 @@ const ScenarioBuilder: React.FC = () => {
       case 4:
         return (
           <div className="space-y-5 animate-fade-in">
-            <h3 className="text-lg font-semibold text-foreground">Спосіб інтеграції</h3>
+            <h3 className="text-lg font-bold text-foreground">Спосіб інтеграції</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               {INTEGRATIONS.map(i => (
-                <button
-                  key={i}
-                  onClick={() => update({ integrationMethod: i })}
+                <button key={i} onClick={() => update({ integrationMethod: i })}
                   className={`p-4 rounded-xl border text-left transition-all ${
                     scenario.integrationMethod === i
-                      ? 'border-primary bg-accent text-accent-foreground'
+                      ? 'border-primary bg-accent text-accent-foreground font-semibold'
                       : 'border-border bg-card text-foreground hover:border-primary/40'
-                  }`}
-                >
+                  }`}>
                   {i}
                 </button>
               ))}
@@ -325,39 +288,34 @@ const ScenarioBuilder: React.FC = () => {
       case 5:
         return (
           <div className="space-y-5 animate-fade-in">
-            <h3 className="text-lg font-semibold text-foreground">Продажі</h3>
+            <h3 className="text-lg font-bold text-foreground">Продажі</h3>
             <div>
               <label className="text-sm text-muted-foreground mb-1.5 block">Розкажіть про компанію</label>
-              <Textarea
-                value={scenario.companyDescription}
+              <Textarea value={scenario.companyDescription}
                 onChange={e => update({ companyDescription: e.target.value })}
                 placeholder="Опишіть вашу компанію, продукт, цільову аудиторію..."
-                rows={4}
-                className="bg-muted border-border text-foreground placeholder:text-muted-foreground resize-none"
-              />
+                rows={4} className="bg-secondary border-border text-foreground placeholder:text-muted-foreground resize-none" />
             </div>
             {scenario.companyDescription && (
               <div className="space-y-4">
                 <div className="glass-card p-4">
-                  <h4 className="font-medium text-foreground mb-2">📞 Скрипт дзвінка</h4>
+                  <h4 className="font-semibold text-foreground mb-2">📞 Скрипт дзвінка</h4>
                   <p className="text-sm text-muted-foreground">
-                    Вітаю! Мене звати [Ім'я], компанія "{scenario.niche || 'ваша компанія'}". 
-                    Ви залишали заявку на [послугу]. Чи зручно вам зараз поговорити? 
-                    Розкажіть, що саме вас цікавить...
+                    Вітаю! Мене звати [Ім'я], компанія "{scenario.niche || 'ваша компанія'}".
+                    Ви залишали заявку на [послугу]. Чи зручно вам зараз поговорити?
                   </p>
                 </div>
                 <div className="glass-card p-4">
-                  <h4 className="font-medium text-foreground mb-2">💬 Скрипт переписки</h4>
+                  <h4 className="font-semibold text-foreground mb-2">💬 Скрипт переписки</h4>
                   <p className="text-sm text-muted-foreground">
-                    Доброго дня! Дякуємо за звернення до "{scenario.niche || 'нас'}". 
+                    Доброго дня! Дякуємо за звернення до "{scenario.niche || 'нас'}".
                     Бачу, що вас цікавить [послуга]. Давайте підберемо найкращий варіант для вас...
                   </p>
                 </div>
                 <div className="glass-card p-4">
-                  <h4 className="font-medium text-foreground mb-2">🔄 Follow-up</h4>
+                  <h4 className="font-semibold text-foreground mb-2">🔄 Follow-up</h4>
                   <p className="text-sm text-muted-foreground">
-                    Доброго дня! Нагадую про вашу заявку. Чи встигли ви обдумати пропозицію? 
-                    Буду радий/рада відповісти на будь-які питання.
+                    Доброго дня! Нагадую про вашу заявку. Чи встигли ви обдумати пропозицію?
                   </p>
                 </div>
                 <Button variant="secondary" className="gap-2 w-full" disabled>
@@ -384,17 +342,14 @@ const ScenarioBuilder: React.FC = () => {
         ];
         return (
           <div className="space-y-5 animate-fade-in">
-            <h3 className="text-lg font-semibold text-foreground">Retention — наявна база</h3>
+            <h3 className="text-lg font-bold text-foreground">Retention — наявна база</h3>
             <div className="grid gap-4 sm:grid-cols-2">
               {fields.map(f => (
                 <div key={f.key}>
                   <label className="text-sm text-muted-foreground mb-1 block">{f.label} (кількість)</label>
-                  <Input
-                    type="number"
-                    value={scenario.retention[f.key] || ''}
+                  <Input type="number" value={scenario.retention[f.key] || ''}
                     onChange={e => update({ retention: { ...scenario.retention, [f.key]: parseInt(e.target.value) || 0 } })}
-                    className="bg-muted border-border text-foreground"
-                  />
+                    className="bg-secondary border-border text-foreground" />
                 </div>
               ))}
             </div>
@@ -404,7 +359,7 @@ const ScenarioBuilder: React.FC = () => {
                   const r = retentionCalc(s.rate);
                   return (
                     <div key={s.label} className="glass-card p-4 space-y-2">
-                      <h4 className="font-medium text-foreground">{s.label}</h4>
+                      <h4 className="font-semibold text-foreground">{s.label}</h4>
                       <div className="text-sm space-y-1 text-muted-foreground">
                         <p>Open Rate: <span className="text-foreground">{Math.round(s.rate * 100)}%</span></p>
                         <p>Відкриття: <span className="text-foreground">{r.opens}</span></p>
@@ -427,15 +382,15 @@ const ScenarioBuilder: React.FC = () => {
         const pos = calcMetrics(scenario.decomposition.positive);
         return (
           <div className="space-y-6 animate-fade-in">
-            <h3 className="text-xl font-bold text-foreground">🏆 Фінальний результат</h3>
+            <h3 className="text-xl font-extrabold text-foreground">🏆 Фінальний результат</h3>
             <div className="grid gap-4 sm:grid-cols-3">
               {[
-                { label: 'Поганий', m: bad, color: 'border-destructive/50' },
-                { label: 'Реалістичний', m: real, color: 'border-primary/50' },
-                { label: 'Позитивний', m: pos, color: 'border-success/50' },
+                { label: 'Поганий', m: bad, borderClass: 'border-destructive/40' },
+                { label: 'Реалістичний', m: real, borderClass: 'border-primary/40' },
+                { label: 'Позитивний', m: pos, borderClass: 'border-success/40' },
               ].map(s => (
-                <div key={s.label} className={`glass-card p-5 border-2 ${s.color}`}>
-                  <h4 className="font-semibold text-foreground mb-3">{s.label}</h4>
+                <div key={s.label} className={`glass-card p-5 border-2 ${s.borderClass}`}>
+                  <h4 className="font-bold text-foreground mb-3">{s.label}</h4>
                   <div className="space-y-2 text-sm">
                     <p className="text-muted-foreground">Ліди: <span className="text-foreground font-medium">{s.m.leads}</span></p>
                     <p className="text-muted-foreground">Продажі: <span className="text-foreground font-medium">{s.m.sales}</span></p>
@@ -447,7 +402,7 @@ const ScenarioBuilder: React.FC = () => {
               ))}
             </div>
             <div className="glass-card p-5 space-y-3">
-              <h4 className="font-semibold text-foreground">📋 Рекомендації</h4>
+              <h4 className="font-bold text-foreground">📋 Рекомендації</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 {real.romi < 0 && <li>⚠️ Реалістичний ROMI від'ємний — переглядньте воронку або зменшіть CPL</li>}
                 {real.romi >= 0 && real.romi < 100 && <li>📈 ROMI помірний — є потенціал для оптимізації конверсії</li>}
@@ -457,13 +412,9 @@ const ScenarioBuilder: React.FC = () => {
                 {scenario.retention.emailCount > 0 && <li>📧 Наявна email-база дає додатковий потенціал доходу</li>}
               </ul>
             </div>
-            <Button
-              className="w-full py-6 text-lg gap-2"
-              style={{ background: 'var(--gradient-primary)' }}
-              onClick={() => { update({ status: 'completed' }); navigate('/'); }}
-            >
-              <Check className="w-5 h-5" />
-              Завершити сценарій
+            <Button className="w-full py-6 text-lg gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
+              onClick={() => { update({ status: 'completed' }); navigate('/'); }}>
+              <Check className="w-5 h-5" /> Завершити сценарій
             </Button>
           </div>
         );
@@ -476,14 +427,13 @@ const ScenarioBuilder: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border/50 backdrop-blur-md sticky top-0 z-50 bg-background/80">
+      <header className="border-b border-border sticky top-0 z-50 bg-card">
         <div className="container mx-auto px-6 py-3 flex items-center gap-4">
           <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="gap-2 text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="w-4 h-4" />
-            Dashboard
+            <ArrowLeft className="w-4 h-4" /> Dashboard
           </Button>
           <div className="h-5 w-px bg-border" />
-          <h1 className="font-semibold text-foreground truncate">{scenario.name}</h1>
+          <h1 className="font-bold text-foreground truncate">{scenario.name}</h1>
         </div>
       </header>
 
@@ -491,17 +441,12 @@ const ScenarioBuilder: React.FC = () => {
         {/* Step indicators */}
         <div className="flex items-center gap-1 mb-8 overflow-x-auto pb-2">
           {STEPS.map((s, i) => (
-            <button
-              key={i}
-              onClick={() => setStep(i)}
+            <button key={i} onClick={() => setStep(i)}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all ${
-                i === step
-                  ? 'bg-primary text-primary-foreground font-medium'
-                  : i < step
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
+                i === step ? 'bg-primary text-primary-foreground font-semibold'
+                : i < step ? 'bg-accent text-accent-foreground'
+                : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+              }`}>
               <span>{s.icon}</span>
               <span className="hidden sm:inline">{s.title}</span>
             </button>
@@ -513,17 +458,15 @@ const ScenarioBuilder: React.FC = () => {
           <div className="flex items-center gap-3 mb-6">
             <span className="text-2xl">{STEPS[step].icon}</span>
             <div>
-              <div className="text-xs text-muted-foreground">Крок {step + 1} з {STEPS.length}</div>
-              <h2 className="text-xl font-bold text-foreground">{STEPS[step].title}</h2>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Крок {step + 1} з {STEPS.length}</div>
+              <h2 className="text-xl font-extrabold text-foreground">{STEPS[step].title}</h2>
             </div>
             <div className="ml-auto flex gap-2">
               <Button variant="ghost" size="sm" className="text-muted-foreground gap-1">
-                <Info className="w-4 h-4" />
-                <span className="hidden sm:inline">Пояснення</span>
+                <Info className="w-4 h-4" /> <span className="hidden sm:inline">Пояснення</span>
               </Button>
               <Button variant="ghost" size="sm" className="text-muted-foreground gap-1">
-                <Play className="w-4 h-4" />
-                <span className="hidden sm:inline">Відео</span>
+                <Play className="w-4 h-4" /> <span className="hidden sm:inline">Відео</span>
               </Button>
             </div>
           </div>
@@ -534,12 +477,10 @@ const ScenarioBuilder: React.FC = () => {
         {step < STEPS.length - 1 && (
           <div className="flex justify-between">
             <Button variant="secondary" onClick={prev} disabled={step === 0} className="gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Назад
+              <ArrowLeft className="w-4 h-4" /> Назад
             </Button>
-            <Button onClick={next} className="gap-2" style={{ background: 'var(--gradient-primary)' }}>
-              Далі
-              <ArrowRight className="w-4 h-4" />
+            <Button onClick={next} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
+              Далі <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
         )}
