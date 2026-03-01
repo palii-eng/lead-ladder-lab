@@ -36,6 +36,23 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Top bar */}
+      <div className="bg-secondary border-b border-border text-center py-1.5 text-xs text-muted-foreground flex items-center justify-center gap-4">
+        <span>
+          Заряджено в{' '}
+          <a href="https://ads-school.online/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+            Ads School
+          </a>
+        </span>
+        <span className="text-border">|</span>
+        <span>
+          Створено в{' '}
+          <a href="https://ai.ads-wind.com/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+            ADS WindAI Lab
+          </a>
+        </span>
+      </div>
+
       {/* Header */}
       <header className="border-b border-border sticky top-0 z-50 bg-card">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
@@ -110,8 +127,9 @@ const Dashboard: React.FC = () => {
               return (
                 <div
                   key={s.id}
-                  className="glass-card p-5 flex flex-col gap-4 animate-slide-up transition-shadow"
+                  className="glass-card p-5 flex flex-col gap-4 animate-slide-up transition-shadow cursor-pointer hover:shadow-md"
                   style={{ animationDelay: `${i * 60}ms` }}
+                  onClick={() => navigate(`/scenario/${s.id}`)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
@@ -155,7 +173,7 @@ const Dashboard: React.FC = () => {
                     <Button
                       size="sm"
                       className="flex-1 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
-                      onClick={() => navigate(`/scenario/${s.id}`)}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/scenario/${s.id}`); }}
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
                       Відкрити
@@ -163,7 +181,7 @@ const Dashboard: React.FC = () => {
                     <Button
                       size="sm"
                       variant="secondary"
-                      onClick={() => duplicateScenario(s.id)}
+                      onClick={(e) => { e.stopPropagation(); duplicateScenario(s.id); }}
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </Button>
@@ -171,7 +189,7 @@ const Dashboard: React.FC = () => {
                       size="sm"
                       variant="secondary"
                       className="hover:bg-destructive hover:text-destructive-foreground"
-                      onClick={() => deleteScenario(s.id)}
+                      onClick={(e) => { e.stopPropagation(); deleteScenario(s.id); }}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
