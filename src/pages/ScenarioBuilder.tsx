@@ -728,10 +728,16 @@ const ScenarioBuilder: React.FC = () => {
                 const getSubtitle = () => {
                   switch (i) {
                     case 0: return scenario.niche || '';
-                    case 1: return CHANNELS.find(c => c.value === scenario.channel)?.label || '';
+                    case 1: {
+                      const label = CHANNELS.find(c => c.value === scenario.channel)?.label || '';
+                      return seoEnabled ? (label ? `${label} + SEO` : 'SEO') : label;
+                    }
                     case 2: {
-                      const m = calcMetrics(scenario.decomposition.realistic);
-                      return m.revenue > 0 ? `${m.revenue.toLocaleString()} ₴` : '';
+                      const bad = calcMetrics(scenario.decomposition.bad);
+                      const real = calcMetrics(scenario.decomposition.realistic);
+                      const pos = calcMetrics(scenario.decomposition.positive);
+                      if (real.revenue <= 0 && bad.revenue <= 0 && pos.revenue <= 0) return '';
+                      return `😟${bad.revenue.toLocaleString()} | 📊${real.revenue.toLocaleString()} | 🚀${pos.revenue.toLocaleString()}`;
                     }
                     case 3: return scenario.leadDestinations.length > 0 ? scenario.leadDestinations[0] : '';
                     case 4: return scenario.integrationMethod || '';

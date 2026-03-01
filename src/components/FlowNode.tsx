@@ -41,7 +41,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({ icon, title, index, isActive, isCom
         </span>
         {/* Subtitle showing selected value */}
         {subtitle && (
-          <span className="text-[10px] text-primary font-medium max-w-[90px] text-center leading-tight truncate bg-primary/10 px-2 py-0.5 rounded-full">
+          <span className="text-[9px] text-primary font-medium max-w-[140px] text-center leading-tight truncate bg-primary/10 px-2 py-0.5 rounded-full">
             {subtitle}
           </span>
         )}
