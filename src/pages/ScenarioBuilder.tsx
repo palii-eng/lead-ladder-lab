@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useScenarios, Scenario, DecompositionScenario } from '@/context/ScenariosContext';
+import { useScenarios, Scenario, DecompositionScenario, DecompositionSet, createDefaultDecompSet } from '@/context/ScenariosContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -70,6 +70,12 @@ const CAMPAIGN_GOALS = [
   { value: 'sales', label: 'Продажі', Icon: ShoppingBag },
 ];
 
+const LEAD_TYPES = [
+  { value: 'leadform', label: 'Лідформи', icon: '📋' },
+  { value: 'quiz', label: 'Квізи', icon: '❓' },
+  { value: 'landing', label: 'Лендінг', icon: '🌐' },
+];
+
 
 const LEAD_DESTINATIONS = [
   'Kommo', 'HubSpot', 'SalesDrive', 'Pipedrive', 'KeyCRM', 'Trello',
@@ -123,6 +129,7 @@ const ScenarioBuilder: React.FC = () => {
   const scenario = getScenario(id!);
   const [activeStep, setActiveStep] = useState<number | null>(0);
   const [decompTab, setDecompTab] = useState<'bad' | 'realistic' | 'positive'>('realistic');
+  const [activeLeadType, setActiveLeadType] = useState<string>('');
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [videoDialogStep, setVideoDialogStep] = useState(0);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -182,6 +189,13 @@ const ScenarioBuilder: React.FC = () => {
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
   }, []);
 
+  // Initialize activeLeadType when entering decomposition
+  useEffect(() => {
+    if (activeStep === 3 && scenario?.channel === 'leads' && scenario.leadTypes.length > 0 && !scenario.leadTypes.includes(activeLeadType)) {
+      setActiveLeadType(scenario.leadTypes[0]);
+    }
+  }, [activeStep, scenario?.channel, scenario?.leadTypes, activeLeadType]);
+
   if (!scenario) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -195,13 +209,35 @@ const ScenarioBuilder: React.FC = () => {
 
   const update = (u: Partial<Scenario>) => updateScenario(id!, u);
 
+  const hasMultipleLeadTypes = scenario.channel === 'leads' && scenario.leadTypes.length > 1;
+  
+  const getActiveDecompSet = (): DecompositionSet => {
+    if (hasMultipleLeadTypes && activeLeadType) {
+      return scenario.decompositionsByType[activeLeadType] || createDefaultDecompSet();
+    }
+    return scenario.decomposition;
+  };
+
   const updateDecomp = (type: 'bad' | 'realistic' | 'positive', field: keyof DecompositionScenario, value: number) => {
-    update({
-      decomposition: {
-        ...scenario.decomposition,
-        [type]: { ...scenario.decomposition[type], [field]: value },
-      },
-    });
+    if (hasMultipleLeadTypes && activeLeadType) {
+      const currentByType = scenario.decompositionsByType[activeLeadType] || createDefaultDecompSet();
+      update({
+        decompositionsByType: {
+          ...scenario.decompositionsByType,
+          [activeLeadType]: {
+            ...currentByType,
+            [type]: { ...currentByType[type], [field]: value },
+          },
+        },
+      });
+    } else {
+      update({
+        decomposition: {
+          ...scenario.decomposition,
+          [type]: { ...scenario.decomposition[type], [field]: value },
+        },
+      });
+    }
   };
 
   const fillBenchmarks = () => {
@@ -222,13 +258,44 @@ const ScenarioBuilder: React.FC = () => {
       d.cpc = d.cpm / ((d.ctr || 1) / 100) / 1000;
       return d;
     };
-    update({
-      decomposition: {
-        bad: make({ cpm: 1.3, ctr: 0.7, cpl: 1.5, conv: 0.65 }, scenario.decomposition.bad.budget || 10000),
-        realistic: make({ cpm: 1, ctr: 1, cpl: 1, conv: 1 }, scenario.decomposition.realistic.budget || 10000),
-        positive: make({ cpm: 0.7, ctr: 1.5, cpl: 0.6, conv: 1.6 }, scenario.decomposition.positive.budget || 10000),
-      },
+    
+    const makeSet = (baseBudget: number): DecompositionSet => ({
+      bad: make({ cpm: 1.3, ctr: 0.7, cpl: 1.5, conv: 0.65 }, baseBudget),
+      realistic: make({ cpm: 1, ctr: 1, cpl: 1, conv: 1 }, baseBudget),
+      positive: make({ cpm: 0.7, ctr: 1.5, cpl: 0.6, conv: 1.6 }, baseBudget),
     });
+
+    if (hasMultipleLeadTypes && activeLeadType) {
+      const currentSet = scenario.decompositionsByType[activeLeadType] || createDefaultDecompSet();
+      update({
+        decompositionsByType: {
+          ...scenario.decompositionsByType,
+          [activeLeadType]: makeSet(currentSet.realistic.budget || 10000),
+        },
+      });
+    } else {
+      update({
+        decomposition: makeSet(scenario.decomposition.realistic.budget || 10000),
+      });
+    }
+  };
+
+  const toggleLeadType = (lt: string) => {
+    const current = scenario.leadTypes;
+    const newTypes = current.includes(lt) ? current.filter(t => t !== lt) : [...current, lt];
+    const newDecompsByType = { ...scenario.decompositionsByType };
+    // Add default decomp for new types
+    newTypes.forEach(t => {
+      if (!newDecompsByType[t]) newDecompsByType[t] = createDefaultDecompSet();
+    });
+    // Remove decomps for removed types
+    Object.keys(newDecompsByType).forEach(k => {
+      if (!newTypes.includes(k)) delete newDecompsByType[k];
+    });
+    update({ leadTypes: newTypes, decompositionsByType: newDecompsByType });
+    if (newTypes.length > 0 && !newTypes.includes(activeLeadType)) {
+      setActiveLeadType(newTypes[0]);
+    }
   };
 
   const toggleLeadDest = (dest: string) => {
@@ -236,7 +303,8 @@ const ScenarioBuilder: React.FC = () => {
     update({ leadDestinations: current.includes(dest) ? current.filter(d => d !== dest) : [...current, dest] });
   };
 
-  const currentDecomp = scenario.decomposition[decompTab];
+  const activeDecompSet = getActiveDecompSet();
+  const currentDecomp = activeDecompSet[decompTab];
   const metrics = calcMetrics(currentDecomp);
 
   const retentionCalc = (rate: number) => {
@@ -253,8 +321,16 @@ const ScenarioBuilder: React.FC = () => {
     switch (i) {
       case 0: return !!s.niche;
       case 1: return !!s.leadSource;
-      case 2: return !!s.channel;
-      case 3: return s.decomposition.realistic.cpl > 0;
+      case 2: return !!s.channel && (s.channel !== 'leads' || (s.leadTypes && s.leadTypes.length > 0));
+      case 3: {
+        if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
+          return s.leadTypes.every(lt => {
+            const set = s.decompositionsByType?.[lt];
+            return set && set.realistic.cpl > 0;
+          });
+        }
+        return s.decomposition.realistic.cpl > 0;
+      }
       case 4: return s.leadDestinations.length > 0;
       case 5: return !!s.integrationMethod;
       case 6: return !!s.companyDescription;
@@ -433,6 +509,27 @@ const ScenarioBuilder: React.FC = () => {
                 ))}
               </div>
 
+              {/* Lead types sub-selection when "leads" is chosen */}
+              {scenario.channel === 'leads' && (
+                <div className="border-t border-border pt-4">
+                  <p className="text-xs text-muted-foreground mb-2">Уточніть тип лідгену (можна обрати декілька):</p>
+                  <div className="grid gap-2">
+                    {LEAD_TYPES.map(lt => (
+                      <button key={lt.value} onClick={() => toggleLeadType(lt.value)}
+                        className={`p-3 rounded-lg border text-left text-sm transition-all flex items-center gap-3 ${
+                          scenario.leadTypes.includes(lt.value)
+                            ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                            : 'border-border bg-card text-foreground hover:border-primary/40'
+                        } cursor-pointer`}>
+                        <span className="text-lg">{lt.icon}</span>
+                        <span>{lt.label}</span>
+                        {scenario.leadTypes.includes(lt.value) && <Check className="w-4 h-4 ml-auto text-primary" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* SEO organic option */}
               <div className="border-t border-border pt-4">
                 <p className="text-xs text-muted-foreground mb-2">Додаткова опція:</p>
@@ -489,8 +586,33 @@ const ScenarioBuilder: React.FC = () => {
           ];
           return (
             <div className="space-y-4">
+              {/* Lead type tabs if multiple */}
+              {hasMultipleLeadTypes && (
+                <div className="flex gap-1 flex-wrap">
+                  {scenario.leadTypes.map(lt => {
+                    const ltInfo = LEAD_TYPES.find(l => l.value === lt);
+                    return (
+                      <button key={lt} onClick={() => setActiveLeadType(lt)}
+                        className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                          activeLeadType === lt
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-secondary text-secondary-foreground'
+                        }`}>
+                        {ltInfo?.icon} {ltInfo?.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-foreground">META AD CALCULATOR</h3>
+                <h3 className="text-base font-bold text-foreground">
+                  META AD CALCULATOR
+                  {hasMultipleLeadTypes && activeLeadType && (
+                    <span className="text-xs font-normal text-muted-foreground ml-2">
+                      — {LEAD_TYPES.find(l => l.value === activeLeadType)?.label}
+                    </span>
+                  )}
+                </h3>
                 <Button variant="secondary" size="sm" onClick={fillBenchmarks} className="gap-1 text-xs">
                   <Sparkles className="w-3 h-3" /> Авто
                 </Button>
@@ -897,7 +1019,7 @@ const ScenarioBuilder: React.FC = () => {
                           `🟢 ${pos.leads} лідів → ${pos.revenue.toLocaleString()}₴ → ${pos.romi}%`,
                         ].join('\n');
                       }
-                      case 4: return scenario.leadDestinations.length > 0 ? scenario.leadDestinations[0] : '';
+                      case 4: return scenario.leadDestinations.length > 0 ? scenario.leadDestinations.join('\n') : '';
                       case 5: return scenario.integrationMethod || '';
                       default: return '';
                     }

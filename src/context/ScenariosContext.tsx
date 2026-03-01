@@ -19,6 +19,12 @@ export interface RetentionData {
   pushCount: number;
 }
 
+export interface DecompositionSet {
+  bad: DecompositionScenario;
+  realistic: DecompositionScenario;
+  positive: DecompositionScenario;
+}
+
 export interface Scenario {
   id: string;
   name: string;
@@ -26,15 +32,13 @@ export interface Scenario {
   niche: string;
   leadSource: string;
   channel: string;
+  leadTypes: string[];
   status: 'draft' | 'completed';
   createdAt: string;
   currentStep: number;
   launchMethod: string;
-  decomposition: {
-    bad: DecompositionScenario;
-    realistic: DecompositionScenario;
-    positive: DecompositionScenario;
-  };
+  decomposition: DecompositionSet;
+  decompositionsByType: Record<string, DecompositionSet>;
   leadDestinations: string[];
   crmSystem: string;
   integrationMethod: string;
@@ -47,6 +51,12 @@ const defaultDecomp: DecompositionScenario = {
   conversionRate: 0, averageCheck: 0, marginality: 0, budget: 10000,
 };
 
+export const createDefaultDecompSet = (): DecompositionSet => ({
+  bad: { ...defaultDecomp },
+  realistic: { ...defaultDecomp },
+  positive: { ...defaultDecomp },
+});
+
 export const createDefaultScenario = (name: string, description: string): Scenario => ({
   id: crypto.randomUUID(),
   name,
@@ -54,15 +64,13 @@ export const createDefaultScenario = (name: string, description: string): Scenar
   niche: '',
   leadSource: '',
   channel: '',
+  leadTypes: [],
   status: 'draft',
   createdAt: new Date().toISOString(),
   currentStep: 0,
   launchMethod: '',
-  decomposition: {
-    bad: { ...defaultDecomp },
-    realistic: { ...defaultDecomp },
-    positive: { ...defaultDecomp },
-  },
+  decomposition: createDefaultDecompSet(),
+  decompositionsByType: {},
   leadDestinations: [],
   crmSystem: '',
   integrationMethod: '',
