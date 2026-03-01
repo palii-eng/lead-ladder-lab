@@ -41,7 +41,9 @@ const FlowNode: React.FC<FlowNodeProps> = ({ icon, title, index, isActive, isCom
             isActive ? 'text-primary font-bold' : isCompleted ? 'text-foreground' : isLocked ? 'text-muted-foreground/40' : 'text-muted-foreground'
           } ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
         >
-          {title}
+          {title.split('\n').map((line, idx) => (
+            <span key={idx} className={idx > 0 ? 'text-[9px] text-primary font-medium' : ''}>{line}</span>
+          ))}
         </button>
 
         {subtitle && (

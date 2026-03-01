@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useScenarios, Scenario, DecompositionScenario, DecompositionSet, createDefaultDecompSet } from '@/context/ScenariosContext';
 import { Button } from '@/components/ui/button';
@@ -7,8 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FlowNode from '@/components/FlowNode';
-import { ArrowLeft, Check, Download, Info, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap } from 'lucide-react';
+import { ArrowLeft, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const STEPS = [
   { title: 'Вибір ніші', icon: '🎯' },
@@ -76,7 +78,6 @@ const LEAD_TYPES = [
   { value: 'landing', label: 'Лендінг', icon: '🌐' },
 ];
 
-
 const LEAD_DESTINATIONS = [
   'Kommo', 'HubSpot', 'SalesDrive', 'Pipedrive', 'KeyCRM', 'Trello',
   'Google Таблиця', 'Telegram-чат з менеджером', 'Інша',
@@ -140,8 +141,29 @@ const ScenarioBuilder: React.FC = () => {
   const [seoEnabled, setSeoEnabled] = useState(false);
   const [seoLeads, setSeoLeads] = useState('');
   const [seoAvgCheck, setSeoAvgCheck] = useState('');
-
-  // Saved steps tracking (local to session, persisted via scenario completion check)
+  const [aiRecommendation, setAiRecommendation] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const { toast } = useToast();
+  const fetchAiRecommendation = useCallback(async () => {
+    if (!scenario) return;
+    setAiLoading(true);
+    setAiRecommendation('');
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-recommendations', {
+        body: { niche: scenario.niche, channel: scenario.channel, leadTypes: scenario.leadTypes || [] },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast({ title: 'AI помилка', description: data.error, variant: 'destructive' });
+      } else {
+        setAiRecommendation(data?.recommendation || '');
+      }
+    } catch (e: any) {
+      toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати рекомендації', variant: 'destructive' });
+    } finally {
+      setAiLoading(false);
+    }
+  }, [scenario?.niche, scenario?.channel, scenario?.leadTypes, toast]);
   const [savedSteps, setSavedSteps] = useState<Set<number>>(() => {
     // Pre-populate with already completed steps
     const set = new Set<number>();
@@ -569,6 +591,30 @@ const ScenarioBuilder: React.FC = () => {
                   </div>
                 )}
               </div>
+
+              {/* AI Recommendations */}
+              {scenario.channel && (
+                <div className="border-t border-border pt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-bold text-foreground">🤖 AI-рекомендації</p>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={fetchAiRecommendation}
+                      disabled={aiLoading}
+                      className="gap-1 text-xs"
+                    >
+                      {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                      {aiLoading ? 'Генерація...' : 'Згенерувати'}
+                    </Button>
+                  </div>
+                  {aiRecommendation && (
+                    <div className="bg-secondary rounded-lg p-3 text-xs text-foreground whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
+                      {aiRecommendation}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <SaveButton step={2} />
             </div>
@@ -998,58 +1044,133 @@ const ScenarioBuilder: React.FC = () => {
             }}
           >
             <div className="relative" id="flow-container">
-              <div className="flex items-start gap-0 px-12 py-8">
-                {STEPS.map((s, i) => {
-                  const getSubtitle = () => {
-                    switch (i) {
-                      case 0: return scenario.niche || '';
-                      case 1: return LEAD_SOURCES.find(s => s.value === scenario.leadSource)?.label || '';
-                      case 2: {
-                        const label = CAMPAIGN_GOALS.find(c => c.value === scenario.channel)?.label || '';
-                        return seoEnabled ? (label ? `${label} + SEO` : 'SEO') : label;
-                      }
-                      case 3: {
-                        const bad = calcMetrics(scenario.decomposition.bad);
-                        const real = calcMetrics(scenario.decomposition.realistic);
-                        const pos = calcMetrics(scenario.decomposition.positive);
-                        if (real.revenue <= 0 && bad.revenue <= 0 && pos.revenue <= 0) return '';
-                        return [
-                          `🟡 ${bad.leads} лідів → ${bad.revenue.toLocaleString()}₴ → ${bad.romi}%`,
-                          `🔵 ${real.leads} лідів → ${real.revenue.toLocaleString()}₴ → ${real.romi}%`,
-                          `🟢 ${pos.leads} лідів → ${pos.revenue.toLocaleString()}₴ → ${pos.romi}%`,
-                        ].join('\n');
-                      }
-                      case 4: return scenario.leadDestinations.length > 0 ? scenario.leadDestinations.join('\n') : '';
-                      case 5: return scenario.integrationMethod || '';
-                      default: return '';
+              {/* Check if we need branching */}
+              {(() => {
+                const leadTypes = scenario.leadTypes || [];
+                const shouldBranch = scenario.channel === 'leads' && leadTypes.length > 1 && savedSteps.has(2);
+                const SHARED_STEPS = shouldBranch ? 3 : STEPS.length; // steps 0-2 shared, rest per-branch
+                const BRANCH_STEPS = STEPS.slice(3); // steps 3-8
+
+                const getSubtitleForStep = (i: number, branchLeadType?: string) => {
+                  switch (i) {
+                    case 0: return scenario.niche || '';
+                    case 1: return LEAD_SOURCES.find(s => s.value === scenario.leadSource)?.label || '';
+                    case 2: {
+                      const label = CAMPAIGN_GOALS.find(c => c.value === scenario.channel)?.label || '';
+                      const ltLabels = leadTypes.map(lt => LEAD_TYPES.find(l => l.value === lt)?.label).filter(Boolean).join(', ');
+                      const base = seoEnabled ? (label ? `${label} + SEO` : 'SEO') : label;
+                      return ltLabels ? `${base}\n${ltLabels}` : base;
                     }
-                  };
+                    case 3: {
+                      const decompSet = branchLeadType && shouldBranch
+                        ? (scenario.decompositionsByType?.[branchLeadType] || scenario.decomposition)
+                        : scenario.decomposition;
+                      const bad = calcMetrics(decompSet.bad);
+                      const real = calcMetrics(decompSet.realistic);
+                      const pos = calcMetrics(decompSet.positive);
+                      if (real.revenue <= 0 && bad.revenue <= 0 && pos.revenue <= 0) return '';
+                      return [
+                        `🟡 ${bad.leads} лідів → ${bad.revenue.toLocaleString()}₴ → ${bad.romi}%`,
+                        `🔵 ${real.leads} лідів → ${real.revenue.toLocaleString()}₴ → ${real.romi}%`,
+                        `🟢 ${pos.leads} лідів → ${pos.revenue.toLocaleString()}₴ → ${pos.romi}%`,
+                      ].join('\n');
+                    }
+                    case 4: return scenario.leadDestinations.length > 0 ? scenario.leadDestinations.join('\n') : '';
+                    case 5: return scenario.integrationMethod || '';
+                    default: return '';
+                  }
+                };
+
+                const renderNode = (stepIdx: number, branchLeadType?: string, isLastInRow = false) => {
+                  const s = STEPS[stepIdx];
+                  const subtitle = (isStepCompleted(stepIdx) || isStepCompletedStatic(scenario, stepIdx)) 
+                    ? getSubtitleForStep(stepIdx, branchLeadType) : '';
                   return (
-                    <div key={i} data-flow-node data-step-index={i}>
+                    <div key={`${stepIdx}-${branchLeadType || 'main'}`} data-flow-node data-step-index={stepIdx}>
                       <FlowNode
                         icon={s.icon}
-                        title={s.title}
-                        index={i}
-                        isActive={activeStep === i}
-                        isCompleted={isStepCompleted(i)}
-                        isLast={i === STEPS.length - 1}
-                        isLocked={!isStepUnlocked(i)}
-                        subtitle={isStepCompleted(i) || isStepCompletedStatic(scenario, i) ? getSubtitle() : ''}
+                        title={branchLeadType && stepIdx === 3
+                          ? `${s.title}\n${LEAD_TYPES.find(l => l.value === branchLeadType)?.icon || ''} ${LEAD_TYPES.find(l => l.value === branchLeadType)?.label || ''}`
+                          : s.title}
+                        index={stepIdx}
+                        isActive={activeStep === stepIdx && (!shouldBranch || stepIdx < 3 || activeLeadType === branchLeadType)}
+                        isCompleted={isStepCompleted(stepIdx)}
+                        isLast={isLastInRow}
+                        isLocked={!isStepUnlocked(stepIdx)}
+                        subtitle={subtitle}
                         onClick={() => {
-                          if (!wasDragged.current && isStepUnlocked(i)) {
-                            setActiveStep(activeStep === i ? null : i);
+                          if (!wasDragged.current && isStepUnlocked(stepIdx)) {
+                            if (branchLeadType) setActiveLeadType(branchLeadType);
+                            setActiveStep(activeStep === stepIdx && activeLeadType === branchLeadType ? null : stepIdx);
                           }
                         }}
                       />
                     </div>
                   );
-                })}
-              </div>
+                };
 
-              {/* Retention → Sales return arrow (from step 6 bottom to step 5 bottom) */}
-              {scenario.retention.emailCount > 0 && savedSteps.has(7) && (
-                <RetentionArrow />
-              )}
+                if (!shouldBranch) {
+                  // Single row — original behavior
+                  return (
+                    <>
+                      <div className="flex items-start gap-0 px-12 py-8">
+                        {STEPS.map((_, i) => renderNode(i, undefined, i === STEPS.length - 1))}
+                      </div>
+                      {scenario.retention.emailCount > 0 && savedSteps.has(7) && <RetentionArrow />}
+                    </>
+                  );
+                }
+
+                // Branching layout
+                const branchGap = 140; // vertical spacing between branches
+                const totalBranches = leadTypes.length;
+                const topOffset = -((totalBranches - 1) * branchGap) / 2;
+
+                return (
+                  <div className="px-12 py-8">
+                    {/* Shared steps row */}
+                    <div className="flex items-start gap-0" style={{ marginBottom: `${branchGap * (totalBranches - 1) / 2 + 40}px` }}>
+                      {STEPS.slice(0, 3).map((_, i) => renderNode(i, undefined, false))}
+                      {/* Branch connector placeholder — after last shared node */}
+                      <div className="flex items-center" style={{ height: '64px' }}>
+                        <svg width="40" height={branchGap * totalBranches + 40} viewBox={`0 0 40 ${branchGap * totalBranches + 40}`} className="flex-shrink-0 mx-1 overflow-visible"
+                          style={{ transform: `translateY(${topOffset - 20}px)` }}>
+                          {leadTypes.map((_, brIdx) => {
+                            const y = (branchGap * totalBranches) / 2 + 20 + (brIdx - (totalBranches - 1) / 2) * branchGap;
+                            return (
+                              <g key={brIdx}>
+                                <line x1="0" y1={(branchGap * totalBranches) / 2 + 20} x2="20" y2={y}
+                                  stroke="hsl(142, 71%, 45%)" strokeWidth="2" strokeDasharray="6 3" />
+                                <line x1="20" y1={y} x2="40" y2={y}
+                                  stroke="hsl(142, 71%, 45%)" strokeWidth="2" strokeDasharray="6 3" />
+                                <polygon points={`34,${y - 4} 40,${y} 34,${y + 4}`} fill="hsl(142, 71%, 45%)" />
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Branch rows */}
+                    <div className="relative" style={{ marginTop: `-${branchGap * (totalBranches - 1) / 2 + 60}px`, marginLeft: '380px' }}>
+                      {leadTypes.map((lt, brIdx) => {
+                        const yOffset = (brIdx - (totalBranches - 1) / 2) * branchGap;
+                        return (
+                          <div key={lt} className="flex items-start gap-0" style={{ transform: `translateY(${yOffset}px)`, marginBottom: brIdx < totalBranches - 1 ? '0px' : '0' }}>
+                            {/* Branch label */}
+                            <div className="flex items-center mr-2" style={{ height: '64px' }}>
+                              <Badge className="bg-primary/10 text-primary text-[10px] whitespace-nowrap">
+                                {LEAD_TYPES.find(l => l.value === lt)?.icon} {LEAD_TYPES.find(l => l.value === lt)?.label}
+                              </Badge>
+                            </div>
+                            {BRANCH_STEPS.map((_, bi) => renderNode(bi + 3, lt, bi === BRANCH_STEPS.length - 1))}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
