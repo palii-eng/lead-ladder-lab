@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useScenarios, Scenario, DecompositionScenario, DecompositionSet, createDefaultDecompSet, createDefaultBranchData, BranchData } from '@/context/ScenariosContext';
 import { Button } from '@/components/ui/button';
@@ -134,6 +135,10 @@ const ScenarioBuilder: React.FC = () => {
   const [activeLeadType, setActiveLeadType] = useState<string>('');
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [videoDialogStep, setVideoDialogStep] = useState(0);
+  const [aiTipsOpen, setAiTipsOpen] = useState(false);
+  const [aiTipsText, setAiTipsText] = useState('');
+  const [aiTipsLoading, setAiTipsLoading] = useState(false);
+  const [aiTipsBranchType, setAiTipsBranchType] = useState<string | undefined>(undefined);
   const canvasRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
@@ -165,6 +170,78 @@ const ScenarioBuilder: React.FC = () => {
       setAiLoading(false);
     }
   }, [scenario?.niche, scenario?.channel, scenario?.leadTypes, toast]);
+
+  const fetchCampaignTips = useCallback(async (branchLeadType?: string) => {
+    if (!scenario) return;
+    setAiTipsLoading(true);
+    setAiTipsText('');
+    setAiTipsBranchType(branchLeadType);
+    setAiTipsOpen(true);
+
+    const isBr = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && branchLeadType;
+    const branch = isBr ? scenario.branchData?.[branchLeadType!] : null;
+    const decompSet = branch ? branch.decomposition : scenario.decomposition;
+
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/campaign-tips`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          niche: scenario.niche,
+          channel: scenario.channel,
+          leadType: branchLeadType || (scenario.leadTypes?.[0] || ''),
+          decomposition: decompSet,
+        }),
+      });
+
+      if (!resp.ok || !resp.body) {
+        const err = await resp.json().catch(() => ({ error: 'Помилка' }));
+        toast({ title: 'AI помилка', description: err.error || 'Не вдалося отримати рекомендації', variant: 'destructive' });
+        setAiTipsLoading(false);
+        return;
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIdx: number;
+        while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
+          let line = buffer.slice(0, newlineIdx);
+          buffer = buffer.slice(newlineIdx + 1);
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.startsWith(':') || line.trim() === '') continue;
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              fullText += content;
+              setAiTipsText(fullText);
+            }
+          } catch {
+            buffer = line + '\n' + buffer;
+            break;
+          }
+        }
+      }
+    } catch (e: any) {
+      toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати рекомендації', variant: 'destructive' });
+    } finally {
+      setAiTipsLoading(false);
+    }
+  }, [scenario, toast]);
   const [savedSteps, setSavedSteps] = useState<Set<number>>(() => {
     // Pre-populate with already completed steps
     const set = new Set<number>();
@@ -1143,26 +1220,45 @@ const ScenarioBuilder: React.FC = () => {
                   const s = STEPS[stepIdx];
                   const subtitle = (isStepCompleted(stepIdx) || isStepCompletedStatic(scenario, stepIdx)) 
                     ? getSubtitleForStep(stepIdx, branchLeadType) : '';
+                  
+                  // Check if decomposition is completed for this branch to show AI hint
+                  const showAiHint = stepIdx === 3 && isStepCompletedStatic(scenario, 3);
+
                   return (
-                    <div key={`${stepIdx}-${branchLeadType || 'main'}`} data-flow-node data-step-index={stepIdx}>
-                      <FlowNode
-                        icon={s.icon}
-                        title={branchLeadType && stepIdx === 3
-                          ? `${s.title}\n${LEAD_TYPES.find(l => l.value === branchLeadType)?.icon || ''} ${LEAD_TYPES.find(l => l.value === branchLeadType)?.label || ''}`
-                          : s.title}
-                        index={stepIdx}
-                        isActive={activeStep === stepIdx && (!shouldBranch || stepIdx < 3 || activeLeadType === branchLeadType)}
-                        isCompleted={isStepCompleted(stepIdx)}
-                        isLast={isLastInRow}
-                        isLocked={!isStepUnlocked(stepIdx)}
-                        subtitle={subtitle}
-                        onClick={() => {
-                          if (!wasDragged.current && isStepUnlocked(stepIdx)) {
-                            if (branchLeadType) setActiveLeadType(branchLeadType);
-                            setActiveStep(activeStep === stepIdx && activeLeadType === branchLeadType ? null : stepIdx);
-                          }
-                        }}
-                      />
+                    <div key={`${stepIdx}-${branchLeadType || 'main'}`} className="flex items-start" data-flow-node data-step-index={stepIdx}>
+                      <div className="relative">
+                        <FlowNode
+                          icon={s.icon}
+                          title={branchLeadType && stepIdx === 3
+                            ? `${s.title}\n${LEAD_TYPES.find(l => l.value === branchLeadType)?.icon || ''} ${LEAD_TYPES.find(l => l.value === branchLeadType)?.label || ''}`
+                            : s.title}
+                          index={stepIdx}
+                          isActive={activeStep === stepIdx && (!shouldBranch || stepIdx < 3 || activeLeadType === branchLeadType)}
+                          isCompleted={isStepCompleted(stepIdx)}
+                          isLast={isLastInRow}
+                          isLocked={!isStepUnlocked(stepIdx)}
+                          subtitle={subtitle}
+                          onClick={() => {
+                            if (!wasDragged.current && isStepUnlocked(stepIdx)) {
+                              if (branchLeadType) setActiveLeadType(branchLeadType);
+                              setActiveStep(activeStep === stepIdx && activeLeadType === branchLeadType ? null : stepIdx);
+                            }
+                          }}
+                        />
+                        {showAiHint && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              fetchCampaignTips(branchLeadType);
+                            }}
+                            className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-sm shadow-lg hover:scale-110 transition-transform z-10 border-2 border-white"
+                            title="AI підказка по кампаніях"
+                            style={{ animation: 'pulse 2s ease-in-out infinite' }}
+                          >
+                            💡
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 };
@@ -1273,6 +1369,42 @@ const ScenarioBuilder: React.FC = () => {
                 <span className="text-sm font-medium text-foreground">{v.title}</span>
               </a>
             ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Campaign Tips dialog */}
+      <Dialog open={aiTipsOpen} onOpenChange={setAiTipsOpen}>
+        <DialogContent className="bg-card border-border max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-foreground font-bold flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-sm">💡</div>
+              AI рекомендації по кампаніях
+              {aiTipsBranchType && (
+                <Badge variant="secondary" className="text-xs ml-2">
+                  {LEAD_TYPES.find(l => l.value === aiTipsBranchType)?.icon} {LEAD_TYPES.find(l => l.value === aiTipsBranchType)?.label}
+                </Badge>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto pt-2">
+            {aiTipsLoading && !aiTipsText && (
+              <div className="flex items-center gap-2 text-muted-foreground text-sm py-8 justify-center">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Генерую рекомендації...</span>
+              </div>
+            )}
+            {aiTipsText && (
+              <div className="prose prose-sm max-w-none text-foreground">
+                <ReactMarkdown>{aiTipsText}</ReactMarkdown>
+              </div>
+            )}
+            {aiTipsLoading && aiTipsText && (
+              <div className="flex items-center gap-1 text-muted-foreground text-xs mt-2">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span>Друкую...</span>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
