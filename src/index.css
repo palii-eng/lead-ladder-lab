@@ -2,60 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @layer base {
   :root {
-    --background: 222 25% 6%;
-    --foreground: 210 20% 92%;
+    --background: 0 0% 98.4%;
+    --foreground: 0 0% 11%;
 
-    --card: 222 20% 10%;
-    --card-foreground: 210 20% 92%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 11%;
 
-    --popover: 222 22% 12%;
-    --popover-foreground: 210 20% 92%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 11%;
 
-    --primary: 199 89% 48%;
-    --primary-foreground: 222 25% 6%;
+    --primary: 232 55% 49%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 18% 16%;
-    --secondary-foreground: 210 15% 75%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 11%;
 
-    --muted: 222 15% 14%;
-    --muted-foreground: 215 12% 50%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 50.2%;
 
-    --accent: 199 70% 20%;
-    --accent-foreground: 199 89% 70%;
+    --accent: 232 55% 95%;
+    --accent-foreground: 232 55% 49%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 20% 92%;
+    --destructive: 0 68% 42%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 222 15% 18%;
-    --input: 222 15% 18%;
-    --ring: 199 89% 48%;
+    --success: 108 42% 52%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 20 82% 61%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 0 0% 85.1%;
+    --input: 0 0% 85.1%;
+    --ring: 232 55% 49%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 222 22% 8%;
-    --sidebar-foreground: 210 15% 75%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 222 25% 6%;
-    --sidebar-accent: 222 18% 14%;
-    --sidebar-accent-foreground: 210 15% 75%;
-    --sidebar-border: 222 15% 16%;
-    --sidebar-ring: 199 89% 48%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 50.2%;
+    --sidebar-primary: 232 55% 49%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96.1%;
+    --sidebar-accent-foreground: 0 0% 11%;
+    --sidebar-border: 0 0% 85.1%;
+    --sidebar-ring: 232 55% 49%;
 
-    --success: 152 69% 42%;
-    --success-foreground: 222 25% 6%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 222 25% 6%;
+    --gradient-primary: linear-gradient(135deg, hsl(232 55% 49%), hsl(232 65% 58%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(0 0% 98%));
 
-    --gradient-primary: linear-gradient(135deg, hsl(199 89% 48%), hsl(220 80% 56%));
-    --gradient-card: linear-gradient(145deg, hsl(222 20% 11%), hsl(222 20% 9%));
-    --gradient-glow: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), hsl(199 89% 48% / 0.06), transparent 40%);
-
-    --shadow-card: 0 4px 24px -4px hsl(0 0% 0% / 0.4);
-    --shadow-glow: 0 0 40px -10px hsl(199 89% 48% / 0.3);
+    --shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.06), 0 1px 2px -1px hsl(0 0% 0% / 0.06);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.07), 0 2px 4px -2px hsl(0 0% 0% / 0.07);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.08), 0 4px 6px -4px hsl(0 0% 0% / 0.08);
   }
 }
 
@@ -76,27 +77,21 @@
 
 @layer utilities {
   .glass-card {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl;
+    @apply bg-card border border-border rounded-xl;
     box-shadow: var(--shadow-card);
   }
 
-  .glow-border {
-    @apply relative;
-    background: var(--gradient-card);
-  }
-
-  .glow-border::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    background: var(--gradient-glow);
+  .glass-card:hover {
+    box-shadow: var(--shadow-md);
   }
 
   .text-gradient {
     @apply bg-clip-text text-transparent;
     background-image: var(--gradient-primary);
+  }
+
+  .brand-hero {
+    background-color: hsl(232 55% 49%);
   }
 
   .animate-fade-in {
