@@ -1125,25 +1125,9 @@ const ScenarioBuilder: React.FC = () => {
 
                 return (
                   <div className="px-12 py-8 flex items-start">
-                    {/* Shared steps (0, 1, 2) — vertically centered */}
+                    {/* Shared steps (0, 1, 2) — vertically centered, last node without connector */}
                     <div className="flex items-start gap-0 flex-shrink-0" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
-                      {STEPS.slice(0, 3).map((_, i) => renderNode(i, undefined, false))}
-                    </div>
-
-                    {/* Router node — the branching point */}
-                    <div className="flex flex-col items-center flex-shrink-0" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
-                      <div className="flex items-center" style={{ height: '64px' }}>
-                        <div className="w-14 h-14 rounded-full border-2 border-primary bg-primary/10 flex items-center justify-center shadow-md">
-                          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                            <circle cx="10" cy="10" r="3" className="fill-primary" />
-                            <line x1="10" y1="10" x2="3" y2="3" className="stroke-primary" strokeWidth="2" />
-                            <line x1="10" y1="10" x2="17" y2="3" className="stroke-primary" strokeWidth="2" />
-                            <line x1="10" y1="10" x2="3" y2="17" className="stroke-primary" strokeWidth="2" />
-                            <line x1="10" y1="10" x2="17" y2="17" className="stroke-primary" strokeWidth="2" />
-                          </svg>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-bold text-primary mt-1">Router</span>
+                      {STEPS.slice(0, 3).map((_, i) => renderNode(i, undefined, i === 2))}
                     </div>
 
                     {/* Branch lines + branch rows */}
