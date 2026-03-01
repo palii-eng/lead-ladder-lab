@@ -139,6 +139,11 @@ const ScenarioBuilder: React.FC = () => {
   const [aiTipsText, setAiTipsText] = useState('');
   const [aiTipsLoading, setAiTipsLoading] = useState(false);
   const [aiTipsBranchType, setAiTipsBranchType] = useState<string | undefined>(undefined);
+  const [salesProcessed, setSalesProcessed] = useState(false);
+  const [salesRecOpen, setSalesRecOpen] = useState(false);
+  const [salesRecText, setSalesRecText] = useState('');
+  const [salesRecLoading, setSalesRecLoading] = useState(false);
+  const [salesRecTitle, setSalesRecTitle] = useState('');
   const canvasRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
@@ -242,6 +247,88 @@ const ScenarioBuilder: React.FC = () => {
       setAiTipsLoading(false);
     }
   }, [scenario, toast]);
+
+  const fetchSalesRecommendation = useCallback(async (recType: string, title: string) => {
+    if (!scenario) return;
+    setSalesRecLoading(true);
+    setSalesRecText('');
+    setSalesRecTitle(title);
+    setSalesRecOpen(true);
+
+    const isBr = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && activeLeadType;
+    const branch = isBr ? scenario.branchData?.[activeLeadType] : null;
+    const decompSet = branch ? branch.decomposition : scenario.decomposition;
+    const dests = branch ? branch.leadDestinations : scenario.leadDestinations;
+    const intMethod = branch ? branch.integrationMethod : scenario.integrationMethod;
+    const compDesc = branch ? branch.companyDescription : scenario.companyDescription;
+    const ret = branch ? branch.retention : scenario.retention;
+
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sales-recommendations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          type: recType,
+          niche: scenario.niche,
+          channel: scenario.channel,
+          leadType: activeLeadType || (scenario.leadTypes?.[0] || ''),
+          companyDescription: compDesc,
+          decomposition: decompSet,
+          leadDestinations: dests,
+          integrationMethod: intMethod,
+          retention: ret,
+        }),
+      });
+
+      if (!resp.ok || !resp.body) {
+        const err = await resp.json().catch(() => ({ error: 'Помилка' }));
+        toast({ title: 'AI помилка', description: err.error || 'Не вдалося отримати рекомендації', variant: 'destructive' });
+        setSalesRecLoading(false);
+        return;
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIdx: number;
+        while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
+          let line = buffer.slice(0, newlineIdx);
+          buffer = buffer.slice(newlineIdx + 1);
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.startsWith(':') || line.trim() === '') continue;
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              fullText += content;
+              setSalesRecText(fullText);
+            }
+          } catch {
+            buffer = line + '\n' + buffer;
+            break;
+          }
+        }
+      }
+    } catch (e: any) {
+      toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати рекомендації', variant: 'destructive' });
+    } finally {
+      setSalesRecLoading(false);
+    }
+  }, [scenario, activeLeadType, toast]);
+
   // savedSteps tracks global steps + per-branch steps (key format: "step" or "step:branchType")
   const [savedSteps, setSavedSteps] = useState<Set<string>>(() => {
     const set = new Set<string>();
@@ -611,14 +698,16 @@ const ScenarioBuilder: React.FC = () => {
     </button>
   );
 
-  const SaveButton: React.FC<{ step: number }> = ({ step }) => (
-    <Button
-      onClick={() => handleSaveStep(step)}
-      disabled={!canSaveStep(step, activeLeadType)}
-      className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold mt-4"
-    >
-      <Save className="w-4 h-4" /> Зберегти та продовжити
-    </Button>
+  const SaveButton: React.FC<{ step: number; sticky?: boolean; disabled?: boolean }> = ({ step, sticky, disabled }) => (
+    <div className={sticky ? 'sticky bottom-0 bg-card pt-3 pb-1 -mx-4 px-4 border-t border-border mt-4 z-10' : 'mt-4'}>
+      <Button
+        onClick={() => handleSaveStep(step)}
+        disabled={disabled !== undefined ? disabled : !canSaveStep(step, activeLeadType)}
+        className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+      >
+        <Save className="w-4 h-4" /> Зберегти та продовжити
+      </Button>
+    </div>
   );
 
   const renderPanel = () => {
@@ -926,9 +1015,16 @@ const ScenarioBuilder: React.FC = () => {
             </div>
           );
 
-        case 6:
+        case 6: {
+          const charCount = (currentCompanyDescription || '').length;
+          const canProcess = charCount >= 50;
+          const salesItems = [
+            { icon: '📞', title: 'Скрипт дзвінка', type: 'call-script' },
+            { icon: '💬', title: 'Скрипт переписки', type: 'chat-script' },
+            { icon: '🔄', title: 'Фоллоу-ап (Follow-up)', type: 'follow-up' },
+          ];
           return (
-            <div className="space-y-4">
+            <div className="space-y-4 pb-16 relative">
               <h3 className="text-base font-bold text-foreground">Продажі</h3>
               {isBranching && activeLeadType && (
                 <Badge variant="secondary" className="text-xs">{LEAD_TYPES.find(l => l.value === activeLeadType)?.icon} {LEAD_TYPES.find(l => l.value === activeLeadType)?.label}</Badge>
@@ -942,29 +1038,42 @@ const ScenarioBuilder: React.FC = () => {
                     } else {
                       update({ companyDescription: e.target.value });
                     }
+                    setSalesProcessed(false);
                   }}
-                  placeholder="Опишіть компанію, продукт, ЦА..."
-                  rows={3} className="bg-secondary border-border text-foreground text-sm placeholder:text-muted-foreground resize-none" />
+                  placeholder="Опишіть компанію, продукт, ЦА... (мінімум 50 символів)"
+                  rows={4} className="bg-secondary border-border text-foreground text-sm placeholder:text-muted-foreground resize-none" />
+                <div className="flex items-center justify-between mt-1">
+                  <span className={`text-xs ${charCount >= 50 ? 'text-success' : 'text-muted-foreground'}`}>
+                    {charCount}/50 символів
+                  </span>
+                  {canProcess && !salesProcessed && (
+                    <Button size="sm" onClick={() => setSalesProcessed(true)} className="gap-1.5 text-xs bg-primary text-primary-foreground">
+                      <Sparkles className="w-3 h-3" /> Обробити
+                    </Button>
+                  )}
+                </div>
               </div>
-              {currentCompanyDescription && (
+              {salesProcessed && (
                 <div className="space-y-3">
-                  {[
-                    { icon: '📞', title: 'Скрипт дзвінка', filename: 'script-call.txt' },
-                    { icon: '💬', title: 'Скрипт переписки', filename: 'script-chat.txt' },
-                    { icon: '🔄', title: 'Follow-up', filename: 'follow-up.txt' },
-                  ].map(s => (
-                    <div key={s.title} className="bg-secondary rounded-lg p-3 flex items-center justify-between">
+                  {salesItems.map(s => (
+                    <div key={s.type} className="bg-secondary rounded-lg p-3 flex items-center justify-between">
                       <span className="font-semibold text-foreground text-sm">{s.icon} {s.title}</span>
-                      <Button variant="secondary" size="sm" className="gap-1.5 text-xs">
-                        <Download className="w-3 h-3" /> Завантажити
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="gap-1.5 text-xs"
+                        onClick={() => fetchSalesRecommendation(s.type, `${s.icon} ${s.title}`)}
+                      >
+                        <Sparkles className="w-3 h-3" /> Рекомендації
                       </Button>
                     </div>
                   ))}
                 </div>
               )}
-              <SaveButton step={6} />
+              <SaveButton step={6} sticky disabled={!canProcess || !salesProcessed} />
             </div>
           );
+        }
 
         case 7: {
           return (
@@ -1418,7 +1527,7 @@ const ScenarioBuilder: React.FC = () => {
 
       {/* AI Campaign Tips dialog */}
       <Dialog open={aiTipsOpen} onOpenChange={setAiTipsOpen}>
-        <DialogContent className="bg-card border-border max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogContent className="bg-card border-border max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-foreground font-bold flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-sm">💡</div>
@@ -1443,6 +1552,37 @@ const ScenarioBuilder: React.FC = () => {
               </div>
             )}
             {aiTipsLoading && aiTipsText && (
+              <div className="flex items-center gap-1 text-muted-foreground text-xs mt-2">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span>Друкую...</span>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sales Recommendations dialog */}
+      <Dialog open={salesRecOpen} onOpenChange={setSalesRecOpen}>
+        <DialogContent className="bg-card border-border max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-foreground font-bold flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              {salesRecTitle || 'Рекомендації'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto pt-2">
+            {salesRecLoading && !salesRecText && (
+              <div className="flex items-center gap-2 text-muted-foreground text-sm py-8 justify-center">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Генерую рекомендації...</span>
+              </div>
+            )}
+            {salesRecText && (
+              <div className="prose prose-sm max-w-none text-foreground">
+                <ReactMarkdown>{salesRecText}</ReactMarkdown>
+              </div>
+            )}
+            {salesRecLoading && salesRecText && (
               <div className="flex items-center gap-1 text-muted-foreground text-xs mt-2">
                 <Loader2 className="w-3 h-3 animate-spin" />
                 <span>Друкую...</span>
