@@ -54,21 +54,23 @@ const FlowNode: React.FC<FlowNodeProps> = ({ icon, title, index, isActive, isCom
 
       {/* Connector line */}
       {!isLast && (
-        <div className="flex items-center mx-2 -mt-5 gap-1">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <svg key={i} width="12" height="20" viewBox="0 0 12 20" className="flex-shrink-0">
-              <path
-                d="M2 2 L10 10 L2 18"
-                fill="none"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className={`transition-colors duration-300 ${
-                  isCompleted ? 'stroke-success' : 'stroke-border'
-                }`}
-              />
-            </svg>
-          ))}
+        <div className="flex items-center -mt-5">
+          <svg width="60" height="16" viewBox="0 0 60 16" className="flex-shrink-0">
+            <line
+              x1="0" y1="8" x2="48" y2="8"
+              strokeWidth="2"
+              strokeDasharray="6 3"
+              className={`transition-colors duration-300 ${
+                isCompleted ? 'stroke-success' : 'stroke-border'
+              }`}
+            />
+            <polygon
+              points="46,3 56,8 46,13"
+              className={`transition-colors duration-300 ${
+                isCompleted ? 'fill-success' : 'fill-border'
+              }`}
+            />
+          </svg>
         </div>
       )}
     </div>
