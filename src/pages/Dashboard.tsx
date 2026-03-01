@@ -13,13 +13,10 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
-  const [desc, setDesc] = useState('');
-
   const handleCreate = () => {
     if (!name.trim()) return;
-    const s = addScenario(name.trim(), desc.trim());
+    const s = addScenario(name.trim(), '');
     setName('');
-    setDesc('');
     setOpen(false);
     navigate(`/scenario/${s.id}`);
   };
@@ -83,16 +80,7 @@ const Dashboard: React.FC = () => {
                     onChange={e => setName(e.target.value)}
                     placeholder="Наприклад: Запуск реклами для кав'ярні"
                     className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Короткий опис</label>
-                  <Textarea
-                    value={desc}
-                    onChange={e => setDesc(e.target.value)}
-                    placeholder="Необов'язково"
-                    rows={3}
-                    className="bg-secondary border-border text-foreground placeholder:text-muted-foreground resize-none"
+                    onKeyDown={e => e.key === 'Enter' && handleCreate()}
                   />
                 </div>
                 <Button onClick={handleCreate} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">

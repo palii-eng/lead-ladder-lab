@@ -23,7 +23,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({ icon, title, index, isActive, isCom
         <div
           className={`rounded-full flex items-center justify-center border-2 transition-all duration-300
             ${isActive
-              ? 'w-[84px] h-[84px] text-3xl border-primary bg-primary/10 shadow-[0_0_24px_hsl(232_55%_49%/0.25)] animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]'
+              ? 'w-[84px] h-[84px] text-3xl border-primary bg-primary/10 shadow-[0_0_24px_hsl(232_55%_49%/0.25)] animate-breathe'
               : isCompleted
               ? 'w-16 h-16 text-2xl border-success bg-success/10'
               : isLocked
