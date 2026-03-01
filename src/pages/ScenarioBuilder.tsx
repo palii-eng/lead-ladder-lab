@@ -381,12 +381,16 @@ const ScenarioBuilder: React.FC = () => {
                 </Button>
               </div>
               <div className="flex gap-1">
-                {(Object.keys(decompLabels) as Array<'bad' | 'realistic' | 'positive'>).map(key => (
-                  <button key={key} onClick={() => setDecompTab(key)}
+                {([
+                  { key: 'bad' as const, label: '😟 Поганий', bg: 'bg-warning text-warning-foreground', inactive: 'bg-warning/20 text-warning-foreground' },
+                  { key: 'realistic' as const, label: '📊 Реалістичний', bg: 'bg-primary text-primary-foreground', inactive: 'bg-primary/20 text-primary' },
+                  { key: 'positive' as const, label: '🚀 Позитивний', bg: 'bg-success text-success-foreground', inactive: 'bg-success/20 text-success' },
+                ]).map(tab => (
+                  <button key={tab.key} onClick={() => setDecompTab(tab.key)}
                     className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                      decompTab === key ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+                      decompTab === tab.key ? tab.bg : tab.inactive
                     }`}>
-                    {decompLabels[key]}
+                    {tab.label}
                   </button>
                 ))}
               </div>
