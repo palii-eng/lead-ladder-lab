@@ -12,20 +12,54 @@ interface FlowNodeProps {
   onClick: () => void;
 }
 
-const FlowNode: React.FC<FlowNodeProps> = ({ icon, title, isActive, isCompleted, isLast, isLocked, subtitle, onClick }) => {
-  const state = isActive ? 'active' : isCompleted ? 'completed' : isLocked ? 'locked' : 'idle';
+const FlowNode: React.FC<FlowNodeProps> = ({
+  icon,
+  title,
+  index,
+  isActive,
+  isCompleted,
+  isLast,
+  isLocked,
+  subtitle,
+  onClick,
+}) => {
+  const state: 'active' | 'completed' | 'locked' | 'idle' = isActive
+    ? 'active'
+    : isCompleted
+    ? 'completed'
+    : isLocked
+    ? 'locked'
+    : 'idle';
+
+  // Outer card sizing
+  const cardSize = isActive ? 'w-[168px]' : 'w-[148px]';
+  const padding = isActive ? 'p-4' : 'p-3.5';
 
   return (
-    <div className="flex items-start flex-shrink-0">
-      {/* Node column */}
-      <div className="flex flex-col items-center" style={{ minWidth: isActive ? '96px' : '76px' }}>
-        <div className="relative">
-          {/* Glow halo for active */}
+    <div className="flex items-stretch flex-shrink-0">
+      {/* ---- Node card ---- */}
+      <div className="flex flex-col items-center" style={{ minWidth: isActive ? '180px' : '160px' }}>
+        <div className="relative group">
+          {/* Animated gradient border for active */}
           {isActive && (
             <span
               aria-hidden
-              className="absolute inset-0 -m-3 rounded-full bg-primary/25 blur-2xl"
-              style={{ animation: 'breathe 3s ease-in-out infinite' }}
+              className="absolute -inset-[2px] rounded-[20px] opacity-90"
+              style={{
+                background:
+                  'conic-gradient(from 0deg, hsl(232 80% 65%), hsl(260 70% 60%), hsl(200 80% 60%), hsl(232 80% 65%))',
+                animation: 'spin 6s linear infinite',
+                filter: 'blur(0.5px)',
+              }}
+            />
+          )}
+
+          {/* Soft glow halo */}
+          {isActive && (
+            <span
+              aria-hidden
+              className="absolute -inset-6 rounded-[28px] bg-primary/20 blur-3xl pointer-events-none"
+              style={{ animation: 'breathe 4s ease-in-out infinite' }}
             />
           )}
 
@@ -33,63 +67,105 @@ const FlowNode: React.FC<FlowNodeProps> = ({ icon, title, isActive, isCompleted,
             onClick={onClick}
             disabled={isLocked}
             className={`
-              relative flex-shrink-0 rounded-2xl flex items-center justify-center
-              transition-all duration-500 ease-out backdrop-blur-sm
+              relative ${cardSize} ${padding}
+              rounded-[18px] flex flex-col items-start gap-2.5
+              transition-all duration-300 ease-out text-left
               ${state === 'active'
-                ? 'w-[88px] h-[88px] text-3xl text-primary-foreground border border-white/20 shadow-[0_20px_50px_-12px_hsl(232_55%_49%/0.55)] scale-100'
+                ? 'bg-card border border-white/40 shadow-[0_20px_50px_-15px_hsl(232_55%_49%/0.45)]'
                 : state === 'completed'
-                ? 'w-[68px] h-[68px] text-2xl text-success-foreground border border-white/30 shadow-[0_10px_25px_-10px_hsl(108_42%_52%/0.5)] hover:scale-105'
+                ? 'bg-card border border-success/30 shadow-[0_8px_24px_-12px_hsl(108_42%_52%/0.4)] hover:-translate-y-1 hover:shadow-[0_16px_32px_-12px_hsl(108_42%_52%/0.5)]'
                 : state === 'locked'
-                ? 'w-[68px] h-[68px] text-2xl bg-muted/60 text-muted-foreground/50 border border-dashed border-border/60 opacity-60'
-                : 'w-[68px] h-[68px] text-2xl bg-card text-foreground border border-border/80 shadow-[0_4px_12px_-6px_hsl(0_0%_0%/0.12)] hover:border-primary/50 hover:shadow-[0_10px_25px_-10px_hsl(232_55%_49%/0.35)] hover:scale-105 cursor-pointer'
+                ? 'bg-muted/40 border border-dashed border-border/60 opacity-55'
+                : 'bg-card border border-border/70 shadow-[0_4px_14px_-8px_hsl(0_0%_0%/0.12)] hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_16px_28px_-12px_hsl(232_55%_49%/0.3)]'
               }
-              ${isLocked ? 'cursor-not-allowed' : ''}
+              ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}
             `}
-            style={
-              state === 'active'
-                ? { background: 'var(--gradient-primary)' }
-                : state === 'completed'
-                ? { background: 'linear-gradient(135deg, hsl(108 42% 52%), hsl(108 50% 60%))' }
-                : undefined
-            }
           >
-            <span className="drop-shadow-sm">{icon}</span>
-
-            {/* Completed check badge */}
-            {isCompleted && !isActive && (
-              <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-success border-2 border-background flex items-center justify-center text-[10px] font-bold text-success-foreground shadow-sm">
-                ✓
+            {/* Top row: step number + icon */}
+            <div className="flex items-center justify-between w-full">
+              <span
+                className={`text-[10px] font-bold tracking-[0.12em] uppercase px-2 py-0.5 rounded-md ${
+                  state === 'active'
+                    ? 'bg-primary text-primary-foreground'
+                    : state === 'completed'
+                    ? 'bg-success/15 text-success'
+                    : state === 'locked'
+                    ? 'bg-muted text-muted-foreground/60'
+                    : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {String(index + 1).padStart(2, '0')}
               </span>
+
+              <div
+                className={`relative flex items-center justify-center rounded-xl text-xl transition-transform ${
+                  isActive ? 'w-10 h-10 scale-110' : 'w-9 h-9'
+                }`}
+                style={
+                  state === 'active'
+                    ? { background: 'var(--gradient-primary)' }
+                    : state === 'completed'
+                    ? { background: 'linear-gradient(135deg, hsl(108 42% 52%), hsl(108 50% 60%))' }
+                    : state === 'locked'
+                    ? { background: 'hsl(var(--muted))' }
+                    : { background: 'hsl(var(--accent))' }
+                }
+              >
+                <span
+                  className={`drop-shadow-sm ${
+                    state === 'active' || state === 'completed' ? 'text-white' : ''
+                  }`}
+                >
+                  {icon}
+                </span>
+                {isCompleted && !isActive && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-success border-2 border-card flex items-center justify-center text-[8px] font-bold text-white">
+                    ✓
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Title */}
+            <div className="w-full">
+              {title.split('\n').map((line, idx) => (
+                <div
+                  key={idx}
+                  className={
+                    idx === 0
+                      ? `text-[12px] font-semibold leading-snug ${
+                          state === 'locked' ? 'text-muted-foreground/50' : 'text-foreground'
+                        }`
+                      : 'text-[10px] text-primary font-medium mt-0.5 leading-tight'
+                  }
+                >
+                  {line}
+                </div>
+              ))}
+            </div>
+
+            {/* Active indicator dot */}
+            {isActive && (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary" />
+                </span>
+                <span className="text-[9px] font-medium text-primary uppercase tracking-wider">
+                  Активний крок
+                </span>
+              </div>
             )}
           </button>
         </div>
 
-        <button
-          onClick={onClick}
-          disabled={isLocked}
-          className={`mt-3 text-[11px] font-semibold max-w-[110px] text-center leading-tight tracking-tight transition-colors ${
-            isActive
-              ? 'text-primary'
-              : isCompleted
-              ? 'text-foreground'
-              : isLocked
-              ? 'text-muted-foreground/40'
-              : 'text-muted-foreground hover:text-foreground'
-          } ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-        >
-          {title.split('\n').map((line, idx) => (
-            <span key={idx} className={idx > 0 ? 'block text-[9px] text-primary/80 font-medium mt-0.5' : 'block'}>
-              {line}
-            </span>
-          ))}
-        </button>
-
+        {/* Subtitle pills below card */}
         {subtitle && (
-          <div className="flex flex-col items-center gap-1 mt-2">
+          <div className="flex flex-col items-center gap-1 mt-3 max-w-[200px]">
             {subtitle.split('\n').map((line, idx) => (
               <span
                 key={idx}
-                className="text-[9px] font-medium text-primary max-w-[220px] text-center leading-tight whitespace-nowrap bg-primary/10 border border-primary/15 px-2 py-0.5 rounded-full backdrop-blur-sm"
+                className="text-[10px] font-medium text-foreground/80 bg-card border border-border/70 px-2.5 py-1 rounded-full shadow-sm whitespace-nowrap"
               >
                 {line}
               </span>
@@ -98,37 +174,45 @@ const FlowNode: React.FC<FlowNodeProps> = ({ icon, title, isActive, isCompleted,
         )}
       </div>
 
-      {/* Modern connector */}
+      {/* ---- Animated connector ---- */}
       {!isLast && (
-        <div className="flex items-center" style={{ height: isActive ? '88px' : '68px' }}>
-          <svg width="84" height="20" viewBox="0 0 84 20" className="flex-shrink-0 mx-1.5 overflow-visible">
+        <div className="flex items-center self-start" style={{ height: isActive ? '96px' : '88px' }}>
+          <svg width="64" height="24" viewBox="0 0 64 24" className="overflow-visible">
             <defs>
-              <linearGradient id={`conn-${isCompleted ? 'done' : 'idle'}`} x1="0" x2="1" y1="0" y2="0">
+              <linearGradient id={`flow-${isCompleted ? 'done' : 'idle'}`} x1="0" x2="1">
                 {isCompleted ? (
                   <>
-                    <stop offset="0%" stopColor="hsl(108 42% 52%)" stopOpacity="0.9" />
-                    <stop offset="100%" stopColor="hsl(108 50% 60%)" stopOpacity="1" />
+                    <stop offset="0%" stopColor="hsl(108 42% 52%)" />
+                    <stop offset="100%" stopColor="hsl(108 50% 60%)" />
                   </>
                 ) : (
                   <>
-                    <stop offset="0%" stopColor="hsl(var(--border))" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="hsl(var(--border))" stopOpacity="0.9" />
+                    <stop offset="0%" stopColor="hsl(var(--border))" />
+                    <stop offset="100%" stopColor="hsl(var(--border))" />
                   </>
                 )}
               </linearGradient>
             </defs>
+            {/* base dashed line */}
             <line
               x1="0"
-              y1="10"
-              x2="70"
-              y2="10"
+              y1="12"
+              x2="52"
+              y2="12"
               strokeWidth="2"
               strokeLinecap="round"
-              stroke={`url(#conn-${isCompleted ? 'done' : 'idle'})`}
-            />
-            <polygon
-              points="68,4 80,10 68,16"
-              className={`transition-colors duration-300 ${isCompleted ? 'fill-success' : 'fill-border'}`}
+              strokeDasharray="4 4"
+              stroke={`url(#flow-${isCompleted ? 'done' : 'idle'})`}
+              opacity={isCompleted ? 1 : 0.5}
+            >
+              {isCompleted && (
+                <animate attributeName="stroke-dashoffset" from="0" to="-16" dur="1.2s" repeatCount="indefinite" />
+              )}
+            </line>
+            {/* arrowhead */}
+            <path
+              d="M 50 6 L 60 12 L 50 18 Z"
+              className={isCompleted ? 'fill-success' : 'fill-border'}
             />
           </svg>
         </div>
