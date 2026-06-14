@@ -1573,7 +1573,8 @@ const ScenarioBuilder: React.FC = () => {
                 }
 
                 // Make.com-style branching layout
-                const branchRowHeight = 160; // height per branch row
+                const branchRowHeight = 260; // height per branch row (room for card + subtitle pills)
+                const nodeCenterOffset = 60; // approx vertical center of card icon row
 
                 return (
                   <div className="px-12 py-8 flex items-start">
@@ -1592,8 +1593,8 @@ const ScenarioBuilder: React.FC = () => {
                         viewBox={`0 0 80 ${leadTypes.length * branchRowHeight}`}
                       >
                         {leadTypes.map((_, brIdx) => {
-                          const centerY = ((leadTypes.length - 1) * branchRowHeight) / 2 + 32;
-                          const branchY = brIdx * branchRowHeight + 32;
+                          const centerY = ((leadTypes.length - 1) * branchRowHeight) / 2 + nodeCenterOffset;
+                          const branchY = brIdx * branchRowHeight + nodeCenterOffset;
                           return (
                             <g key={brIdx}>
                               <path
