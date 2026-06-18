@@ -524,10 +524,53 @@ const ScenarioBuilder: React.FC = () => {
     return (
       <SimulationIntro
         scenarioName={scenario.name}
-        onAccept={(difficulty, brief) => updateScenario(id!, { difficulty, clientBrief: brief })}
+        onAccept={(difficulty, brief) => {
+          updateScenario(id!, { difficulty, clientBrief: brief });
+          toast({
+            title: 'Ads School',
+            description: `Вітаю з новим проектом — ${brief.name}!`,
+          });
+        }}
       />
     );
   }
+
+  const ClientInfoCard: React.FC<{ compact?: boolean }> = ({ compact }) => {
+    const b = scenario.clientBrief!;
+    return (
+      <div
+        className={`flex-shrink-0 rounded-2xl bg-card border border-border shadow-sm overflow-hidden ${compact ? 'w-[260px]' : 'w-[280px]'}`}
+        style={{ boxShadow: '0 10px 30px -15px hsl(var(--foreground) / 0.18)' }}
+        data-flow-node
+      >
+        <div className="relative aspect-[4/3] bg-secondary">
+          <img
+            src={b.photo}
+            alt={b.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${b.name}`;
+            }}
+          />
+          <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/65 via-black/15 to-transparent">
+            <p className="text-white font-bold text-base leading-tight">{b.name}</p>
+            {b.niche && <p className="text-white/85 text-xs mt-0.5">{b.niche}</p>}
+          </div>
+          {b.source && (
+            <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur text-foreground text-[9px] font-semibold uppercase tracking-wide shadow-sm">
+              {b.source}
+            </span>
+          )}
+        </div>
+        <div className="p-3">
+          <p className="text-[10px] font-bold text-foreground/60 uppercase tracking-wider mb-1">
+            Клієнт
+          </p>
+          <p className="text-xs text-foreground leading-relaxed line-clamp-5">{b.task}</p>
+        </div>
+      </div>
+    );
+  };
 
   const update = (u: Partial<Scenario>) => updateScenario(id!, u);
 
