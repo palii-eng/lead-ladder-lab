@@ -66,9 +66,6 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
               <Sparkles className="w-3.5 h-3.5" />
               Симуляція маркетолога
             </div>
-            <h1 className="text-4xl font-extrabold text-foreground tracking-tight mb-2">
-              {scenarioName}
-            </h1>
             <p className="text-muted-foreground">Оберіть рівень складності — від цього залежать клієнти, які до вас прийдуть.</p>
           </div>
 
