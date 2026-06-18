@@ -992,45 +992,6 @@ const ScenarioBuilder: React.FC = () => {
                 </div>
               )}
 
-              {/* SEO organic option */}
-              <div className="border-t border-border pt-4">
-                <p className="text-xs text-muted-foreground mb-2">Додаткова опція:</p>
-                <button
-                  onClick={() => setSeoEnabled(!seoEnabled)}
-                  className={`w-full p-3 rounded-lg border text-left text-sm transition-all ${
-                    seoEnabled
-                      ? 'border-success bg-success/10 text-foreground font-semibold'
-                      : 'border-border bg-card text-foreground hover:border-success/40'
-                  }`}
-                >
-                  🌿 SEO — органіка
-                  <span className="text-xs text-muted-foreground ml-2">(опціонально)</span>
-                </button>
-                {seoEnabled && (
-                  <div className="mt-3 space-y-3 p-3 bg-secondary rounded-lg">
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Скільки продажів зараз з органіки?</label>
-                      <Input
-                        type="number"
-                        value={seoLeads}
-                        onChange={e => setSeoLeads(e.target.value)}
-                        placeholder="Наприклад: 10"
-                        className="bg-card border-border text-foreground h-9 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Середній чек з органіки (₴)</label>
-                      <Input
-                        type="number"
-                        value={seoAvgCheck}
-                        onChange={e => setSeoAvgCheck(e.target.value)}
-                        placeholder="Наприклад: 2000"
-                        className="bg-card border-border text-foreground h-9 text-sm"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
 
               {/* AI Recommendations */}
               {scenario.channel && (
