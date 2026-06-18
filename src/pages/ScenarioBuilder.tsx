@@ -1686,7 +1686,10 @@ const ScenarioBuilder: React.FC = () => {
                     </div>
                     {/* Shared steps (0, 1, 2) — vertically centered, last node without connector */}
                     <div className="flex items-start gap-0 flex-shrink-0" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
-                      {STEPS.slice(0, 3).map((_, i) => renderNode(i, undefined, i === 2))}
+                      {(() => {
+                        const visible = [0, 1, 2].filter(i => isStepUnlocked(i));
+                        return visible.map((i, idx) => renderNode(i, undefined, idx === visible.length - 1));
+                      })()}
                     </div>
 
                     {/* Branch lines + branch rows */}
