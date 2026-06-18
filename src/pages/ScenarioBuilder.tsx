@@ -1663,7 +1663,10 @@ const ScenarioBuilder: React.FC = () => {
                           <ClientInfoCard />
                           <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />
                         </div>
-                        {STEPS.map((_, i) => renderNode(i, undefined, i === STEPS.length - 1))}
+                        {(() => {
+                          const visible = STEPS.map((_, i) => i).filter(i => isStepUnlocked(i));
+                          return visible.map((i, idx) => renderNode(i, undefined, idx === visible.length - 1));
+                        })()}
                       </div>
                       {scenario.retention.emailCount > 0 && savedSteps.has('7') && <RetentionArrow />}
                     </>
@@ -1683,7 +1686,10 @@ const ScenarioBuilder: React.FC = () => {
                     </div>
                     {/* Shared steps (0, 1, 2) — vertically centered, last node without connector */}
                     <div className="flex items-start gap-0 flex-shrink-0" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
-                      {STEPS.slice(0, 3).map((_, i) => renderNode(i, undefined, i === 2))}
+                      {(() => {
+                        const visible = [0, 1, 2].filter(i => isStepUnlocked(i));
+                        return visible.map((i, idx) => renderNode(i, undefined, idx === visible.length - 1));
+                      })()}
                     </div>
 
                     {/* Branch lines + branch rows */}
@@ -1720,7 +1726,10 @@ const ScenarioBuilder: React.FC = () => {
                       <div className="flex flex-col" style={{ marginLeft: '80px' }}>
                         {leadTypes.map((lt, brIdx) => (
                           <div key={lt} className="flex items-start gap-0" style={{ height: `${branchRowHeight}px` }}>
-                            {BRANCH_STEPS.map((_, bi) => renderNode(bi + 3, lt, bi === BRANCH_STEPS.length - 1))}
+                            {(() => {
+                              const visible = BRANCH_STEPS.map((_, bi) => bi).filter(bi => isStepUnlocked(bi + 3, lt));
+                              return visible.map((bi, idx) => renderNode(bi + 3, lt, idx === visible.length - 1));
+                            })()}
                           </div>
                         ))}
                       </div>
