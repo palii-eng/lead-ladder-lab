@@ -549,10 +549,13 @@ const ScenarioBuilder: React.FC = () => {
   const ClientInfoCard: React.FC<{ compact?: boolean }> = ({ compact }) => {
     const b = scenario.clientBrief!;
     return (
-      <div
-        className={`flex-shrink-0 rounded-2xl bg-card border border-border shadow-sm overflow-hidden ${compact ? 'w-[260px]' : 'w-[280px]'}`}
+      <button
+        type="button"
+        onClick={() => { if (!wasDragged.current) setClientBriefOpen(true); }}
+        className={`flex-shrink-0 rounded-2xl bg-card border border-border shadow-sm overflow-hidden text-left hover:-translate-y-0.5 hover:shadow-md transition-all ${compact ? 'w-[260px]' : 'w-[280px]'}`}
         style={{ boxShadow: '0 10px 30px -15px hsl(var(--foreground) / 0.18)' }}
         data-flow-node
+        title="Натисніть, щоб прочитати запит клієнта"
       >
         <div className="relative aspect-[4/3] bg-secondary">
           <img
@@ -578,8 +581,9 @@ const ScenarioBuilder: React.FC = () => {
             Клієнт
           </p>
           <p className="text-xs text-foreground leading-relaxed line-clamp-5">{b.task}</p>
+          <p className="text-[10px] text-primary font-semibold mt-2">Натисніть, щоб прочитати повністю →</p>
         </div>
-      </div>
+      </button>
     );
   };
 
