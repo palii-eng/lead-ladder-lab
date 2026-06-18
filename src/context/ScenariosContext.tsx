@@ -33,10 +33,20 @@ export interface DecompositionSet {
   positive: DecompositionScenario;
 }
 
+export interface ClientBrief {
+  name: string;
+  photo: string;
+  task: string;
+  niche?: string;
+  source?: string;
+}
+
 export interface Scenario {
   id: string;
   name: string;
   description: string;
+  difficulty?: 'lucky' | 'suffer';
+  clientBrief?: ClientBrief;
   niche: string;
   leadSource: string;
   channel: string;
