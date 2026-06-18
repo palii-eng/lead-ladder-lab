@@ -520,6 +520,15 @@ const ScenarioBuilder: React.FC = () => {
     );
   }
 
+  if (!scenario.clientBrief) {
+    return (
+      <SimulationIntro
+        scenarioName={scenario.name}
+        onAccept={(difficulty, brief) => updateScenario(id!, { difficulty, clientBrief: brief })}
+      />
+    );
+  }
+
   const update = (u: Partial<Scenario>) => updateScenario(id!, u);
 
   const hasMultipleLeadTypes = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1;
