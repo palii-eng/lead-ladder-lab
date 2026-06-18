@@ -1731,6 +1731,43 @@ const ScenarioBuilder: React.FC = () => {
         )}
       </div>
 
+      {/* Client brief dialog */}
+      <Dialog open={clientBriefOpen} onOpenChange={setClientBriefOpen}>
+        <DialogContent className="bg-card border-border max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-foreground font-bold flex items-center gap-3">
+              <img
+                src={scenario.clientBrief?.photo}
+                alt={scenario.clientBrief?.name}
+                className="w-12 h-12 rounded-full object-cover"
+              />
+              <div className="flex flex-col items-start">
+                <span>{scenario.clientBrief?.name}</span>
+                {scenario.clientBrief?.niche && (
+                  <span className="text-xs text-muted-foreground font-normal">{scenario.clientBrief.niche}</span>
+                )}
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          {scenario.clientBrief?.source && (
+            <span className="self-start px-2.5 py-1 rounded-full bg-secondary text-foreground text-[10px] font-semibold uppercase tracking-wide">
+              {scenario.clientBrief.source}
+            </span>
+          )}
+          <div
+            className="rounded-2xl p-4 mt-1"
+            style={{ background: 'linear-gradient(135deg, hsl(48 80% 96%), hsl(0 0% 100%))' }}
+          >
+            <p className="text-xs font-bold text-foreground/60 uppercase tracking-wider mb-2">
+              Задача для маркетолога
+            </p>
+            <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+              {scenario.clientBrief?.task}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Video dialog */}
       <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
         <DialogContent className="bg-card border-border">
