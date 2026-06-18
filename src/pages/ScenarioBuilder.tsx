@@ -131,7 +131,8 @@ const ScenarioBuilder: React.FC = () => {
   const navigate = useNavigate();
   const { getScenario, updateScenario } = useScenarios();
   const scenario = getScenario(id!);
-  const [activeStep, setActiveStep] = useState<number | null>(0);
+  const [activeStep, setActiveStep] = useState<number | null>(1);
+  const [clientBriefOpen, setClientBriefOpen] = useState(false);
   const [decompTab, setDecompTab] = useState<'bad' | 'realistic' | 'positive'>('realistic');
   const [activeLeadType, setActiveLeadType] = useState<string>('');
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
