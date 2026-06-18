@@ -16,7 +16,7 @@ const LUCKY_CLIENTS: ClientTemplate[] = [
     task: 'Hi, я Дмитро, CEO SaaS-сервісу для HR-команд. Шукаємо performance-маркетолога. LTV високий, можемо платити за лід дорого. Цікавить Meta + Google.' },
 ];
 
-const HARD_CLIENTS: ClientBrief[] = [
+const HARD_CLIENTS: ClientTemplate[] = [
   { name: 'Сергій', niche: 'Дешеві чохли для телефонів', source: 'Холодний контакт',
     task: 'Алло, це Сергій. Мені друг сказав, що ти "робиш рекламу". Бюджет — 50 баксів на тиждень, треба продавати чохли по 200 грн. Хочу ROMI 500%, інакше це не цікаво.' },
   { name: 'Олена', niche: 'Езотерика / Таро', source: 'Direct в Instagram',
