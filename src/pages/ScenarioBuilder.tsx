@@ -526,7 +526,17 @@ const ScenarioBuilder: React.FC = () => {
       <SimulationIntro
         scenarioName={scenario.name}
         onAccept={(difficulty, brief) => {
-          updateScenario(id!, { difficulty, clientBrief: brief });
+          updateScenario(id!, {
+            difficulty,
+            clientBrief: brief,
+            niche: brief.niche || scenario.niche,
+          });
+          setSavedSteps(prev => {
+            const next = new Set(prev);
+            next.add('0');
+            return next;
+          });
+          setActiveStep(1);
           toast({
             title: 'Ads School',
             description: `Вітаю з новим проектом — ${brief.name}!`,
