@@ -42,30 +42,30 @@ const HARD_CLIENTS: ClientTemplate[] = [
     task: 'Йо. Треба залити траф на лендос, ніша — крипта, деталі не питай поки не підпишем нда. Платимо в USDT кожний тиждень, но тільки за результат (CPA). KPI скину в телезі, тут не хочу. Працюємо?' },
 ];
 
-// Curated high-quality Unsplash portraits (free to use). Cropped square, faces centered.
+// Curated Slavic / Eastern European portraits from Unsplash (free to use).
 const FEMALE_PHOTOS = [
-  'photo-1494790108377-be9c29b29330',
-  'photo-1488426862026-3ee34a7d66df',
-  'photo-1544005313-94ddf0286df2',
+  'photo-1531123897727-8f129e1688ce', // light hair, blue eyes
+  'photo-1502323777036-f29e3972d82f',
+  'photo-1592621385612-4d7129426394',
+  'photo-1593104547489-5cfb3839a3b5',
+  'photo-1551836022-deb4988cc6c0',
+  'photo-1546961342-1e9cd865c8b0',
+  'photo-1557555187-23d685287bc3',
   'photo-1573496359142-b8d87734a5a2',
-  'photo-1487412720507-e7ab37603c6f',
-  'photo-1531123897727-8f129e1688ce',
-  'photo-1517841905240-472988babdf9',
-  'photo-1438761681033-6461ffad8d80',
-  'photo-1502823403499-6ccfcf4fb453',
-  'photo-1524504388940-b1c1722653e1',
+  'photo-1488426862026-3ee34a7d66df',
+  'photo-1524638431109-93d95c968f03',
 ];
 const MALE_PHOTOS = [
   'photo-1500648767791-00dcc994a43e',
-  'photo-1507003211169-0a1dd7228f2d',
-  'photo-1472099645785-5658abf4ff4e',
-  'photo-1463453091185-61582044d556',
-  'photo-1519085360753-af0119f7cbe7',
-  'photo-1492562080023-ab3db95bfbce',
-  'photo-1506794778202-cad84cf45f1d',
   'photo-1531427186611-ecfd6d936c79',
-  'photo-1539571696357-5a69c17a67c6',
-  'photo-1521119989659-a83eee488004',
+  'photo-1463453091185-61582044d556',
+  'photo-1492562080023-ab3db95bfbce',
+  'photo-1519345182560-3f2917c472ef',
+  'photo-1610088441520-4352457e7095',
+  'photo-1564564321837-a57b7070ac4f',
+  'photo-1545167622-3a6ac756afa4',
+  'photo-1564485377539-4af72d1f6a2f',
+  'photo-1520975916090-3105956dac38',
 ];
 
 const photoFor = (gender: Gender, seed: number) => {
