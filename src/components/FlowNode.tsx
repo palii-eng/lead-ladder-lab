@@ -131,7 +131,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({
             state === 'completed' ? 'text-success font-semibold' :
             'text-muted-foreground/70'
           }`}>
-            STEP {String(index + 1).padStart(2, '0')}
+            КРОК {String(index + 1).padStart(2, '0')}
           </span>
           {isActive && (
             <span className="relative flex h-1.5 w-1.5">
