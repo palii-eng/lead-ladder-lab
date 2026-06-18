@@ -588,6 +588,32 @@ const ScenarioBuilder: React.FC = () => {
     );
   };
 
+  const PlusBriefButton: React.FC = () => (
+    <div className="flex flex-col items-center mt-3 select-none">
+      <div className="w-px h-4 bg-border" />
+      {briefRequested ? (
+        <div className="px-3 py-2 rounded-full bg-accent border border-primary/30 text-primary text-xs font-semibold shadow-sm flex items-center gap-1.5">
+          <Check className="w-3 h-3" /> Попросити заповнити бриф
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setBriefRequested(true);
+            toast({ title: 'Попросити заповнити бриф', description: 'Запит відправлено клієнту.' });
+          }}
+          className="w-10 h-10 rounded-full bg-card border-2 border-primary text-primary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all shadow-sm hover:shadow-md"
+          title="Попросити заповнити бриф"
+          aria-label="Попросити заповнити бриф"
+        >
+          <Plus className="w-5 h-5" />
+        </button>
+      )}
+    </div>
+  );
+
+
   const update = (u: Partial<Scenario>) => updateScenario(id!, u);
 
   const hasMultipleLeadTypes = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1;
