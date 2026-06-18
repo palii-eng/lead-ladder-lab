@@ -1658,7 +1658,11 @@ const ScenarioBuilder: React.FC = () => {
                   // Single row — original behavior
                   return (
                     <>
-                      <div className="flex items-start gap-0 px-12 py-8">
+                      <div className="flex items-center gap-0 px-12 py-8">
+                        <div className="flex items-center pr-6">
+                          <ClientInfoCard />
+                          <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />
+                        </div>
                         {STEPS.map((_, i) => renderNode(i, undefined, i === STEPS.length - 1))}
                       </div>
                       {scenario.retention.emailCount > 0 && savedSteps.has('7') && <RetentionArrow />}
