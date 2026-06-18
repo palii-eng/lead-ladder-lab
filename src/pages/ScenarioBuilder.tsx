@@ -993,29 +993,7 @@ const ScenarioBuilder: React.FC = () => {
               )}
 
 
-              {/* AI Recommendations */}
-              {scenario.channel && (
-                <div className="border-t border-border pt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-bold text-foreground">🤖 AI-рекомендації</p>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={fetchAiRecommendation}
-                      disabled={aiLoading}
-                      className="gap-1 text-xs"
-                    >
-                      {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                      {aiLoading ? 'Генерація...' : 'Згенерувати'}
-                    </Button>
-                  </div>
-                  {aiRecommendation && (
-                    <div className="bg-secondary rounded-lg p-3 text-xs text-foreground whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
-                      {aiRecommendation}
-                    </div>
-                  )}
-                </div>
-              )}
+
 
               <SaveButton step={2} />
             </div>
