@@ -1663,7 +1663,10 @@ const ScenarioBuilder: React.FC = () => {
                           <ClientInfoCard />
                           <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />
                         </div>
-                        {STEPS.map((_, i) => renderNode(i, undefined, i === STEPS.length - 1))}
+                        {(() => {
+                          const visible = STEPS.map((_, i) => i).filter(i => isStepUnlocked(i));
+                          return visible.map((i, idx) => renderNode(i, undefined, idx === visible.length - 1));
+                        })()}
                       </div>
                       {scenario.retention.emailCount > 0 && savedSteps.has('7') && <RetentionArrow />}
                     </>
