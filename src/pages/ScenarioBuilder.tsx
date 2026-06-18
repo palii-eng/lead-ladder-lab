@@ -1641,7 +1641,10 @@ const ScenarioBuilder: React.FC = () => {
                     <>
                       <div className="flex items-center gap-0 px-12 py-8">
                         <div className="flex items-center pr-6">
-                          <ClientInfoCard />
+                          <div className="flex flex-col items-center">
+                            <ClientInfoCard />
+                            <PlusBriefButton />
+                          </div>
                           <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />
                         </div>
                         {(() => {
@@ -1662,7 +1665,10 @@ const ScenarioBuilder: React.FC = () => {
                   <div className="px-12 py-8 flex items-start">
                     {/* Client info card — vertically centered with shared steps */}
                     <div className="flex items-center flex-shrink-0 pr-6" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
-                      <ClientInfoCard />
+                      <div className="flex flex-col items-center">
+                        <ClientInfoCard />
+                        <PlusBriefButton />
+                      </div>
                       <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />
                     </div>
                     {/* Shared steps (0, 1, 2) — vertically centered, last node without connector */}
