@@ -1726,7 +1726,10 @@ const ScenarioBuilder: React.FC = () => {
                       <div className="flex flex-col" style={{ marginLeft: '80px' }}>
                         {leadTypes.map((lt, brIdx) => (
                           <div key={lt} className="flex items-start gap-0" style={{ height: `${branchRowHeight}px` }}>
-                            {BRANCH_STEPS.map((_, bi) => renderNode(bi + 3, lt, bi === BRANCH_STEPS.length - 1))}
+                            {(() => {
+                              const visible = BRANCH_STEPS.map((_, bi) => bi).filter(bi => isStepUnlocked(bi + 3, lt));
+                              return visible.map((bi, idx) => renderNode(bi + 3, lt, idx === visible.length - 1));
+                            })()}
                           </div>
                         ))}
                       </div>
