@@ -2,6 +2,16 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ClientBrief } from '@/context/ScenariosContext';
 import { Sparkles, Flame, X, Check, ArrowLeft, Loader2 } from 'lucide-react';
+import f1 from '@/assets/clients/f1.jpg';
+import f2 from '@/assets/clients/f2.jpg';
+import f3 from '@/assets/clients/f3.jpg';
+import f4 from '@/assets/clients/f4.jpg';
+import f5 from '@/assets/clients/f5.jpg';
+import m1 from '@/assets/clients/m1.jpg';
+import m2 from '@/assets/clients/m2.jpg';
+import m3 from '@/assets/clients/m3.jpg';
+import m4 from '@/assets/clients/m4.jpg';
+import m5 from '@/assets/clients/m5.jpg';
 
 type Gender = 'male' | 'female';
 type ClientTemplate = Omit<ClientBrief, 'photo'> & { gender: Gender; role: string };
@@ -42,36 +52,13 @@ const HARD_CLIENTS: ClientTemplate[] = [
     task: 'Йо. Треба залити траф на лендос, ніша — крипта, деталі не питай поки не підпишем нда. Платимо в USDT кожний тиждень, но тільки за результат (CPA). KPI скину в телезі, тут не хочу. Працюємо?' },
 ];
 
-// Curated Slavic / Eastern European portraits from Unsplash (free to use).
-const FEMALE_PHOTOS = [
-  'photo-1531123897727-8f129e1688ce', // light hair, blue eyes
-  'photo-1502323777036-f29e3972d82f',
-  'photo-1592621385612-4d7129426394',
-  'photo-1593104547489-5cfb3839a3b5',
-  'photo-1551836022-deb4988cc6c0',
-  'photo-1546961342-1e9cd865c8b0',
-  'photo-1557555187-23d685287bc3',
-  'photo-1573496359142-b8d87734a5a2',
-  'photo-1488426862026-3ee34a7d66df',
-  'photo-1524638431109-93d95c968f03',
-];
-const MALE_PHOTOS = [
-  'photo-1500648767791-00dcc994a43e',
-  'photo-1531427186611-ecfd6d936c79',
-  'photo-1463453091185-61582044d556',
-  'photo-1492562080023-ab3db95bfbce',
-  'photo-1519345182560-3f2917c472ef',
-  'photo-1610088441520-4352457e7095',
-  'photo-1564564321837-a57b7070ac4f',
-  'photo-1545167622-3a6ac756afa4',
-  'photo-1564485377539-4af72d1f6a2f',
-  'photo-1520975916090-3105956dac38',
-];
+// Hand-painted illustrated portraits (AI-generated, project assets)
+const FEMALE_PHOTOS = [f1, f2, f3, f4, f5];
+const MALE_PHOTOS = [m1, m2, m3, m4, m5];
 
 const photoFor = (gender: Gender, seed: number) => {
   const list = gender === 'female' ? FEMALE_PHOTOS : MALE_PHOTOS;
-  const id = list[Math.abs(seed) % list.length];
-  return `https://images.unsplash.com/${id}?w=800&h=1000&fit=crop&crop=faces&q=80`;
+  return list[Math.abs(seed) % list.length];
 };
 
 interface Props {
