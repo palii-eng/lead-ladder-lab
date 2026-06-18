@@ -461,6 +461,9 @@ const ScenarioBuilder: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const ZOOM_MIN = 0.25;
+  const ZOOM_MAX = 1.5;
   const wasDragged = useRef(false);
 
   const handleMouseDown = (e: React.MouseEvent) => {
