@@ -82,7 +82,7 @@ const Dashboard: React.FC = () => {
                   />
                 </div>
                 <Button onClick={handleCreate} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
-                  Створити
+                  Почати симуляцію
                 </Button>
               </div>
             </DialogContent>
