@@ -131,7 +131,8 @@ const ScenarioBuilder: React.FC = () => {
   const navigate = useNavigate();
   const { getScenario, updateScenario } = useScenarios();
   const scenario = getScenario(id!);
-  const [activeStep, setActiveStep] = useState<number | null>(0);
+  const [activeStep, setActiveStep] = useState<number | null>(1);
+  const [clientBriefOpen, setClientBriefOpen] = useState(false);
   const [decompTab, setDecompTab] = useState<'bad' | 'realistic' | 'positive'>('realistic');
   const [activeLeadType, setActiveLeadType] = useState<string>('');
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
@@ -525,7 +526,17 @@ const ScenarioBuilder: React.FC = () => {
       <SimulationIntro
         scenarioName={scenario.name}
         onAccept={(difficulty, brief) => {
-          updateScenario(id!, { difficulty, clientBrief: brief });
+          updateScenario(id!, {
+            difficulty,
+            clientBrief: brief,
+            niche: brief.niche || scenario.niche,
+          });
+          setSavedSteps(prev => {
+            const next = new Set(prev);
+            next.add('0');
+            return next;
+          });
+          setActiveStep(1);
           toast({
             title: 'Ads School',
             description: `Вітаю з новим проектом — ${brief.name}!`,
@@ -538,10 +549,13 @@ const ScenarioBuilder: React.FC = () => {
   const ClientInfoCard: React.FC<{ compact?: boolean }> = ({ compact }) => {
     const b = scenario.clientBrief!;
     return (
-      <div
-        className={`flex-shrink-0 rounded-2xl bg-card border border-border shadow-sm overflow-hidden ${compact ? 'w-[260px]' : 'w-[280px]'}`}
+      <button
+        type="button"
+        onClick={() => { if (!wasDragged.current) setClientBriefOpen(true); }}
+        className={`flex-shrink-0 rounded-2xl bg-card border border-border shadow-sm overflow-hidden text-left hover:-translate-y-0.5 hover:shadow-md transition-all ${compact ? 'w-[260px]' : 'w-[280px]'}`}
         style={{ boxShadow: '0 10px 30px -15px hsl(var(--foreground) / 0.18)' }}
         data-flow-node
+        title="Натисніть, щоб прочитати запит клієнта"
       >
         <div className="relative aspect-[4/3] bg-secondary">
           <img
@@ -567,8 +581,9 @@ const ScenarioBuilder: React.FC = () => {
             Клієнт
           </p>
           <p className="text-xs text-foreground leading-relaxed line-clamp-5">{b.task}</p>
+          <p className="text-[10px] text-primary font-semibold mt-2">Натисніть, щоб прочитати повністю →</p>
         </div>
-      </div>
+      </button>
     );
   };
 
@@ -977,45 +992,6 @@ const ScenarioBuilder: React.FC = () => {
                 </div>
               )}
 
-              {/* SEO organic option */}
-              <div className="border-t border-border pt-4">
-                <p className="text-xs text-muted-foreground mb-2">Додаткова опція:</p>
-                <button
-                  onClick={() => setSeoEnabled(!seoEnabled)}
-                  className={`w-full p-3 rounded-lg border text-left text-sm transition-all ${
-                    seoEnabled
-                      ? 'border-success bg-success/10 text-foreground font-semibold'
-                      : 'border-border bg-card text-foreground hover:border-success/40'
-                  }`}
-                >
-                  🌿 SEO — органіка
-                  <span className="text-xs text-muted-foreground ml-2">(опціонально)</span>
-                </button>
-                {seoEnabled && (
-                  <div className="mt-3 space-y-3 p-3 bg-secondary rounded-lg">
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Скільки продажів зараз з органіки?</label>
-                      <Input
-                        type="number"
-                        value={seoLeads}
-                        onChange={e => setSeoLeads(e.target.value)}
-                        placeholder="Наприклад: 10"
-                        className="bg-card border-border text-foreground h-9 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Середній чек з органіки (₴)</label>
-                      <Input
-                        type="number"
-                        value={seoAvgCheck}
-                        onChange={e => setSeoAvgCheck(e.target.value)}
-                        placeholder="Наприклад: 2000"
-                        className="bg-card border-border text-foreground h-9 text-sm"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
 
               {/* AI Recommendations */}
               {scenario.channel && (
@@ -1664,7 +1640,7 @@ const ScenarioBuilder: React.FC = () => {
                           <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />
                         </div>
                         {(() => {
-                          const visible = STEPS.map((_, i) => i).filter(i => isStepUnlocked(i));
+                          const visible = STEPS.map((_, i) => i).filter(i => i !== 0 && isStepUnlocked(i));
                           return visible.map((i, idx) => renderNode(i, undefined, idx === visible.length - 1));
                         })()}
                       </div>
@@ -1687,7 +1663,7 @@ const ScenarioBuilder: React.FC = () => {
                     {/* Shared steps (0, 1, 2) — vertically centered, last node without connector */}
                     <div className="flex items-start gap-0 flex-shrink-0" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
                       {(() => {
-                        const visible = [0, 1, 2].filter(i => isStepUnlocked(i));
+                        const visible = [1, 2].filter(i => isStepUnlocked(i));
                         return visible.map((i, idx) => renderNode(i, undefined, idx === visible.length - 1));
                       })()}
                     </div>
@@ -1754,6 +1730,43 @@ const ScenarioBuilder: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Client brief dialog */}
+      <Dialog open={clientBriefOpen} onOpenChange={setClientBriefOpen}>
+        <DialogContent className="bg-card border-border max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-foreground font-bold flex items-center gap-3">
+              <img
+                src={scenario.clientBrief?.photo}
+                alt={scenario.clientBrief?.name}
+                className="w-12 h-12 rounded-full object-cover"
+              />
+              <div className="flex flex-col items-start">
+                <span>{scenario.clientBrief?.name}</span>
+                {scenario.clientBrief?.niche && (
+                  <span className="text-xs text-muted-foreground font-normal">{scenario.clientBrief.niche}</span>
+                )}
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          {scenario.clientBrief?.source && (
+            <span className="self-start px-2.5 py-1 rounded-full bg-secondary text-foreground text-[10px] font-semibold uppercase tracking-wide">
+              {scenario.clientBrief.source}
+            </span>
+          )}
+          <div
+            className="rounded-2xl p-4 mt-1"
+            style={{ background: 'linear-gradient(135deg, hsl(48 80% 96%), hsl(0 0% 100%))' }}
+          >
+            <p className="text-xs font-bold text-foreground/60 uppercase tracking-wider mb-2">
+              Задача для маркетолога
+            </p>
+            <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+              {scenario.clientBrief?.task}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Video dialog */}
       <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
