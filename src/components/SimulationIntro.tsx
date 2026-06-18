@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/button';
 import { ClientBrief } from '@/context/ScenariosContext';
 import { Sparkles, Flame, X, Check, ArrowLeft, Quote } from 'lucide-react';
 
-const LUCKY_CLIENTS: ClientBrief[] = [
+type ClientTemplate = Omit<ClientBrief, 'photo'>;
+
+const LUCKY_CLIENTS: ClientTemplate[] = [
   { name: 'Катя', niche: 'Інстамагазин одягу', source: 'Контакт від знайомої',
     task: 'Привіт! Я Катя, ваш контакт дала знайома. У мене є інстамагазин жіночого одягу — хочу запустити рекламу, щоб стабільно отримувати 30+ замовлень на тиждень. Бюджет адекватний, готова чути експерта.' },
   { name: 'Андрій', niche: 'Стоматологія', source: 'Прийшов з рекомендації',
