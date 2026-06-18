@@ -133,6 +133,7 @@ const ScenarioBuilder: React.FC = () => {
   const scenario = getScenario(id!);
   const [activeStep, setActiveStep] = useState<number | null>(1);
   const [clientBriefOpen, setClientBriefOpen] = useState(false);
+  const [briefRequested, setBriefRequested] = useState(false);
   const [decompTab, setDecompTab] = useState<'bad' | 'realistic' | 'positive'>('realistic');
   const [activeLeadType, setActiveLeadType] = useState<string>('');
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
@@ -587,6 +588,32 @@ const ScenarioBuilder: React.FC = () => {
     );
   };
 
+  const PlusBriefButton: React.FC = () => (
+    <div className="flex flex-col items-center mt-3 select-none">
+      <div className="w-px h-4 bg-border" />
+      {briefRequested ? (
+        <div className="px-3 py-2 rounded-full bg-accent border border-primary/30 text-primary text-xs font-semibold shadow-sm flex items-center gap-1.5">
+          <Check className="w-3 h-3" /> Попросити заповнити бриф
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setBriefRequested(true);
+            toast({ title: 'Попросити заповнити бриф', description: 'Запит відправлено клієнту.' });
+          }}
+          className="w-10 h-10 rounded-full bg-card border-2 border-primary text-primary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all shadow-sm hover:shadow-md"
+          title="Попросити заповнити бриф"
+          aria-label="Попросити заповнити бриф"
+        >
+          <Plus className="w-5 h-5" />
+        </button>
+      )}
+    </div>
+  );
+
+
   const update = (u: Partial<Scenario>) => updateScenario(id!, u);
 
   const hasMultipleLeadTypes = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1;
@@ -993,29 +1020,7 @@ const ScenarioBuilder: React.FC = () => {
               )}
 
 
-              {/* AI Recommendations */}
-              {scenario.channel && (
-                <div className="border-t border-border pt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-bold text-foreground">🤖 AI-рекомендації</p>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={fetchAiRecommendation}
-                      disabled={aiLoading}
-                      className="gap-1 text-xs"
-                    >
-                      {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                      {aiLoading ? 'Генерація...' : 'Згенерувати'}
-                    </Button>
-                  </div>
-                  {aiRecommendation && (
-                    <div className="bg-secondary rounded-lg p-3 text-xs text-foreground whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
-                      {aiRecommendation}
-                    </div>
-                  )}
-                </div>
-              )}
+
 
               <SaveButton step={2} />
             </div>
@@ -1636,7 +1641,10 @@ const ScenarioBuilder: React.FC = () => {
                     <>
                       <div className="flex items-center gap-0 px-12 py-8">
                         <div className="flex items-center pr-6">
-                          <ClientInfoCard />
+                          <div className="flex flex-col items-center">
+                            <ClientInfoCard />
+                            <PlusBriefButton />
+                          </div>
                           <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />
                         </div>
                         {(() => {
@@ -1657,7 +1665,10 @@ const ScenarioBuilder: React.FC = () => {
                   <div className="px-12 py-8 flex items-start">
                     {/* Client info card — vertically centered with shared steps */}
                     <div className="flex items-center flex-shrink-0 pr-6" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
-                      <ClientInfoCard />
+                      <div className="flex flex-col items-center">
+                        <ClientInfoCard />
+                        <PlusBriefButton />
+                      </div>
                       <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />
                     </div>
                     {/* Shared steps (0, 1, 2) — vertically centered, last node without connector */}
