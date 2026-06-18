@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FlowNode from '@/components/FlowNode';
-import { ArrowLeft, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap } from 'lucide-react';
+import { ArrowLeft, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2 } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -461,6 +461,9 @@ const ScenarioBuilder: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const ZOOM_MIN = 0.25;
+  const ZOOM_MAX = 1.5;
   const wasDragged = useRef(false);
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -1460,19 +1463,52 @@ const ScenarioBuilder: React.FC = () => {
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
+          onWheel={(e) => {
+            if (e.ctrlKey || e.metaKey) {
+              e.preventDefault();
+              const delta = -e.deltaY * 0.0015;
+              setZoom((z) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, +(z + delta).toFixed(3))));
+            }
+          }}
         >
-          <div className="absolute inset-0 opacity-30" style={{
+          <div className="absolute inset-0 opacity-30 pointer-events-none" style={{
             backgroundImage: 'radial-gradient(circle, hsl(0 0% 80%) 1px, transparent 1px)',
-            backgroundSize: '24px 24px',
-            backgroundPosition: `${canvasOffset.x % 24}px ${canvasOffset.y % 24}px`,
+            backgroundSize: `${24 * zoom}px ${24 * zoom}px`,
+            backgroundPosition: `${canvasOffset.x % (24 * zoom)}px ${canvasOffset.y % (24 * zoom)}px`,
           }} />
+
+          {/* Zoom controls */}
+          <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-1 bg-card border border-border rounded-xl shadow-lg p-1">
+            <button
+              onClick={() => setZoom((z) => Math.min(ZOOM_MAX, +(z + 0.1).toFixed(2)))}
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+              title="Збільшити"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => { setZoom(1); setCanvasOffset({ x: 0, y: 0 }); }}
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-[10px] font-mono font-semibold"
+              title="Скинути масштаб"
+            >
+              {Math.round(zoom * 100)}%
+            </button>
+            <button
+              onClick={() => setZoom((z) => Math.max(ZOOM_MIN, +(z - 0.1).toFixed(2)))}
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+              title="Зменшити"
+            >
+              <Minus className="w-4 h-4" />
+            </button>
+          </div>
 
           <div
             ref={canvasRef}
             className="relative min-h-full flex items-center justify-center select-none"
             style={{
-              transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px)`,
-              transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+              transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${zoom})`,
+              transformOrigin: 'center center',
+              transition: isDragging ? 'none' : 'transform 0.15s ease-out',
             }}
           >
             <div className="relative" id="flow-container">
