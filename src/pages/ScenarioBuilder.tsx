@@ -1573,8 +1573,8 @@ const ScenarioBuilder: React.FC = () => {
                 }
 
                 // Make.com-style branching layout
-                const branchRowHeight = 260; // height per branch row (room for card + subtitle pills)
-                const nodeCenterOffset = 60; // approx vertical center of card icon row
+                const branchRowHeight = 340; // height per branch row (room for info card + subtitle pills)
+                const nodeCenterOffset = 110; // approx vertical center of info card
 
                 return (
                   <div className="px-12 py-8 flex items-start">
