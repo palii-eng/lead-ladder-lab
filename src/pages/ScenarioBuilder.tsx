@@ -485,6 +485,8 @@ const ScenarioBuilder: React.FC = () => {
 
   const handleMouseUp = () => {
     setIsDragging(false);
+    // Reset shortly after, so the onClick of the underlying element fires first
+    setTimeout(() => { wasDragged.current = false; }, 0);
   };
 
   useEffect(() => {
