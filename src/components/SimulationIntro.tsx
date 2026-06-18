@@ -42,9 +42,36 @@ const HARD_CLIENTS: ClientTemplate[] = [
     task: 'Йо, треба залити трафік на лендос. Що це за проект — не питай. Платимо в USDT, але тільки за результат. KPI скажу пізніше.' },
 ];
 
+// Curated high-quality Unsplash portraits (free to use). Cropped square, faces centered.
+const FEMALE_PHOTOS = [
+  'photo-1494790108377-be9c29b29330',
+  'photo-1488426862026-3ee34a7d66df',
+  'photo-1544005313-94ddf0286df2',
+  'photo-1573496359142-b8d87734a5a2',
+  'photo-1487412720507-e7ab37603c6f',
+  'photo-1531123897727-8f129e1688ce',
+  'photo-1517841905240-472988babdf9',
+  'photo-1438761681033-6461ffad8d80',
+  'photo-1502823403499-6ccfcf4fb453',
+  'photo-1524504388940-b1c1722653e1',
+];
+const MALE_PHOTOS = [
+  'photo-1500648767791-00dcc994a43e',
+  'photo-1507003211169-0a1dd7228f2d',
+  'photo-1472099645785-5658abf4ff4e',
+  'photo-1463453091185-61582044d556',
+  'photo-1519085360753-af0119f7cbe7',
+  'photo-1492562080023-ab3db95bfbce',
+  'photo-1506794778202-cad84cf45f1d',
+  'photo-1531427186611-ecfd6d936c79',
+  'photo-1539571696357-5a69c17a67c6',
+  'photo-1521119989659-a83eee488004',
+];
+
 const photoFor = (gender: Gender, seed: number) => {
-  const id = ((seed * 17) % 90) + 1; // 1..90
-  return `https://randomuser.me/api/portraits/${gender === 'female' ? 'women' : 'men'}/${id}.jpg`;
+  const list = gender === 'female' ? FEMALE_PHOTOS : MALE_PHOTOS;
+  const id = list[Math.abs(seed) % list.length];
+  return `https://images.unsplash.com/${id}?w=800&h=1000&fit=crop&crop=faces&q=80`;
 };
 
 interface Props {
