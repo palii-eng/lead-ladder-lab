@@ -783,7 +783,7 @@ const ScenarioBuilder: React.FC = () => {
     const check = findA('середній чек');
     const promos = findA('акції');
     const parts = [
-      `Клієнт: ${cb.name}${cb.role ? ` — ${cb.role}` : ''}.`,
+      `Клієнт: ${cb.name}${(cb as any).role ? ` — ${(cb as any).role}` : ''}.`,
       cb.niche ? `Ніша: ${cb.niche}.` : '',
       cb.task ? `Запит клієнта: ${cb.task}` : '',
       audience ? `Цільова аудиторія: ${audience}` : '',
