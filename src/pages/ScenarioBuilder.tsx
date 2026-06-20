@@ -14,6 +14,7 @@ import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import adsSchoolLogo from '@/assets/ads-school-logo.png';
+import { getBriefForClient, BriefField } from '@/data/clientBriefs';
 
 const STEPS = [
   { title: 'Вибір ніші', icon: '🎯' },
@@ -133,6 +134,7 @@ const ScenarioBuilder: React.FC = () => {
   const scenario = getScenario(id!);
   const [activeStep, setActiveStep] = useState<number | null>(1);
   const [clientBriefOpen, setClientBriefOpen] = useState(false);
+  const [filledBriefOpen, setFilledBriefOpen] = useState(false);
   const [clientActions, setClientActions] = useState<Set<string>>(new Set());
   const [decompTab, setDecompTab] = useState<'bad' | 'realistic' | 'positive'>('realistic');
   const [activeLeadType, setActiveLeadType] = useState<string>('');
@@ -589,36 +591,52 @@ const ScenarioBuilder: React.FC = () => {
   };
 
   const CLIENT_ACTIONS: { key: string; label: string }[] = [
-    { key: 'brief', label: 'Заповнити бриф' },
+    { key: 'brief', label: 'Попросити кліента заповнити бриф' },
     { key: 'decomp', label: 'Заповнити декомпозицію' },
     { key: 'payment', label: 'Взяти оплату' },
   ];
+
+  const handleClientAction = (key: string, label: string) => {
+    setClientActions(prev => {
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+    if (key === 'brief') {
+      setFilledBriefOpen(true);
+    } else {
+      toast({ title: label, description: 'Запит відправлено клієнту.' });
+    }
+  };
 
   const ClientActionsColumn: React.FC = () => (
     <div className="flex flex-col items-center mt-3 select-none gap-2">
       <div className="w-px h-4 bg-border" />
       {CLIENT_ACTIONS.map(({ key, label }) => {
         const done = clientActions.has(key);
+        const onClick = (e: React.MouseEvent) => {
+          e.stopPropagation();
+          if (done && key === 'brief') {
+            setFilledBriefOpen(true);
+            return;
+          }
+          if (done) return;
+          handleClientAction(key, label);
+        };
         return done ? (
-          <div
+          <button
             key={key}
-            className="px-3 py-2 rounded-full bg-accent border border-primary/30 text-primary text-xs font-semibold shadow-sm flex items-center gap-1.5"
+            type="button"
+            onClick={onClick}
+            className="px-3 py-2 rounded-full bg-accent border border-primary/30 text-primary text-xs font-semibold shadow-sm flex items-center gap-1.5 hover:bg-primary/10 transition-all"
           >
             <Check className="w-3 h-3" /> {label}
-          </div>
+          </button>
         ) : (
           <button
             key={key}
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setClientActions(prev => {
-                const next = new Set(prev);
-                next.add(key);
-                return next;
-              });
-              toast({ title: label, description: 'Запит відправлено клієнту.' });
-            }}
+            onClick={onClick}
             className="px-3 py-2 rounded-full bg-card border-2 border-primary text-primary text-xs font-semibold flex items-center gap-1.5 hover:bg-primary hover:text-primary-foreground transition-all shadow-sm hover:shadow-md"
             title={label}
             aria-label={label}
@@ -1793,6 +1811,58 @@ const ScenarioBuilder: React.FC = () => {
             <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
               {scenario.clientBrief?.task}
             </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Filled brief dialog */}
+      <Dialog open={filledBriefOpen} onOpenChange={setFilledBriefOpen}>
+        <DialogContent className="bg-card border-border max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-foreground font-bold flex items-center gap-3">
+              {scenario.clientBrief?.photo && (
+                <img
+                  src={scenario.clientBrief.photo}
+                  alt={scenario.clientBrief?.name}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              )}
+              <div className="flex flex-col items-start">
+                <span>Бриф Meta Ads — Лідогенерація</span>
+                <span className="text-xs text-muted-foreground font-normal">
+                  Заповнив(ла): {scenario.clientBrief?.name || 'Клієнт'} · ~90% готовності
+                </span>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto pr-1 -mr-1 space-y-3">
+            {(() => {
+              const brief = getBriefForClient(scenario.clientBrief?.name);
+              if (!brief) {
+                return (
+                  <p className="text-sm text-muted-foreground">
+                    Клієнт ще не повернув заповнений бриф.
+                  </p>
+                );
+              }
+              return brief.map((f: BriefField, i: number) => (
+                <div
+                  key={i}
+                  className="rounded-xl border border-border p-3 bg-secondary/40"
+                >
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-foreground/60 mb-1">
+                    {i + 1}. {f.q}
+                  </p>
+                  {f.a ? (
+                    <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                      {f.a}
+                    </p>
+                  ) : (
+                    <p className="text-xs italic text-muted-foreground">— не вказано —</p>
+                  )}
+                </div>
+              ));
+            })()}
           </div>
         </DialogContent>
       </Dialog>
