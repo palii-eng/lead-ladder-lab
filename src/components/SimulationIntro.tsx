@@ -201,9 +201,9 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
               boxShadow: '0 30px 60px -30px hsl(var(--foreground) / 0.25), 0 0 0 1px hsl(var(--border))',
             }}
           >
-            {/* Photo block */}
-            <div className="p-3">
-              <div className="relative rounded-2xl overflow-hidden bg-secondary aspect-[4/5]">
+            {/* Header: round avatar + name + source */}
+            <div className="p-4 flex items-center gap-3">
+              <div className="relative w-16 h-16 shrink-0 rounded-full overflow-hidden ring-2 ring-accent shadow-md bg-secondary">
                 <img
                   src={current.photo}
                   alt={current.name}
@@ -212,32 +212,32 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
                     (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${current.name}`;
                   }}
                 />
-                <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/65 via-black/15 to-transparent">
-                  <h3 className="text-2xl font-extrabold text-white tracking-tight leading-tight">
-                    {current.name}
-                  </h3>
-                  <p className="text-white/85 text-sm mt-0.5">{current.role || current.niche}</p>
-                </div>
-                {current.source && (
-                  <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur text-foreground text-[10px] font-semibold uppercase tracking-wide shadow-sm">
-                    {current.source}
-                  </span>
-                )}
               </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-extrabold text-foreground tracking-tight leading-tight truncate">
+                  {current.name}
+                </h3>
+                <p className="text-muted-foreground text-xs truncate">{current.role || current.niche}</p>
+              </div>
+              {current.source && (
+                <span className="shrink-0 px-2 py-1 rounded-full bg-secondary text-foreground text-[9px] font-semibold uppercase tracking-wide">
+                  {current.source}
+                </span>
+              )}
             </div>
 
             {/* Task block */}
-            <div className="px-5 pb-5">
+            <div className="px-4 pb-3">
               <div
-                className="rounded-2xl p-5"
+                className="rounded-2xl p-4"
                 style={{
                   background: 'linear-gradient(135deg, hsl(48 80% 96%), hsl(0 0% 100%))',
                 }}
               >
-                <p className="text-xs font-bold text-foreground/60 uppercase tracking-wider mb-2">
+                <p className="text-[10px] font-bold text-foreground/60 uppercase tracking-wider mb-1.5">
                   Задача для маркетолога
                 </p>
-                <p className="text-sm text-foreground leading-relaxed">{current.task}</p>
+                <p className="text-[13px] text-foreground leading-relaxed">{current.task}</p>
               </div>
             </div>
 
@@ -245,7 +245,7 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
             <div className="px-3 pb-3 grid grid-cols-2 gap-2">
               <Button
                 onClick={() => onAccept(difficulty, current)}
-                className="h-12 rounded-xl font-semibold text-white"
+                className="h-11 rounded-xl font-semibold text-white text-sm"
                 style={{ background: 'hsl(108 25% 50%)' }}
               >
                 <Check className="w-4 h-4 mr-1.5" /> Взяти в роботу
@@ -253,7 +253,7 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
               <Button
                 variant="outline"
                 onClick={handleNext}
-                className="h-12 rounded-xl font-semibold border-border"
+                className="h-11 rounded-xl font-semibold border-border text-sm"
                 style={{ color: 'hsl(0 75% 55%)' }}
               >
                 <X className="w-4 h-4 mr-1.5" /> Відмовити
