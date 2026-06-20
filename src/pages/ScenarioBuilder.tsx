@@ -513,6 +513,40 @@ const ScenarioBuilder: React.FC = () => {
     }
   }, [activeStep, scenario?.channel, scenario?.leadTypes, activeLeadType]);
 
+  // Auto-prefill sales "Про компанію" from client brief + filled brief answers
+  useEffect(() => {
+    if (activeStep !== 6) return;
+    if (!scenario) return;
+    const cb = scenario.clientBrief;
+    if (!cb?.name) return;
+    const existing = scenario.companyDescription || '';
+    if (existing.trim().length > 0) return;
+    const brief = getBriefForClient(cb.name);
+    const findA = (kw: string) =>
+      brief?.find(f => f.q.toLowerCase().includes(kw.toLowerCase()))?.a || '';
+    const audience = findA('опис клієнта');
+    const services = findA('послуги з найбільшим попитом');
+    const utp = findA('УТП');
+    const check = findA('середній чек');
+    const promos = findA('акції');
+    const parts = [
+      `Клієнт: ${cb.name}${(cb as any).role ? ` — ${(cb as any).role}` : ''}.`,
+      cb.niche ? `Ніша: ${cb.niche}.` : '',
+      cb.task ? `Запит клієнта: ${cb.task}` : '',
+      audience ? `Цільова аудиторія: ${audience}` : '',
+      services ? `Топ послуги/продукти: ${services}` : '',
+      utp ? `УТП / переваги: ${utp}` : '',
+      check ? `Середній чек: ${check}.` : '',
+      promos ? `Акції / лояльність: ${promos}` : '',
+    ].filter(Boolean);
+    const text = parts.join('\n\n');
+    if (!text.trim()) return;
+    updateScenario(id!, { companyDescription: text });
+    setSalesProcessed(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeStep, scenario?.clientBrief?.name]);
+
+
   if (!scenario) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -768,40 +802,7 @@ const ScenarioBuilder: React.FC = () => {
   const currentCompanyDescription = isBranching && activeLeadType ? getBranch().companyDescription : scenario.companyDescription;
   const currentRetention = isBranching && activeLeadType ? getBranch().retention : scenario.retention;
 
-  // Auto-prefill sales "Про компанію" from client brief + filled brief answers
-  useEffect(() => {
-    if (activeStep !== 6) return;
-    if ((currentCompanyDescription || '').trim().length > 0) return;
-    const cb = scenario.clientBrief;
-    if (!cb?.name) return;
-    const brief = getBriefForClient(cb.name);
-    const findA = (kw: string) =>
-      brief?.find(f => f.q.toLowerCase().includes(kw.toLowerCase()))?.a || '';
-    const audience = findA('опис клієнта');
-    const services = findA('послуги з найбільшим попитом');
-    const utp = findA('УТП');
-    const check = findA('середній чек');
-    const promos = findA('акції');
-    const parts = [
-      `Клієнт: ${cb.name}${(cb as any).role ? ` — ${(cb as any).role}` : ''}.`,
-      cb.niche ? `Ніша: ${cb.niche}.` : '',
-      cb.task ? `Запит клієнта: ${cb.task}` : '',
-      audience ? `Цільова аудиторія: ${audience}` : '',
-      services ? `Топ послуги/продукти: ${services}` : '',
-      utp ? `УТП / переваги: ${utp}` : '',
-      check ? `Середній чек: ${check}.` : '',
-      promos ? `Акції / лояльність: ${promos}` : '',
-    ].filter(Boolean);
-    const text = parts.join('\n\n');
-    if (!text.trim()) return;
-    if (isBranching && activeLeadType) {
-      updateBranch({ companyDescription: text });
-    } else {
-      update({ companyDescription: text });
-    }
-    setSalesProcessed(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeStep]);
+
 
 
   const activeDecompSet = getActiveDecompSet();
