@@ -588,28 +588,45 @@ const ScenarioBuilder: React.FC = () => {
     );
   };
 
-  const PlusBriefButton: React.FC = () => (
-    <div className="flex flex-col items-center mt-3 select-none">
+  const CLIENT_ACTIONS: { key: string; label: string }[] = [
+    { key: 'brief', label: 'Заповнити бриф' },
+    { key: 'decomp', label: 'Заповнити декомпозицію' },
+    { key: 'payment', label: 'Взяти оплату' },
+  ];
+
+  const ClientActionsColumn: React.FC = () => (
+    <div className="flex flex-col items-center mt-3 select-none gap-2">
       <div className="w-px h-4 bg-border" />
-      {briefRequested ? (
-        <div className="px-3 py-2 rounded-full bg-accent border border-primary/30 text-primary text-xs font-semibold shadow-sm flex items-center gap-1.5">
-          <Check className="w-3 h-3" /> Попросити заповнити бриф
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setBriefRequested(true);
-            toast({ title: 'Попросити заповнити бриф', description: 'Запит відправлено клієнту.' });
-          }}
-          className="w-10 h-10 rounded-full bg-card border-2 border-primary text-primary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all shadow-sm hover:shadow-md"
-          title="Попросити заповнити бриф"
-          aria-label="Попросити заповнити бриф"
-        >
-          <Plus className="w-5 h-5" />
-        </button>
-      )}
+      {CLIENT_ACTIONS.map(({ key, label }) => {
+        const done = clientActions.has(key);
+        return done ? (
+          <div
+            key={key}
+            className="px-3 py-2 rounded-full bg-accent border border-primary/30 text-primary text-xs font-semibold shadow-sm flex items-center gap-1.5"
+          >
+            <Check className="w-3 h-3" /> {label}
+          </div>
+        ) : (
+          <button
+            key={key}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setClientActions(prev => {
+                const next = new Set(prev);
+                next.add(key);
+                return next;
+              });
+              toast({ title: label, description: 'Запит відправлено клієнту.' });
+            }}
+            className="px-3 py-2 rounded-full bg-card border-2 border-primary text-primary text-xs font-semibold flex items-center gap-1.5 hover:bg-primary hover:text-primary-foreground transition-all shadow-sm hover:shadow-md"
+            title={label}
+            aria-label={label}
+          >
+            <Plus className="w-3.5 h-3.5" /> {label}
+          </button>
+        );
+      })}
     </div>
   );
 
