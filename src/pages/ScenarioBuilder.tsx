@@ -14,6 +14,7 @@ import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import adsSchoolLogo from '@/assets/ads-school-logo.png';
+import { getBriefForClient, BriefField } from '@/data/clientBriefs';
 
 const STEPS = [
   { title: 'Вибір ніші', icon: '🎯' },
