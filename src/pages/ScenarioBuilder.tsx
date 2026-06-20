@@ -1815,6 +1815,58 @@ const ScenarioBuilder: React.FC = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Filled brief dialog */}
+      <Dialog open={filledBriefOpen} onOpenChange={setFilledBriefOpen}>
+        <DialogContent className="bg-card border-border max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-foreground font-bold flex items-center gap-3">
+              {scenario.clientBrief?.photo && (
+                <img
+                  src={scenario.clientBrief.photo}
+                  alt={scenario.clientBrief?.name}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              )}
+              <div className="flex flex-col items-start">
+                <span>Бриф Meta Ads — Лідогенерація</span>
+                <span className="text-xs text-muted-foreground font-normal">
+                  Заповнив(ла): {scenario.clientBrief?.name || 'Клієнт'} · ~90% готовності
+                </span>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto pr-1 -mr-1 space-y-3">
+            {(() => {
+              const brief = getBriefForClient(scenario.clientBrief?.name);
+              if (!brief) {
+                return (
+                  <p className="text-sm text-muted-foreground">
+                    Клієнт ще не повернув заповнений бриф.
+                  </p>
+                );
+              }
+              return brief.map((f: BriefField, i: number) => (
+                <div
+                  key={i}
+                  className="rounded-xl border border-border p-3 bg-secondary/40"
+                >
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-foreground/60 mb-1">
+                    {i + 1}. {f.q}
+                  </p>
+                  {f.a ? (
+                    <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                      {f.a}
+                    </p>
+                  ) : (
+                    <p className="text-xs italic text-muted-foreground">— не вказано —</p>
+                  )}
+                </div>
+              ));
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Video dialog */}
       <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
         <DialogContent className="bg-card border-border">
