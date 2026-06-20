@@ -876,12 +876,8 @@ const ScenarioBuilder: React.FC = () => {
       }
       return next;
     });
-    // Auto-open next step
-    if (step < STEPS.length - 1) {
-      setActiveStep(step + 1);
-    } else {
-      setActiveStep(null);
-    }
+    // Just close the panel after saving; don't auto-advance
+    setActiveStep(null);
   };
 
   const RetentionArrow: React.FC = () => {
