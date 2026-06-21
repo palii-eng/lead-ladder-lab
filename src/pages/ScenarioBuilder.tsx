@@ -805,9 +805,10 @@ const ScenarioBuilder: React.FC = () => {
             />
             <div className="w-px h-2 bg-border" />
             <SubBlock
-              icon="🎨"
-              title="Налаштування крео"
+              icon="📝"
+              title="Підготувати ТЗ по крео"
             />
+
           </div>
         </div>
       </div>
