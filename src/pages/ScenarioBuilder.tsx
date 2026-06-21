@@ -628,7 +628,6 @@ const ScenarioBuilder: React.FC = () => {
     { key: 'meet', label: 'Провести міт-знайомство' },
     { key: 'brief', label: 'Попросити кліента заповнити бриф' },
     { key: 'payment', label: 'Взяти оплату' },
-    { key: 'mediaplan', label: 'Погодити медіаплан' },
   ];
 
   const handleClientAction = (key: string, label: string) => {
