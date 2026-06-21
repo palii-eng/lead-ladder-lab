@@ -2488,7 +2488,53 @@ const ScenarioBuilder: React.FC = () => {
                 ← Назад
               </Button>
             ) : <span />}
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap justify-end">
+              {creoFormat && (creoFormat !== 'video' || creoVideoFormat) && (
+                <Button
+                  variant="outline"
+                  disabled={creoAiLoading}
+                  onClick={async () => {
+                    if (!scenario) return;
+                    setCreoAiLoading(true);
+                    try {
+                      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/creo-brief`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+                        },
+                        body: JSON.stringify({
+                          format: creoFormat,
+                          videoFormat: creoVideoFormat,
+                          niche: scenario.niche,
+                          channel: scenario.channel,
+                          clientBrief: scenario.clientBrief,
+                          decomposition: scenario.decomposition,
+                        }),
+                      });
+                      if (!resp.ok) {
+                        const err = await resp.json().catch(() => ({ error: 'Помилка' }));
+                        toast({ title: 'AI помилка', description: err.error || 'Не вдалося згенерувати', variant: 'destructive' });
+                      } else {
+                        const data = await resp.json();
+                        setCreoFields(prev => ({ ...prev, ...(data.fields || {}) }));
+                        toast({ title: 'Заповнено AI', description: 'Перевірте та відредагуйте за потреби' });
+                      }
+                    } catch (e: any) {
+                      toast({ title: 'Помилка', description: e.message || 'Збій', variant: 'destructive' });
+                    } finally {
+                      setCreoAiLoading(false);
+                    }
+                  }}
+                  className="border-amber-400/50 text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/30 font-semibold"
+                >
+                  {creoAiLoading ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Генерую...</>
+                  ) : (
+                    <><Sparkles className="w-4 h-4 mr-2" /> Заповнити за допомогою AI</>
+                  )}
+                </Button>
+              )}
               <Button variant="outline" onClick={() => setCreoOpen(false)}>Закрити</Button>
               {creoFormat && (
                 <Button
