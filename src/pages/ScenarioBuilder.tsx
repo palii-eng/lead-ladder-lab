@@ -812,6 +812,7 @@ const ScenarioBuilder: React.FC = () => {
             <SubBlock
               icon="📝"
               title="Підготувати ТЗ по крео"
+              onClick={() => { setCreoOpen(true); setCreoFormat(null); }}
             />
 
           </div>
