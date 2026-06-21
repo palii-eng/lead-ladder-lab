@@ -159,6 +159,7 @@ const ScenarioBuilder: React.FC = () => {
   const [creoFormat, setCreoFormat] = useState<'static' | 'carousel' | 'video' | null>(null);
   const [creoFields, setCreoFields] = useState<Record<string, string>>({});
   const [creoVideoFormat, setCreoVideoFormat] = useState<string>('');
+  const [creoAiLoading, setCreoAiLoading] = useState(false);
   // Cache for AI-generated content: key → text
   const aiCacheRef = useRef<Record<string, string>>({});
   // AI conclusion for result step
