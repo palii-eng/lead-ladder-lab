@@ -1019,7 +1019,7 @@ const ScenarioBuilder: React.FC = () => {
                       <button
                         key={label}
                         onClick={() => update({ niche: label })}
-                        className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${active ? 'border-primary bg-primary/5' : 'border-border bg-secondary hover:border-primary/40'}`}
+                        className={`h-28 flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${active ? 'border-primary bg-primary/5' : 'border-border bg-secondary hover:border-primary/40'}`}
                       >
                         <Icon className={`w-6 h-6 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
                         <span className={`text-xs font-semibold text-center ${active ? 'text-primary' : 'text-foreground'}`}>{label}</span>
