@@ -18,7 +18,7 @@ import { getBriefForClient, BriefField } from '@/data/clientBriefs';
 
 const STEPS = [
   { title: 'Вибір ніші', icon: '🎯' },
-  { title: 'Джерело лідгену', icon: '📡' },
+  { title: 'Джерело трафіку', icon: '📡' },
   { title: 'Ціль оптимізації', icon: '🚀' },
   { title: 'Декомпозиція', icon: '📊' },
   { title: 'Куди йдуть ліди', icon: '📥' },
