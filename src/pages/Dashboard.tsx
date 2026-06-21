@@ -73,7 +73,7 @@ const Dashboard: React.FC = () => {
             <p className="text-muted-foreground mb-8 text-center max-w-md">
               Створіть свій перший маркетинговий сценарій та побудуйте повну воронку продажів
             </p>
-            <Button onClick={() => setOpen(true)} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
+            <Button onClick={handleCreate} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
               <Plus className="w-4 h-4" />
               Створити перший сценарій
             </Button>
