@@ -2276,6 +2276,8 @@ const ScenarioBuilder: React.FC = () => {
               className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
             >
               <Check className="w-4 h-4 mr-2" /> Погодити
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
