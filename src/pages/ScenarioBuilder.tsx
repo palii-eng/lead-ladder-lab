@@ -773,78 +773,65 @@ const ScenarioBuilder: React.FC = () => {
   );
 
   const PrepWorksNode: React.FC = () => {
-    const SubBlock: React.FC<{ icon: string; title: string; onClick?: () => void }> = ({ icon, title, onClick }) => (
+    const key = activeLeadType || 'main';
+    const raw = (scenario as any)?.creoBriefs?.[key];
+    const list: any[] = Array.isArray(raw) ? raw : (raw?.format ? [raw] : []);
+    const counts = list.reduce((acc: Record<string, number>, item) => {
+      acc[item.format] = (acc[item.format] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    const formatIcons: Record<string, string> = { static: '🖼️', carousel: '🎠', video: '🎬' };
+
+    const Row: React.FC<{ icon: string; title: string; meta?: React.ReactNode; onClick: () => void }> = ({ icon, title, meta, onClick }) => (
       <button
         type="button"
         onClick={onClick}
-        className="group relative w-44 rounded-xl bg-card border-2 border-dashed border-primary/40 px-3 py-2.5 text-left hover:border-primary hover:bg-primary/5 transition-all shadow-sm"
+        className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg bg-foreground/[0.03] border border-border/60 hover:bg-primary/5 hover:border-primary/40 transition-all text-left"
       >
-        <span className="absolute -top-2 left-3 px-1.5 py-0.5 rounded bg-background text-[9px] font-bold uppercase tracking-wider text-muted-foreground border border-border">
-          Підблок
-        </span>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-base">{icon}</span>
-          <span className="text-xs font-semibold text-foreground leading-tight">{title}</span>
-        </div>
+        <span className="text-sm">{icon}</span>
+        <span className="text-[12px] font-semibold text-foreground leading-tight flex-1 truncate">{title}</span>
+        {meta}
       </button>
     );
 
     return (
-      <div className="flex items-start" data-flow-node>
-        <div className="flex flex-col items-center">
-          <FlowNode
-            icon="🛠️"
-            title="Підготовчі роботи"
-            index={-1}
-            isActive={false}
-            isCompleted={false}
-            isLast={false}
-            isLocked={false}
-            onClick={() => {}}
-          />
-          <div className="flex flex-col items-center mt-4 gap-3 select-none">
-            <div className="w-px h-3 bg-border" />
-            <SubBlock
-              icon="👥"
-              title="Налаштування аудиторій"
-              onClick={() => setAudienceOpen(true)}
-            />
-            <div className="w-px h-2 bg-border" />
-            <SubBlock
-              icon="📝"
-              title="Підготувати ТЗ по крео"
-              onClick={() => { setCreoOpen(true); setCreoFormat(null); }}
-            />
-            {(() => {
-              const key = activeLeadType || 'main';
-              const raw = (scenario as any)?.creoBriefs?.[key];
-              const list: any[] = Array.isArray(raw) ? raw : (raw?.format ? [raw] : []);
-              if (list.length === 0) return null;
-              const counts = list.reduce((acc: Record<string, number>, item) => {
-                acc[item.format] = (acc[item.format] || 0) + 1;
-                return acc;
-              }, {});
-              const formatIcons: Record<string, string> = { static: '🖼️', carousel: '🎠', video: '🎬' };
-              return (
-                <>
-                  <div className="w-px h-2 bg-border" />
-                  <div
-                    onClick={() => { setCreoOpen(true); setCreoFormat(null); }}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-xs font-semibold text-primary cursor-pointer hover:bg-primary/15 transition-colors"
-                    title="Натисніть, щоб переглянути та керувати адсетами"
-                  >
-                    <span>📦</span>
-                    <span>{list.length} адсет{list.length === 1 ? '' : (list.length < 5 ? 'и' : 'ів')}</span>
-                    <span className="flex items-center gap-1 ml-1 opacity-70">
-                      {Object.entries(counts).map(([f, n]) => (
-                        <span key={f} className="text-[10px]">{formatIcons[f]}{(n as number) > 1 ? `×${n}` : ''}</span>
-                      ))}
-                    </span>
-                  </div>
-                </>
-              );
-            })()}
+      <div className="flex items-start flex-shrink-0" data-flow-node>
+        <div className="flex flex-col" style={{ width: '240px' }}>
+          <div className="flex items-center gap-2 mb-2 px-1 h-4">
+            <span className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground/70">ПІДГОТОВКА</span>
+          </div>
+          <div
+            className="relative w-full rounded-2xl p-4"
+            style={{
+              background: 'hsl(0 0% 100%)',
+              boxShadow: '0 12px 26px -16px hsl(0 0% 0% / 0.18), 0 2px 6px -2px hsl(0 0% 0% / 0.05), inset 0 0 0 1px hsl(var(--border) / 0.7)',
+            }}
+          >
+            <span
+              className="absolute -top-2 -right-2 flex items-center justify-center w-10 h-10 rounded-full border-2 border-background text-base"
+              style={{ background: 'linear-gradient(135deg, hsl(220 14% 96%), hsl(220 14% 90%))' }}
+            >
+              🛠️
+            </span>
+            <h3 className="text-[15px] font-bold leading-tight pr-8 text-foreground">Підготовчі роботи</h3>
+            <p className="text-[12px] leading-snug mt-1 text-muted-foreground">Налаштуйте аудиторії та підготуйте ТЗ для крео.</p>
 
+            <div className="flex flex-col gap-1.5 mt-3">
+              <Row icon="👥" title="Налаштування аудиторій" onClick={() => setAudienceOpen(true)} />
+              <Row
+                icon="📝"
+                title="ТЗ по крео"
+                meta={list.length > 0 ? (
+                  <span className="flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                    📦 {list.length}
+                    {Object.entries(counts).map(([f, n]) => (
+                      <span key={f} className="opacity-80">{formatIcons[f]}{(n as number) > 1 ? String(n) : ''}</span>
+                    ))}
+                  </span>
+                ) : null}
+                onClick={() => { setCreoOpen(true); setCreoFormat(null); }}
+              />
+            </div>
           </div>
         </div>
       </div>
