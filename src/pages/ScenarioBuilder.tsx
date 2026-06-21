@@ -682,6 +682,40 @@ const ScenarioBuilder: React.FC = () => {
     </div>
   );
 
+  const PrepWorksNode: React.FC = () => (
+    <div className="flex items-start" data-flow-node>
+      <div className="flex flex-col items-center">
+        <FlowNode
+          icon="🛠️"
+          title="Підготовчі роботи"
+          index={-1}
+          isActive={false}
+          isCompleted={false}
+          isLast={false}
+          isLocked={false}
+          onClick={() => {}}
+        />
+        <div className="flex flex-col items-center mt-3 gap-2 select-none">
+          <div className="w-px h-4 bg-border" />
+          <button
+            type="button"
+            className="px-3 py-2 rounded-full bg-card border-2 border-primary text-primary text-xs font-semibold flex items-center gap-1.5 hover:bg-primary hover:text-primary-foreground transition-all shadow-sm hover:shadow-md"
+          >
+            <Plus className="w-3.5 h-3.5" /> Налаштування аудиторій
+          </button>
+          <button
+            type="button"
+            className="px-3 py-2 rounded-full bg-card border-2 border-primary text-primary text-xs font-semibold flex items-center gap-1.5 hover:bg-primary hover:text-primary-foreground transition-all shadow-sm hover:shadow-md"
+          >
+            <Plus className="w-3.5 h-3.5" /> Налаштування крео
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+
+
 
   const update = (u: Partial<Scenario>) => updateScenario(id!, u);
 
