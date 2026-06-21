@@ -825,7 +825,7 @@ const ScenarioBuilder: React.FC = () => {
                   <span className="flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
                     📦 {list.length}
                     {Object.entries(counts).map(([f, n]) => (
-                      <span key={f} className="opacity-80">{formatIcons[f]}{(n as number) > 1 ? n : ''}</span>
+                      <span key={f} className="opacity-80">{formatIcons[f]}{(n as number) > 1 ? String(n) : ''}</span>
                     ))}
                   </span>
                 ) : null}
