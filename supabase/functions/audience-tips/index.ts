@@ -1,0 +1,108 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const { niche, channel, leadType, decomposition, clientBrief } = await req.json();
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    const goalLabels: Record<string, string> = {
+      awareness: "Упізнаваність",
+      traffic: "Трафік",
+      engagement: "Взаємодія",
+      leads: "Ліди",
+      app_promotion: "Просування додатка",
+      sales: "Продажі",
+    };
+    const leadTypeLabels: Record<string, string> = {
+      leadform: "Лідформи",
+      quiz: "Квізи",
+      landing: "Лендінг",
+    };
+
+    const goalLabel = goalLabels[channel] || channel || "не вказано";
+    const ltLabel = leadType ? (leadTypeLabels[leadType] || leadType) : "";
+
+    let decompContext = "";
+    if (decomposition?.realistic) {
+      const r = decomposition.realistic;
+      decompContext = `
+Дані декомпозиції (реалістичний сценарій):
+- Бюджет: ${r.budget || 0} ₴
+- Середній чек: ${r.averageCheck || 0} ₴
+- CPL: ${r.cpl || 0} ₴`;
+    }
+
+    const clientContext = clientBrief
+      ? `\nКлієнт: ${clientBrief.name || ""}${clientBrief.task ? ` — ${clientBrief.task}` : ""}`
+      : "";
+
+    const systemPrompt = `Ти — старший таргетолог Meta/Facebook. Давай конкретні, практичні поради по підбору аудиторій українською мовою. Структуруй відповідь з емодзі, заголовками та списками. Будь конкретним — давай назви інтересів, поведінкові сигнали, цифри, приклади розмірів аудиторій.`;
+
+    const userPrompt = `Ніша: ${niche || "не вказано"}
+Ціль кампанії: ${goalLabel}
+${ltLabel ? `Тип лідгену: ${ltLabel}` : ""}${clientContext}${decompContext}
+
+Дай детальні поради по підбору аудиторій саме для цієї ніші та цілі:
+
+1. 🎯 **Ціль оптимізації та піксель** — яку оптимізацію обрати в адсеті, які події має ловити піксель, як перевірити налаштування
+2. 🌍 **Гео** — конкретні рекомендації (країна/місто/радіус), типові помилки
+3. 👥 **Стать та вік** — оптимальні діапазони з обґрунтуванням
+4. 🗣️ **Мова акаунту** — які мови додавати/виключати і чому
+5. ❤️ **Інтереси** — 8–12 конкретних інтересів/поведінок Meta для цієї ніші згруповані в 2–3 адсети, з приблизним розміром аудиторії
+6. 📱 **Плейсменти** — які увімкнути / вимкнути для цієї цілі, з поясненням
+7. ⚡ **3 швидкі поради** — найважливіше для цієї ніші
+
+Формат: структурований список без вступу, одразу до справи.`;
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        stream: true,
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "Занадто багато запитів, спробуйте пізніше." }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "Необхідно поповнити кредити." }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const t = await response.text();
+      console.error("AI gateway error:", response.status, t);
+      return new Response(JSON.stringify({ error: "AI помилка" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(response.body, {
+      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+    });
+  } catch (e) {
+    console.error("Error:", e);
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
