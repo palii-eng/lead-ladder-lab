@@ -656,12 +656,6 @@ const ScenarioBuilder: React.FC = () => {
           updateScenario(id!, {
             difficulty,
             clientBrief: brief,
-            niche: brief.niche || scenario.niche,
-          });
-          setSavedSteps(prev => {
-            const next = new Set(prev);
-            next.add('0');
-            return next;
           });
           setActiveStep(null);
           toast({
