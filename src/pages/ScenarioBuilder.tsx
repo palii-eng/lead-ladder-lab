@@ -2021,6 +2021,7 @@ const ScenarioBuilder: React.FC = () => {
                         ))}
                       </div>
                     </div>
+                    </>}
                   </div>
                 );
               })()}
