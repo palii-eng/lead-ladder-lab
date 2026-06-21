@@ -11,13 +11,9 @@ import { Badge } from '@/components/ui/badge';
 const Dashboard: React.FC = () => {
   const { scenarios, addScenario, deleteScenario, duplicateScenario } = useScenarios();
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
   const handleCreate = () => {
-    if (!name.trim()) return;
-    const s = addScenario(name.trim(), '');
-    setName('');
-    setOpen(false);
+    const defaultName = `Сценарій #${scenarios.length + 1}`;
+    const s = addScenario(defaultName, '');
     navigate(`/scenario/${s.id}`);
   };
 
@@ -59,34 +55,10 @@ const Dashboard: React.FC = () => {
               </a>
             </span>
           </div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
-                <Plus className="w-4 h-4" />
-                Створити сценарій
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-card border-border">
-              <DialogHeader>
-                <DialogTitle className="text-foreground font-bold">Новий сценарій</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-2">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Назва сценарію *</label>
-                  <Input
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    placeholder="Наприклад: Запуск реклами для кав'ярні"
-                    className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
-                    onKeyDown={e => e.key === 'Enter' && handleCreate()}
-                  />
-                </div>
-                <Button onClick={handleCreate} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
-                  Почати симуляцію
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={handleCreate} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
+            <Plus className="w-4 h-4" />
+            Створити сценарій
+          </Button>
         </div>
       </header>
 
