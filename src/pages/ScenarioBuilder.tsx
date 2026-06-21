@@ -132,7 +132,7 @@ const ScenarioBuilder: React.FC = () => {
   const navigate = useNavigate();
   const { getScenario, updateScenario } = useScenarios();
   const scenario = getScenario(id!);
-  const [activeStep, setActiveStep] = useState<number | null>(1);
+  const [activeStep, setActiveStep] = useState<number | null>(null);
   const [clientBriefOpen, setClientBriefOpen] = useState(false);
   const [filledBriefOpen, setFilledBriefOpen] = useState(false);
   const [clientActions, setClientActions] = useState<Set<string>>(new Set());
@@ -663,7 +663,7 @@ const ScenarioBuilder: React.FC = () => {
             next.add('0');
             return next;
           });
-          setActiveStep(1);
+          setActiveStep(null);
           toast({
             title: 'Ads School',
             description: `Вітаю з новим проектом — ${brief.name}!`,
