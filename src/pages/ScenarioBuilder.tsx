@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
-import { ArrowLeft, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram } from 'lucide-react';
+import { ArrowLeft, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -656,12 +656,6 @@ const ScenarioBuilder: React.FC = () => {
           updateScenario(id!, {
             difficulty,
             clientBrief: brief,
-            niche: brief.niche || scenario.niche,
-          });
-          setSavedSteps(prev => {
-            const next = new Set(prev);
-            next.add('0');
-            return next;
           });
           setActiveStep(null);
           toast({
@@ -1166,12 +1160,24 @@ const ScenarioBuilder: React.FC = () => {
               { label: 'Нерухомість', Icon: Home },
               { label: 'Інфобізнес', Icon: GraduationCap },
               { label: 'Інстаграм-крамниця', Icon: Instagram },
+              { label: 'Стоматологія', Icon: Stethoscope },
+              { label: 'Фітнес-студія', Icon: Dumbbell },
+              { label: 'Онлайн-школа', Icon: BookOpen },
+              { label: 'Ресторан', Icon: UtensilsCrossed },
+              { label: 'Юридичні послуги', Icon: Scale },
+              { label: 'Барбершоп', Icon: Scissors },
+              { label: 'Салон краси', Icon: Sparkle },
+              { label: 'SaaS', Icon: Cloud },
+              { label: 'Автосервіс', Icon: Wrench },
+              { label: 'Клініка', Icon: HeartPulse },
+              { label: 'Туризм', Icon: Plane },
+              { label: 'Будівництво', Icon: HardHat },
             ];
-            const NICHE_TAGS = ['Стоматологія', 'Фітнес-студія', 'Онлайн-школа', 'Ресторан', 'Юридичні послуги', 'Барбершоп', 'Салон краси', 'SaaS', 'Автосервіс', 'Клініка', 'Туризм', 'Будівництво'];
             const selected = scenario.niche;
+            const isCustom = selected && !NICHE_CARDS.some(c => c.label === selected);
             return (
               <div className="space-y-5">
-                <h3 className="text-base font-bold text-foreground">Оберіть тип бізнесу</h3>
+                <h3 className="text-base font-bold text-foreground">Оберіть нішу або тип бізнесу</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {NICHE_CARDS.map(({ label, Icon }) => {
                     const active = selected === label;
@@ -1189,32 +1195,16 @@ const ScenarioBuilder: React.FC = () => {
                 </div>
 
                 <div>
-                  <p className="text-xs text-muted-foreground mb-2">Або оберіть нішу:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {NICHE_TAGS.map(tag => {
-                      const active = selected === tag;
-                      return (
-                        <button
-                          key={tag}
-                          onClick={() => update({ niche: tag })}
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border hover:border-primary/40'}`}
-                        >
-                          {tag}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
                   <p className="text-xs text-muted-foreground mb-2">Свій варіант:</p>
                   <Input
-                    value={selected}
+                    value={isCustom ? selected : ''}
                     onChange={e => update({ niche: e.target.value })}
                     placeholder="Введіть свою нішу..."
                     className="bg-secondary border-border text-foreground text-base py-5 placeholder:text-muted-foreground"
                   />
                 </div>
+
+
 
                 <SaveButton step={0} />
               </div>
