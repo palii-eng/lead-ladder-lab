@@ -766,37 +766,55 @@ const ScenarioBuilder: React.FC = () => {
     </div>
   );
 
-  const PrepWorksNode: React.FC = () => (
-    <div className="flex items-start" data-flow-node>
-      <div className="flex flex-col items-center">
-        <FlowNode
-          icon="🛠️"
-          title="Підготовчі роботи"
-          index={-1}
-          isActive={false}
-          isCompleted={false}
-          isLast={false}
-          isLocked={false}
-          onClick={() => {}}
-        />
-        <div className="flex flex-col items-center mt-3 gap-2 select-none">
-          <div className="w-px h-4 bg-border" />
-          <button
-            type="button"
-            className="px-3 py-2 rounded-full bg-card border-2 border-primary text-primary text-xs font-semibold flex items-center gap-1.5 hover:bg-primary hover:text-primary-foreground transition-all shadow-sm hover:shadow-md"
-          >
-            <Plus className="w-3.5 h-3.5" /> Налаштування аудиторій
-          </button>
-          <button
-            type="button"
-            className="px-3 py-2 rounded-full bg-card border-2 border-primary text-primary text-xs font-semibold flex items-center gap-1.5 hover:bg-primary hover:text-primary-foreground transition-all shadow-sm hover:shadow-md"
-          >
-            <Plus className="w-3.5 h-3.5" /> Налаштування крео
-          </button>
+  const PrepWorksNode: React.FC = () => {
+    const SubBlock: React.FC<{ icon: string; title: string; onClick?: () => void }> = ({ icon, title, onClick }) => (
+      <button
+        type="button"
+        onClick={onClick}
+        className="group relative w-44 rounded-xl bg-card border-2 border-dashed border-primary/40 px-3 py-2.5 text-left hover:border-primary hover:bg-primary/5 transition-all shadow-sm"
+      >
+        <span className="absolute -top-2 left-3 px-1.5 py-0.5 rounded bg-background text-[9px] font-bold uppercase tracking-wider text-muted-foreground border border-border">
+          Підблок
+        </span>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="text-base">{icon}</span>
+          <span className="text-xs font-semibold text-foreground leading-tight">{title}</span>
+        </div>
+      </button>
+    );
+
+    return (
+      <div className="flex items-start" data-flow-node>
+        <div className="flex flex-col items-center">
+          <FlowNode
+            icon="🛠️"
+            title="Підготовчі роботи"
+            index={-1}
+            isActive={false}
+            isCompleted={false}
+            isLast={false}
+            isLocked={false}
+            onClick={() => {}}
+          />
+          <div className="flex flex-col items-center mt-4 gap-3 select-none">
+            <div className="w-px h-3 bg-border" />
+            <SubBlock
+              icon="👥"
+              title="Налаштування аудиторій"
+              onClick={() => setAudienceOpen(true)}
+            />
+            <div className="w-px h-2 bg-border" />
+            <SubBlock
+              icon="🎨"
+              title="Налаштування крео"
+            />
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
+
+
 
 
 
