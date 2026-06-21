@@ -2592,26 +2592,28 @@ const ScenarioBuilder: React.FC = () => {
                   onClick={() => {
                     const key = activeLeadType || 'main';
                     const current = (scenario as any)?.creoBriefs || {};
-                    update({
-                      creoBriefs: {
-                        ...current,
-                        [key]: {
-                          format: creoFormat,
-                          videoFormat: creoFormat === 'video' ? creoVideoFormat : undefined,
-                          fields: creoFields,
-                          savedAt: new Date().toISOString(),
-                        },
+                    const rawExisting = current[key];
+                    const existingList: any[] = Array.isArray(rawExisting)
+                      ? rawExisting
+                      : (rawExisting?.format ? [rawExisting] : []);
+                    const next = [
+                      ...existingList,
+                      {
+                        format: creoFormat,
+                        videoFormat: creoFormat === 'video' ? creoVideoFormat : undefined,
+                        fields: creoFields,
+                        savedAt: new Date().toISOString(),
                       },
-                    } as any);
-                    toast({ title: 'ТЗ збережено', description: 'Технічне завдання по крео погоджено' });
-                    setCreoOpen(false);
+                    ];
+                    update({ creoBriefs: { ...current, [key]: next } } as any);
+                    toast({ title: 'Адсет збережено', description: `Збережено адсет №${next.length}` });
                     setCreoFormat(null);
                     setCreoFields({});
                     setCreoVideoFormat('');
                   }}
                   className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
                 >
-                  <Check className="w-4 h-4 mr-2" /> Зберегти ТЗ
+                  <Check className="w-4 h-4 mr-2" /> Зберегти адсет
                 </Button>
               )}
             </div>
