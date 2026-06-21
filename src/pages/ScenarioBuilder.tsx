@@ -820,45 +820,26 @@ const ScenarioBuilder: React.FC = () => {
               const raw = (scenario as any)?.creoBriefs?.[key];
               const list: any[] = Array.isArray(raw) ? raw : (raw?.format ? [raw] : []);
               if (list.length === 0) return null;
-              const labels: Record<string, { icon: string; label: string }> = {
-                static: { icon: '🖼️', label: 'Статика' },
-                carousel: { icon: '🎠', label: 'Карусель' },
-                video: { icon: '🎬', label: 'Відео' },
-              };
+              const counts = list.reduce((acc: Record<string, number>, item) => {
+                acc[item.format] = (acc[item.format] || 0) + 1;
+                return acc;
+              }, {});
+              const formatIcons: Record<string, string> = { static: '🖼️', carousel: '🎠', video: '🎬' };
               return (
                 <>
                   <div className="w-px h-2 bg-border" />
                   <div
                     onClick={() => { setCreoOpen(true); setCreoFormat(null); }}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-xs font-semibold text-primary cursor-pointer hover:bg-primary/15"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-xs font-semibold text-primary cursor-pointer hover:bg-primary/15 transition-colors"
+                    title="Натисніть, щоб переглянути та керувати адсетами"
                   >
                     <span>📦</span>
-                    <span>Адсетів: {list.length}</span>
-                    <Check className="w-3 h-3" />
-                  </div>
-                  <div className="flex flex-col items-center gap-2 mt-1">
-                    {list.map((item, idx) => {
-                      const info = labels[item.format] || { icon: '📝', label: item.format };
-                      const title = item.fields?.h1 || item.fields?.script?.slice(0, 40) || 'Без назви';
-                      return (
-                        <React.Fragment key={idx}>
-                          <div className="w-px h-2 bg-border" />
-                          <div
-                            onClick={() => { setCreoOpen(true); setCreoFormat(null); }}
-                            className="w-44 px-3 py-2 rounded-lg border border-border bg-card hover:border-primary/50 hover:shadow-sm transition-all cursor-pointer"
-                          >
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-sm shrink-0">{info.icon}</div>
-                              <div className="min-w-0 flex-1">
-                                <div className="text-[10px] font-bold text-primary uppercase tracking-wider">Адсет №{idx + 1}</div>
-                                <div className="text-[11px] text-muted-foreground truncate">{info.label}{item.format === 'video' && item.videoFormat ? ` · ${item.videoFormat}` : ''}</div>
-                              </div>
-                            </div>
-                            <div className="mt-1.5 text-[11px] text-foreground font-medium line-clamp-2 leading-tight">{title}</div>
-                          </div>
-                        </React.Fragment>
-                      );
-                    })}
+                    <span>{list.length} адсет{list.length === 1 ? '' : (list.length < 5 ? 'и' : 'ів')}</span>
+                    <span className="flex items-center gap-1 ml-1 opacity-70">
+                      {Object.entries(counts).map(([f, n]) => (
+                        <span key={f} className="text-[10px]">{formatIcons[f]}{(n as number) > 1 ? `×${n}` : ''}</span>
+                      ))}
+                    </span>
                   </div>
                 </>
               );
