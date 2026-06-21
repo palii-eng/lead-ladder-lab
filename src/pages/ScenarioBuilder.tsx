@@ -2319,30 +2319,82 @@ const ScenarioBuilder: React.FC = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto pt-2 space-y-4">
-            {!creoFormat && (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">Оберіть формат крео:</p>
-                <div className="grid gap-3">
-                  {[
-                    { key: 'static', icon: '🖼️', title: 'Статика (банер)', desc: 'Одне зображення з текстом' },
-                    { key: 'carousel', icon: '🎠', title: 'Кільцева галерея', desc: 'Кілька карток з єдиною логікою' },
-                    { key: 'video', icon: '🎬', title: 'Відео', desc: 'Динамічний відеоконтент' },
-                  ].map(opt => (
-                    <button
-                      key={opt.key}
-                      onClick={() => { setCreoFormat(opt.key as any); setCreoFields({}); }}
-                      className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
-                    >
-                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">{opt.icon}</div>
-                      <div>
-                        <div className="font-semibold text-foreground">{opt.title}</div>
-                        <div className="text-xs text-muted-foreground">{opt.desc}</div>
+            {!creoFormat && (() => {
+              const key = activeLeadType || 'main';
+              const rawSaved = (scenario as any)?.creoBriefs?.[key];
+              const savedList: any[] = Array.isArray(rawSaved)
+                ? rawSaved
+                : (rawSaved?.format ? [rawSaved] : []);
+              const labels: Record<string, { icon: string; label: string }> = {
+                static: { icon: '🖼️', label: 'Статика' },
+                carousel: { icon: '🎠', label: 'Карусель' },
+                video: { icon: '🎬', label: 'Відео' },
+              };
+              return (
+                <div className="space-y-4">
+                  {savedList.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Збережені адсети ({savedList.length})</p>
+                      <div className="space-y-2">
+                        {savedList.map((item, idx) => {
+                          const info = labels[item.format] || { icon: '📝', label: item.format };
+                          const title = item.fields?.h1 || item.fields?.script?.slice(0, 60) || 'Без назви';
+                          return (
+                            <div key={idx} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-xl shrink-0">{info.icon}</div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs font-semibold text-primary">Адсет №{idx + 1} · {info.label}{item.format === 'video' && item.videoFormat ? ` (${item.videoFormat})` : ''}</div>
+                                <div className="text-sm text-foreground truncate">{title}</div>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  const next = savedList.filter((_, i) => i !== idx);
+                                  const current = (scenario as any)?.creoBriefs || {};
+                                  update({ creoBriefs: { ...current, [key]: next } } as any);
+                                  toast({ title: 'Видалено', description: `Адсет №${idx + 1}` });
+                                }}
+                                className="w-8 h-8 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive flex items-center justify-center shrink-0"
+                                aria-label="Видалити"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
-                    </button>
-                  ))}
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      {savedList.length > 0 ? 'Додати новий адсет — оберіть формат:' : 'Оберіть формат крео:'}
+                    </p>
+                    <div className="grid gap-3">
+                      {[
+                        { key: 'static', icon: '🖼️', title: 'Статика (банер)', desc: 'Одне зображення з текстом' },
+                        { key: 'carousel', icon: '🎠', title: 'Кільцева галерея', desc: 'Кілька карток з єдиною логікою' },
+                        { key: 'video', icon: '🎬', title: 'Відео', desc: 'Динамічний відеоконтент' },
+                      ].map(opt => (
+                        <button
+                          key={opt.key}
+                          onClick={() => { setCreoFormat(opt.key as any); setCreoFields({}); setCreoVideoFormat(''); }}
+                          className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
+                        >
+                          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">
+                            <Plus className="w-5 h-5 text-primary absolute" style={{ marginLeft: -28, marginTop: -28 }} />
+                            <span>{opt.icon}</span>
+                          </div>
+                          <div>
+                            <div className="font-semibold text-foreground">+ {opt.title}</div>
+                            <div className="text-xs text-muted-foreground">{opt.desc}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {creoFormat === 'static' && (
               <div className="space-y-4">
