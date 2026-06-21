@@ -1795,8 +1795,14 @@ const ScenarioBuilder: React.FC = () => {
                         </div>
                         {(() => {
                           const visible = STEPS.map((_, i) => i).filter(i => i === 0 || isStepUnlocked(i));
-                          return visible.map((i, idx) => renderNode(i, undefined, idx === visible.length - 1));
+                          return visible.map((i, idx) => (
+                            <React.Fragment key={i}>
+                              {renderNode(i, undefined, idx === visible.length - 1)}
+                              {i === 3 && <PrepWorksNode />}
+                            </React.Fragment>
+                          ));
                         })()}
+
                       </div>
                       {scenario.retention.emailCount > 0 && savedSteps.has('7') && <RetentionArrow />}
                     </>
