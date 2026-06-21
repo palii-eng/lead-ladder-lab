@@ -663,7 +663,7 @@ const ScenarioBuilder: React.FC = () => {
             next.add('0');
             return next;
           });
-          setActiveStep(1);
+          setActiveStep(null);
           toast({
             title: 'Ads School',
             description: `Вітаю з новим проектом — ${brief.name}!`,
