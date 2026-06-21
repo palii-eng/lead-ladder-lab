@@ -2185,7 +2185,73 @@ const ScenarioBuilder: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Audience prep dialog */}
+      <Dialog open={audienceOpen} onOpenChange={setAudienceOpen}>
+        <DialogContent className="bg-card border-border max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-foreground font-bold flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-base">👥</div>
+              Налаштування аудиторій
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto pt-2 space-y-4">
+            <div>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Чек-ліст</p>
+              <div className="space-y-2">
+                {[
+                  { key: 'goal', label: 'Ціль оптимізації (чи стоїть піксель)' },
+                  { key: 'geo', label: 'Налаштування гео' },
+                  { key: 'gender', label: 'Налаштування гендеру та статі' },
+                  { key: 'lang', label: 'Налаштування мови акаунту' },
+                  { key: 'interests', label: 'Налаштування інтересів' },
+                  { key: 'placement', label: 'Налаштування плейсменту' },
+                ].map(item => {
+                  const checked = !!audienceChecks[item.key];
+                  return (
+                    <label
+                      key={item.key}
+                      className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/40 cursor-pointer transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => setAudienceChecks(prev => ({ ...prev, [item.key]: e.target.checked }))}
+                        className="w-4 h-4 rounded accent-primary"
+                      />
+                      <span className={`text-sm ${checked ? 'text-muted-foreground line-through' : 'text-foreground font-medium'}`}>
+                        {item.label}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Button
+              onClick={fetchAudienceTips}
+              disabled={audienceTipsLoading}
+              className="w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-semibold shadow-md"
+            >
+              {audienceTipsLoading ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Генерую поради...</>
+              ) : (
+                <><Sparkles className="w-4 h-4 mr-2" /> Поради по аудиторіях</>
+              )}
+            </Button>
+
+            {audienceTipsText && (
+              <div className="rounded-xl border border-border bg-muted/30 p-4">
+                <div className="prose prose-sm max-w-none text-foreground">
+                  <ReactMarkdown>{audienceTipsText}</ReactMarkdown>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 };
 
