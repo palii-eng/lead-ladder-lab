@@ -1920,6 +1920,8 @@ const ScenarioBuilder: React.FC = () => {
                   );
                 };
 
+                const flowGated = !!scenario.clientBrief && clientActions.size < 3;
+
                 if (!shouldBranch) {
                   // Single row — original behavior
                   return (
@@ -1930,9 +1932,9 @@ const ScenarioBuilder: React.FC = () => {
                             <ClientInfoCard />
                             <ClientActionsColumn />
                           </div>
-                          <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />
+                          {!flowGated && <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />}
                         </div>
-                        {(() => {
+                        {!flowGated && (() => {
                           const visible = STEPS.map((_, i) => i).filter(i => i === 0 || isStepUnlocked(i));
                           return visible.map((i, idx) => (
                             <React.Fragment key={i}>
