@@ -148,7 +148,7 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
 
           {/* The actual card */}
           <div
-            key={`${difficulty}-${index}`}
+            key={`card-${index}`}
             className={`relative rounded-3xl overflow-hidden bg-card ${revealing ? 'opacity-0' : 'animate-card-in'}`}
             style={{
               boxShadow: '0 30px 60px -30px hsl(var(--foreground) / 0.25), 0 0 0 1px hsl(var(--border))',
@@ -197,7 +197,7 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
             {/* Actions */}
             <div className="px-3 pb-3 grid grid-cols-2 gap-2">
               <Button
-                onClick={() => onAccept(difficulty, current)}
+                onClick={() => onAccept(current._difficulty, current)}
                 className="h-11 rounded-xl font-semibold text-white text-sm"
                 style={{ background: 'hsl(108 25% 50%)' }}
               >
