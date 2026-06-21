@@ -118,12 +118,7 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
       }}
     >
       <div className="max-w-sm w-full">
-        <button
-          onClick={() => setDifficulty(null)}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Інша складність
-        </button>
+
 
         {/* CARD STAGE */}
         <div className="relative" style={{ perspective: '1200px' }}>
