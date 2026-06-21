@@ -1962,8 +1962,9 @@ const ScenarioBuilder: React.FC = () => {
                         <ClientInfoCard />
                         <ClientActionsColumn />
                       </div>
-                      <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />
+                      {!flowGated && <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />}
                     </div>
+                    {!flowGated && <>
                     {/* Shared steps (0, 1, 2) — vertically centered, last node without connector */}
                     <div className="flex items-start gap-0 flex-shrink-0" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
                       {(() => {
