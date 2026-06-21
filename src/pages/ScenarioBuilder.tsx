@@ -2286,6 +2286,219 @@ const ScenarioBuilder: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Creo brief dialog */}
+      <Dialog open={creoOpen} onOpenChange={(o) => { setCreoOpen(o); if (!o) { setCreoFormat(null); setCreoFields({}); setCreoVideoFormat(''); } }}>
+        <DialogContent className="bg-card border-border max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-foreground font-bold flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-base">📝</div>
+              ТЗ по крео {creoFormat && '— заповніть поля'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto pt-2 space-y-4">
+            {!creoFormat && (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">Оберіть формат крео:</p>
+                <div className="grid gap-3">
+                  {[
+                    { key: 'static', icon: '🖼️', title: 'Статика (банер)', desc: 'Одне зображення з текстом' },
+                    { key: 'carousel', icon: '🎠', title: 'Кільцева галерея', desc: 'Кілька карток з єдиною логікою' },
+                    { key: 'video', icon: '🎬', title: 'Відео', desc: 'Динамічний відеоконтент' },
+                  ].map(opt => (
+                    <button
+                      key={opt.key}
+                      onClick={() => { setCreoFormat(opt.key as any); setCreoFields({}); }}
+                      className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
+                    >
+                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">{opt.icon}</div>
+                      <div>
+                        <div className="font-semibold text-foreground">{opt.title}</div>
+                        <div className="text-xs text-muted-foreground">{opt.desc}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {creoFormat === 'static' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-semibold text-foreground mb-1.5 block">Основний текст / заголовок (H1) *</label>
+                  <Textarea
+                    value={creoFields.h1 || ''}
+                    onChange={(e) => setCreoFields(prev => ({ ...prev, h1: e.target.value }))}
+                    placeholder="Наприклад: Знижка 50% тільки сьогодні"
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-foreground mb-1.5 block">Підзаголовок <span className="text-muted-foreground font-normal">(не обов'язково)</span></label>
+                  <Input
+                    value={creoFields.subtitle || ''}
+                    onChange={(e) => setCreoFields(prev => ({ ...prev, subtitle: e.target.value }))}
+                    placeholder="Додатковий текст під заголовком"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-foreground mb-1.5 block">Опис основного зображення *</label>
+                  <Textarea
+                    value={creoFields.imageDesc || ''}
+                    onChange={(e) => setCreoFields(prev => ({ ...prev, imageDesc: e.target.value }))}
+                    placeholder="Що зображено, стиль, колірна гамма, обʼєкти..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+            )}
+
+            {creoFormat === 'carousel' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-semibold text-foreground mb-1.5 block">Основний текст / заголовок (H1) *</label>
+                  <Textarea
+                    value={creoFields.h1 || ''}
+                    onChange={(e) => setCreoFields(prev => ({ ...prev, h1: e.target.value }))}
+                    placeholder="Наприклад: 5 причин обрати нас"
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-foreground mb-1.5 block">Підзаголовок <span className="text-muted-foreground font-normal">(не обов'язково)</span></label>
+                  <Input
+                    value={creoFields.subtitle || ''}
+                    onChange={(e) => setCreoFields(prev => ({ ...prev, subtitle: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-foreground mb-1.5 block">Кількість карток (крео) *</label>
+                  <Input
+                    type="number"
+                    min={2}
+                    max={10}
+                    value={creoFields.cards || ''}
+                    onChange={(e) => setCreoFields(prev => ({ ...prev, cards: e.target.value }))}
+                    placeholder="3–10"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-foreground mb-1.5 block">Опис основного зображення *</label>
+                  <Textarea
+                    value={creoFields.imageDesc || ''}
+                    onChange={(e) => setCreoFields(prev => ({ ...prev, imageDesc: e.target.value }))}
+                    placeholder="Стиль, колір, обʼєкти..."
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-foreground mb-1.5 block">Єдина логіка карток *</label>
+                  <Textarea
+                    value={creoFields.logic || ''}
+                    onChange={(e) => setCreoFields(prev => ({ ...prev, logic: e.target.value }))}
+                    placeholder="Наприклад: кожна картка — окрема перевага продукту, або кроки сценарію"
+                    rows={3}
+                  />
+                </div>
+              </div>
+            )}
+
+            {creoFormat === 'video' && (() => {
+              const VIDEO_FORMATS: Record<string, { label: string; example: string }> = {
+                ugc: { label: 'UGC', example: 'Людина тримає продукт перед камерою смартфона, ділиться враженнями простими словами, як рекомендація другу.' },
+                unboxing: { label: 'Распаковка', example: 'Крупним планом руки розпаковують упаковку, показують комплектацію, реакція "вау".' },
+                product: { label: 'Демонстрація продукту', example: 'Покрокова демонстрація як працює продукт: проблема → застосування → результат.' },
+                review: { label: 'Відгук', example: 'Реальний клієнт говорить на камеру: що було до, як купив, який результат отримав через X днів.' },
+                ba: { label: 'До-Після', example: '"До": проблемна ситуація. "Після": той самий обʼєкт/людина після використання продукту. Контрастний монтаж.' },
+                story: { label: 'Сторітелінг', example: 'Зачіпка (0-3 сек) → проблема героя → знайомство з продуктом → трансформація → CTA.' },
+              };
+              return (
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-semibold text-foreground mb-1.5 block">Формат відео *</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.entries(VIDEO_FORMATS).map(([key, v]) => (
+                        <button
+                          key={key}
+                          onClick={() => setCreoVideoFormat(key)}
+                          className={`p-2.5 rounded-lg border text-sm font-medium transition-all ${creoVideoFormat === key ? 'border-primary bg-primary/10 text-foreground' : 'border-border hover:border-primary/50 text-muted-foreground'}`}
+                        >
+                          {v.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {creoVideoFormat && (
+                    <div className="rounded-lg bg-muted/40 border border-border p-3">
+                      <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Приклад сценарію</div>
+                      <div className="text-sm text-foreground">{VIDEO_FORMATS[creoVideoFormat].example}</div>
+                    </div>
+                  )}
+                  <div>
+                    <label className="text-sm font-semibold text-foreground mb-1.5 block">Основний сценарій *</label>
+                    <Textarea
+                      value={creoFields.script || ''}
+                      onChange={(e) => setCreoFields(prev => ({ ...prev, script: e.target.value }))}
+                      placeholder="Опишіть сюжет сцена за сценою..."
+                      rows={5}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-foreground mb-1.5 block">
+                      Таймінг (сек) * <span className="text-muted-foreground font-normal">— рекомендуємо до 30 сек</span>
+                    </label>
+                    <Input
+                      type="number"
+                      min={5}
+                      max={120}
+                      value={creoFields.timing || ''}
+                      onChange={(e) => setCreoFields(prev => ({ ...prev, timing: e.target.value }))}
+                      placeholder="до 30"
+                    />
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+          <div className="border-t border-border pt-4 mt-2 flex items-center justify-between gap-2">
+            {creoFormat ? (
+              <Button variant="outline" onClick={() => { setCreoFormat(null); setCreoFields({}); setCreoVideoFormat(''); }}>
+                ← Назад
+              </Button>
+            ) : <span />}
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setCreoOpen(false)}>Закрити</Button>
+              {creoFormat && (
+                <Button
+                  onClick={() => {
+                    const key = activeLeadType || 'main';
+                    const current = (scenario as any)?.creoBriefs || {};
+                    update({
+                      creoBriefs: {
+                        ...current,
+                        [key]: {
+                          format: creoFormat,
+                          videoFormat: creoFormat === 'video' ? creoVideoFormat : undefined,
+                          fields: creoFields,
+                          savedAt: new Date().toISOString(),
+                        },
+                      },
+                    } as any);
+                    toast({ title: 'ТЗ збережено', description: 'Технічне завдання по крео погоджено' });
+                    setCreoOpen(false);
+                    setCreoFormat(null);
+                    setCreoFields({});
+                    setCreoVideoFormat('');
+                  }}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+                >
+                  <Check className="w-4 h-4 mr-2" /> Зберегти ТЗ
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
 
   );
