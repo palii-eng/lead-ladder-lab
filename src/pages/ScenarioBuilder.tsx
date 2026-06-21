@@ -149,6 +149,11 @@ const ScenarioBuilder: React.FC = () => {
   const [salesRecText, setSalesRecText] = useState('');
   const [salesRecLoading, setSalesRecLoading] = useState(false);
   const [salesRecTitle, setSalesRecTitle] = useState('');
+  // Audience prep
+  const [audienceOpen, setAudienceOpen] = useState(false);
+  const [audienceChecks, setAudienceChecks] = useState<Record<string, boolean>>({});
+  const [audienceTipsText, setAudienceTipsText] = useState('');
+  const [audienceTipsLoading, setAudienceTipsLoading] = useState(false);
   // Cache for AI-generated content: key → text
   const aiCacheRef = useRef<Record<string, string>>({});
   // AI conclusion for result step
