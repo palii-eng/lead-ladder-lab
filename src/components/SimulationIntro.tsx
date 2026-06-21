@@ -69,87 +69,45 @@ interface Props {
 const REVEAL_MS = 1600;
 
 const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
-  const [difficulty, setDifficulty] = useState<'lucky' | 'suffer' | null>(null);
   const [index, setIndex] = useState(0);
   const [revealing, setRevealing] = useState(true);
 
-  const pool = useMemo<ClientBrief[]>(() => {
-    if (!difficulty) return [];
-    const base = difficulty === 'lucky' ? LUCKY_CLIENTS : HARD_CLIENTS;
+  const pool = useMemo<(ClientBrief & { role?: string; _difficulty: 'lucky' | 'suffer' })[]>(() => {
     const seedBase = Math.floor(Math.random() * 1000);
-    return [...base]
-      .map((b, i) => ({ b, k: Math.random() + i }))
+    const tagged = [
+      ...LUCKY_CLIENTS.map(c => ({ c, d: 'lucky' as const })),
+      ...HARD_CLIENTS.map(c => ({ c, d: 'suffer' as const })),
+    ];
+    return tagged
+      .map((x, i) => ({ ...x, k: Math.random() + i }))
       .sort((a, z) => a.k - z.k)
       .map((x, i) => ({
-        name: x.b.name,
-        niche: x.b.niche,
-        source: x.b.source,
-        task: x.b.task,
-        photo: photoFor(x.b.gender, seedBase + i * 7),
-        role: x.b.role,
-      } as ClientBrief & { role: string }));
-  }, [difficulty]);
+        name: x.c.name,
+        niche: x.c.niche,
+        source: x.c.source,
+        task: x.c.task,
+        photo: photoFor(x.c.gender, seedBase + i * 7),
+        role: x.c.role,
+        _difficulty: x.d,
+      }));
+  }, []);
 
   // Trigger reveal animation on each new card
   useEffect(() => {
-    if (!difficulty) return;
     setRevealing(true);
     const t = setTimeout(() => setRevealing(false), REVEAL_MS);
     return () => clearTimeout(t);
-  }, [difficulty, index]);
+  }, [index]);
 
-  const current = pool[index % (pool.length || 1)] as (ClientBrief & { role?: string }) | undefined;
+  const current = pool[index % (pool.length || 1)];
 
   const handleNext = () => {
     setRevealing(true);
     setTimeout(() => setIndex(i => i + 1), 350);
   };
 
-  if (!difficulty) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-6 animate-fade-in">
-        <div className="max-w-3xl w-full">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold mb-4">
-              <Sparkles className="w-3.5 h-3.5" />
-              Симуляція маркетолога
-            </div>
-            <p className="text-muted-foreground">Оберіть рівень складності — від цього залежать клієнти, які до вас прийдуть.</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <button
-              onClick={() => setDifficulty('lucky')}
-              className="group glass-card p-8 text-left transition-all hover:-translate-y-1 hover:shadow-lg"
-            >
-              <div className="w-12 h-12 rounded-xl bg-success/15 text-success flex items-center justify-center mb-4">
-                <Sparkles className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-1">Мені щастить на клієнтів</h3>
-              <p className="text-sm text-muted-foreground">
-                Адекватні брифи, нормальні бюджети, чіткі цілі. Ідеально для першого прогону.
-              </p>
-            </button>
-
-            <button
-              onClick={() => setDifficulty('suffer')}
-              className="group glass-card p-8 text-left transition-all hover:-translate-y-1 hover:shadow-lg"
-            >
-              <div className="w-12 h-12 rounded-xl bg-destructive/15 text-destructive flex items-center justify-center mb-4">
-                <Flame className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-1">Готовий страждати</h3>
-              <p className="text-sm text-muted-foreground">
-                "Зроби красиво, бюджету немає, треба вчора". Реальне життя баєра.
-              </p>
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (!current) return null;
+
 
   return (
     <div
@@ -160,12 +118,7 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
       }}
     >
       <div className="max-w-sm w-full">
-        <button
-          onClick={() => setDifficulty(null)}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Інша складність
-        </button>
+
 
         {/* CARD STAGE */}
         <div className="relative" style={{ perspective: '1200px' }}>
@@ -195,7 +148,7 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
 
           {/* The actual card */}
           <div
-            key={`${difficulty}-${index}`}
+            key={`card-${index}`}
             className={`relative rounded-3xl overflow-hidden bg-card ${revealing ? 'opacity-0' : 'animate-card-in'}`}
             style={{
               boxShadow: '0 30px 60px -30px hsl(var(--foreground) / 0.25), 0 0 0 1px hsl(var(--border))',
@@ -244,7 +197,7 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
             {/* Actions */}
             <div className="px-3 pb-3 grid grid-cols-2 gap-2">
               <Button
-                onClick={() => onAccept(difficulty, current)}
+                onClick={() => onAccept(current._difficulty, current)}
                 className="h-11 rounded-xl font-semibold text-white text-sm"
                 style={{ background: 'hsl(108 25% 50%)' }}
               >
