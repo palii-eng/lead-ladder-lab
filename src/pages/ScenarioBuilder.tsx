@@ -837,7 +837,7 @@ const ScenarioBuilder: React.FC = () => {
                     <span>{list.length} адсет{list.length === 1 ? '' : (list.length < 5 ? 'и' : 'ів')}</span>
                     <span className="flex items-center gap-1 ml-1 opacity-70">
                       {Object.entries(counts).map(([f, n]) => (
-                        <span key={f} className="text-[10px]">{formatIcons[f]}{n > 1 ? `×${n}` : ''}</span>
+                        <span key={f} className="text-[10px]">{formatIcons[f]}{(n as number) > 1 ? `×${n}` : ''}</span>
                       ))}
                     </span>
                   </div>
