@@ -815,6 +815,27 @@ const ScenarioBuilder: React.FC = () => {
               title="Підготувати ТЗ по крео"
               onClick={() => { setCreoOpen(true); setCreoFormat(null); }}
             />
+            {(() => {
+              const key = activeLeadType || 'main';
+              const saved = (scenario as any)?.creoBriefs?.[key];
+              if (!saved?.format) return null;
+              const labels: Record<string, { icon: string; label: string }> = {
+                static: { icon: '🖼️', label: 'Статика' },
+                carousel: { icon: '🎠', label: 'Карусель' },
+                video: { icon: '🎬', label: 'Відео' },
+              };
+              const info = labels[saved.format];
+              return (
+                <>
+                  <div className="w-px h-2 bg-border" />
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-xs font-semibold text-primary">
+                    <span>{info.icon}</span>
+                    <span>Формат: {info.label}</span>
+                    <Check className="w-3 h-3" />
+                  </div>
+                </>
+              );
+            })()}
 
           </div>
         </div>
