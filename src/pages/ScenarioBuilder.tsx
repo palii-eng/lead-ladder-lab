@@ -2249,6 +2249,33 @@ const ScenarioBuilder: React.FC = () => {
               </div>
             )}
           </div>
+          <div className="border-t border-border pt-4 mt-2 flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setAudienceOpen(false)}
+            >
+              Закрити
+            </Button>
+            <Button
+              onClick={() => {
+                const key = activeLeadType || 'main';
+                const current = (scenario as any)?.audienceSettings || {};
+                update({
+                  audienceSettings: {
+                    ...current,
+                    [key]: {
+                      checks: audienceChecks,
+                      tips: audienceTipsText,
+                      approvedAt: new Date().toISOString(),
+                    },
+                  },
+                } as any);
+                toast({ title: 'Збережено', description: 'Налаштування аудиторій погоджено' });
+                setAudienceOpen(false);
+              }}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+            >
+              <Check className="w-4 h-4 mr-2" /> Погодити
         </DialogContent>
       </Dialog>
     </div>
