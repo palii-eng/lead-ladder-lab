@@ -1064,7 +1064,7 @@ const ScenarioBuilder: React.FC = () => {
         case 1:
           return (
             <div className="space-y-4">
-              <h3 className="text-base font-bold text-foreground">Оберіть джерело лідгену</h3>
+              <h3 className="text-base font-bold text-foreground">Оберіть джерело трафіку</h3>
               <p className="text-xs text-muted-foreground">Оберіть рекламну платформу:</p>
               <div className="grid gap-2">
                 {LEAD_SOURCES.map(src => {
