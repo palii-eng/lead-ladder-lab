@@ -154,6 +154,11 @@ const ScenarioBuilder: React.FC = () => {
   const [audienceChecks, setAudienceChecks] = useState<Record<string, boolean>>({});
   const [audienceTipsText, setAudienceTipsText] = useState('');
   const [audienceTipsLoading, setAudienceTipsLoading] = useState(false);
+  // Creo brief
+  const [creoOpen, setCreoOpen] = useState(false);
+  const [creoFormat, setCreoFormat] = useState<'static' | 'carousel' | 'video' | null>(null);
+  const [creoFields, setCreoFields] = useState<Record<string, string>>({});
+  const [creoVideoFormat, setCreoVideoFormat] = useState<string>('');
   // Cache for AI-generated content: key → text
   const aiCacheRef = useRef<Record<string, string>>({});
   // AI conclusion for result step
