@@ -108,7 +108,7 @@ export const CLIENT_BRIEFS: Record<string, BriefField[]> = {
     'Так, Meta Ads + Google Search. CPL ~180 грн, ROAS x4. Хочемо масштабувати без втрати якості.',
     'GA4, GTM, Meta Pixel, server-side через GTM — все налаштовано',
     'Ringostat (відключено, працюємо в чатах)',
-    'KeyCRM + інтеграція з Tilda і Telegram-ботом',
+    'KeyCRM + інтеграція з WordPress-сайтом і Telegram-ботом',
     'Так, 3 менеджери з продажу + 1 head of sales',
     'Так, повний брендбук',
   ]),
