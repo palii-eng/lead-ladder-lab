@@ -273,6 +273,85 @@ const ScenarioBuilder: React.FC = () => {
     }
   }, [scenario, toast]);
 
+  const fetchAudienceTips = useCallback(async () => {
+    if (!scenario) return;
+    const cacheKey = `audience-tips:${activeLeadType || 'main'}`;
+    if (aiCacheRef.current[cacheKey]) {
+      setAudienceTipsText(aiCacheRef.current[cacheKey]);
+      return;
+    }
+    setAudienceTipsLoading(true);
+    setAudienceTipsText('');
+
+    const isBr = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && activeLeadType;
+    const branch = isBr ? scenario.branchData?.[activeLeadType] : null;
+    const decompSet = branch ? branch.decomposition : scenario.decomposition;
+
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/audience-tips`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          niche: scenario.niche,
+          channel: scenario.channel,
+          leadType: activeLeadType || (scenario.leadTypes?.[0] || ''),
+          decomposition: decompSet,
+          clientBrief: scenario.clientBrief,
+        }),
+      });
+
+      if (!resp.ok || !resp.body) {
+        const err = await resp.json().catch(() => ({ error: 'Помилка' }));
+        toast({ title: 'AI помилка', description: err.error || 'Не вдалося отримати поради', variant: 'destructive' });
+        setAudienceTipsLoading(false);
+        return;
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIdx: number;
+        while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
+          let line = buffer.slice(0, newlineIdx);
+          buffer = buffer.slice(newlineIdx + 1);
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.startsWith(':') || line.trim() === '') continue;
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              fullText += content;
+              setAudienceTipsText(fullText);
+            }
+          } catch {
+            buffer = line + '\n' + buffer;
+            break;
+          }
+        }
+      }
+      if (fullText) aiCacheRef.current[cacheKey] = fullText;
+    } catch (e: any) {
+      toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати поради', variant: 'destructive' });
+    } finally {
+      setAudienceTipsLoading(false);
+    }
+  }, [scenario, activeLeadType, toast]);
+
+
+
   const fetchSalesRecommendation = useCallback(async (recType: string, title: string) => {
     if (!scenario) return;
     const cacheKey = `sales:${recType}:${activeLeadType || 'main'}`;
