@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
-import { ArrowLeft, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2 } from 'lucide-react';
+import { ArrowLeft, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -1000,24 +1000,68 @@ const ScenarioBuilder: React.FC = () => {
     const stepContent = () => {
       switch (activeStep) {
         case 0:
-          return (
-            <div className="space-y-5">
-              <h3 className="text-base font-bold text-foreground">Вкажіть нішу вашого бізнесу</h3>
-              <Input
-                value={scenario.niche}
-                onChange={e => update({ niche: e.target.value })}
-                placeholder="Наприклад: Стоматологія, Кав'ярня, SaaS..."
-                className="bg-secondary border-border text-foreground text-base py-5 placeholder:text-muted-foreground"
-              />
-              <Button variant="secondary" size="sm" onClick={() => {
-                const niches = ['Стоматологія', 'Фітнес-студія', 'Онлайн-школа', 'eCommerce', 'SaaS', 'Ресторан', 'Нерухомість', 'Юридичні послуги'];
-                update({ niche: niches[Math.floor(Math.random() * niches.length)] });
-              }} className="gap-2">
-                <Sparkles className="w-4 h-4" /> Згенерувати автоматично
-              </Button>
-              <SaveButton step={0} />
-            </div>
-          );
+          return (() => {
+            const NICHE_CARDS = [
+              { label: 'Послуги B2B', Icon: Briefcase },
+              { label: 'Послуги B2C', Icon: Heart },
+              { label: 'E-commerce', Icon: ShoppingBag },
+              { label: 'Нерухомість', Icon: Home },
+              { label: 'Інфобізнес', Icon: GraduationCap },
+              { label: 'Інстаграм-крамниця', Icon: Instagram },
+            ];
+            const NICHE_TAGS = ['Стоматологія', 'Фітнес-студія', 'Онлайн-школа', 'Ресторан', 'Юридичні послуги', 'Барбершоп', 'Салон краси', 'SaaS', 'Автосервіс', 'Клініка', 'Туризм', 'Будівництво'];
+            const selected = scenario.niche;
+            return (
+              <div className="space-y-5">
+                <h3 className="text-base font-bold text-foreground">Оберіть тип бізнесу</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {NICHE_CARDS.map(({ label, Icon }) => {
+                    const active = selected === label;
+                    return (
+                      <button
+                        key={label}
+                        onClick={() => update({ niche: label })}
+                        className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${active ? 'border-primary bg-primary/5' : 'border-border bg-secondary hover:border-primary/40'}`}
+                      >
+                        <Icon className={`w-6 h-6 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <span className={`text-xs font-semibold text-center ${active ? 'text-primary' : 'text-foreground'}`}>{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">Або оберіть нішу:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {NICHE_TAGS.map(tag => {
+                      const active = selected === tag;
+                      return (
+                        <button
+                          key={tag}
+                          onClick={() => update({ niche: tag })}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${active ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border hover:border-primary/40'}`}
+                        >
+                          {tag}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">Свій варіант:</p>
+                  <Input
+                    value={selected}
+                    onChange={e => update({ niche: e.target.value })}
+                    placeholder="Введіть свою нішу..."
+                    className="bg-secondary border-border text-foreground text-base py-5 placeholder:text-muted-foreground"
+                  />
+                </div>
+
+                <SaveButton step={0} />
+              </div>
+            );
+          })();
 
         case 1:
           return (
