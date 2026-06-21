@@ -628,7 +628,6 @@ const ScenarioBuilder: React.FC = () => {
     { key: 'meet', label: 'Провести міт-знайомство' },
     { key: 'brief', label: 'Попросити кліента заповнити бриф' },
     { key: 'payment', label: 'Взяти оплату' },
-    { key: 'mediaplan', label: 'Погодити медіаплан' },
   ];
 
   const handleClientAction = (key: string, label: string) => {
@@ -886,8 +885,7 @@ const ScenarioBuilder: React.FC = () => {
   };
 
   const isStepUnlocked = (i: number, branchLeadType?: string): boolean => {
-    if (i === 0) return true;
-    if (i === 1) return clientActions.has('brief');
+    if (i === 0) return clientActions.has('meet') && clientActions.has('brief') && clientActions.has('payment');
     if (i <= 2) return isStepCompleted(i - 1);
     // For branch steps (3+), check previous step in the same branch
     if (i === 3) return isStepCompleted(2); // step 2 is shared
@@ -1762,7 +1760,7 @@ const ScenarioBuilder: React.FC = () => {
                           <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />
                         </div>
                         {(() => {
-                          const visible = STEPS.map((_, i) => i).filter(i => i !== 0 && isStepUnlocked(i));
+                          const visible = STEPS.map((_, i) => i).filter(i => isStepUnlocked(i));
                           return visible.map((i, idx) => renderNode(i, undefined, idx === visible.length - 1));
                         })()}
                       </div>
