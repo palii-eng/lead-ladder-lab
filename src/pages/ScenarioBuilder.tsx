@@ -1760,7 +1760,7 @@ const ScenarioBuilder: React.FC = () => {
                           <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />
                         </div>
                         {(() => {
-                          const visible = STEPS.map((_, i) => i).filter(i => isStepUnlocked(i));
+                          const visible = STEPS.map((_, i) => i).filter(i => i === 0 || isStepUnlocked(i));
                           return visible.map((i, idx) => renderNode(i, undefined, idx === visible.length - 1));
                         })()}
                       </div>
