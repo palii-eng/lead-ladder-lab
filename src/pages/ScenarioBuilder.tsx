@@ -885,8 +885,7 @@ const ScenarioBuilder: React.FC = () => {
   };
 
   const isStepUnlocked = (i: number, branchLeadType?: string): boolean => {
-    if (i === 0) return true;
-    if (i === 1) return clientActions.has('brief');
+    if (i === 0) return clientActions.has('meet') && clientActions.has('brief') && clientActions.has('payment');
     if (i <= 2) return isStepCompleted(i - 1);
     // For branch steps (3+), check previous step in the same branch
     if (i === 3) return isStepCompleted(2); // step 2 is shared
