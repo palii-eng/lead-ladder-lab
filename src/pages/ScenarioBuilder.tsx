@@ -1925,7 +1925,7 @@ const ScenarioBuilder: React.FC = () => {
                           return visible.map((i, idx) => (
                             <React.Fragment key={i}>
                               {renderNode(i, undefined, idx === visible.length - 1)}
-                              {i === 3 && <PrepWorksNode />}
+                              {i === 3 && isStepCompletedStatic(scenario, 3) && <PrepWorksNode />}
                             </React.Fragment>
                           ));
                         })()}
@@ -1998,7 +1998,7 @@ const ScenarioBuilder: React.FC = () => {
                               return visible.map((bi, idx) => (
                                 <React.Fragment key={bi}>
                                   {renderNode(bi + 3, lt, idx === visible.length - 1)}
-                                  {bi === 0 && <PrepWorksNode />}
+                                  {bi === 0 && isStepCompletedForBranch(scenario, 3, lt) && <PrepWorksNode />}
                                 </React.Fragment>
                               ));
                             })()}
