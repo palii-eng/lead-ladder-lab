@@ -703,12 +703,12 @@ const ScenarioBuilder: React.FC = () => {
       <button
         type="button"
         onClick={() => { if (!wasDragged.current) setClientBriefOpen(true); }}
-        className={`flex-shrink-0 rounded-2xl bg-card border border-border shadow-sm overflow-hidden text-left hover:-translate-y-0.5 hover:shadow-md transition-all ${compact ? 'w-[260px]' : 'w-[280px]'}`}
+        className={`flex-shrink-0 rounded-3xl bg-card border border-border shadow-sm overflow-hidden text-left hover:-translate-y-0.5 hover:shadow-md transition-all ${compact ? 'w-[260px]' : 'w-[280px]'}`}
         style={{ boxShadow: '0 10px 30px -15px hsl(var(--foreground) / 0.18)' }}
         data-flow-node
         title="Натисніть, щоб прочитати запит клієнта"
       >
-        <div className="relative aspect-[4/3] bg-secondary">
+        <div className="relative aspect-square bg-secondary rounded-t-3xl overflow-hidden">
           <img
             src={b.photo}
             alt={b.name}
@@ -717,21 +717,21 @@ const ScenarioBuilder: React.FC = () => {
               (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${b.name}`;
             }}
           />
-          <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/65 via-black/15 to-transparent">
+          <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 via-black/30 to-transparent">
             <p className="text-white font-bold text-base leading-tight">{b.name}</p>
             {b.niche && <p className="text-white/85 text-xs mt-0.5">{b.niche}</p>}
           </div>
           {b.source && (
-            <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur text-foreground text-[9px] font-semibold uppercase tracking-wide shadow-sm">
+            <span className="absolute top-2 right-2 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur text-foreground text-[9px] font-semibold uppercase tracking-wide shadow-sm">
               {b.source}
             </span>
           )}
         </div>
-        <div className="p-3">
-          <p className="text-[10px] font-bold text-foreground/60 uppercase tracking-wider mb-1">
+        <div className="p-4">
+          <p className="text-[10px] font-bold text-foreground/60 uppercase tracking-wider mb-1.5">
             Клієнт
           </p>
-          <p className="text-xs text-foreground leading-relaxed line-clamp-5">{b.task}</p>
+          <p className="text-xs text-foreground leading-relaxed line-clamp-4">{b.task}</p>
           <p className="text-[10px] text-primary font-semibold mt-2">Натисніть, щоб прочитати повністю →</p>
         </div>
       </button>
