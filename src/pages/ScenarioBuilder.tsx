@@ -1888,19 +1888,6 @@ const ScenarioBuilder: React.FC = () => {
                             }
                           }}
                         />
-                        {showAiHint && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              fetchCampaignTips(branchLeadType);
-                            }}
-                            className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-sm shadow-lg hover:scale-110 transition-transform z-10 border-2 border-white"
-                            title="AI підказка по кампаніях"
-                            style={{ animation: 'pulse 2s ease-in-out infinite' }}
-                          >
-                            💡
-                          </button>
-                        )}
                       </div>
                     </div>
                   );
