@@ -1925,7 +1925,7 @@ const ScenarioBuilder: React.FC = () => {
                           return visible.map((i, idx) => (
                             <React.Fragment key={i}>
                               {renderNode(i, undefined, idx === visible.length - 1)}
-                              {i === 3 && <PrepWorksNode />}
+                              {i === 3 && isStepCompletedStatic(scenario, 3) && <PrepWorksNode />}
                             </React.Fragment>
                           ));
                         })()}
