@@ -135,7 +135,16 @@ const ScenarioBuilder: React.FC = () => {
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [clientBriefOpen, setClientBriefOpen] = useState(false);
   const [filledBriefOpen, setFilledBriefOpen] = useState(false);
-  const [clientActions, setClientActions] = useState<Set<string>>(new Set());
+  const [clientActions, setClientActions] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem(`clientActions:${id}`);
+      if (raw) return new Set(JSON.parse(raw));
+    } catch {}
+    return new Set();
+  });
+  useEffect(() => {
+    try { localStorage.setItem(`clientActions:${id}`, JSON.stringify(Array.from(clientActions))); } catch {}
+  }, [clientActions, id]);
   const [decompTab, setDecompTab] = useState<'bad' | 'realistic' | 'positive'>('realistic');
   const [activeLeadType, setActiveLeadType] = useState<string>('');
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
