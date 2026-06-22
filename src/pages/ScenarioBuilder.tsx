@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useScenarios, Scenario, DecompositionScenario, DecompositionSet, createDefaultDecompSet, createDefaultBranchData, BranchData } from '@/context/ScenariosContext';
+import { useScenarios, Scenario, DecompositionScenario, DecompositionSet, createDefaultDecompSet, createDefaultBranchData, BranchData, ClientBrief } from '@/context/ScenariosContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -657,7 +657,16 @@ const ScenarioBuilder: React.FC = () => {
     );
   }
 
-  if (!scenario.clientBrief) {
+  const hasExistingProgress = !!(
+    scenario.niche ||
+    scenario.leadSource ||
+    scenario.channel ||
+    (scenario.leadTypes && scenario.leadTypes.length > 0) ||
+    (scenario.currentStep && scenario.currentStep > 0) ||
+    (scenario.branchData && Object.keys(scenario.branchData).length > 0)
+  );
+
+  if (!scenario.clientBrief && !hasExistingProgress) {
     return (
       <SimulationIntro
         scenarioName={scenario.name}
@@ -674,6 +683,18 @@ const ScenarioBuilder: React.FC = () => {
         }}
       />
     );
+  }
+
+  // Legacy scenarios created before client brief — synthesize a minimal brief so the saved flow opens.
+  if (!scenario.clientBrief && hasExistingProgress) {
+    const fallbackBrief: ClientBrief = {
+      name: 'Клієнт',
+      photo: '',
+      task: '',
+      niche: scenario.niche || '',
+      source: scenario.leadSource || '',
+    };
+    scenario.clientBrief = fallbackBrief;
   }
 
   const ClientInfoCard: React.FC<{ compact?: boolean }> = ({ compact }) => {
