@@ -798,7 +798,7 @@ const ScenarioBuilder: React.FC = () => {
     );
 
     return (
-      <div className="flex items-start flex-shrink-0" data-flow-node>
+      <div className="flex items-start flex-shrink-0 ml-10" data-flow-node>
         <div className="flex flex-col" style={{ width: '240px' }}>
           <div className="flex items-center gap-2 mb-2 px-1 h-4">
             <span className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground/70">ПІДГОТОВКА</span>
