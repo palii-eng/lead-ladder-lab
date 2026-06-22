@@ -1143,8 +1143,8 @@ const ScenarioBuilder: React.FC = () => {
     </button>
   );
 
-  const SaveButton: React.FC<{ step: number; sticky?: boolean; disabled?: boolean }> = ({ step, sticky, disabled }) => (
-    <div className={sticky ? 'sticky bottom-0 bg-card pt-3 pb-1 -mx-4 px-4 border-t border-border mt-4 z-10' : 'mt-4'}>
+  const SaveButton: React.FC<{ step: number; sticky?: boolean; disabled?: boolean }> = ({ step, disabled }) => (
+    <div className="sticky bottom-0 bg-card pt-3 pb-2 -mx-4 px-4 border-t border-border mt-4 z-10">
       <Button
         onClick={() => handleSaveStep(step)}
         disabled={disabled !== undefined ? disabled : !canSaveStep(step, activeLeadType)}
