@@ -819,7 +819,7 @@ const ScenarioBuilder: React.FC = () => {
     );
 
     return (
-      <div className="flex items-start flex-shrink-0 ml-10" data-flow-node>
+      <div className="flex items-start flex-shrink-0 mx-10" data-flow-node>
         <div className="flex flex-col" style={{ width: '240px' }}>
           <div className="flex items-center gap-2 mb-2 px-1 h-4">
             <span className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground/70">ПІДГОТОВКА</span>
@@ -840,7 +840,7 @@ const ScenarioBuilder: React.FC = () => {
             <h3 className="text-[15px] font-bold leading-tight pr-8 text-foreground">Підготовчі роботи</h3>
             <p className="text-[12px] leading-snug mt-1 text-muted-foreground">Налаштуйте аудиторії та підготуйте ТЗ для крео.</p>
 
-            <div className="flex flex-col gap-1.5 mt-3">
+            <div className="flex flex-col gap-3 mt-3">
               <Row icon="👥" title="Налаштування аудиторій" onClick={() => setAudienceOpen(true)} />
               <Row
                 icon="📝"
