@@ -218,7 +218,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({
       {/* ---- Connector ---- */}
       {!isLast && (
         <div className="flex items-center flex-shrink-0" style={{ alignSelf: 'center', marginTop: '24px' }}>
-          <svg width="40" height="20" viewBox="0 0 40 20" className="overflow-visible">
+          <svg width="20" height="20" viewBox="0 0 20 20" className="overflow-visible">
             <circle
               cx="3" cy="10" r="2.5"
               fill="hsl(0 0% 100%)"
@@ -226,13 +226,13 @@ const FlowNode: React.FC<FlowNodeProps> = ({
               strokeWidth="1.5"
             />
             <line
-              x1="6" y1="10" x2="34" y2="10"
+              x1="6" y1="10" x2="14" y2="10"
               stroke={isCompleted ? 'hsl(108 45% 50%)' : 'hsl(var(--border))'}
               strokeWidth="1.5"
               strokeDasharray={isCompleted ? '0' : '3 3'}
             />
             <circle
-              cx="37" cy="10" r="2.5"
+              cx="17" cy="10" r="2.5"
               fill="hsl(0 0% 100%)"
               stroke={isCompleted ? 'hsl(108 45% 50%)' : 'hsl(var(--border))'}
               strokeWidth="1.5"
