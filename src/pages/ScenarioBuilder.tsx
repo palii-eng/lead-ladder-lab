@@ -1058,6 +1058,19 @@ const ScenarioBuilder: React.FC = () => {
   const currentIntegrationMethod = isBranching && activeLeadType ? getBranch().integrationMethod : scenario.integrationMethod;
   const currentCompanyDescription = isBranching && activeLeadType ? getBranch().companyDescription : scenario.companyDescription;
   const currentRetention = isBranching && activeLeadType ? getBranch().retention : scenario.retention;
+  const currentSalesChannel: string = (isBranching && activeLeadType ? (getBranch() as any).salesChannel : (scenario as any).salesChannel) || '';
+  const currentSalesChannelOther: string = (isBranching && activeLeadType ? (getBranch() as any).salesChannelOther : (scenario as any).salesChannelOther) || '';
+  const setSalesChannelVal = (val: string) => {
+    if (isBranching && activeLeadType) updateBranch({ salesChannel: val } as any);
+    else update({ salesChannel: val } as any);
+    setSalesProcessed(false);
+  };
+  const setSalesChannelOtherVal = (val: string) => {
+    if (isBranching && activeLeadType) updateBranch({ salesChannelOther: val } as any);
+    else update({ salesChannelOther: val } as any);
+    setSalesProcessed(false);
+  };
+  const hasSalesChannel = !!currentSalesChannel && (currentSalesChannel !== 'other' || currentSalesChannelOther.trim().length > 0);
 
 
 
