@@ -1257,6 +1257,8 @@ const ScenarioBuilder: React.FC = () => {
     if (i <= 2) return isStepCompleted(i - 1);
     // For branch steps (3+), check previous step in the same branch
     if (i === 3) return isStepCompleted(2); // step 2 is shared
+    // Висновок (Результат) розблоковується одразу після Продажів — Retention опціональний
+    if (i === 8) return isStepCompleted(6, branchLeadType);
     return isStepCompleted(i - 1, branchLeadType);
   };
 
