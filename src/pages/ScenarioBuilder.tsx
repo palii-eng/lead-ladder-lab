@@ -1293,6 +1293,26 @@ const ScenarioBuilder: React.FC = () => {
                 ))}
               </div>
 
+              {/* Awareness sub-types */}
+              {scenario.channel === 'awareness' && (
+                <div className="border-t border-border pt-4">
+                  <p className="text-xs text-muted-foreground mb-2">Оберіть ціль оптимізації показу:</p>
+                  <div className="grid gap-2">
+                    {AWARENESS_TYPES.map(at => (
+                      <button key={at.value} onClick={() => update({ awarenessType: at.value } as any)}
+                        className={`p-3 rounded-lg border text-left text-sm transition-all flex items-center gap-3 ${
+                          (scenario as any).awarenessType === at.value
+                            ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                            : 'border-border bg-card text-foreground hover:border-primary/40'
+                        } cursor-pointer`}>
+                        <span className="text-lg">{at.icon}</span>
+                        <span>{at.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Lead types sub-selection when "leads" is chosen */}
               {scenario.channel === 'leads' && (
                 <div className="border-t border-border pt-4">
