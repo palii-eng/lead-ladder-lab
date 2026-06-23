@@ -1655,6 +1655,44 @@ const ScenarioBuilder: React.FC = () => {
               {isBranching && activeLeadType && (
                 <Badge variant="secondary" className="text-xs">{LEAD_TYPES.find(l => l.value === activeLeadType)?.icon} {LEAD_TYPES.find(l => l.value === activeLeadType)?.label}</Badge>
               )}
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-2 block">Як бізнес продає?</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {SALES_CHANNELS.map(c => {
+                    const active = currentSalesChannel === c.value;
+                    return (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => setSalesChannelVal(c.value)}
+                        className={`text-left p-2.5 rounded-lg border text-xs transition-all ${
+                          active
+                            ? 'border-primary bg-primary/10 text-foreground'
+                            : 'border-border bg-secondary text-foreground hover:border-primary/40'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className="text-base leading-none">{c.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold">{c.label}</div>
+                            {c.desc && <div className="text-[11px] text-muted-foreground mt-0.5">{c.desc}</div>}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {currentSalesChannel === 'other' && (
+                  <Input
+                    value={currentSalesChannelOther}
+                    onChange={e => setSalesChannelOtherVal(e.target.value)}
+                    placeholder="Опишіть свій канал продажів..."
+                    className="bg-secondary border-border text-foreground h-9 text-sm mt-2"
+                  />
+                )}
+              </div>
+
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Про компанію</label>
                 <Textarea value={currentCompanyDescription}
@@ -1672,12 +1710,15 @@ const ScenarioBuilder: React.FC = () => {
                   <span className={`text-xs ${charCount >= 50 ? 'text-success' : 'text-muted-foreground'}`}>
                     {charCount}/50 символів
                   </span>
-                  {canProcess && !salesProcessed && (
+                  {canProcess && hasSalesChannel && !salesProcessed && (
                     <Button size="sm" onClick={() => setSalesProcessed(true)} className="gap-1.5 text-xs bg-primary text-primary-foreground">
                       <Sparkles className="w-3 h-3" /> Обробити
                     </Button>
                   )}
                 </div>
+                {!hasSalesChannel && canProcess && (
+                  <p className="text-[11px] text-muted-foreground mt-1">Оберіть канал продажів, щоб розблокувати AI-поради.</p>
+                )}
               </div>
               {salesProcessed && (
                 <div className="space-y-3">
@@ -1688,15 +1729,16 @@ const ScenarioBuilder: React.FC = () => {
                         variant="secondary"
                         size="sm"
                         className="gap-1.5 text-xs"
+                        disabled={!hasSalesChannel}
                         onClick={() => fetchSalesRecommendation(s.type, `${s.icon} ${s.title}`)}
                       >
-                        <Sparkles className="w-3 h-3" /> Рекомендації
+                        <Sparkles className="w-3 h-3" /> AI-поради
                       </Button>
                     </div>
                   ))}
                 </div>
               )}
-              <SaveButton step={6} sticky disabled={!canProcess || !salesProcessed} />
+              <SaveButton step={6} sticky disabled={!canProcess || !salesProcessed || !hasSalesChannel} />
             </div>
           );
         }
