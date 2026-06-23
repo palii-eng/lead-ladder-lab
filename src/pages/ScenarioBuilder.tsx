@@ -1169,6 +1169,14 @@ const ScenarioBuilder: React.FC = () => {
   };
   const hasSalesChannel = !!currentSalesChannel && (currentSalesChannel !== 'other' || currentSalesChannelOther.trim().length > 0);
 
+  const isSalesCompletedFor = (s: Scenario, lt?: string): boolean => {
+    const branch = lt ? s.branchData?.[lt] : null;
+    const salesChannel = (branch ? branch.salesChannel : s.salesChannel) || '';
+    const salesChannelOther = (branch ? branch.salesChannelOther : s.salesChannelOther) || '';
+    const salesProcessedSaved = (s.aiCache?.[`sales:processed:${lt || 'main'}`] || aiCacheRef.current[`sales:processed:${lt || 'main'}`]) === '1';
+    return !!salesChannel && (salesChannel !== 'other' || salesChannelOther.trim().length > 0) && salesProcessedSaved;
+  };
+
 
 
 
@@ -1195,7 +1203,7 @@ const ScenarioBuilder: React.FC = () => {
       case 3: return branch.decomposition.realistic.cpl > 0;
       case 4: return (branch.leadDestinations?.length || 0) > 0;
       case 5: return !!branch.integrationMethod;
-      case 6: return !!branch.companyDescription;
+      case 6: return isSalesCompletedFor(s, lt);
       case 7: return (branch.retention?.emailCount || 0) > 0;
       default: return false;
     }
@@ -1228,7 +1236,7 @@ const ScenarioBuilder: React.FC = () => {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
           return s.leadTypes.every(lt => isStepCompletedForBranch(s, 6, lt));
         }
-        return !!s.companyDescription;
+        return isSalesCompletedFor(s);
       }
       case 7: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {

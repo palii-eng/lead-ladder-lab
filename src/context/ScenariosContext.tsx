@@ -17,6 +17,8 @@ export interface BranchData {
   leadDestinations: string[];
   integrationMethod: string;
   companyDescription: string;
+  salesChannel?: string;
+  salesChannelOther?: string;
   retention: RetentionData;
 }
 
@@ -61,6 +63,8 @@ export interface Scenario {
   crmSystem: string;
   integrationMethod: string;
   companyDescription: string;
+  salesChannel?: string;
+  salesChannelOther?: string;
   retention: RetentionData;
   branchData: Record<string, BranchData>;
   aiCache?: Record<string, string>;
@@ -82,6 +86,8 @@ export const createDefaultBranchData = (): BranchData => ({
   leadDestinations: [],
   integrationMethod: '',
   companyDescription: '',
+  salesChannel: '',
+  salesChannelOther: '',
   retention: { emailCount: 0, telegramCount: 0, smsCount: 0, pushCount: 0 },
 });
 
@@ -103,6 +109,8 @@ export const createDefaultScenario = (name: string, description: string): Scenar
   crmSystem: '',
   integrationMethod: '',
   companyDescription: '',
+  salesChannel: '',
+  salesChannelOther: '',
   retention: { emailCount: 0, telegramCount: 0, smsCount: 0, pushCount: 0 },
   branchData: {},
 });
