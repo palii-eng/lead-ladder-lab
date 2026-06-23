@@ -1653,7 +1653,7 @@ const ScenarioBuilder: React.FC = () => {
 
         case 6: {
           const charCount = (currentCompanyDescription || '').length;
-          const canProcess = charCount >= 50;
+          const canProcess = true;
           const salesItems = [
             { icon: '📞', title: 'Скрипт дзвінка', type: 'call-script' },
             { icon: '💬', title: 'Скрипт переписки', type: 'chat-script' },
@@ -1703,33 +1703,13 @@ const ScenarioBuilder: React.FC = () => {
                 )}
               </div>
 
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Про компанію</label>
-                <Textarea value={currentCompanyDescription}
-                  onChange={e => {
-                    if (isBranching && activeLeadType) {
-                      updateBranch({ companyDescription: e.target.value });
-                    } else {
-                      update({ companyDescription: e.target.value });
-                    }
-                    setSalesProcessed(false);
-                  }}
-                  placeholder="Опишіть компанію, продукт, ЦА... (мінімум 50 символів)"
-                  rows={4} className="bg-secondary border-border text-foreground text-sm placeholder:text-muted-foreground resize-none" />
-                <div className="flex items-center justify-between mt-1">
-                  <span className={`text-xs ${charCount >= 50 ? 'text-success' : 'text-muted-foreground'}`}>
-                    {charCount}/50 символів
-                  </span>
-                  {canProcess && hasSalesChannel && !salesProcessed && (
-                    <Button size="sm" onClick={() => setSalesProcessed(true)} className="gap-1.5 text-xs bg-primary text-primary-foreground">
-                      <Sparkles className="w-3 h-3" /> Обробити
-                    </Button>
-                  )}
+              {hasSalesChannel && !salesProcessed && (
+                <div className="flex justify-end">
+                  <Button size="sm" onClick={() => setSalesProcessed(true)} className="gap-1.5 text-xs bg-primary text-primary-foreground">
+                    <Sparkles className="w-3 h-3" /> Обробити
+                  </Button>
                 </div>
-                {!hasSalesChannel && canProcess && (
-                  <p className="text-[11px] text-muted-foreground mt-1">Оберіть канал продажів, щоб розблокувати AI-поради.</p>
-                )}
-              </div>
+              )}
               {salesProcessed && (
                 <div className="space-y-3">
                   {salesItems.map(s => (
