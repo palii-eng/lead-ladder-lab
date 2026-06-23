@@ -2581,7 +2581,7 @@ const ScenarioBuilder: React.FC = () => {
                   {audienceView === 'ai' && (
                     <div className="space-y-3">
                       <div>
-                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Назва гіпотези *</label>
+                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Назва гіпотези</label>
                         <Input
                           value={audienceName}
                           onChange={(e) => setAudienceName(e.target.value)}
@@ -2590,7 +2590,7 @@ const ScenarioBuilder: React.FC = () => {
                       </div>
                       <Button
                         onClick={() => fetchAudienceTips({ force: true, previousAudiences: savedAudiences, audienceName })}
-                        disabled={audienceTipsLoading || !audienceName.trim()}
+                        disabled={audienceTipsLoading}
                         className="w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-semibold shadow-md"
                       >
                         {audienceTipsLoading ? (
