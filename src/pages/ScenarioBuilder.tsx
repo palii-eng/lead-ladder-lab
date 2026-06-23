@@ -751,8 +751,6 @@ const ScenarioBuilder: React.FC = () => {
     });
     if (key === 'brief') {
       setFilledBriefOpen(true);
-    } else {
-      toast({ title: label, description: 'Запит відправлено клієнту.' });
     }
   };
 
