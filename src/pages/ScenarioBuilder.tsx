@@ -131,13 +131,13 @@ const SALES_CHANNELS = [
 ];
 
 const BENCHMARKS: Record<string, Partial<DecompositionScenario>> = {
-  awareness: { cpm: 5, ctr: 1.5, cpc: 3.33, cpl: 40, landingConversion: 50, conversionRate: 3, averageCheck: 2500, marginality: 30 },
-  traffic: { cpm: 6, ctr: 2.0, cpc: 3.0, cpl: 30, landingConversion: 50, conversionRate: 4, averageCheck: 2000, marginality: 30 },
-  engagement: { cpm: 7, ctr: 1.8, cpc: 3.89, cpl: 35, landingConversion: 50, conversionRate: 5, averageCheck: 2500, marginality: 30 },
-  leads: { cpm: 8, ctr: 1.2, cpc: 6.67, cpl: 45, landingConversion: 50, conversionRate: 5, averageCheck: 3000, marginality: 32 },
-  app_promotion: { cpm: 6, ctr: 2.5, cpc: 2.4, cpl: 25, landingConversion: 50, conversionRate: 8, averageCheck: 1500, marginality: 30 },
-  sales: { cpm: 10, ctr: 1.0, cpc: 10.0, cpl: 50, landingConversion: 50, conversionRate: 6, averageCheck: 4000, marginality: 32 },
-  other: { cpm: 7, ctr: 1.5, cpc: 4.67, cpl: 35, landingConversion: 50, conversionRate: 5, averageCheck: 3000, marginality: 30 },
+  awareness: { cpm: 3, ctr: 1.5, cpc: 2.0, cpl: 1.2, landingConversion: 50, conversionRate: 3, averageCheck: 60, marginality: 30 },
+  traffic: { cpm: 3.5, ctr: 2.0, cpc: 1.75, cpl: 0.9, landingConversion: 50, conversionRate: 4, averageCheck: 50, marginality: 30 },
+  engagement: { cpm: 4, ctr: 1.8, cpc: 2.2, cpl: 1.1, landingConversion: 50, conversionRate: 5, averageCheck: 60, marginality: 30 },
+  leads: { cpm: 4.5, ctr: 1.2, cpc: 3.75, cpl: 1.5, landingConversion: 50, conversionRate: 5, averageCheck: 75, marginality: 32 },
+  app_promotion: { cpm: 3.5, ctr: 2.5, cpc: 1.4, cpl: 0.8, landingConversion: 50, conversionRate: 8, averageCheck: 40, marginality: 30 },
+  sales: { cpm: 5, ctr: 1.0, cpc: 5.0, cpl: 1.7, landingConversion: 50, conversionRate: 6, averageCheck: 100, marginality: 32 },
+  other: { cpm: 4, ctr: 1.5, cpc: 2.67, cpl: 1.2, landingConversion: 50, conversionRate: 5, averageCheck: 75, marginality: 30 },
 };
 
 const calcMetrics = (d: DecompositionScenario) => {
@@ -660,14 +660,14 @@ const ScenarioBuilder: React.FC = () => {
       `Джерело: ${sourceLabel}`,
       `Ціль: ${channelLabel}`,
       `Типи лідгену: ${(scenario.leadTypes || []).join(', ') || '—'}`,
-      `Бюджет: ${decompSet.realistic.budget.toLocaleString()} ₴`,
+      `Бюджет: ${decompSet.realistic.budget.toLocaleString()} $`,
       `Ліди йдуть у: ${dests.join(', ') || '—'}`,
       `Інтеграція: ${intMethod || '—'}`,
       `Опис компанії: ${compDesc || '—'}`,
       ``,
       `Реалістичний сценарій:`,
       `- Ліди: ${real.leads}, Продажі: ${real.sales}`,
-      `- Дохід: ${real.revenue.toLocaleString()} ₴, Чистий: ${real.netIncome.toLocaleString()} ₴`,
+      `- Дохід: ${real.revenue.toLocaleString()} $, Чистий: ${real.netIncome.toLocaleString()} $`,
       `- ROMI: ${real.romi}%`,
       ``,
       `AI Висновок:`,
@@ -1114,7 +1114,7 @@ const ScenarioBuilder: React.FC = () => {
         cpl: (bench.cpl || 35) * mult.cpl,
         landingConversion: bench.landingConversion || 50,
         conversionRate: (bench.conversionRate || 5) * mult.conv,
-        averageCheck: bench.averageCheck || 3000,
+        averageCheck: bench.averageCheck || 75,
         marginality: bench.marginality || 30,
         budget,
       };
@@ -1269,7 +1269,7 @@ const ScenarioBuilder: React.FC = () => {
     const clicks = Math.round(opens * 0.15);
     const conversions = Math.round(clicks * 0.05);
     const decompSet = isBranching && activeLeadType ? getBranch().decomposition : scenario.decomposition;
-    const revenue = conversions * (decompSet.realistic.averageCheck || 2000);
+    const revenue = conversions * (decompSet.realistic.averageCheck || 50);
     return { total, opens, clicks, conversions, revenue };
   };
 
@@ -1675,12 +1675,12 @@ const ScenarioBuilder: React.FC = () => {
 
         case 3: {
           const inputFields: { key: keyof DecompositionScenario; label: string; suffix: string }[] = [
-            { key: 'budget', label: 'FB Ad Бюджет', suffix: '₴' },
-            { key: 'cpm', label: 'CPM', suffix: '₴' },
+            { key: 'budget', label: 'FB Ad Бюджет', suffix: '$' },
+            { key: 'cpm', label: 'CPM', suffix: '$' },
             { key: 'ctr', label: 'Ad CTR', suffix: '%' },
             { key: 'landingConversion', label: 'Конверсія перегляду → заявка', suffix: '%' },
             { key: 'conversionRate', label: 'Конверсія заявки → покупка', suffix: '%' },
-            { key: 'averageCheck', label: 'Середній чек', suffix: '₴' },
+            { key: 'averageCheck', label: 'Середній чек', suffix: '$' },
             { key: 'marginality', label: 'Маржинальність', suffix: '%' },
           ];
           return (
@@ -1730,11 +1730,11 @@ const ScenarioBuilder: React.FC = () => {
                   {[
                     { label: 'Покази', value: metrics.impressions.toLocaleString() },
                     { label: 'Кліки', value: metrics.clicks.toLocaleString() },
-                    { label: 'CPC', value: `${metrics.cpc.toFixed(2)} ₴` },
+                    { label: 'CPC', value: `${metrics.cpc.toFixed(2)} $` },
                     { label: 'Всі заявки (ліди)', value: metrics.leads.toLocaleString() },
                     { label: 'Всі продажі', value: metrics.sales.toString() },
-                    { label: 'CPA', value: `${metrics.cpa.toFixed(2)} ₴` },
-                    { label: 'Чистий прибуток з 1 продажу', value: `${metrics.profitPerSale.toLocaleString()} ₴` },
+                    { label: 'CPA', value: `${metrics.cpa.toFixed(2)} $` },
+                    { label: 'Чистий прибуток з 1 продажу', value: `${metrics.profitPerSale.toLocaleString()} $` },
                   ].map(row => (
                     <div key={row.label} className="flex items-center justify-between px-3 py-1.5 text-xs">
                       <span className="text-muted-foreground">{row.label}</span>
@@ -1748,9 +1748,9 @@ const ScenarioBuilder: React.FC = () => {
               <div className="bg-accent rounded-lg p-3 space-y-2">
                 <h4 className="text-xs font-bold text-foreground uppercase">Підсумок</h4>
                 {[
-                  { label: 'Прибуток', value: `${metrics.totalProfit.toLocaleString()} ₴`, color: metrics.totalProfit > 0 ? 'text-success' : 'text-destructive' },
+                  { label: 'Прибуток', value: `${metrics.totalProfit.toLocaleString()} $`, color: metrics.totalProfit > 0 ? 'text-success' : 'text-destructive' },
                   { label: 'ROAS', value: `${metrics.roas.toFixed(2)}%`, color: metrics.roas > 100 ? 'text-success' : 'text-destructive' },
-                  { label: 'Чистий дохід', value: `${metrics.netIncome.toLocaleString()} ₴`, color: metrics.netIncome > 0 ? 'text-success' : 'text-destructive' },
+                  { label: 'Чистий дохід', value: `${metrics.netIncome.toLocaleString()} $`, color: metrics.netIncome > 0 ? 'text-success' : 'text-destructive' },
                 ].map(row => (
                   <div key={row.label} className="flex items-center justify-between text-sm">
                     <span className="font-bold text-foreground">{row.label}</span>
@@ -1963,7 +1963,7 @@ const ScenarioBuilder: React.FC = () => {
                           <span>Open: {Math.round(s.rate * 100)}%</span>
                           <span>Кліки: {r.clicks}</span>
                           <span>Конверсії: {r.conversions}</span>
-                          <span className="font-bold text-foreground">Дохід: {r.revenue.toLocaleString()} ₴</span>
+                          <span className="font-bold text-foreground">Дохід: {r.revenue.toLocaleString()} $</span>
                         </div>
                       </div>
                     );
@@ -2004,7 +2004,7 @@ const ScenarioBuilder: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-muted-foreground">Бюджет:</span>
-                    <p className="font-semibold text-foreground">{decompSet.realistic.budget.toLocaleString()} ₴</p>
+                    <p className="font-semibold text-foreground">{decompSet.realistic.budget.toLocaleString()} $</p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Ліди йдуть у:</span>
@@ -2039,7 +2039,7 @@ const ScenarioBuilder: React.FC = () => {
                       </div>
                       <div className="text-xs mt-1">
                         <span className="text-muted-foreground">Чистий дохід: </span>
-                        <b className={s.m.netIncome >= 0 ? 'text-success' : 'text-destructive'}>{s.m.netIncome.toLocaleString()} ₴</b>
+                        <b className={s.m.netIncome >= 0 ? 'text-success' : 'text-destructive'}>{s.m.netIncome.toLocaleString()} $</b>
                       </div>
                     </div>
                   ))}
@@ -2258,9 +2258,9 @@ const ScenarioBuilder: React.FC = () => {
                       const pos = calcMetrics(decompSet.positive);
                       if (real.revenue <= 0 && bad.revenue <= 0 && pos.revenue <= 0) return '';
                       return [
-                        `🟡 ${bad.leads} лідів → ${bad.revenue.toLocaleString()}₴ → ${bad.romi}%`,
-                        `🔵 ${real.leads} лідів → ${real.revenue.toLocaleString()}₴ → ${real.romi}%`,
-                        `🟢 ${pos.leads} лідів → ${pos.revenue.toLocaleString()}₴ → ${pos.romi}%`,
+                        `🟡 ${bad.leads} лідів → ${bad.revenue.toLocaleString()}$ → ${bad.romi}%`,
+                        `🔵 ${real.leads} лідів → ${real.revenue.toLocaleString()}$ → ${real.romi}%`,
+                        `🟢 ${pos.leads} лідів → ${pos.revenue.toLocaleString()}$ → ${pos.romi}%`,
                       ].join('\n');
                     }
                     case 4: {
