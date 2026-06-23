@@ -162,10 +162,37 @@ const readScenariosFromStorage = (): Scenario[] => {
   }
 };
 
-const mergeScenarios = (primary: Scenario[], secondary: Scenario[]): Scenario[] => {
+// Score how "populated" a scenario is — used to pick a winner when the same
+// scenario exists in both local and cloud (e.g. local was a stub created
+// before cloud sync, while cloud has the full filled-in version).
+const scenarioCompleteness = (s: Scenario | undefined | null): number => {
+  if (!s) return -1;
+  let score = 0;
+  if (s.clientBrief && (s.clientBrief.name || s.clientBrief.task)) score += 100;
+  if (s.status === 'completed') score += 50;
+  if (typeof s.currentStep === 'number') score += s.currentStep * 5;
+  if (s.niche) score += 2;
+  if (s.leadSource) score += 2;
+  if (s.channel) score += 2;
+  if (s.leadTypes && s.leadTypes.length) score += s.leadTypes.length * 2;
+  if (s.branchData && Object.keys(s.branchData).length) score += Object.keys(s.branchData).length * 3;
+  if (s.companyDescription) score += 2;
+  return score;
+};
+
+const mergeScenarios = (local: Scenario[], cloud: Scenario[]): Scenario[] => {
   const byId = new Map<string, Scenario>();
-  [...secondary, ...primary].forEach(s => {
-    if (s?.id) byId.set(s.id, s);
+  // Seed with whichever side has more data per id.
+  const seen = new Set<string>();
+  [...local, ...cloud].forEach(s => {
+    if (!s?.id || seen.has(s.id)) return;
+    seen.add(s.id);
+    const localVer = local.find(x => x.id === s.id);
+    const cloudVer = cloud.find(x => x.id === s.id);
+    const localScore = scenarioCompleteness(localVer);
+    const cloudScore = scenarioCompleteness(cloudVer);
+    const winner = cloudScore > localScore ? cloudVer! : (localVer || cloudVer!);
+    byId.set(s.id, winner);
   });
   return Array.from(byId.values()).sort((a, b) => {
     const aTime = new Date(a.createdAt || 0).getTime();
