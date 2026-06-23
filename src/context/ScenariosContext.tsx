@@ -123,15 +123,54 @@ export const useScenarios = () => {
   return ctx;
 };
 
+const STORAGE_KEY = 'scenarios';
+
+const readScenariosFromStorage = (): Scenario[] => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.error('Failed to parse scenarios from localStorage', e);
+    // Preserve corrupted data for recovery instead of overwriting it.
+    try {
+      const corrupt = localStorage.getItem(STORAGE_KEY);
+      if (corrupt) localStorage.setItem(`${STORAGE_KEY}__corrupt_${Date.now()}`, corrupt);
+    } catch {}
+    return [];
+  }
+};
+
 export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [scenarios, setScenarios] = useState<Scenario[]>(() => {
-    const saved = localStorage.getItem('scenarios');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [scenarios, setScenarios] = useState<Scenario[]>(readScenariosFromStorage);
+  const hydratedRef = React.useRef(false);
 
   useEffect(() => {
-    localStorage.setItem('scenarios', JSON.stringify(scenarios));
+    // Skip the very first effect run — it would just re-write what we read.
+    // This also prevents wiping localStorage if initial read returned [] due to a
+    // transient parse error while real data is still on disk.
+    if (!hydratedRef.current) {
+      hydratedRef.current = true;
+      return;
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(scenarios));
+    } catch (e) {
+      console.error('Failed to save scenarios to localStorage', e);
+    }
   }, [scenarios]);
+
+  // Sync across tabs and recover if another tab/process updated storage.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== STORAGE_KEY) return;
+      const next = readScenariosFromStorage();
+      setScenarios(prev => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   const addScenario = useCallback((name: string, description: string) => {
     const s = createDefaultScenario(name, description);
