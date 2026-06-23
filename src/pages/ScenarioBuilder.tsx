@@ -651,6 +651,17 @@ const ScenarioBuilder: React.FC = () => {
     }
   }, [activeStep, scenario?.channel, scenario?.leadTypes, activeLeadType]);
 
+  // Restore audience checklist when opening dialog
+  useEffect(() => {
+    if (!audienceOpen) return;
+    const key = activeLeadType || 'main';
+    const settings = (scenario as any)?.audienceSettings || {};
+    const savedChecks = settings[`${key}__checks`] || (settings[key] && !Array.isArray(settings[key]) ? settings[key].checks : null);
+    if (savedChecks && typeof savedChecks === 'object') {
+      setAudienceChecks(savedChecks);
+    }
+  }, [audienceOpen, activeLeadType, scenario]);
+
   // Auto-prefill sales "Про компанію" from client brief + filled brief answers
   useEffect(() => {
     if (activeStep !== 6) return;
