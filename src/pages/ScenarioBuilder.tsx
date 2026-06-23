@@ -626,6 +626,60 @@ const ScenarioBuilder: React.FC = () => {
     }
   }, [scenario, activeLeadType, toast]);
 
+  // Hydrate cached conclusion + auto-generate when entering Результат step
+  useEffect(() => {
+    if (!scenario) return;
+    const cacheKey = `conclusion:${activeLeadType || 'main'}`;
+    const cached = aiCacheRef.current[cacheKey];
+    if (cached) {
+      setAiConclusionText(cached);
+    } else {
+      setAiConclusionText('');
+    }
+    if (activeStep === 8 && !cached && !aiConclusionLoading) {
+      fetchAiConclusion();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeStep, activeLeadType, id]);
+
+  const sendToCurator = useCallback(() => {
+    if (!scenario) return;
+    const decompSet = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && activeLeadType
+      ? (scenario.branchData?.[activeLeadType]?.decomposition || scenario.decomposition)
+      : scenario.decomposition;
+    const real = calcMetrics(decompSet.realistic);
+    const channelLabel = CAMPAIGN_GOALS.find(c => c.value === scenario.channel)?.label || scenario.channel || '—';
+    const sourceLabel = LEAD_SOURCES.find(s => s.value === scenario.leadSource)?.label || scenario.leadSource || '—';
+    const dests = (scenario.channel === 'leads' && activeLeadType && scenario.branchData?.[activeLeadType]?.leadDestinations) || scenario.leadDestinations || [];
+    const intMethod = (scenario.channel === 'leads' && activeLeadType && scenario.branchData?.[activeLeadType]?.integrationMethod) || scenario.integrationMethod || '';
+    const compDesc = (scenario.channel === 'leads' && activeLeadType && scenario.branchData?.[activeLeadType]?.companyDescription) || scenario.companyDescription || '';
+
+    const lines = [
+      `Воронка: ${scenario.name}`,
+      `Ніша: ${scenario.niche || '—'}`,
+      `Джерело: ${sourceLabel}`,
+      `Ціль: ${channelLabel}`,
+      `Типи лідгену: ${(scenario.leadTypes || []).join(', ') || '—'}`,
+      `Бюджет: ${decompSet.realistic.budget.toLocaleString()} ₴`,
+      `Ліди йдуть у: ${dests.join(', ') || '—'}`,
+      `Інтеграція: ${intMethod || '—'}`,
+      `Опис компанії: ${compDesc || '—'}`,
+      ``,
+      `Реалістичний сценарій:`,
+      `- Ліди: ${real.leads}, Продажі: ${real.sales}`,
+      `- Дохід: ${real.revenue.toLocaleString()} ₴, Чистий: ${real.netIncome.toLocaleString()} ₴`,
+      `- ROMI: ${real.romi}%`,
+      ``,
+      `AI Висновок:`,
+      aiConclusionText || '(ще не згенеровано)',
+    ];
+    const body = lines.join('\n');
+    const subject = `SmartFunnel: ${scenario.name}`;
+    try { navigator.clipboard?.writeText(body); } catch {}
+    window.open(`mailto:kurator@ads-school.online?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+    toast({ title: 'Відправлено куратору', description: 'Підсумок скопійовано в буфер обміну та відкрито у пошті.' });
+  }, [scenario, activeLeadType, aiConclusionText, toast]);
+
   // savedSteps tracks global steps + per-branch steps (key format: "step" or "step:branchType")
   const [savedSteps, setSavedSteps] = useState<Set<string>>(() => {
     const set = new Set<string>();
@@ -1954,6 +2008,13 @@ const ScenarioBuilder: React.FC = () => {
                 )}
               </div>
 
+              <Button
+                variant="outline"
+                className="w-full gap-2 border-primary text-primary hover:bg-primary/5 font-bold"
+                onClick={sendToCurator}
+              >
+                📤 Відправити куратору
+              </Button>
               <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
                 onClick={() => { update({ status: 'completed' }); navigate('/'); }}>
                 <Check className="w-4 h-4" /> Завершити
