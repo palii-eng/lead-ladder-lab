@@ -150,7 +150,7 @@ const Dashboard: React.FC = () => {
                       size="sm"
                       variant="secondary"
                       className="hover:bg-destructive hover:text-destructive-foreground"
-                      onClick={(e) => { e.stopPropagation(); deleteScenario(s.id); }}
+                      onClick={(e) => { e.stopPropagation(); setDeleteId(s.id); }}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
