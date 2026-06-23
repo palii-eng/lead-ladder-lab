@@ -119,6 +119,17 @@ const LEAD_DESTINATIONS = [
 ];
 const INTEGRATIONS = ['Пряма інтеграція', 'Webhook', 'Make', 'ApiX-Drive'];
 
+const SALES_CHANNELS = [
+  { value: 'direct_social', icon: '💬', label: 'В діректі соцмереж', desc: 'Instagram, Facebook, TikTok' },
+  { value: 'sales_dept', icon: '📞', label: 'Через відділ продажів', desc: 'Дзвінки, менеджери' },
+  { value: 'auto_site', icon: '🌐', label: 'Автоматично через сайт або лендинг', desc: '' },
+  { value: 'combined', icon: '🔀', label: 'Комбіновано', desc: 'Автоматизація + менеджер' },
+  { value: 'messengers', icon: '📱', label: 'Через месенджери', desc: 'Telegram, Viber, WhatsApp' },
+  { value: 'marketplaces', icon: '🛒', label: 'Через маркетплейси', desc: 'Rozetka, Prom тощо' },
+  { value: 'partners', icon: '🤝', label: 'Через партнерів або дилерів', desc: '' },
+  { value: 'other', icon: '✏️', label: 'Інше', desc: 'Опишіть свій варіант' },
+];
+
 const BENCHMARKS: Record<string, Partial<DecompositionScenario>> = {
   awareness: { cpm: 5, ctr: 1.5, cpc: 3.33, cpl: 40, landingConversion: 50, conversionRate: 3, averageCheck: 2500, marginality: 30 },
   traffic: { cpm: 6, ctr: 2.0, cpc: 3.0, cpl: 30, landingConversion: 50, conversionRate: 4, averageCheck: 2000, marginality: 30 },
