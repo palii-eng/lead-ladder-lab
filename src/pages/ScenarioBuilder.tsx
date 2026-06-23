@@ -419,7 +419,10 @@ const ScenarioBuilder: React.FC = () => {
 
   const fetchSalesRecommendation = useCallback(async (recType: string, title: string) => {
     if (!scenario) return;
-    const cacheKey = `sales:${recType}:${activeLeadType || 'main'}`;
+    const isBrCache = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && activeLeadType;
+    const branchCache = isBrCache ? scenario.branchData?.[activeLeadType] : null;
+    const channelCacheKey = (branchCache ? (branchCache as any).salesChannel : (scenario as any).salesChannel) || 'none';
+    const cacheKey = `sales:${recType}:${activeLeadType || 'main'}:${channelCacheKey}`;
     setSalesRecTitle(title);
     setSalesRecOpen(true);
 
