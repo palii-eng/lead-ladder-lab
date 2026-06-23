@@ -440,6 +440,12 @@ const ScenarioBuilder: React.FC = () => {
     const intMethod = branch ? branch.integrationMethod : scenario.integrationMethod;
     const compDesc = branch ? branch.companyDescription : scenario.companyDescription;
     const ret = branch ? branch.retention : scenario.retention;
+    const salesChannelVal: string = (branch ? (branch as any).salesChannel : (scenario as any).salesChannel) || '';
+    const salesChannelOtherVal: string = (branch ? (branch as any).salesChannelOther : (scenario as any).salesChannelOther) || '';
+    const channelMeta = SALES_CHANNELS.find(c => c.value === salesChannelVal);
+    const salesChannelLabel = salesChannelVal === 'other'
+      ? (salesChannelOtherVal || 'Інше')
+      : (channelMeta ? `${channelMeta.label}${channelMeta.desc ? ` (${channelMeta.desc})` : ''}` : '');
 
     try {
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sales-recommendations`, {
@@ -458,6 +464,7 @@ const ScenarioBuilder: React.FC = () => {
           leadDestinations: dests,
           integrationMethod: intMethod,
           retention: ret,
+          salesChannel: salesChannelLabel,
         }),
       });
 
