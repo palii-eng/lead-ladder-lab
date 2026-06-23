@@ -338,7 +338,7 @@ const ScenarioBuilder: React.FC = () => {
           }
         }
       }
-      if (fullText) aiCacheRef.current[cacheKey] = fullText;
+      if (fullText) setAiCache(cacheKey, fullText);
     } catch (e: any) {
       toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати рекомендації', variant: 'destructive' });
     } finally {
@@ -417,7 +417,7 @@ const ScenarioBuilder: React.FC = () => {
           }
         }
       }
-      if (fullText) aiCacheRef.current[cacheKey] = fullText;
+      if (fullText) setAiCache(cacheKey, fullText);
     } catch (e: any) {
       toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати поради', variant: 'destructive' });
     } finally {
@@ -520,7 +520,7 @@ const ScenarioBuilder: React.FC = () => {
           }
         }
       }
-      if (fullText) aiCacheRef.current[cacheKey] = fullText;
+      if (fullText) setAiCache(cacheKey, fullText);
     } catch (e: any) {
       toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати рекомендації', variant: 'destructive' });
     } finally {
@@ -606,7 +606,7 @@ const ScenarioBuilder: React.FC = () => {
           }
         }
       }
-      if (fullText) aiCacheRef.current[cacheKey] = fullText;
+      if (fullText) setAiCache(cacheKey, fullText);
     } catch (e: any) {
       toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати висновок', variant: 'destructive' });
     } finally {
