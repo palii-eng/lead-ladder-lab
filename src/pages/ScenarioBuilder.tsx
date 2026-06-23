@@ -72,7 +72,7 @@ const CAMPAIGN_GOALS = [
   { value: 'traffic', label: 'Трафік', desc: 'Спрямуйте людей на сайт, у застосунок, Messenger, WhatsApp або Instagram-профіль', Icon: MousePointerClick },
   { value: 'engagement', label: 'Взаємодія', desc: 'Більше повідомлень, перегляди відео, реакції, коментарі та підписки', Icon: MessageCircle },
   { value: 'leads', label: 'Ліди', desc: 'Збирайте контакти через лід-форми, дзвінки або повідомлення', Icon: Filter },
-  { value: 'app_promotion', label: 'Просування додатка', desc: 'Залучайте встановлення та активні дії в мобільному застосунку', Icon: Users },
+  
   { value: 'sales', label: 'Продажі', desc: 'Знаходьте людей, які з найбільшою ймовірністю куплять ваш продукт', Icon: ShoppingBag },
 ];
 
