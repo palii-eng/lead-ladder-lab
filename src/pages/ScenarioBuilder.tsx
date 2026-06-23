@@ -836,20 +836,23 @@ const ScenarioBuilder: React.FC = () => {
     const key = activeLeadType || 'main';
     const raw = (scenario as any)?.creoBriefs?.[key];
     const list: any[] = Array.isArray(raw) ? raw : (raw?.format ? [raw] : []);
-    const counts = list.reduce((acc: Record<string, number>, item) => {
-      acc[item.format] = (acc[item.format] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
     const formatIcons: Record<string, string> = { static: '🖼️', carousel: '🎠', video: '🎬' };
 
-    const Row: React.FC<{ icon: string; title: string; meta?: React.ReactNode; onClick: () => void }> = ({ icon, title, meta, onClick }) => (
+    const rawAud = (scenario as any)?.audienceSettings?.[key];
+    const audiences: any[] = Array.isArray(rawAud)
+      ? rawAud
+      : (rawAud && (rawAud.tips || rawAud.checks)
+          ? [{ id: 'legacy', name: 'Аудиторія 1', mode: 'ai' }]
+          : []);
+
+    const Row: React.FC<{ icon: string; title: string; meta?: React.ReactNode; onClick: () => void; compact?: boolean }> = ({ icon, title, meta, onClick, compact }) => (
       <button
         type="button"
         onClick={onClick}
-        className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg bg-foreground/[0.03] border border-border/60 hover:bg-primary/5 hover:border-primary/40 transition-all text-left"
+        className={`w-full flex items-center gap-2 ${compact ? 'px-2 py-1.5' : 'px-2.5 py-2'} rounded-lg bg-foreground/[0.03] border border-border/60 hover:bg-primary/5 hover:border-primary/40 transition-all text-left`}
       >
-        <span className="text-sm">{icon}</span>
-        <span className="text-[12px] font-semibold text-foreground leading-tight flex-1 truncate">{title}</span>
+        <span className={compact ? 'text-xs' : 'text-sm'}>{icon}</span>
+        <span className={`${compact ? 'text-[11px]' : 'text-[12px]'} font-semibold text-foreground leading-tight flex-1 truncate`}>{title}</span>
         {meta}
       </button>
     );
@@ -877,26 +880,50 @@ const ScenarioBuilder: React.FC = () => {
             <p className="text-[12px] leading-snug mt-1 text-muted-foreground">Налаштуйте аудиторії та підготуйте ТЗ для крео.</p>
 
             <div className="flex flex-col gap-3 mt-3">
-              <Row icon="👥" title="Налаштування аудиторій" onClick={() => setAudienceOpen(true)} />
-              <Row
-                icon="📝"
-                title="ТЗ по крео"
-                meta={list.length > 0 ? (
-                  <span className="flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
-                    📦 {list.length}
-                    {Object.entries(counts).map(([f, n]) => (
-                      <span key={f} className="opacity-80">{formatIcons[f]}{(n as number) > 1 ? String(n) : ''}</span>
+              <div className="flex flex-col gap-1.5">
+                <Row icon="👥" title="Налаштування аудиторій" onClick={() => { setAudienceView('list'); setAudienceOpen(true); }} />
+                {audiences.length > 0 && (
+                  <div className="pl-3 flex flex-col gap-1">
+                    {audiences.map((a, idx) => (
+                      <Row
+                        key={a.id || idx}
+                        compact
+                        icon={a.mode === 'ai' ? '✨' : '✍️'}
+                        title={`Аудиторія ${idx + 1}${a.name ? ` · ${a.name}` : ''}`}
+                        onClick={() => { setViewAudienceIdx(idx); setAudienceView('view'); setAudienceOpen(true); }}
+                      />
                     ))}
-                  </span>
-                ) : null}
-                onClick={() => { setCreoOpen(true); setCreoFormat(null); }}
-              />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Row
+                  icon="📝"
+                  title="ТЗ по крео"
+                  onClick={() => { setCreoOpen(true); setCreoFormat(null); setViewCreoIdx(null); }}
+                />
+                {list.length > 0 && (
+                  <div className="pl-3 flex flex-col gap-1">
+                    {list.map((item, idx) => (
+                      <Row
+                        key={idx}
+                        compact
+                        icon={formatIcons[item.format] || '📝'}
+                        title={`Крео ${idx + 1}${item.fields?.h1 ? ` · ${item.fields.h1.slice(0, 20)}` : ''}`}
+                        onClick={() => { setViewCreoIdx(idx); setCreoOpen(true); setCreoFormat(null); }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
     );
   };
+
 
 
 
