@@ -41,6 +41,7 @@ serve(async (req) => {
     const fullContext = `Ніша: ${niche || "не вказано"}
 Ціль кампанії: ${goalLabel}
 ${ltLabel ? `Тип лідгену: ${ltLabel}` : ""}
+${salesChannel ? `Канал продажів (як бізнес продає): ${salesChannel}` : ""}
 ${decompContext}
 Куди йдуть ліди: ${(leadDestinations || []).join(", ") || "не вказано"}
 Інтеграція: ${integrationMethod || "не вказано"}
