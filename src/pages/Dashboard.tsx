@@ -99,6 +99,16 @@ const Dashboard: React.FC = () => {
 
       {/* Content */}
       <main className="container mx-auto px-6 py-8">
+        {corruptKeys.length > 0 && (
+          <div className="mb-6 p-4 rounded-lg border border-warning/40 bg-warning/10 flex items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold text-foreground">Знайдено резервну копію сценаріїв</p>
+              <p className="text-sm text-muted-foreground">Попередня сесія завершилась помилкою. Можна відновити старі сценарії.</p>
+            </div>
+            <Button onClick={handleRecover} className="bg-primary text-primary-foreground">Відновити</Button>
+          </div>
+        )}
+
         {scenarios.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 animate-fade-in">
             <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 bg-accent">
