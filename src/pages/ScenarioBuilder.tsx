@@ -1689,8 +1689,9 @@ const ScenarioBuilder: React.FC = () => {
                 <h3 className="text-base font-bold text-foreground">
                   META AD CALCULATOR
                 </h3>
-                <Button variant="secondary" size="sm" onClick={fillBenchmarks} className="gap-1 text-xs">
-                  <Sparkles className="w-3 h-3" /> Авто
+                <Button variant="secondary" size="sm" onClick={fillBenchmarks} disabled={fillBenchLoading} className="gap-1 text-xs">
+                  {fillBenchLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                  {fillBenchLoading ? 'Аналіз ринку…' : 'Авто (AI)'}
                 </Button>
               </div>
               <div className="flex gap-1">
