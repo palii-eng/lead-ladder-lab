@@ -352,6 +352,8 @@ const ScenarioBuilder: React.FC = () => {
           leadType: activeLeadType || (scenario.leadTypes?.[0] || ''),
           decomposition: decompSet,
           clientBrief: scenario.clientBrief,
+          previousAudiences: opts?.previousAudiences || [],
+          audienceName: opts?.audienceName || '',
         }),
       });
 
