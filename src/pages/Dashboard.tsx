@@ -14,11 +14,43 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const scenarioToDelete = deleteId ? scenarios.find(s => s.id === deleteId) : null;
+
+  // Detect corrupt backups saved by ScenariosContext on a parse failure.
+  const [corruptKeys, setCorruptKeys] = useState<string[]>(() => {
+    try {
+      return Object.keys(localStorage).filter(k => k.startsWith('scenarios__corrupt_'));
+    } catch { return []; }
+  });
+
+  const handleRecover = () => {
+    try {
+      // Try each corrupt backup, newest first, and restore the first one that parses.
+      const sorted = [...corruptKeys].sort().reverse();
+      for (const k of sorted) {
+        const raw = localStorage.getItem(k);
+        if (!raw) continue;
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length) {
+            localStorage.setItem('scenarios', raw);
+            sorted.forEach(x => localStorage.removeItem(x));
+            window.location.reload();
+            return;
+          }
+        } catch {}
+      }
+      alert('Не вдалося відновити — резервні копії пошкоджені.');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleCreate = () => {
     const defaultName = `Сценарій #${scenarios.length + 1}`;
     const s = addScenario(defaultName, '');
     navigate(`/scenario/${s.id}`);
   };
+
 
   const calcRomi = (s: typeof scenarios[0]) => {
     const d = s.decomposition.realistic;
