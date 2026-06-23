@@ -1277,7 +1277,10 @@ const ScenarioBuilder: React.FC = () => {
                     <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
                       <goal.Icon className="w-5 h-5 text-foreground" />
                     </div>
-                    <span className="font-medium">{goal.label}</span>
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <span className="font-medium">{goal.label}</span>
+                      <span className="text-xs text-muted-foreground font-normal leading-snug">{goal.desc}</span>
+                    </div>
                   </button>
                 ))}
               </div>
