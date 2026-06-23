@@ -99,6 +99,14 @@ const TRAFFIC_TYPES = [
   { value: 'website_calls', label: 'Вебсайт і дзвінки', desc: 'Спрямувати трафік на ваш сайт і отримати дзвінки від клієнтів.', icon: '🔗' },
 ];
 
+const ENGAGEMENT_TYPES = [
+  { value: 'messages', label: 'Messenger, Instagram та WhatsApp', desc: 'Більше повідомлень у месенджерах.', icon: '💬' },
+  { value: 'video_views', label: 'Перегляди відео', desc: 'Максимум переглядів вашого відео.', icon: '🎬' },
+  { value: 'interactions', label: 'Взаємодії', desc: 'Реакції, коментарі, поширення та збереження.', icon: '❤️' },
+  { value: 'conversions', label: 'Конверсії', desc: 'Цільові дії на сайті чи в застосунку.', icon: '🎯' },
+  { value: 'calls', label: 'Дзвінки', desc: 'Дзвінки на ваш номер.', icon: '📞' },
+];
+
 
 const LEAD_DESTINATIONS = [
   'Kommo', 'HubSpot', 'SalesDrive', 'Pipedrive', 'KeyCRM', 'Trello',
@@ -1347,7 +1355,29 @@ const ScenarioBuilder: React.FC = () => {
                 </div>
               )}
 
-
+              {/* Engagement sub-types */}
+              {scenario.channel === 'engagement' && (
+                <div className="border-t border-border pt-4">
+                  <p className="text-xs font-semibold text-foreground mb-1">Підходить для:</p>
+                  <p className="text-xs text-muted-foreground mb-2">Оберіть тип взаємодії:</p>
+                  <div className="grid gap-2">
+                    {ENGAGEMENT_TYPES.map(et => (
+                      <button key={et.value} onClick={() => update({ engagementType: et.value } as any)}
+                        className={`p-3 rounded-lg border text-left text-sm transition-all flex items-start gap-3 ${
+                          (scenario as any).engagementType === et.value
+                            ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                            : 'border-border bg-card text-foreground hover:border-primary/40'
+                        } cursor-pointer`}>
+                        <span className="text-lg leading-none mt-0.5">{et.icon}</span>
+                        <div className="flex flex-col gap-0.5 min-w-0">
+                          <span className="font-medium">{et.label}</span>
+                          <span className="text-xs text-muted-foreground font-normal leading-snug">{et.desc}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Lead types sub-selection when "leads" is chosen */}
               {scenario.channel === 'leads' && (
