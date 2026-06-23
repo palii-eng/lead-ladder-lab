@@ -2695,16 +2695,44 @@ const ScenarioBuilder: React.FC = () => {
 
 
       {/* Creo brief dialog */}
-      <Dialog open={creoOpen} onOpenChange={(o) => { setCreoOpen(o); if (!o) { setCreoFormat(null); setCreoFields({}); setCreoVideoFormat(''); } }}>
+      <Dialog open={creoOpen} onOpenChange={(o) => { setCreoOpen(o); if (!o) { setCreoFormat(null); setCreoFields({}); setCreoVideoFormat(''); setViewCreoIdx(null); } }}>
         <DialogContent className="bg-card border-border max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-foreground font-bold flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-base">📝</div>
-              ТЗ по крео {creoFormat && '— заповніть поля'}
+              ТЗ по крео {creoFormat && '— заповніть поля'}{viewCreoIdx !== null && ` — Крео ${viewCreoIdx + 1}`}
             </DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto pt-2 space-y-4">
-            {!creoFormat && (() => {
+            {viewCreoIdx !== null && !creoFormat && (() => {
+              const key = activeLeadType || 'main';
+              const rawSaved = (scenario as any)?.creoBriefs?.[key];
+              const savedList: any[] = Array.isArray(rawSaved)
+                ? rawSaved
+                : (rawSaved?.format ? [rawSaved] : []);
+              const item = savedList[viewCreoIdx];
+              if (!item) return null;
+              const labels: Record<string, string> = { static: 'Статика', carousel: 'Карусель', video: 'Відео' };
+              const f = item.fields || {};
+              return (
+                <div className="space-y-3">
+                  <div className="text-xs font-bold text-primary uppercase tracking-wider">
+                    {labels[item.format] || item.format}{item.format === 'video' && item.videoFormat ? ` · ${item.videoFormat}` : ''}
+                  </div>
+                  {f.h1 && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">H1</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.h1}</div></div>)}
+                  {f.subtitle && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Підзаголовок</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.subtitle}</div></div>)}
+                  {f.cards && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Кількість карток</div><div className="text-sm text-foreground">{f.cards}</div></div>)}
+                  {f.imageDesc && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Опис зображення</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.imageDesc}</div></div>)}
+                  {f.logic && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Логіка карток</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.logic}</div></div>)}
+                  {f.script && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Сценарій</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.script}</div></div>)}
+                  {f.timing && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Таймінг</div><div className="text-sm text-foreground">{f.timing} сек</div></div>)}
+                  <div className="pt-2">
+                    <Button variant="outline" onClick={() => setViewCreoIdx(null)}>← До списку</Button>
+                  </div>
+                </div>
+              );
+            })()}
+            {!creoFormat && viewCreoIdx === null && (() => {
               const key = activeLeadType || 'main';
               const rawSaved = (scenario as any)?.creoBriefs?.[key];
               const savedList: any[] = Array.isArray(rawSaved)
