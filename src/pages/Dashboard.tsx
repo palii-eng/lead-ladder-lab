@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 const Dashboard: React.FC = () => {
   const { scenarios, addScenario, deleteScenario, duplicateScenario } = useScenarios();
   const navigate = useNavigate();
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const scenarioToDelete = deleteId ? scenarios.find(s => s.id === deleteId) : null;
   const handleCreate = () => {
     const defaultName = `Сценарій #${scenarios.length + 1}`;
     const s = addScenario(defaultName, '');
