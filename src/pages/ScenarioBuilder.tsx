@@ -325,10 +325,10 @@ const ScenarioBuilder: React.FC = () => {
     }
   }, [scenario, toast]);
 
-  const fetchAudienceTips = useCallback(async () => {
+  const fetchAudienceTips = useCallback(async (opts?: { force?: boolean; previousAudiences?: any[]; audienceName?: string }) => {
     if (!scenario) return;
-    const cacheKey = `audience-tips:${activeLeadType || 'main'}`;
-    if (aiCacheRef.current[cacheKey]) {
+    const cacheKey = `audience-tips:${activeLeadType || 'main'}:${opts?.audienceName || ''}`;
+    if (!opts?.force && aiCacheRef.current[cacheKey]) {
       setAudienceTipsText(aiCacheRef.current[cacheKey]);
       return;
     }
