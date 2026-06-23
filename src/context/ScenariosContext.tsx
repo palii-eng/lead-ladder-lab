@@ -182,7 +182,7 @@ const readScenariosFromCloud = async (): Promise<Scenario[]> => {
     .maybeSingle();
 
   if (error) throw error;
-  return Array.isArray(data?.scenarios) ? data.scenarios as Scenario[] : [];
+  return Array.isArray(data?.scenarios) ? data.scenarios as unknown as Scenario[] : [];
 };
 
 const persistScenariosToCloud = async (next: Scenario[]) => {
