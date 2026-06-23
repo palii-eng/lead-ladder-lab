@@ -1114,7 +1114,7 @@ const ScenarioBuilder: React.FC = () => {
         cpl: (bench.cpl || 35) * mult.cpl,
         landingConversion: bench.landingConversion || 50,
         conversionRate: (bench.conversionRate || 5) * mult.conv,
-        averageCheck: bench.averageCheck || 3000,
+        averageCheck: bench.averageCheck || 75,
         marginality: bench.marginality || 30,
         budget,
       };
@@ -1269,7 +1269,7 @@ const ScenarioBuilder: React.FC = () => {
     const clicks = Math.round(opens * 0.15);
     const conversions = Math.round(clicks * 0.05);
     const decompSet = isBranching && activeLeadType ? getBranch().decomposition : scenario.decomposition;
-    const revenue = conversions * (decompSet.realistic.averageCheck || 2000);
+    const revenue = conversions * (decompSet.realistic.averageCheck || 50);
     return { total, opens, clicks, conversions, revenue };
   };
 
