@@ -1734,20 +1734,31 @@ const ScenarioBuilder: React.FC = () => {
               )}
               {salesProcessed && (
                 <div className="space-y-3">
-                  {salesItems.map(s => (
-                    <div key={s.type} className="bg-secondary rounded-lg p-3 flex items-center justify-between">
-                      <span className="font-semibold text-foreground text-sm">{s.icon} {s.title}</span>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="gap-1.5 text-xs"
-                        disabled={!hasSalesChannel}
-                        onClick={() => fetchSalesRecommendation(s.type, `${s.icon} ${s.title}`)}
-                      >
-                        <Sparkles className="w-3 h-3" /> AI-поради
-                      </Button>
-                    </div>
-                  ))}
+                  {salesItems.map(s => {
+                    const channelCacheKey = currentSalesChannel || 'none';
+                    const hasCached = !!aiCacheRef.current[`sales:${s.type}:${activeLeadType || 'main'}:${channelCacheKey}`];
+                    return (
+                      <div key={s.type} className="bg-secondary rounded-lg p-3 flex items-center justify-between">
+                        <span className="font-semibold text-foreground text-sm flex items-center gap-2">
+                          {s.icon} {s.title}
+                          {hasCached && (
+                            <span className="text-[10px] font-medium text-success bg-success/10 px-1.5 py-0.5 rounded-full">
+                              ✓ збережено
+                            </span>
+                          )}
+                        </span>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="gap-1.5 text-xs"
+                          disabled={!hasSalesChannel}
+                          onClick={() => fetchSalesRecommendation(s.type, `${s.icon} ${s.title}`)}
+                        >
+                          <Sparkles className="w-3 h-3" /> {hasCached ? 'Переглянути' : 'AI-поради'}
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               <SaveButton step={6} sticky disabled={!canProcess || !salesProcessed || !hasSalesChannel} />
