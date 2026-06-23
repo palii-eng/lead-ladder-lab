@@ -107,6 +107,11 @@ const ENGAGEMENT_TYPES = [
   { value: 'calls', label: 'Дзвінки', desc: 'Дзвінки на ваш номер.', icon: '📞' },
 ];
 
+const SALES_TYPES = [
+  { value: 'conversions', label: 'Конверсії', desc: 'Цільові дії на сайті, у застосунку чи в месенджерах.', icon: '🎯' },
+  { value: 'catalog_sales', label: 'Продажі за каталогом', desc: 'Реклама товарів із вашого каталогу цільовій аудиторії.', icon: '🛍️' },
+];
+
 
 const LEAD_DESTINATIONS = [
   'Kommo', 'HubSpot', 'SalesDrive', 'Pipedrive', 'KeyCRM', 'Trello',
@@ -1372,6 +1377,30 @@ const ScenarioBuilder: React.FC = () => {
                         <div className="flex flex-col gap-0.5 min-w-0">
                           <span className="font-medium">{et.label}</span>
                           <span className="text-xs text-muted-foreground font-normal leading-snug">{et.desc}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Sales sub-types */}
+              {scenario.channel === 'sales' && (
+                <div className="border-t border-border pt-4">
+                  <p className="text-xs font-semibold text-foreground mb-1">Місце конверсії</p>
+                  <p className="text-xs text-muted-foreground mb-2">Оберіть тип продажів:</p>
+                  <div className="grid gap-2">
+                    {SALES_TYPES.map(st => (
+                      <button key={st.value} onClick={() => update({ salesType: st.value } as any)}
+                        className={`p-3 rounded-lg border text-left text-sm transition-all flex items-start gap-3 ${
+                          (scenario as any).salesType === st.value
+                            ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                            : 'border-border bg-card text-foreground hover:border-primary/40'
+                        } cursor-pointer`}>
+                        <span className="text-lg leading-none mt-0.5">{st.icon}</span>
+                        <div className="flex flex-col gap-0.5 min-w-0">
+                          <span className="font-medium">{st.label}</span>
+                          <span className="text-xs text-muted-foreground font-normal leading-snug">{st.desc}</span>
                         </div>
                       </button>
                     ))}
