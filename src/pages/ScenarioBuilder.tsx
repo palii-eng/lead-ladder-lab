@@ -2402,7 +2402,7 @@ const ScenarioBuilder: React.FC = () => {
                               return visible.map((bi, idx) => (
                                 <React.Fragment key={bi}>
                                   {renderNode(bi + 3, lt, idx === visible.length - 1)}
-                                  {bi === 0 && isStepCompletedForBranch(scenario, 3, lt) && <PrepWorksNode />}
+                                  {bi === 0 && isStepCompletedForBranch(scenario, 3, lt) && <PrepWorksNode branchKey={lt} />}
                                 </React.Fragment>
                               ));
                             })()}
