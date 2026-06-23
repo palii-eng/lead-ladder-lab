@@ -161,6 +161,26 @@ const Dashboard: React.FC = () => {
           </div>
         )}
       </main>
+
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Видалити сценарій?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ви впевнені, що хочете видалити сценарій{scenarioToDelete ? ` «${scenarioToDelete.name}»` : ''}? Цю дію не можна скасувати.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Скасувати</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (deleteId) deleteScenario(deleteId); setDeleteId(null); }}
+            >
+              Видалити
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
