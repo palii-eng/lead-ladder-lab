@@ -1911,7 +1911,7 @@ const ScenarioBuilder: React.FC = () => {
                   );
                 };
 
-                const flowGated = !!scenario.clientBrief && clientActions.size < 3;
+                const flowGated = !!scenario.clientBrief && clientActions.size < 2;
 
                 if (!shouldBranch) {
                   // Single row — original behavior
