@@ -99,6 +99,14 @@ const TRAFFIC_TYPES = [
   { value: 'website_calls', label: 'Вебсайт і дзвінки', desc: 'Спрямувати трафік на ваш сайт і отримати дзвінки від клієнтів.', icon: '🔗' },
 ];
 
+const ENGAGEMENT_TYPES = [
+  { value: 'messages', label: 'Messenger, Instagram та WhatsApp', desc: 'Більше повідомлень у месенджерах.', icon: '💬' },
+  { value: 'video_views', label: 'Перегляди відео', desc: 'Максимум переглядів вашого відео.', icon: '🎬' },
+  { value: 'interactions', label: 'Взаємодії', desc: 'Реакції, коментарі, поширення та збереження.', icon: '❤️' },
+  { value: 'conversions', label: 'Конверсії', desc: 'Цільові дії на сайті чи в застосунку.', icon: '🎯' },
+  { value: 'calls', label: 'Дзвінки', desc: 'Дзвінки на ваш номер.', icon: '📞' },
+];
+
 
 const LEAD_DESTINATIONS = [
   'Kommo', 'HubSpot', 'SalesDrive', 'Pipedrive', 'KeyCRM', 'Trello',
