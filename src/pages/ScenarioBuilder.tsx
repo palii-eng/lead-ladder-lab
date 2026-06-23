@@ -194,12 +194,18 @@ const ScenarioBuilder: React.FC = () => {
   const [audienceChecks, setAudienceChecks] = useState<Record<string, boolean>>({});
   const [audienceTipsText, setAudienceTipsText] = useState('');
   const [audienceTipsLoading, setAudienceTipsLoading] = useState(false);
+  // 'list' | 'choose' | 'manual' | 'ai' | 'view'
+  const [audienceView, setAudienceView] = useState<'list' | 'choose' | 'manual' | 'ai' | 'view'>('list');
+  const [audienceName, setAudienceName] = useState('');
+  const [audienceDescription, setAudienceDescription] = useState('');
+  const [viewAudienceIdx, setViewAudienceIdx] = useState<number | null>(null);
   // Creo brief
   const [creoOpen, setCreoOpen] = useState(false);
   const [creoFormat, setCreoFormat] = useState<'static' | 'carousel' | 'video' | null>(null);
   const [creoFields, setCreoFields] = useState<Record<string, string>>({});
   const [creoVideoFormat, setCreoVideoFormat] = useState<string>('');
   const [creoAiLoading, setCreoAiLoading] = useState(false);
+  const [viewCreoIdx, setViewCreoIdx] = useState<number | null>(null);
   // Cache for AI-generated content: key → text
   const aiCacheRef = useRef<Record<string, string>>({});
   // AI conclusion for result step
