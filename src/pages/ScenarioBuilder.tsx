@@ -82,6 +82,14 @@ const LEAD_TYPES = [
   { value: 'landing', label: 'Лендінг', icon: '🌐' },
 ];
 
+const AWARENESS_TYPES = [
+  { value: 'reach', label: 'Максимізувати охоплення реклами', icon: '📡' },
+  { value: 'impressions', label: 'Максимізувати кількість показів', icon: '👁️' },
+  { value: 'ad_recall', label: 'Максимізувати запам’ятовуваність реклами', icon: '🧠' },
+  { value: 'thruplay', label: 'Максимізувати перегляди ThruPlay', icon: '▶️' },
+  { value: 'continuous_2s', label: 'Максимізувати безперервні перегляди тривалістю 2 секунди', icon: '⏱️' },
+];
+
 const LEAD_DESTINATIONS = [
   'Kommo', 'HubSpot', 'SalesDrive', 'Pipedrive', 'KeyCRM', 'Trello',
   'Google Таблиця', 'Telegram-чат з менеджером', 'Інша',
