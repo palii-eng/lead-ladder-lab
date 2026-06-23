@@ -63,6 +63,7 @@ export interface Scenario {
   companyDescription: string;
   retention: RetentionData;
   branchData: Record<string, BranchData>;
+  aiCache?: Record<string, string>;
 }
 
 const defaultDecomp: DecompositionScenario = {
