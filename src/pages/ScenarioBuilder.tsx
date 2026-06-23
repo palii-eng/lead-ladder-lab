@@ -194,12 +194,18 @@ const ScenarioBuilder: React.FC = () => {
   const [audienceChecks, setAudienceChecks] = useState<Record<string, boolean>>({});
   const [audienceTipsText, setAudienceTipsText] = useState('');
   const [audienceTipsLoading, setAudienceTipsLoading] = useState(false);
+  // 'list' | 'choose' | 'manual' | 'ai' | 'view'
+  const [audienceView, setAudienceView] = useState<'list' | 'choose' | 'manual' | 'ai' | 'view'>('list');
+  const [audienceName, setAudienceName] = useState('');
+  const [audienceDescription, setAudienceDescription] = useState('');
+  const [viewAudienceIdx, setViewAudienceIdx] = useState<number | null>(null);
   // Creo brief
   const [creoOpen, setCreoOpen] = useState(false);
   const [creoFormat, setCreoFormat] = useState<'static' | 'carousel' | 'video' | null>(null);
   const [creoFields, setCreoFields] = useState<Record<string, string>>({});
   const [creoVideoFormat, setCreoVideoFormat] = useState<string>('');
   const [creoAiLoading, setCreoAiLoading] = useState(false);
+  const [viewCreoIdx, setViewCreoIdx] = useState<number | null>(null);
   // Cache for AI-generated content: key → text
   const aiCacheRef = useRef<Record<string, string>>({});
   // AI conclusion for result step
@@ -319,10 +325,10 @@ const ScenarioBuilder: React.FC = () => {
     }
   }, [scenario, toast]);
 
-  const fetchAudienceTips = useCallback(async () => {
+  const fetchAudienceTips = useCallback(async (opts?: { force?: boolean; previousAudiences?: any[]; audienceName?: string }) => {
     if (!scenario) return;
-    const cacheKey = `audience-tips:${activeLeadType || 'main'}`;
-    if (aiCacheRef.current[cacheKey]) {
+    const cacheKey = `audience-tips:${activeLeadType || 'main'}:${opts?.audienceName || ''}`;
+    if (!opts?.force && aiCacheRef.current[cacheKey]) {
       setAudienceTipsText(aiCacheRef.current[cacheKey]);
       return;
     }
@@ -346,6 +352,8 @@ const ScenarioBuilder: React.FC = () => {
           leadType: activeLeadType || (scenario.leadTypes?.[0] || ''),
           decomposition: decompSet,
           clientBrief: scenario.clientBrief,
+          previousAudiences: opts?.previousAudiences || [],
+          audienceName: opts?.audienceName || '',
         }),
       });
 
@@ -643,6 +651,17 @@ const ScenarioBuilder: React.FC = () => {
     }
   }, [activeStep, scenario?.channel, scenario?.leadTypes, activeLeadType]);
 
+  // Restore audience checklist when opening dialog
+  useEffect(() => {
+    if (!audienceOpen) return;
+    const key = activeLeadType || 'main';
+    const settings = (scenario as any)?.audienceSettings || {};
+    const savedChecks = settings[`${key}__checks`] || (settings[key] && !Array.isArray(settings[key]) ? settings[key].checks : null);
+    if (savedChecks && typeof savedChecks === 'object') {
+      setAudienceChecks(savedChecks);
+    }
+  }, [audienceOpen, activeLeadType, scenario]);
+
   // Auto-prefill sales "Про компанію" from client brief + filled brief answers
   useEffect(() => {
     if (activeStep !== 6) return;
@@ -828,20 +847,23 @@ const ScenarioBuilder: React.FC = () => {
     const key = activeLeadType || 'main';
     const raw = (scenario as any)?.creoBriefs?.[key];
     const list: any[] = Array.isArray(raw) ? raw : (raw?.format ? [raw] : []);
-    const counts = list.reduce((acc: Record<string, number>, item) => {
-      acc[item.format] = (acc[item.format] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
     const formatIcons: Record<string, string> = { static: '🖼️', carousel: '🎠', video: '🎬' };
 
-    const Row: React.FC<{ icon: string; title: string; meta?: React.ReactNode; onClick: () => void }> = ({ icon, title, meta, onClick }) => (
+    const rawAud = (scenario as any)?.audienceSettings?.[key];
+    const audiences: any[] = Array.isArray(rawAud)
+      ? rawAud
+      : (rawAud && (rawAud.tips || rawAud.checks)
+          ? [{ id: 'legacy', name: 'Аудиторія 1', mode: 'ai' }]
+          : []);
+
+    const Row: React.FC<{ icon: string; title: string; meta?: React.ReactNode; onClick: () => void; compact?: boolean }> = ({ icon, title, meta, onClick, compact }) => (
       <button
         type="button"
         onClick={onClick}
-        className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg bg-foreground/[0.03] border border-border/60 hover:bg-primary/5 hover:border-primary/40 transition-all text-left"
+        className={`w-full flex items-center gap-2 ${compact ? 'px-2 py-1.5' : 'px-2.5 py-2'} rounded-lg bg-foreground/[0.03] border border-border/60 hover:bg-primary/5 hover:border-primary/40 transition-all text-left`}
       >
-        <span className="text-sm">{icon}</span>
-        <span className="text-[12px] font-semibold text-foreground leading-tight flex-1 truncate">{title}</span>
+        <span className={compact ? 'text-xs' : 'text-sm'}>{icon}</span>
+        <span className={`${compact ? 'text-[11px]' : 'text-[12px]'} font-semibold text-foreground leading-tight flex-1 truncate`}>{title}</span>
         {meta}
       </button>
     );
@@ -869,26 +891,50 @@ const ScenarioBuilder: React.FC = () => {
             <p className="text-[12px] leading-snug mt-1 text-muted-foreground">Налаштуйте аудиторії та підготуйте ТЗ для крео.</p>
 
             <div className="flex flex-col gap-3 mt-3">
-              <Row icon="👥" title="Налаштування аудиторій" onClick={() => setAudienceOpen(true)} />
-              <Row
-                icon="📝"
-                title="ТЗ по крео"
-                meta={list.length > 0 ? (
-                  <span className="flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
-                    📦 {list.length}
-                    {Object.entries(counts).map(([f, n]) => (
-                      <span key={f} className="opacity-80">{formatIcons[f]}{(n as number) > 1 ? String(n) : ''}</span>
+              <div className="flex flex-col gap-1.5">
+                <Row icon="👥" title="Налаштування аудиторій" onClick={() => { setAudienceView('list'); setAudienceOpen(true); }} />
+                {audiences.length > 0 && (
+                  <div className="pl-3 flex flex-col gap-1">
+                    {audiences.map((a, idx) => (
+                      <Row
+                        key={a.id || idx}
+                        compact
+                        icon={a.mode === 'ai' ? '✨' : '✍️'}
+                        title={`Аудиторія ${idx + 1}${a.name ? ` · ${a.name}` : ''}`}
+                        onClick={() => { setViewAudienceIdx(idx); setAudienceView('view'); setAudienceOpen(true); }}
+                      />
                     ))}
-                  </span>
-                ) : null}
-                onClick={() => { setCreoOpen(true); setCreoFormat(null); }}
-              />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Row
+                  icon="📝"
+                  title="ТЗ по крео"
+                  onClick={() => { setCreoOpen(true); setCreoFormat(null); setViewCreoIdx(null); }}
+                />
+                {list.length > 0 && (
+                  <div className="pl-3 flex flex-col gap-1">
+                    {list.map((item, idx) => (
+                      <Row
+                        key={idx}
+                        compact
+                        icon={formatIcons[item.format] || '📝'}
+                        title={`Крео ${idx + 1}${item.fields?.h1 ? ` · ${item.fields.h1.slice(0, 20)}` : ''}`}
+                        onClick={() => { setViewCreoIdx(idx); setCreoOpen(true); setCreoFormat(null); }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
     );
   };
+
 
 
 
@@ -2333,7 +2379,16 @@ const ScenarioBuilder: React.FC = () => {
       </Dialog>
 
       {/* Audience prep dialog */}
-      <Dialog open={audienceOpen} onOpenChange={setAudienceOpen}>
+      <Dialog open={audienceOpen} onOpenChange={(o) => {
+        setAudienceOpen(o);
+        if (!o) {
+          setAudienceView('list');
+          setAudienceName('');
+          setAudienceDescription('');
+          setAudienceTipsText('');
+          setViewAudienceIdx(null);
+        }
+      }}>
         <DialogContent className="bg-card border-border max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-foreground font-bold flex items-center gap-2">
@@ -2341,102 +2396,354 @@ const ScenarioBuilder: React.FC = () => {
               Налаштування аудиторій
             </DialogTitle>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto pt-2 space-y-4">
-            <div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Чек-ліст</p>
-              <div className="space-y-2">
-                {[
-                  { key: 'goal', label: 'Ціль оптимізації (чи стоїть піксель)' },
-                  { key: 'geo', label: 'Налаштування гео' },
-                  { key: 'gender', label: 'Налаштування гендеру та статі' },
-                  { key: 'lang', label: 'Налаштування мови акаунту' },
-                  { key: 'interests', label: 'Налаштування інтересів' },
-                  { key: 'placement', label: 'Налаштування плейсменту' },
-                ].map(item => {
-                  const checked = !!audienceChecks[item.key];
-                  return (
-                    <label
-                      key={item.key}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/40 cursor-pointer transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={(e) => setAudienceChecks(prev => ({ ...prev, [item.key]: e.target.checked }))}
-                        className="w-4 h-4 rounded accent-primary"
-                      />
-                      <span className={`text-sm ${checked ? 'text-muted-foreground line-through' : 'text-foreground font-medium'}`}>
-                        {item.label}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
 
-            <Button
-              onClick={fetchAudienceTips}
-              disabled={audienceTipsLoading}
-              className="w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-semibold shadow-md"
-            >
-              {audienceTipsLoading ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Генерую поради...</>
-              ) : (
-                <><Sparkles className="w-4 h-4 mr-2" /> Поради по аудиторіях</>
-              )}
-            </Button>
+          {(() => {
+            const key = activeLeadType || 'main';
+            const rawSaved = (scenario as any)?.audienceSettings?.[key];
+            const savedAudiences: any[] = Array.isArray(rawSaved)
+              ? rawSaved
+              : (rawSaved && (rawSaved.tips || rawSaved.checks)
+                  ? [{ id: 'legacy', name: 'Аудиторія 1', mode: 'ai', tips: rawSaved.tips, description: '', createdAt: rawSaved.approvedAt }]
+                  : []);
 
-            {audienceTipsText && (
-              <div className="rounded-xl border border-border bg-muted/30 p-4">
-                <div className="prose prose-sm max-w-none text-foreground">
-                  <ReactMarkdown>{audienceTipsText}</ReactMarkdown>
+            const saveAudiencesList = (next: any[]) => {
+              const current = (scenario as any)?.audienceSettings || {};
+              update({
+                audienceSettings: {
+                  ...current,
+                  [key]: next,
+                  // keep checklist separately
+                  [`${key}__checks`]: audienceChecks,
+                },
+              } as any);
+            };
+
+            return (
+              <>
+                <div className="flex-1 overflow-y-auto pt-2 space-y-4">
+                  {/* Compact checklist always visible */}
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Чек-ліст налаштувань</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[
+                        { key: 'goal', label: 'Ціль / піксель' },
+                        { key: 'geo', label: 'Гео' },
+                        { key: 'gender', label: 'Стать і вік' },
+                        { key: 'lang', label: 'Мова акаунту' },
+                        { key: 'interests', label: 'Інтереси' },
+                        { key: 'placement', label: 'Плейсменти' },
+                      ].map(item => {
+                        const checked = !!audienceChecks[item.key];
+                        return (
+                          <label
+                            key={item.key}
+                            className="flex items-center gap-2 px-2 py-1.5 rounded-md border border-border/60 hover:bg-muted/40 cursor-pointer transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => setAudienceChecks(prev => ({ ...prev, [item.key]: e.target.checked }))}
+                              className="w-3.5 h-3.5 rounded accent-primary"
+                            />
+                            <span className={`text-[11px] ${checked ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                              {item.label}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* LIST view */}
+                  {audienceView === 'list' && (
+                    <div className="space-y-3">
+                      {savedAudiences.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Збережені аудиторії ({savedAudiences.length})</p>
+                          <div className="space-y-2">
+                            {savedAudiences.map((a, idx) => (
+                              <div key={a.id || idx} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                                <button
+                                  type="button"
+                                  onClick={() => { setViewAudienceIdx(idx); setAudienceView('view'); }}
+                                  className="flex-1 flex items-center gap-3 text-left min-w-0"
+                                >
+                                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-base shrink-0">
+                                    {a.mode === 'ai' ? '✨' : '✍️'}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-xs font-semibold text-primary">Аудиторія №{idx + 1}</div>
+                                    <div className="text-sm text-foreground truncate">{a.name || 'Без назви'}</div>
+                                  </div>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const next = savedAudiences.filter((_, i) => i !== idx);
+                                    saveAudiencesList(next);
+                                    toast({ title: 'Видалено', description: `Аудиторія №${idx + 1}` });
+                                  }}
+                                  className="w-8 h-8 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive flex items-center justify-center shrink-0"
+                                  aria-label="Видалити"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => { setAudienceView('choose'); setAudienceName(''); setAudienceDescription(''); setAudienceTipsText(''); }}
+                        className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">➕</div>
+                        <div>
+                          <div className="font-semibold text-foreground">Створити нову аудиторію</div>
+                          <div className="text-xs text-muted-foreground">Опишіть самі або отримайте AI-поради</div>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* CHOOSE mode */}
+                  {audienceView === 'choose' && (
+                    <div className="space-y-3">
+                      <p className="text-sm text-muted-foreground">Як хочете створити аудиторію?</p>
+                      <div className="grid gap-3">
+                        <button
+                          onClick={() => setAudienceView('manual')}
+                          className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
+                        >
+                          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">✍️</div>
+                          <div>
+                            <div className="font-semibold text-foreground">Прописати аудиторію самому</div>
+                            <div className="text-xs text-muted-foreground">Я знаю, кого таргетувати — опишу сам</div>
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => { setAudienceView('ai'); setAudienceTipsText(''); }}
+                          className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
+                        >
+                          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">✨</div>
+                          <div>
+                            <div className="font-semibold text-foreground">Попросити AI-поради</div>
+                            <div className="text-xs text-muted-foreground">Згенерую на основі брифу та попередніх аудиторій</div>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* MANUAL mode */}
+                  {audienceView === 'manual' && (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Назва аудиторії *</label>
+                        <Input
+                          value={audienceName}
+                          onChange={(e) => setAudienceName(e.target.value)}
+                          placeholder="Напр. Молоді мами 25-34, Київ"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Опис аудиторії *</label>
+                        <Textarea
+                          value={audienceDescription}
+                          onChange={(e) => setAudienceDescription(e.target.value)}
+                          placeholder="Гео, стать, вік, інтереси, поведінка, болі, тригери..."
+                          rows={8}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* AI mode */}
+                  {audienceView === 'ai' && (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Назва аудиторії *</label>
+                        <Input
+                          value={audienceName}
+                          onChange={(e) => setAudienceName(e.target.value)}
+                          placeholder="Напр. Холодна аудиторія №1"
+                        />
+                      </div>
+                      <Button
+                        onClick={() => fetchAudienceTips({ force: true, previousAudiences: savedAudiences, audienceName })}
+                        disabled={audienceTipsLoading || !audienceName.trim()}
+                        className="w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-semibold shadow-md"
+                      >
+                        {audienceTipsLoading ? (
+                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Генерую...</>
+                        ) : audienceTipsText ? (
+                          <><Sparkles className="w-4 h-4 mr-2" /> Перегенерувати</>
+                        ) : (
+                          <><Sparkles className="w-4 h-4 mr-2" /> Згенерувати поради</>
+                        )}
+                      </Button>
+                      {audienceTipsText && (
+                        <div className="rounded-xl border border-border bg-muted/30 p-4 max-h-[40vh] overflow-y-auto">
+                          <div className="prose prose-sm max-w-none text-foreground">
+                            <ReactMarkdown>{audienceTipsText}</ReactMarkdown>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* VIEW mode */}
+                  {audienceView === 'view' && viewAudienceIdx !== null && savedAudiences[viewAudienceIdx] && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-primary uppercase tracking-wider">Аудиторія №{viewAudienceIdx + 1}</span>
+                        <span className="text-xs text-muted-foreground">· {savedAudiences[viewAudienceIdx].mode === 'ai' ? 'AI-поради' : 'Власний опис'}</span>
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Назва</div>
+                        <div className="text-sm text-foreground font-medium">{savedAudiences[viewAudienceIdx].name}</div>
+                      </div>
+                      {savedAudiences[viewAudienceIdx].description && (
+                        <div>
+                          <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Опис</div>
+                          <div className="text-sm text-foreground whitespace-pre-wrap">{savedAudiences[viewAudienceIdx].description}</div>
+                        </div>
+                      )}
+                      {savedAudiences[viewAudienceIdx].tips && (
+                        <div className="rounded-xl border border-border bg-muted/30 p-4 max-h-[45vh] overflow-y-auto">
+                          <div className="prose prose-sm max-w-none text-foreground">
+                            <ReactMarkdown>{savedAudiences[viewAudienceIdx].tips}</ReactMarkdown>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
-          </div>
-          <div className="border-t border-border pt-4 mt-2 flex items-center justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setAudienceOpen(false)}
-            >
-              Закрити
-            </Button>
-            <Button
-              onClick={() => {
-                const key = activeLeadType || 'main';
-                const current = (scenario as any)?.audienceSettings || {};
-                update({
-                  audienceSettings: {
-                    ...current,
-                    [key]: {
-                      checks: audienceChecks,
-                      tips: audienceTipsText,
-                      approvedAt: new Date().toISOString(),
-                    },
-                  },
-                } as any);
-                toast({ title: 'Збережено', description: 'Налаштування аудиторій погоджено' });
-                setAudienceOpen(false);
-              }}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
-            >
-              <Check className="w-4 h-4 mr-2" /> Погодити
-            </Button>
-          </div>
+
+                <div className="border-t border-border pt-4 mt-2 flex items-center justify-between gap-2">
+                  {audienceView !== 'list' ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setAudienceView('list');
+                        setAudienceName('');
+                        setAudienceDescription('');
+                        setAudienceTipsText('');
+                        setViewAudienceIdx(null);
+                      }}
+                    >
+                      ← Назад
+                    </Button>
+                  ) : <span />}
+                  <div className="flex gap-2">
+                    {audienceView === 'list' && (
+                      <Button variant="outline" onClick={() => setAudienceOpen(false)}>Закрити</Button>
+                    )}
+                    {audienceView === 'view' && (
+                      <Button variant="outline" onClick={() => setAudienceOpen(false)}>Закрити</Button>
+                    )}
+                    {audienceView === 'manual' && (
+                      <Button
+                        disabled={!audienceName.trim() || !audienceDescription.trim()}
+                        onClick={() => {
+                          const next = [
+                            ...savedAudiences,
+                            {
+                              id: crypto.randomUUID(),
+                              name: audienceName.trim(),
+                              mode: 'manual',
+                              description: audienceDescription.trim(),
+                              tips: '',
+                              createdAt: new Date().toISOString(),
+                            },
+                          ];
+                          saveAudiencesList(next);
+                          toast({ title: 'Збережено', description: audienceName });
+                          setAudienceView('list');
+                          setAudienceName('');
+                          setAudienceDescription('');
+                        }}
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+                      >
+                        <Check className="w-4 h-4 mr-2" /> Зберегти
+                      </Button>
+                    )}
+                    {audienceView === 'ai' && (
+                      <Button
+                        disabled={!audienceName.trim() || !audienceTipsText.trim()}
+                        onClick={() => {
+                          const next = [
+                            ...savedAudiences,
+                            {
+                              id: crypto.randomUUID(),
+                              name: audienceName.trim(),
+                              mode: 'ai',
+                              description: '',
+                              tips: audienceTipsText,
+                              createdAt: new Date().toISOString(),
+                            },
+                          ];
+                          saveAudiencesList(next);
+                          toast({ title: 'Збережено', description: audienceName });
+                          setAudienceView('list');
+                          setAudienceName('');
+                          setAudienceTipsText('');
+                        }}
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+                      >
+                        <Check className="w-4 h-4 mr-2" /> Зберегти
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
+
+
       {/* Creo brief dialog */}
-      <Dialog open={creoOpen} onOpenChange={(o) => { setCreoOpen(o); if (!o) { setCreoFormat(null); setCreoFields({}); setCreoVideoFormat(''); } }}>
+      <Dialog open={creoOpen} onOpenChange={(o) => { setCreoOpen(o); if (!o) { setCreoFormat(null); setCreoFields({}); setCreoVideoFormat(''); setViewCreoIdx(null); } }}>
         <DialogContent className="bg-card border-border max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-foreground font-bold flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-base">📝</div>
-              ТЗ по крео {creoFormat && '— заповніть поля'}
+              ТЗ по крео {creoFormat && '— заповніть поля'}{viewCreoIdx !== null && ` — Крео ${viewCreoIdx + 1}`}
             </DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto pt-2 space-y-4">
-            {!creoFormat && (() => {
+            {viewCreoIdx !== null && !creoFormat && (() => {
+              const key = activeLeadType || 'main';
+              const rawSaved = (scenario as any)?.creoBriefs?.[key];
+              const savedList: any[] = Array.isArray(rawSaved)
+                ? rawSaved
+                : (rawSaved?.format ? [rawSaved] : []);
+              const item = savedList[viewCreoIdx];
+              if (!item) return null;
+              const labels: Record<string, string> = { static: 'Статика', carousel: 'Карусель', video: 'Відео' };
+              const f = item.fields || {};
+              return (
+                <div className="space-y-3">
+                  <div className="text-xs font-bold text-primary uppercase tracking-wider">
+                    {labels[item.format] || item.format}{item.format === 'video' && item.videoFormat ? ` · ${item.videoFormat}` : ''}
+                  </div>
+                  {f.h1 && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">H1</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.h1}</div></div>)}
+                  {f.subtitle && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Підзаголовок</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.subtitle}</div></div>)}
+                  {f.cards && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Кількість карток</div><div className="text-sm text-foreground">{f.cards}</div></div>)}
+                  {f.imageDesc && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Опис зображення</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.imageDesc}</div></div>)}
+                  {f.logic && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Логіка карток</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.logic}</div></div>)}
+                  {f.script && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Сценарій</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.script}</div></div>)}
+                  {f.timing && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Таймінг</div><div className="text-sm text-foreground">{f.timing} сек</div></div>)}
+                  <div className="pt-2">
+                    <Button variant="outline" onClick={() => setViewCreoIdx(null)}>← До списку</Button>
+                  </div>
+                </div>
+              );
+            })()}
+            {!creoFormat && viewCreoIdx === null && (() => {
               const key = activeLeadType || 'main';
               const rawSaved = (scenario as any)?.creoBriefs?.[key];
               const savedList: any[] = Array.isArray(rawSaved)
