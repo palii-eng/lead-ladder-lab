@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 
 export interface DecompositionScenario {
   cpm: number;
@@ -133,6 +135,7 @@ export const useScenarios = () => {
 };
 
 const STORAGE_KEY = 'scenarios';
+const CLOUD_WORKSPACE_ID = 'default';
 
 const persistScenariosToStorage = (next: Scenario[]) => {
   try {
@@ -159,9 +162,41 @@ const readScenariosFromStorage = (): Scenario[] => {
   }
 };
 
+const mergeScenarios = (primary: Scenario[], secondary: Scenario[]): Scenario[] => {
+  const byId = new Map<string, Scenario>();
+  [...secondary, ...primary].forEach(s => {
+    if (s?.id) byId.set(s.id, s);
+  });
+  return Array.from(byId.values()).sort((a, b) => {
+    const aTime = new Date(a.createdAt || 0).getTime();
+    const bTime = new Date(b.createdAt || 0).getTime();
+    return bTime - aTime;
+  });
+};
+
+const readScenariosFromCloud = async (): Promise<Scenario[]> => {
+  const { data, error } = await supabase
+    .from('scenario_workspaces')
+    .select('scenarios')
+    .eq('id', CLOUD_WORKSPACE_ID)
+    .maybeSingle();
+
+  if (error) throw error;
+  return Array.isArray(data?.scenarios) ? data.scenarios as Scenario[] : [];
+};
+
+const persistScenariosToCloud = async (next: Scenario[]) => {
+  const { error } = await supabase
+    .from('scenario_workspaces')
+    .upsert({ id: CLOUD_WORKSPACE_ID, scenarios: next as unknown as Json }, { onConflict: 'id' });
+
+  if (error) throw error;
+};
+
 export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [scenarios, setScenarios] = useState<Scenario[]>(readScenariosFromStorage);
   const hydratedRef = React.useRef(false);
+  const cloudReadyRef = React.useRef(false);
 
   useEffect(() => {
     // Skip the very first effect run — it would just re-write what we read.
@@ -172,7 +207,39 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return;
     }
     persistScenariosToStorage(scenarios);
+    if (cloudReadyRef.current) {
+      persistScenariosToCloud(scenarios).catch(e => console.error('Failed to save scenarios to cloud', e));
+    }
   }, [scenarios]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const hydrateFromCloud = async () => {
+      try {
+        const local = readScenariosFromStorage();
+        const cloud = await readScenariosFromCloud();
+        if (cancelled) return;
+
+        const merged = mergeScenarios(local, cloud);
+        cloudReadyRef.current = true;
+
+        if (merged.length) {
+          persistScenariosToStorage(merged);
+          setScenarios(prev => (JSON.stringify(prev) === JSON.stringify(merged) ? prev : merged));
+          if (JSON.stringify(merged) !== JSON.stringify(cloud)) {
+            persistScenariosToCloud(merged).catch(e => console.error('Failed to sync scenarios to cloud', e));
+          }
+        }
+      } catch (e) {
+        cloudReadyRef.current = false;
+        console.error('Failed to load scenarios from cloud', e);
+      }
+    };
+
+    hydrateFromCloud();
+    return () => { cancelled = true; };
+  }, []);
 
   // Sync across tabs and recover if another tab/process updated storage.
   useEffect(() => {
@@ -190,6 +257,9 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setScenarios(prev => {
       const next = [s, ...prev];
       persistScenariosToStorage(next);
+      if (cloudReadyRef.current) {
+        persistScenariosToCloud(next).catch(e => console.error('Failed to save scenarios to cloud', e));
+      }
       return next;
     });
     return s;
@@ -203,6 +273,9 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       const next = base.map(s => s.id === id ? { ...s, ...updates } : s);
       persistScenariosToStorage(next);
+      if (cloudReadyRef.current) {
+        persistScenariosToCloud(next).catch(e => console.error('Failed to save scenarios to cloud', e));
+      }
       return next;
     });
   }, []);
@@ -211,6 +284,9 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setScenarios(prev => {
       const next = prev.filter(s => s.id !== id);
       persistScenariosToStorage(next);
+      if (cloudReadyRef.current) {
+        persistScenariosToCloud(next).catch(e => console.error('Failed to save scenarios to cloud', e));
+      }
       return next;
     });
   }, []);
@@ -229,6 +305,9 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       };
       const next = [copy, ...base];
       persistScenariosToStorage(next);
+      if (cloudReadyRef.current) {
+        persistScenariosToCloud(next).catch(e => console.error('Failed to save scenarios to cloud', e));
+      }
       return next;
     });
   }, []);
