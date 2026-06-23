@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
-import { ArrowLeft, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat } from 'lucide-react';
+import { ArrowLeft, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -738,10 +738,9 @@ const ScenarioBuilder: React.FC = () => {
     );
   };
 
-  const CLIENT_ACTIONS: { key: string; label: string }[] = [
-    { key: 'meet', label: 'Провести міт-знайомство' },
-    { key: 'brief', label: 'Попросити кліента заповнити бриф' },
-    { key: 'payment', label: 'Взяти оплату' },
+  const CLIENT_ACTIONS: { key: string; label: string; doneIcon: React.ComponentType<{ className?: string }> }[] = [
+    { key: 'brief', label: 'Провести міт та зібрати бриф', doneIcon: FileText },
+    { key: 'payment', label: 'Взяти оплату', doneIcon: DollarSign },
   ];
 
   const handleClientAction = (key: string, label: string) => {
@@ -760,7 +759,7 @@ const ScenarioBuilder: React.FC = () => {
   const ClientActionsColumn: React.FC = () => (
     <div className="flex flex-col items-center mt-3 select-none gap-2">
       <div className="w-px h-4 bg-border" />
-      {CLIENT_ACTIONS.map(({ key, label }) => {
+      {CLIENT_ACTIONS.map(({ key, label, doneIcon: DoneIcon }) => {
         const done = clientActions.has(key);
         const onClick = (e: React.MouseEvent) => {
           e.stopPropagation();
@@ -778,7 +777,7 @@ const ScenarioBuilder: React.FC = () => {
             onClick={onClick}
             className="px-3 py-2 rounded-full bg-accent border border-primary/30 text-primary text-xs font-semibold shadow-sm flex items-center gap-1.5 hover:bg-primary/10 transition-all"
           >
-            <Check className="w-3 h-3" /> {label}
+            <DoneIcon className="w-3.5 h-3.5" /> {label}
           </button>
         ) : (
           <button
