@@ -134,6 +134,14 @@ export const useScenarios = () => {
 
 const STORAGE_KEY = 'scenarios';
 
+const persistScenariosToStorage = (next: Scenario[]) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  } catch (e) {
+    console.error('Failed to save scenarios to localStorage', e);
+  }
+};
+
 const readScenariosFromStorage = (): Scenario[] => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -163,11 +171,7 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       hydratedRef.current = true;
       return;
     }
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(scenarios));
-    } catch (e) {
-      console.error('Failed to save scenarios to localStorage', e);
-    }
+    persistScenariosToStorage(scenarios);
   }, [scenarios]);
 
   // Sync across tabs and recover if another tab/process updated storage.
@@ -183,21 +187,38 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const addScenario = useCallback((name: string, description: string) => {
     const s = createDefaultScenario(name, description);
-    setScenarios(prev => [s, ...prev]);
+    setScenarios(prev => {
+      const next = [s, ...prev];
+      persistScenariosToStorage(next);
+      return next;
+    });
     return s;
   }, []);
 
   const updateScenario = useCallback((id: string, updates: Partial<Scenario>) => {
-    setScenarios(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+    setScenarios(prev => {
+      const hasInState = prev.some(s => s.id === id);
+      const base = hasInState ? prev : readScenariosFromStorage();
+      if (!base.some(s => s.id === id)) return prev;
+
+      const next = base.map(s => s.id === id ? { ...s, ...updates } : s);
+      persistScenariosToStorage(next);
+      return next;
+    });
   }, []);
 
   const deleteScenario = useCallback((id: string) => {
-    setScenarios(prev => prev.filter(s => s.id !== id));
+    setScenarios(prev => {
+      const next = prev.filter(s => s.id !== id);
+      persistScenariosToStorage(next);
+      return next;
+    });
   }, []);
 
   const duplicateScenario = useCallback((id: string) => {
     setScenarios(prev => {
-      const original = prev.find(s => s.id === id);
+      const base = prev.some(s => s.id === id) ? prev : readScenariosFromStorage();
+      const original = base.find(s => s.id === id);
       if (!original) return prev;
       const copy: Scenario = {
         ...JSON.parse(JSON.stringify(original)),
@@ -206,11 +227,15 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         createdAt: new Date().toISOString(),
         status: 'draft',
       };
-      return [copy, ...prev];
+      const next = [copy, ...base];
+      persistScenariosToStorage(next);
+      return next;
     });
   }, []);
 
-  const getScenario = useCallback((id: string) => scenarios.find(s => s.id === id), [scenarios]);
+  const getScenario = useCallback((id: string) => {
+    return scenarios.find(s => s.id === id) || readScenariosFromStorage().find(s => s.id === id);
+  }, [scenarios]);
 
   return (
     <ScenariosContext.Provider value={{ scenarios, addScenario, updateScenario, deleteScenario, duplicateScenario, getScenario }}>
