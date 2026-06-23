@@ -940,8 +940,8 @@ const ScenarioBuilder: React.FC = () => {
     </div>
   );
 
-  const PrepWorksNode: React.FC = () => {
-    const key = activeLeadType || 'main';
+  const PrepWorksNode: React.FC<{ branchKey?: string }> = ({ branchKey }) => {
+    const key = branchKey || activeLeadType || 'main';
     const raw = (scenario as any)?.creoBriefs?.[key];
     const list: any[] = Array.isArray(raw) ? raw : (raw?.format ? [raw] : []);
     const formatIcons: Record<string, string> = { static: '🖼️', carousel: '🎠', video: '🎬' };
