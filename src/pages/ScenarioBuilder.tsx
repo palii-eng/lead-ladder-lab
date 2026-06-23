@@ -2421,38 +2421,50 @@ const ScenarioBuilder: React.FC = () => {
             return (
               <>
                 <div className="flex-1 overflow-y-auto pt-2 space-y-4">
-                  {/* Compact checklist always visible */}
-                  <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Чек-ліст налаштувань</p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {[
-                        { key: 'goal', label: 'Ціль / піксель' },
-                        { key: 'geo', label: 'Гео' },
-                        { key: 'gender', label: 'Стать і вік' },
-                        { key: 'lang', label: 'Мова акаунту' },
-                        { key: 'interests', label: 'Інтереси' },
-                        { key: 'placement', label: 'Плейсменти' },
-                      ].map(item => {
-                        const checked = !!audienceChecks[item.key];
-                        return (
-                          <label
-                            key={item.key}
-                            className="flex items-center gap-2 px-2 py-1.5 rounded-md border border-border/60 hover:bg-muted/40 cursor-pointer transition-colors"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={(e) => setAudienceChecks(prev => ({ ...prev, [item.key]: e.target.checked }))}
-                              className="w-3.5 h-3.5 rounded accent-primary"
-                            />
-                            <span className={`text-[11px] ${checked ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
-                              {item.label}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  {/* Collapsible checklist "Перевір себе" */}
+                  {(() => {
+                    const items = [
+                      { key: 'goal', label: 'Ціль / піксель' },
+                      { key: 'geo', label: 'Гео' },
+                      { key: 'gender', label: 'Стать і вік' },
+                      { key: 'lang', label: 'Мова акаунту' },
+                      { key: 'interests', label: 'Інтереси' },
+                      { key: 'placement', label: 'Плейсменти' },
+                    ];
+                    const checkedCount = items.filter(i => audienceChecks[i.key]).length;
+                    return (
+                      <details className="group rounded-lg border border-border bg-muted/20 open:bg-muted/30">
+                        <summary className="flex items-center justify-between gap-2 px-3 py-2 cursor-pointer list-none select-none">
+                          <span className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                            <span>✅</span> Перевір себе
+                            <span className="text-[10px] font-normal text-muted-foreground">({checkedCount}/{items.length})</span>
+                          </span>
+                          <span className="text-xs text-muted-foreground transition-transform group-open:rotate-180">▾</span>
+                        </summary>
+                        <div className="px-3 pb-3 pt-1 grid grid-cols-2 gap-1.5">
+                          {items.map(item => {
+                            const checked = !!audienceChecks[item.key];
+                            return (
+                              <label
+                                key={item.key}
+                                className="flex items-center gap-2 px-2 py-1.5 rounded-md border border-border/60 bg-background hover:bg-muted/40 cursor-pointer transition-colors"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={(e) => setAudienceChecks(prev => ({ ...prev, [item.key]: e.target.checked }))}
+                                  className="w-3.5 h-3.5 rounded accent-primary"
+                                />
+                                <span className={`text-[11px] ${checked ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                                  {item.label}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </details>
+                    );
+                  })()}
 
                   {/* LIST view */}
                   {audienceView === 'list' && (
