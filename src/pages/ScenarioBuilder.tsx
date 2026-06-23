@@ -940,8 +940,8 @@ const ScenarioBuilder: React.FC = () => {
     </div>
   );
 
-  const PrepWorksNode: React.FC = () => {
-    const key = activeLeadType || 'main';
+  const PrepWorksNode: React.FC<{ branchKey?: string }> = ({ branchKey }) => {
+    const key = branchKey || activeLeadType || 'main';
     const raw = (scenario as any)?.creoBriefs?.[key];
     const list: any[] = Array.isArray(raw) ? raw : (raw?.format ? [raw] : []);
     const formatIcons: Record<string, string> = { static: '🖼️', carousel: '🎠', video: '🎬' };
@@ -989,7 +989,7 @@ const ScenarioBuilder: React.FC = () => {
 
             <div className="flex flex-col gap-3 mt-3">
               <div className="flex flex-col gap-1.5">
-                <Row icon="👥" title="Налаштування аудиторій" onClick={() => { setAudienceView('list'); setAudienceOpen(true); }} />
+                <Row icon="👥" title="Налаштування аудиторій" onClick={() => { if (branchKey) setActiveLeadType(branchKey); setAudienceView('list'); setAudienceOpen(true); }} />
                 {audiences.length > 0 && (
                   <div className="pl-3 flex flex-col gap-1">
                     {audiences.map((a, idx) => (
@@ -998,7 +998,7 @@ const ScenarioBuilder: React.FC = () => {
                         compact
                         icon={a.mode === 'ai' ? '✨' : '✍️'}
                         title={`Гіпотеза ${idx + 1}${a.name ? ` · ${a.name}` : ''}`}
-                        onClick={() => { setViewAudienceIdx(idx); setAudienceView('view'); setAudienceOpen(true); }}
+                        onClick={() => { if (branchKey) setActiveLeadType(branchKey); setViewAudienceIdx(idx); setAudienceView('view'); setAudienceOpen(true); }}
                       />
                     ))}
                   </div>
@@ -1009,7 +1009,7 @@ const ScenarioBuilder: React.FC = () => {
                 <Row
                   icon="📝"
                   title="ТЗ по крео"
-                  onClick={() => { setCreoOpen(true); setCreoFormat(null); setViewCreoIdx(null); }}
+                  onClick={() => { if (branchKey) setActiveLeadType(branchKey); setCreoOpen(true); setCreoFormat(null); setViewCreoIdx(null); }}
                 />
                 {list.length > 0 && (
                   <div className="pl-3 flex flex-col gap-1">
@@ -1019,7 +1019,7 @@ const ScenarioBuilder: React.FC = () => {
                         compact
                         icon={formatIcons[item.format] || '📝'}
                         title={`Крео ${idx + 1}${item.fields?.h1 ? ` · ${item.fields.h1.slice(0, 20)}` : ''}`}
-                        onClick={() => { setViewCreoIdx(idx); setCreoOpen(true); setCreoFormat(null); }}
+                        onClick={() => { if (branchKey) setActiveLeadType(branchKey); setViewCreoIdx(idx); setCreoOpen(true); setCreoFormat(null); }}
                       />
                     ))}
                   </div>
@@ -2402,7 +2402,7 @@ const ScenarioBuilder: React.FC = () => {
                               return visible.map((bi, idx) => (
                                 <React.Fragment key={bi}>
                                   {renderNode(bi + 3, lt, idx === visible.length - 1)}
-                                  {bi === 0 && isStepCompletedForBranch(scenario, 3, lt) && <PrepWorksNode />}
+                                  {bi === 0 && isStepCompletedForBranch(scenario, 3, lt) && <PrepWorksNode branchKey={lt} />}
                                 </React.Fragment>
                               ));
                             })()}
