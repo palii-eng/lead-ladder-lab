@@ -119,6 +119,17 @@ const LEAD_DESTINATIONS = [
 ];
 const INTEGRATIONS = ['Пряма інтеграція', 'Webhook', 'Make', 'ApiX-Drive'];
 
+const SALES_CHANNELS = [
+  { value: 'direct_social', icon: '💬', label: 'В діректі соцмереж', desc: 'Instagram, Facebook, TikTok' },
+  { value: 'sales_dept', icon: '📞', label: 'Через відділ продажів', desc: 'Дзвінки, менеджери' },
+  { value: 'auto_site', icon: '🌐', label: 'Автоматично через сайт або лендинг', desc: '' },
+  { value: 'combined', icon: '🔀', label: 'Комбіновано', desc: 'Автоматизація + менеджер' },
+  { value: 'messengers', icon: '📱', label: 'Через месенджери', desc: 'Telegram, Viber, WhatsApp' },
+  { value: 'marketplaces', icon: '🛒', label: 'Через маркетплейси', desc: 'Rozetka, Prom тощо' },
+  { value: 'partners', icon: '🤝', label: 'Через партнерів або дилерів', desc: '' },
+  { value: 'other', icon: '✏️', label: 'Інше', desc: 'Опишіть свій варіант' },
+];
+
 const BENCHMARKS: Record<string, Partial<DecompositionScenario>> = {
   awareness: { cpm: 5, ctr: 1.5, cpc: 3.33, cpl: 40, landingConversion: 50, conversionRate: 3, averageCheck: 2500, marginality: 30 },
   traffic: { cpm: 6, ctr: 2.0, cpc: 3.0, cpl: 30, landingConversion: 50, conversionRate: 4, averageCheck: 2000, marginality: 30 },
@@ -408,7 +419,10 @@ const ScenarioBuilder: React.FC = () => {
 
   const fetchSalesRecommendation = useCallback(async (recType: string, title: string) => {
     if (!scenario) return;
-    const cacheKey = `sales:${recType}:${activeLeadType || 'main'}`;
+    const isBrCache = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && activeLeadType;
+    const branchCache = isBrCache ? scenario.branchData?.[activeLeadType] : null;
+    const channelCacheKey = (branchCache ? (branchCache as any).salesChannel : (scenario as any).salesChannel) || 'none';
+    const cacheKey = `sales:${recType}:${activeLeadType || 'main'}:${channelCacheKey}`;
     setSalesRecTitle(title);
     setSalesRecOpen(true);
 
@@ -429,6 +443,12 @@ const ScenarioBuilder: React.FC = () => {
     const intMethod = branch ? branch.integrationMethod : scenario.integrationMethod;
     const compDesc = branch ? branch.companyDescription : scenario.companyDescription;
     const ret = branch ? branch.retention : scenario.retention;
+    const salesChannelVal: string = (branch ? (branch as any).salesChannel : (scenario as any).salesChannel) || '';
+    const salesChannelOtherVal: string = (branch ? (branch as any).salesChannelOther : (scenario as any).salesChannelOther) || '';
+    const channelMeta = SALES_CHANNELS.find(c => c.value === salesChannelVal);
+    const salesChannelLabel = salesChannelVal === 'other'
+      ? (salesChannelOtherVal || 'Інше')
+      : (channelMeta ? `${channelMeta.label}${channelMeta.desc ? ` (${channelMeta.desc})` : ''}` : '');
 
     try {
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sales-recommendations`, {
@@ -447,6 +467,7 @@ const ScenarioBuilder: React.FC = () => {
           leadDestinations: dests,
           integrationMethod: intMethod,
           retention: ret,
+          salesChannel: salesChannelLabel,
         }),
       });
 
@@ -1058,6 +1079,19 @@ const ScenarioBuilder: React.FC = () => {
   const currentIntegrationMethod = isBranching && activeLeadType ? getBranch().integrationMethod : scenario.integrationMethod;
   const currentCompanyDescription = isBranching && activeLeadType ? getBranch().companyDescription : scenario.companyDescription;
   const currentRetention = isBranching && activeLeadType ? getBranch().retention : scenario.retention;
+  const currentSalesChannel: string = (isBranching && activeLeadType ? (getBranch() as any).salesChannel : (scenario as any).salesChannel) || '';
+  const currentSalesChannelOther: string = (isBranching && activeLeadType ? (getBranch() as any).salesChannelOther : (scenario as any).salesChannelOther) || '';
+  const setSalesChannelVal = (val: string) => {
+    if (isBranching && activeLeadType) updateBranch({ salesChannel: val } as any);
+    else update({ salesChannel: val } as any);
+    setSalesProcessed(false);
+  };
+  const setSalesChannelOtherVal = (val: string) => {
+    if (isBranching && activeLeadType) updateBranch({ salesChannelOther: val } as any);
+    else update({ salesChannelOther: val } as any);
+    setSalesProcessed(false);
+  };
+  const hasSalesChannel = !!currentSalesChannel && (currentSalesChannel !== 'other' || currentSalesChannelOther.trim().length > 0);
 
 
 
@@ -1631,6 +1665,44 @@ const ScenarioBuilder: React.FC = () => {
               {isBranching && activeLeadType && (
                 <Badge variant="secondary" className="text-xs">{LEAD_TYPES.find(l => l.value === activeLeadType)?.icon} {LEAD_TYPES.find(l => l.value === activeLeadType)?.label}</Badge>
               )}
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-2 block">Як бізнес продає?</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {SALES_CHANNELS.map(c => {
+                    const active = currentSalesChannel === c.value;
+                    return (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => setSalesChannelVal(c.value)}
+                        className={`text-left p-2.5 rounded-lg border text-xs transition-all ${
+                          active
+                            ? 'border-primary bg-primary/10 text-foreground'
+                            : 'border-border bg-secondary text-foreground hover:border-primary/40'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className="text-base leading-none">{c.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold">{c.label}</div>
+                            {c.desc && <div className="text-[11px] text-muted-foreground mt-0.5">{c.desc}</div>}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {currentSalesChannel === 'other' && (
+                  <Input
+                    value={currentSalesChannelOther}
+                    onChange={e => setSalesChannelOtherVal(e.target.value)}
+                    placeholder="Опишіть свій канал продажів..."
+                    className="bg-secondary border-border text-foreground h-9 text-sm mt-2"
+                  />
+                )}
+              </div>
+
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Про компанію</label>
                 <Textarea value={currentCompanyDescription}
@@ -1648,12 +1720,15 @@ const ScenarioBuilder: React.FC = () => {
                   <span className={`text-xs ${charCount >= 50 ? 'text-success' : 'text-muted-foreground'}`}>
                     {charCount}/50 символів
                   </span>
-                  {canProcess && !salesProcessed && (
+                  {canProcess && hasSalesChannel && !salesProcessed && (
                     <Button size="sm" onClick={() => setSalesProcessed(true)} className="gap-1.5 text-xs bg-primary text-primary-foreground">
                       <Sparkles className="w-3 h-3" /> Обробити
                     </Button>
                   )}
                 </div>
+                {!hasSalesChannel && canProcess && (
+                  <p className="text-[11px] text-muted-foreground mt-1">Оберіть канал продажів, щоб розблокувати AI-поради.</p>
+                )}
               </div>
               {salesProcessed && (
                 <div className="space-y-3">
@@ -1664,15 +1739,16 @@ const ScenarioBuilder: React.FC = () => {
                         variant="secondary"
                         size="sm"
                         className="gap-1.5 text-xs"
+                        disabled={!hasSalesChannel}
                         onClick={() => fetchSalesRecommendation(s.type, `${s.icon} ${s.title}`)}
                       >
-                        <Sparkles className="w-3 h-3" /> Рекомендації
+                        <Sparkles className="w-3 h-3" /> AI-поради
                       </Button>
                     </div>
                   ))}
                 </div>
               )}
-              <SaveButton step={6} sticky disabled={!canProcess || !salesProcessed} />
+              <SaveButton step={6} sticky disabled={!canProcess || !salesProcessed || !hasSalesChannel} />
             </div>
           );
         }

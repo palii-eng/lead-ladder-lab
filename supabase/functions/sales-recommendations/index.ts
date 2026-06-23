@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { type, niche, channel, leadType, companyDescription, decomposition, leadDestinations, integrationMethod, retention } = await req.json();
+    const { type, niche, channel, leadType, companyDescription, decomposition, leadDestinations, integrationMethod, retention, salesChannel } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -41,6 +41,7 @@ serve(async (req) => {
     const fullContext = `Ніша: ${niche || "не вказано"}
 Ціль кампанії: ${goalLabel}
 ${ltLabel ? `Тип лідгену: ${ltLabel}` : ""}
+${salesChannel ? `Канал продажів (як бізнес продає): ${salesChannel}` : ""}
 ${decompContext}
 Куди йдуть ліди: ${(leadDestinations || []).join(", ") || "не вказано"}
 Інтеграція: ${integrationMethod || "не вказано"}
