@@ -1190,13 +1190,8 @@ const ScenarioBuilder: React.FC = () => {
               { label: 'Стоматологія', Icon: Stethoscope },
               { label: 'Фітнес-студія', Icon: Dumbbell },
               { label: 'Онлайн-школа', Icon: BookOpen },
-              { label: 'Ресторан', Icon: UtensilsCrossed },
-              { label: 'Юридичні послуги', Icon: Scale },
-              { label: 'Барбершоп', Icon: Scissors },
               { label: 'Салон краси', Icon: Sparkle },
-              { label: 'SaaS', Icon: Cloud },
               { label: 'Автосервіс', Icon: Wrench },
-              { label: 'Клініка', Icon: HeartPulse },
               { label: 'Туризм', Icon: Plane },
               { label: 'Будівництво', Icon: HardHat },
             ];
