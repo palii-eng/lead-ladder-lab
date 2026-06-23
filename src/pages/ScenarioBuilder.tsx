@@ -853,7 +853,7 @@ const ScenarioBuilder: React.FC = () => {
     const audiences: any[] = Array.isArray(rawAud)
       ? rawAud
       : (rawAud && (rawAud.tips || rawAud.checks)
-          ? [{ id: 'legacy', name: 'Аудиторія 1', mode: 'ai' }]
+          ? [{ id: 'legacy', name: 'Гіпотеза 1', mode: 'ai' }]
           : []);
 
     const Row: React.FC<{ icon: string; title: string; meta?: React.ReactNode; onClick: () => void; compact?: boolean }> = ({ icon, title, meta, onClick, compact }) => (
@@ -900,7 +900,7 @@ const ScenarioBuilder: React.FC = () => {
                         key={a.id || idx}
                         compact
                         icon={a.mode === 'ai' ? '✨' : '✍️'}
-                        title={`Аудиторія ${idx + 1}${a.name ? ` · ${a.name}` : ''}`}
+                        title={`Гіпотеза ${idx + 1}${a.name ? ` · ${a.name}` : ''}`}
                         onClick={() => { setViewAudienceIdx(idx); setAudienceView('view'); setAudienceOpen(true); }}
                       />
                     ))}
@@ -2403,7 +2403,7 @@ const ScenarioBuilder: React.FC = () => {
             const savedAudiences: any[] = Array.isArray(rawSaved)
               ? rawSaved
               : (rawSaved && (rawSaved.tips || rawSaved.checks)
-                  ? [{ id: 'legacy', name: 'Аудиторія 1', mode: 'ai', tips: rawSaved.tips, description: '', createdAt: rawSaved.approvedAt }]
+                  ? [{ id: 'legacy', name: 'Гіпотеза 1', mode: 'ai', tips: rawSaved.tips, description: '', createdAt: rawSaved.approvedAt }]
                   : []);
 
             const saveAudiencesList = (next: any[]) => {
@@ -2471,7 +2471,7 @@ const ScenarioBuilder: React.FC = () => {
                     <div className="space-y-3">
                       {savedAudiences.length > 0 && (
                         <div className="space-y-2">
-                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Збережені аудиторії ({savedAudiences.length})</p>
+                          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Збережені гіпотези ({savedAudiences.length})</p>
                           <div className="space-y-2">
                             {savedAudiences.map((a, idx) => (
                               <div key={a.id || idx} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
@@ -2484,7 +2484,7 @@ const ScenarioBuilder: React.FC = () => {
                                     {a.mode === 'ai' ? '✨' : '✍️'}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <div className="text-xs font-semibold text-primary">Аудиторія №{idx + 1}</div>
+                                    <div className="text-xs font-semibold text-primary">Гіпотеза №{idx + 1}</div>
                                     <div className="text-sm text-foreground truncate">{a.name || 'Без назви'}</div>
                                   </div>
                                 </button>
@@ -2492,7 +2492,7 @@ const ScenarioBuilder: React.FC = () => {
                                   onClick={() => {
                                     const next = savedAudiences.filter((_, i) => i !== idx);
                                     saveAudiencesList(next);
-                                    toast({ title: 'Видалено', description: `Аудиторія №${idx + 1}` });
+                                    toast({ title: 'Видалено', description: `Гіпотеза №${idx + 1}` });
                                   }}
                                   className="w-8 h-8 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive flex items-center justify-center shrink-0"
                                   aria-label="Видалити"
@@ -2512,7 +2512,7 @@ const ScenarioBuilder: React.FC = () => {
                       >
                         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">➕</div>
                         <div>
-                          <div className="font-semibold text-foreground">Створити нову аудиторію</div>
+                          <div className="font-semibold text-foreground">Створити нову гіпотезу</div>
                           <div className="text-xs text-muted-foreground">Опишіть самі або отримайте AI-поради</div>
                         </div>
                       </button>
@@ -2522,7 +2522,7 @@ const ScenarioBuilder: React.FC = () => {
                   {/* CHOOSE mode */}
                   {audienceView === 'choose' && (
                     <div className="space-y-3">
-                      <p className="text-sm text-muted-foreground">Як хочете створити аудиторію?</p>
+                      <p className="text-sm text-muted-foreground">Як хочете створити гіпотезу?</p>
                       <div className="grid gap-3">
                         <button
                           onClick={() => setAudienceView('manual')}
@@ -2530,7 +2530,7 @@ const ScenarioBuilder: React.FC = () => {
                         >
                           <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">✍️</div>
                           <div>
-                            <div className="font-semibold text-foreground">Прописати аудиторію самому</div>
+                            <div className="font-semibold text-foreground">Прописати гіпотезу самому</div>
                             <div className="text-xs text-muted-foreground">Я знаю, кого таргетувати — опишу сам</div>
                           </div>
                         </button>
@@ -2552,7 +2552,7 @@ const ScenarioBuilder: React.FC = () => {
                   {audienceView === 'manual' && (
                     <div className="space-y-3">
                       <div>
-                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Назва аудиторії *</label>
+                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Назва гіпотези *</label>
                         <Input
                           value={audienceName}
                           onChange={(e) => setAudienceName(e.target.value)}
@@ -2560,7 +2560,7 @@ const ScenarioBuilder: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Опис аудиторії *</label>
+                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Опис гіпотези *</label>
                         <Textarea
                           value={audienceDescription}
                           onChange={(e) => setAudienceDescription(e.target.value)}
@@ -2575,7 +2575,7 @@ const ScenarioBuilder: React.FC = () => {
                   {audienceView === 'ai' && (
                     <div className="space-y-3">
                       <div>
-                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Назва аудиторії *</label>
+                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Назва гіпотези *</label>
                         <Input
                           value={audienceName}
                           onChange={(e) => setAudienceName(e.target.value)}
@@ -2609,7 +2609,7 @@ const ScenarioBuilder: React.FC = () => {
                   {audienceView === 'view' && viewAudienceIdx !== null && savedAudiences[viewAudienceIdx] && (
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-primary uppercase tracking-wider">Аудиторія №{viewAudienceIdx + 1}</span>
+                        <span className="text-xs font-bold text-primary uppercase tracking-wider">Гіпотеза №{viewAudienceIdx + 1}</span>
                         <span className="text-xs text-muted-foreground">· {savedAudiences[viewAudienceIdx].mode === 'ai' ? 'AI-поради' : 'Власний опис'}</span>
                       </div>
                       <div>
