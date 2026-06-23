@@ -217,8 +217,18 @@ const ScenarioBuilder: React.FC = () => {
   const [creoVideoFormat, setCreoVideoFormat] = useState<string>('');
   const [creoAiLoading, setCreoAiLoading] = useState(false);
   const [viewCreoIdx, setViewCreoIdx] = useState<number | null>(null);
-  // Cache for AI-generated content: key → text
-  const aiCacheRef = useRef<Record<string, string>>({});
+  // Cache for AI-generated content: key → text. Persisted on the scenario so
+  // recommendations survive reload and aren't regenerated every time.
+  const aiCacheRef = useRef<Record<string, string>>(scenario?.aiCache ? { ...scenario.aiCache } : {});
+  // Re-hydrate when navigating between scenarios.
+  useEffect(() => {
+    aiCacheRef.current = scenario?.aiCache ? { ...scenario.aiCache } : {};
+  }, [id]);
+  const setAiCache = useCallback((key: string, text: string) => {
+    if (!text || !id) return;
+    aiCacheRef.current[key] = text;
+    updateScenario(id, { aiCache: { ...aiCacheRef.current } });
+  }, [id, updateScenario]);
   // AI conclusion for result step
   const [aiConclusionText, setAiConclusionText] = useState('');
   const [aiConclusionLoading, setAiConclusionLoading] = useState(false);
