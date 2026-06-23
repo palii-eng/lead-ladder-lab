@@ -107,6 +107,11 @@ const ENGAGEMENT_TYPES = [
   { value: 'calls', label: 'Дзвінки', desc: 'Дзвінки на ваш номер.', icon: '📞' },
 ];
 
+const SALES_TYPES = [
+  { value: 'conversions', label: 'Конверсії', desc: 'Цільові дії на сайті, у застосунку чи в месенджерах.', icon: '🎯' },
+  { value: 'catalog_sales', label: 'Продажі за каталогом', desc: 'Реклама товарів із вашого каталогу цільовій аудиторії.', icon: '🛍️' },
+];
+
 
 const LEAD_DESTINATIONS = [
   'Kommo', 'HubSpot', 'SalesDrive', 'Pipedrive', 'KeyCRM', 'Trello',
