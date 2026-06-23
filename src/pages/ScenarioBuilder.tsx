@@ -2535,7 +2535,13 @@ const ScenarioBuilder: React.FC = () => {
                           </div>
                         </button>
                         <button
-                          onClick={() => { setAudienceView('ai'); setAudienceTipsText(''); }}
+                          onClick={() => {
+                            const autoName = `Гіпотеза ${savedAudiences.length + 1}`;
+                            setAudienceName(autoName);
+                            setAudienceView('ai');
+                            setAudienceTipsText('');
+                            fetchAudienceTips({ force: true, previousAudiences: savedAudiences, audienceName: autoName });
+                          }}
                           className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
                         >
                           <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">✨</div>
