@@ -195,7 +195,7 @@ const ScenarioBuilder: React.FC = () => {
   const [aiTipsText, setAiTipsText] = useState('');
   const [aiTipsLoading, setAiTipsLoading] = useState(false);
   const [aiTipsBranchType, setAiTipsBranchType] = useState<string | undefined>(undefined);
-  const [salesProcessed, setSalesProcessed] = useState(false);
+  const [salesProcessed, setSalesProcessedRaw] = useState(false);
   const [salesRecOpen, setSalesRecOpen] = useState(false);
   const [salesRecText, setSalesRecText] = useState('');
   const [salesRecLoading, setSalesRecLoading] = useState(false);
