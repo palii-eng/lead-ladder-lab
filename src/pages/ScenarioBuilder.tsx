@@ -1296,145 +1296,138 @@ const ScenarioBuilder: React.FC = () => {
           return (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground">Оберіть ціль оптимізації</h3>
-              <p className="text-xs text-muted-foreground">Виберіть ціль кампанії:</p>
-              <div className="grid gap-2">
-                {CAMPAIGN_GOALS.map(goal => (
-                  <button key={goal.value} onClick={() => update({ channel: goal.value })}
-                    className={`p-4 rounded-lg border text-left text-sm transition-all flex items-center gap-4 ${
-                      scenario.channel === goal.value
-                        ? 'border-primary bg-accent text-accent-foreground font-semibold'
-                        : 'border-border bg-card text-foreground hover:border-primary/40'
-                    } cursor-pointer`}>
-                    <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
-                      <goal.Icon className="w-5 h-5 text-foreground" />
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Left: main goals */}
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Основна ціль</p>
+                  <div className="grid gap-2">
+                    {CAMPAIGN_GOALS.map(goal => (
+                      <button key={goal.value} onClick={() => update({ channel: goal.value })}
+                        className={`p-3 rounded-lg border text-left text-sm transition-all flex items-center gap-3 ${
+                          scenario.channel === goal.value
+                            ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                            : 'border-border bg-card text-foreground hover:border-primary/40'
+                        } cursor-pointer`}>
+                        <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
+                          <goal.Icon className="w-4 h-4 text-foreground" />
+                        </div>
+                        <div className="flex flex-col gap-0.5 min-w-0">
+                          <span className="font-medium">{goal.label}</span>
+                          <span className="text-[11px] text-muted-foreground font-normal leading-snug">{goal.desc}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right: optimization sub-goals */}
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Ціль для оптимізації</p>
+
+                  {!scenario.channel && (
+                    <div className="p-4 rounded-lg border border-dashed border-border text-xs text-muted-foreground text-center">
+                      Спочатку оберіть основну ціль зліва
                     </div>
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                      <span className="font-medium">{goal.label}</span>
-                      <span className="text-xs text-muted-foreground font-normal leading-snug">{goal.desc}</span>
+                  )}
+
+                  {scenario.channel === 'awareness' && (
+                    <div className="grid gap-2">
+                      {AWARENESS_TYPES.map(at => (
+                        <button key={at.value} onClick={() => update({ awarenessType: at.value } as any)}
+                          className={`p-3 rounded-lg border text-left text-sm transition-all flex items-center gap-3 ${
+                            (scenario as any).awarenessType === at.value
+                              ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                              : 'border-border bg-card text-foreground hover:border-primary/40'
+                          } cursor-pointer`}>
+                          <span className="text-lg">{at.icon}</span>
+                          <span className="leading-snug">{at.label}</span>
+                        </button>
+                      ))}
                     </div>
-                  </button>
-                ))}
+                  )}
+
+                  {scenario.channel === 'traffic' && (
+                    <div className="grid gap-2">
+                      {TRAFFIC_TYPES.map(tt => (
+                        <button key={tt.value} onClick={() => update({ trafficType: tt.value } as any)}
+                          className={`p-3 rounded-lg border text-left text-sm transition-all flex items-start gap-3 ${
+                            (scenario as any).trafficType === tt.value
+                              ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                              : 'border-border bg-card text-foreground hover:border-primary/40'
+                          } cursor-pointer`}>
+                          <span className="text-lg leading-none mt-0.5">{tt.icon}</span>
+                          <div className="flex flex-col gap-0.5 min-w-0">
+                            <span className="font-medium">{tt.label}</span>
+                            <span className="text-[11px] text-muted-foreground font-normal leading-snug">{tt.desc}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {scenario.channel === 'engagement' && (
+                    <div className="grid gap-2">
+                      {ENGAGEMENT_TYPES.map(et => (
+                        <button key={et.value} onClick={() => update({ engagementType: et.value } as any)}
+                          className={`p-3 rounded-lg border text-left text-sm transition-all flex items-start gap-3 ${
+                            (scenario as any).engagementType === et.value
+                              ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                              : 'border-border bg-card text-foreground hover:border-primary/40'
+                          } cursor-pointer`}>
+                          <span className="text-lg leading-none mt-0.5">{et.icon}</span>
+                          <div className="flex flex-col gap-0.5 min-w-0">
+                            <span className="font-medium">{et.label}</span>
+                            <span className="text-[11px] text-muted-foreground font-normal leading-snug">{et.desc}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {scenario.channel === 'sales' && (
+                    <div className="grid gap-2">
+                      {SALES_TYPES.map(st => (
+                        <button key={st.value} onClick={() => update({ salesType: st.value } as any)}
+                          className={`p-3 rounded-lg border text-left text-sm transition-all flex items-start gap-3 ${
+                            (scenario as any).salesType === st.value
+                              ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                              : 'border-border bg-card text-foreground hover:border-primary/40'
+                          } cursor-pointer`}>
+                          <span className="text-lg leading-none mt-0.5">{st.icon}</span>
+                          <div className="flex flex-col gap-0.5 min-w-0">
+                            <span className="font-medium">{st.label}</span>
+                            <span className="text-[11px] text-muted-foreground font-normal leading-snug">{st.desc}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {scenario.channel === 'leads' && (
+                    <div className="grid gap-2">
+                      <p className="text-[11px] text-muted-foreground">Можна обрати декілька типів лідгену:</p>
+                      {LEAD_TYPES.map(lt => (
+                        <button key={lt.value} onClick={() => toggleLeadType(lt.value)}
+                          className={`p-3 rounded-lg border text-left text-sm transition-all flex items-center gap-3 ${
+                            (scenario.leadTypes || []).includes(lt.value)
+                              ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                              : 'border-border bg-card text-foreground hover:border-primary/40'
+                          } cursor-pointer`}>
+                          <span className="text-lg">{lt.icon}</span>
+                          <span>{lt.label}</span>
+                          {(scenario.leadTypes || []).includes(lt.value) && <Check className="w-4 h-4 ml-auto text-primary" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-
-              {/* Awareness sub-types */}
-              {scenario.channel === 'awareness' && (
-                <div className="border-t border-border pt-4">
-                  <p className="text-xs text-muted-foreground mb-2">Оберіть ціль оптимізації показу:</p>
-                  <div className="grid gap-2">
-                    {AWARENESS_TYPES.map(at => (
-                      <button key={at.value} onClick={() => update({ awarenessType: at.value } as any)}
-                        className={`p-3 rounded-lg border text-left text-sm transition-all flex items-center gap-3 ${
-                          (scenario as any).awarenessType === at.value
-                            ? 'border-primary bg-accent text-accent-foreground font-semibold'
-                            : 'border-border bg-card text-foreground hover:border-primary/40'
-                        } cursor-pointer`}>
-                        <span className="text-lg">{at.icon}</span>
-                        <span>{at.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Traffic sub-types (Conversion location) */}
-              {scenario.channel === 'traffic' && (
-                <div className="border-t border-border pt-4">
-                  <p className="text-xs font-semibold text-foreground mb-1">Місце конверсії</p>
-                  <p className="text-xs text-muted-foreground mb-2">Оберіть, куди спрямувати трафік:</p>
-                  <div className="grid gap-2">
-                    {TRAFFIC_TYPES.map(tt => (
-                      <button key={tt.value} onClick={() => update({ trafficType: tt.value } as any)}
-                        className={`p-3 rounded-lg border text-left text-sm transition-all flex items-start gap-3 ${
-                          (scenario as any).trafficType === tt.value
-                            ? 'border-primary bg-accent text-accent-foreground font-semibold'
-                            : 'border-border bg-card text-foreground hover:border-primary/40'
-                        } cursor-pointer`}>
-                        <span className="text-lg leading-none mt-0.5">{tt.icon}</span>
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                          <span className="font-medium">{tt.label}</span>
-                          <span className="text-xs text-muted-foreground font-normal leading-snug">{tt.desc}</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Engagement sub-types */}
-              {scenario.channel === 'engagement' && (
-                <div className="border-t border-border pt-4">
-                  <p className="text-xs font-semibold text-foreground mb-1">Підходить для:</p>
-                  <p className="text-xs text-muted-foreground mb-2">Оберіть тип взаємодії:</p>
-                  <div className="grid gap-2">
-                    {ENGAGEMENT_TYPES.map(et => (
-                      <button key={et.value} onClick={() => update({ engagementType: et.value } as any)}
-                        className={`p-3 rounded-lg border text-left text-sm transition-all flex items-start gap-3 ${
-                          (scenario as any).engagementType === et.value
-                            ? 'border-primary bg-accent text-accent-foreground font-semibold'
-                            : 'border-border bg-card text-foreground hover:border-primary/40'
-                        } cursor-pointer`}>
-                        <span className="text-lg leading-none mt-0.5">{et.icon}</span>
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                          <span className="font-medium">{et.label}</span>
-                          <span className="text-xs text-muted-foreground font-normal leading-snug">{et.desc}</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Sales sub-types */}
-              {scenario.channel === 'sales' && (
-                <div className="border-t border-border pt-4">
-                  <p className="text-xs font-semibold text-foreground mb-1">Місце конверсії</p>
-                  <p className="text-xs text-muted-foreground mb-2">Оберіть тип продажів:</p>
-                  <div className="grid gap-2">
-                    {SALES_TYPES.map(st => (
-                      <button key={st.value} onClick={() => update({ salesType: st.value } as any)}
-                        className={`p-3 rounded-lg border text-left text-sm transition-all flex items-start gap-3 ${
-                          (scenario as any).salesType === st.value
-                            ? 'border-primary bg-accent text-accent-foreground font-semibold'
-                            : 'border-border bg-card text-foreground hover:border-primary/40'
-                        } cursor-pointer`}>
-                        <span className="text-lg leading-none mt-0.5">{st.icon}</span>
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                          <span className="font-medium">{st.label}</span>
-                          <span className="text-xs text-muted-foreground font-normal leading-snug">{st.desc}</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Lead types sub-selection when "leads" is chosen */}
-              {scenario.channel === 'leads' && (
-                <div className="border-t border-border pt-4">
-                  <p className="text-xs text-muted-foreground mb-2">Уточніть тип лідгену (можна обрати декілька):</p>
-                  <div className="grid gap-2">
-                    {LEAD_TYPES.map(lt => (
-                      <button key={lt.value} onClick={() => toggleLeadType(lt.value)}
-                        className={`p-3 rounded-lg border text-left text-sm transition-all flex items-center gap-3 ${
-                          (scenario.leadTypes || []).includes(lt.value)
-                            ? 'border-primary bg-accent text-accent-foreground font-semibold'
-                            : 'border-border bg-card text-foreground hover:border-primary/40'
-                        } cursor-pointer`}>
-                        <span className="text-lg">{lt.icon}</span>
-                        <span>{lt.label}</span>
-                        {(scenario.leadTypes || []).includes(lt.value) && <Check className="w-4 h-4 ml-auto text-primary" />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-
-
 
               <SaveButton step={2} />
             </div>
           );
+
 
         case 3: {
           const inputFields: { key: keyof DecompositionScenario; label: string; suffix: string }[] = [
