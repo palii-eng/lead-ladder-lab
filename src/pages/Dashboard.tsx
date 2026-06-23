@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, LayoutDashboard, Copy, Trash2, ExternalLink, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 const Dashboard: React.FC = () => {
   const { scenarios, addScenario, deleteScenario, duplicateScenario } = useScenarios();
   const navigate = useNavigate();
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const scenarioToDelete = deleteId ? scenarios.find(s => s.id === deleteId) : null;
   const handleCreate = () => {
     const defaultName = `Сценарій #${scenarios.length + 1}`;
     const s = addScenario(defaultName, '');
@@ -147,7 +150,7 @@ const Dashboard: React.FC = () => {
                       size="sm"
                       variant="secondary"
                       className="hover:bg-destructive hover:text-destructive-foreground"
-                      onClick={(e) => { e.stopPropagation(); deleteScenario(s.id); }}
+                      onClick={(e) => { e.stopPropagation(); setDeleteId(s.id); }}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
@@ -158,6 +161,26 @@ const Dashboard: React.FC = () => {
           </div>
         )}
       </main>
+
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Видалити сценарій?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ви впевнені, що хочете видалити сценарій{scenarioToDelete ? ` «${scenarioToDelete.name}»` : ''}? Цю дію не можна скасувати.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Скасувати</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (deleteId) deleteScenario(deleteId); setDeleteId(null); }}
+            >
+              Видалити
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
