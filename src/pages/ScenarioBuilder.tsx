@@ -90,6 +90,16 @@ const AWARENESS_TYPES = [
   { value: 'continuous_2s', label: 'Максимізувати безперервні перегляди тривалістю 2 секунди', icon: '⏱️' },
 ];
 
+const TRAFFIC_TYPES = [
+  { value: 'website', label: 'Вебсайт', desc: 'Спрямувати трафік на ваш сайт.', icon: '🌐' },
+  { value: 'app', label: 'Застосунок', desc: 'Спрямувати трафік у ваш застосунок.', icon: '📱' },
+  { value: 'messages', label: 'Повідомлення', desc: 'Спрямувати трафік у Messenger, Instagram та WhatsApp.', icon: '💬' },
+  { value: 'ig_fb', label: 'Instagram або Facebook', desc: 'Спрямувати трафік у профіль Instagram, на Facebook-сторінку або обидва.', icon: '📸' },
+  { value: 'calls', label: 'Дзвінки', desc: 'Залучити людей до дзвінків на ваш номер, у Messenger або WhatsApp.', icon: '📞' },
+  { value: 'website_calls', label: 'Вебсайт і дзвінки', desc: 'Спрямувати трафік на ваш сайт і отримати дзвінки від клієнтів.', icon: '🔗' },
+];
+
+
 const LEAD_DESTINATIONS = [
   'Kommo', 'HubSpot', 'SalesDrive', 'Pipedrive', 'KeyCRM', 'Trello',
   'Google Таблиця', 'Telegram-чат з менеджером', 'Інша',
