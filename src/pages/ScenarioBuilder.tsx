@@ -660,14 +660,14 @@ const ScenarioBuilder: React.FC = () => {
       `Джерело: ${sourceLabel}`,
       `Ціль: ${channelLabel}`,
       `Типи лідгену: ${(scenario.leadTypes || []).join(', ') || '—'}`,
-      `Бюджет: ${decompSet.realistic.budget.toLocaleString()} ₴`,
+      `Бюджет: ${decompSet.realistic.budget.toLocaleString()} $`,
       `Ліди йдуть у: ${dests.join(', ') || '—'}`,
       `Інтеграція: ${intMethod || '—'}`,
       `Опис компанії: ${compDesc || '—'}`,
       ``,
       `Реалістичний сценарій:`,
       `- Ліди: ${real.leads}, Продажі: ${real.sales}`,
-      `- Дохід: ${real.revenue.toLocaleString()} ₴, Чистий: ${real.netIncome.toLocaleString()} ₴`,
+      `- Дохід: ${real.revenue.toLocaleString()} $, Чистий: ${real.netIncome.toLocaleString()} $`,
       `- ROMI: ${real.romi}%`,
       ``,
       `AI Висновок:`,
@@ -1675,12 +1675,12 @@ const ScenarioBuilder: React.FC = () => {
 
         case 3: {
           const inputFields: { key: keyof DecompositionScenario; label: string; suffix: string }[] = [
-            { key: 'budget', label: 'FB Ad Бюджет', suffix: '₴' },
-            { key: 'cpm', label: 'CPM', suffix: '₴' },
+            { key: 'budget', label: 'FB Ad Бюджет', suffix: '$' },
+            { key: 'cpm', label: 'CPM', suffix: '$' },
             { key: 'ctr', label: 'Ad CTR', suffix: '%' },
             { key: 'landingConversion', label: 'Конверсія перегляду → заявка', suffix: '%' },
             { key: 'conversionRate', label: 'Конверсія заявки → покупка', suffix: '%' },
-            { key: 'averageCheck', label: 'Середній чек', suffix: '₴' },
+            { key: 'averageCheck', label: 'Середній чек', suffix: '$' },
             { key: 'marginality', label: 'Маржинальність', suffix: '%' },
           ];
           return (
@@ -1730,11 +1730,11 @@ const ScenarioBuilder: React.FC = () => {
                   {[
                     { label: 'Покази', value: metrics.impressions.toLocaleString() },
                     { label: 'Кліки', value: metrics.clicks.toLocaleString() },
-                    { label: 'CPC', value: `${metrics.cpc.toFixed(2)} ₴` },
+                    { label: 'CPC', value: `${metrics.cpc.toFixed(2)} $` },
                     { label: 'Всі заявки (ліди)', value: metrics.leads.toLocaleString() },
                     { label: 'Всі продажі', value: metrics.sales.toString() },
-                    { label: 'CPA', value: `${metrics.cpa.toFixed(2)} ₴` },
-                    { label: 'Чистий прибуток з 1 продажу', value: `${metrics.profitPerSale.toLocaleString()} ₴` },
+                    { label: 'CPA', value: `${metrics.cpa.toFixed(2)} $` },
+                    { label: 'Чистий прибуток з 1 продажу', value: `${metrics.profitPerSale.toLocaleString()} $` },
                   ].map(row => (
                     <div key={row.label} className="flex items-center justify-between px-3 py-1.5 text-xs">
                       <span className="text-muted-foreground">{row.label}</span>
@@ -1748,9 +1748,9 @@ const ScenarioBuilder: React.FC = () => {
               <div className="bg-accent rounded-lg p-3 space-y-2">
                 <h4 className="text-xs font-bold text-foreground uppercase">Підсумок</h4>
                 {[
-                  { label: 'Прибуток', value: `${metrics.totalProfit.toLocaleString()} ₴`, color: metrics.totalProfit > 0 ? 'text-success' : 'text-destructive' },
+                  { label: 'Прибуток', value: `${metrics.totalProfit.toLocaleString()} $`, color: metrics.totalProfit > 0 ? 'text-success' : 'text-destructive' },
                   { label: 'ROAS', value: `${metrics.roas.toFixed(2)}%`, color: metrics.roas > 100 ? 'text-success' : 'text-destructive' },
-                  { label: 'Чистий дохід', value: `${metrics.netIncome.toLocaleString()} ₴`, color: metrics.netIncome > 0 ? 'text-success' : 'text-destructive' },
+                  { label: 'Чистий дохід', value: `${metrics.netIncome.toLocaleString()} $`, color: metrics.netIncome > 0 ? 'text-success' : 'text-destructive' },
                 ].map(row => (
                   <div key={row.label} className="flex items-center justify-between text-sm">
                     <span className="font-bold text-foreground">{row.label}</span>
@@ -1963,7 +1963,7 @@ const ScenarioBuilder: React.FC = () => {
                           <span>Open: {Math.round(s.rate * 100)}%</span>
                           <span>Кліки: {r.clicks}</span>
                           <span>Конверсії: {r.conversions}</span>
-                          <span className="font-bold text-foreground">Дохід: {r.revenue.toLocaleString()} ₴</span>
+                          <span className="font-bold text-foreground">Дохід: {r.revenue.toLocaleString()} $</span>
                         </div>
                       </div>
                     );
@@ -2004,7 +2004,7 @@ const ScenarioBuilder: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-muted-foreground">Бюджет:</span>
-                    <p className="font-semibold text-foreground">{decompSet.realistic.budget.toLocaleString()} ₴</p>
+                    <p className="font-semibold text-foreground">{decompSet.realistic.budget.toLocaleString()} $</p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Ліди йдуть у:</span>
@@ -2039,7 +2039,7 @@ const ScenarioBuilder: React.FC = () => {
                       </div>
                       <div className="text-xs mt-1">
                         <span className="text-muted-foreground">Чистий дохід: </span>
-                        <b className={s.m.netIncome >= 0 ? 'text-success' : 'text-destructive'}>{s.m.netIncome.toLocaleString()} ₴</b>
+                        <b className={s.m.netIncome >= 0 ? 'text-success' : 'text-destructive'}>{s.m.netIncome.toLocaleString()} $</b>
                       </div>
                     </div>
                   ))}
@@ -2258,9 +2258,9 @@ const ScenarioBuilder: React.FC = () => {
                       const pos = calcMetrics(decompSet.positive);
                       if (real.revenue <= 0 && bad.revenue <= 0 && pos.revenue <= 0) return '';
                       return [
-                        `🟡 ${bad.leads} лідів → ${bad.revenue.toLocaleString()}₴ → ${bad.romi}%`,
-                        `🔵 ${real.leads} лідів → ${real.revenue.toLocaleString()}₴ → ${real.romi}%`,
-                        `🟢 ${pos.leads} лідів → ${pos.revenue.toLocaleString()}₴ → ${pos.romi}%`,
+                        `🟡 ${bad.leads} лідів → ${bad.revenue.toLocaleString()}$ → ${bad.romi}%`,
+                        `🔵 ${real.leads} лідів → ${real.revenue.toLocaleString()}$ → ${real.romi}%`,
+                        `🟢 ${pos.leads} лідів → ${pos.revenue.toLocaleString()}$ → ${pos.romi}%`,
                       ].join('\n');
                     }
                     case 4: {
