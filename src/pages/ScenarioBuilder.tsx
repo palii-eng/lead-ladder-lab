@@ -1086,7 +1086,24 @@ const ScenarioBuilder: React.FC = () => {
     }
   };
 
-  const fillBenchmarks = () => {
+  const [fillBenchLoading, setFillBenchLoading] = useState(false);
+
+  const buildScenarioFromAi = (s: any, budget: number): DecompositionScenario => {
+    const cpm = Number(s?.cpm) || 0;
+    const ctr = Number(s?.ctr) || 0;
+    const cpc = cpm > 0 && ctr > 0 ? cpm / (ctr / 100) / 1000 : 0;
+    const landingConversion = Number(s?.landingConversion) || 0;
+    const conversionRate = Number(s?.conversionRate) || 0;
+    const averageCheck = Number(s?.averageCheck) || 0;
+    const marginality = Number(s?.marginality) || 0;
+    // Derive CPL: leads = impressions * ctr * landingConv
+    const impressions = cpm > 0 ? (budget / cpm) * 1000 : 0;
+    const leads = impressions * (ctr / 100) * (landingConversion / 100);
+    const cpl = leads > 0 ? budget / leads : 0;
+    return { cpm, ctr, cpc, cpl, landingConversion, conversionRate, averageCheck, marginality, budget };
+  };
+
+  const fillBenchmarksStatic = (): DecompositionSet => {
     const ch = scenario.channel || 'other';
     const bench = BENCHMARKS[ch] || BENCHMARKS.other;
     const make = (mult: { cpm: number; ctr: number; cpl: number; conv: number }, budget: number) => {
@@ -1104,20 +1121,81 @@ const ScenarioBuilder: React.FC = () => {
       d.cpc = d.cpm / ((d.ctr || 1) / 100) / 1000;
       return d;
     };
-    
-    const makeSet = (baseBudget: number): DecompositionSet => ({
+    const baseBudget = (isBranching && activeLeadType
+      ? getBranch().decomposition.realistic.budget
+      : scenario.decomposition.realistic.budget) || 10000;
+    return {
       bad: make({ cpm: 1.3, ctr: 0.7, cpl: 1.5, conv: 0.65 }, baseBudget),
       realistic: make({ cpm: 1, ctr: 1, cpl: 1, conv: 1 }, baseBudget),
       positive: make({ cpm: 0.7, ctr: 1.5, cpl: 0.6, conv: 1.6 }, baseBudget),
-    });
+    };
+  };
 
-    if (isBranching && activeLeadType) {
-      const branch = getBranch();
-      updateBranch({ decomposition: makeSet(branch.decomposition.realistic.budget || 10000) });
-    } else {
-      update({
-        decomposition: makeSet(scenario.decomposition.realistic.budget || 10000),
+  const fillBenchmarks = async () => {
+    if (fillBenchLoading) return;
+    const baseBudget = (isBranching && activeLeadType
+      ? getBranch().decomposition.realistic.budget
+      : scenario.decomposition.realistic.budget) || 10000;
+    const cacheKey = `decomp:ai:${scenario.niche || ''}:${scenario.channel || ''}:${activeLeadType || (scenario.leadTypes?.[0] || '')}:${baseBudget}`;
+    const applySet = (set: DecompositionSet) => {
+      if (isBranching && activeLeadType) updateBranch({ decomposition: set });
+      else update({ decomposition: set });
+    };
+
+    // Try cache
+    const cached = aiCacheRef.current[cacheKey];
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        applySet({
+          bad: buildScenarioFromAi(parsed.bad, baseBudget),
+          realistic: buildScenarioFromAi(parsed.realistic, baseBudget),
+          positive: buildScenarioFromAi(parsed.positive, baseBudget),
+        });
+        toast({ title: 'Заповнено AI', description: 'Дані з ринку (кеш). Перевірте та коригуйте.' });
+        return;
+      } catch {}
+    }
+
+    setFillBenchLoading(true);
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/decomposition-fill`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          niche: scenario.niche,
+          channel: scenario.channel,
+          leadType: activeLeadType || (scenario.leadTypes?.[0] || ''),
+          budget: baseBudget,
+        }),
       });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: 'AI помилка' }));
+        toast({ title: 'AI недоступний', description: (err.error || 'Заповнюю середні бенчмарки'), variant: 'destructive' });
+        applySet(fillBenchmarksStatic());
+        return;
+      }
+      const data = await resp.json();
+      const sc = data.scenarios;
+      if (!sc?.realistic) {
+        applySet(fillBenchmarksStatic());
+        return;
+      }
+      setAiCache(cacheKey, JSON.stringify(sc));
+      applySet({
+        bad: buildScenarioFromAi(sc.bad, baseBudget),
+        realistic: buildScenarioFromAi(sc.realistic, baseBudget),
+        positive: buildScenarioFromAi(sc.positive, baseBudget),
+      });
+      toast({ title: 'Заповнено AI', description: 'Реалістичні дані з ринку. Перевірте та коригуйте.' });
+    } catch (e: any) {
+      toast({ title: 'Помилка', description: e?.message || 'Збій', variant: 'destructive' });
+      applySet(fillBenchmarksStatic());
+    } finally {
+      setFillBenchLoading(false);
     }
   };
 
