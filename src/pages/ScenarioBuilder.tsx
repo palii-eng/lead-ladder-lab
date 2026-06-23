@@ -229,6 +229,18 @@ const ScenarioBuilder: React.FC = () => {
     aiCacheRef.current[key] = text;
     updateScenario(id, { aiCache: { ...aiCacheRef.current } });
   }, [id, updateScenario]);
+  // Persist "sales processed" flag through the AI cache so reload doesn't reset it.
+  const salesProcessedKey = `sales:processed:${activeLeadType || 'main'}`;
+  const setSalesProcessed = useCallback((val: boolean) => {
+    setSalesProcessedRaw(val);
+    if (!id) return;
+    aiCacheRef.current[salesProcessedKey] = val ? '1' : '';
+    updateScenario(id, { aiCache: { ...aiCacheRef.current } });
+  }, [id, salesProcessedKey, updateScenario]);
+  // Hydrate when switching scenario/branch.
+  useEffect(() => {
+    setSalesProcessedRaw(aiCacheRef.current[salesProcessedKey] === '1');
+  }, [id, salesProcessedKey]);
   // AI conclusion for result step
   const [aiConclusionText, setAiConclusionText] = useState('');
   const [aiConclusionLoading, setAiConclusionLoading] = useState(false);
