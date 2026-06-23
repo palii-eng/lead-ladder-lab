@@ -1169,13 +1169,13 @@ const ScenarioBuilder: React.FC = () => {
   };
   const hasSalesChannel = !!currentSalesChannel && (currentSalesChannel !== 'other' || currentSalesChannelOther.trim().length > 0);
 
-  const isSalesCompletedFor = (s: Scenario, lt?: string): boolean => {
+  function isSalesCompletedFor(s: Scenario, lt?: string): boolean {
     const branch = lt ? s.branchData?.[lt] : null;
     const salesChannel = (branch ? branch.salesChannel : s.salesChannel) || '';
     const salesChannelOther = (branch ? branch.salesChannelOther : s.salesChannelOther) || '';
     const salesProcessedSaved = (s.aiCache?.[`sales:processed:${lt || 'main'}`] || aiCacheRef.current[`sales:processed:${lt || 'main'}`]) === '1';
     return !!salesChannel && (salesChannel !== 'other' || salesChannelOther.trim().length > 0) && salesProcessedSaved;
-  };
+  }
 
 
 
