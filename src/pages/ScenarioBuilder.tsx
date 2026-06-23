@@ -1086,7 +1086,7 @@ const ScenarioBuilder: React.FC = () => {
     }
   };
 
-  const [fillBenchLoading, setFillBenchLoading] = useState(false);
+  
 
   const buildScenarioFromAi = (s: any, budget: number): DecompositionScenario => {
     const cpm = Number(s?.cpm) || 0;
