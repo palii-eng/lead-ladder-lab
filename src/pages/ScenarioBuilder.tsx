@@ -1323,6 +1323,32 @@ const ScenarioBuilder: React.FC = () => {
                 </div>
               )}
 
+              {/* Traffic sub-types (Conversion location) */}
+              {scenario.channel === 'traffic' && (
+                <div className="border-t border-border pt-4">
+                  <p className="text-xs font-semibold text-foreground mb-1">Місце конверсії</p>
+                  <p className="text-xs text-muted-foreground mb-2">Оберіть, куди спрямувати трафік:</p>
+                  <div className="grid gap-2">
+                    {TRAFFIC_TYPES.map(tt => (
+                      <button key={tt.value} onClick={() => update({ trafficType: tt.value } as any)}
+                        className={`p-3 rounded-lg border text-left text-sm transition-all flex items-start gap-3 ${
+                          (scenario as any).trafficType === tt.value
+                            ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                            : 'border-border bg-card text-foreground hover:border-primary/40'
+                        } cursor-pointer`}>
+                        <span className="text-lg leading-none mt-0.5">{tt.icon}</span>
+                        <div className="flex flex-col gap-0.5 min-w-0">
+                          <span className="font-medium">{tt.label}</span>
+                          <span className="text-xs text-muted-foreground font-normal leading-snug">{tt.desc}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+
+
               {/* Lead types sub-selection when "leads" is chosen */}
               {scenario.channel === 'leads' && (
                 <div className="border-t border-border pt-4">
