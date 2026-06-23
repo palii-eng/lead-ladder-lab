@@ -131,13 +131,13 @@ const SALES_CHANNELS = [
 ];
 
 const BENCHMARKS: Record<string, Partial<DecompositionScenario>> = {
-  awareness: { cpm: 5, ctr: 1.5, cpc: 3.33, cpl: 40, landingConversion: 50, conversionRate: 3, averageCheck: 2500, marginality: 30 },
-  traffic: { cpm: 6, ctr: 2.0, cpc: 3.0, cpl: 30, landingConversion: 50, conversionRate: 4, averageCheck: 2000, marginality: 30 },
-  engagement: { cpm: 7, ctr: 1.8, cpc: 3.89, cpl: 35, landingConversion: 50, conversionRate: 5, averageCheck: 2500, marginality: 30 },
-  leads: { cpm: 8, ctr: 1.2, cpc: 6.67, cpl: 45, landingConversion: 50, conversionRate: 5, averageCheck: 3000, marginality: 32 },
-  app_promotion: { cpm: 6, ctr: 2.5, cpc: 2.4, cpl: 25, landingConversion: 50, conversionRate: 8, averageCheck: 1500, marginality: 30 },
-  sales: { cpm: 10, ctr: 1.0, cpc: 10.0, cpl: 50, landingConversion: 50, conversionRate: 6, averageCheck: 4000, marginality: 32 },
-  other: { cpm: 7, ctr: 1.5, cpc: 4.67, cpl: 35, landingConversion: 50, conversionRate: 5, averageCheck: 3000, marginality: 30 },
+  awareness: { cpm: 3, ctr: 1.5, cpc: 2.0, cpl: 1.2, landingConversion: 50, conversionRate: 3, averageCheck: 60, marginality: 30 },
+  traffic: { cpm: 3.5, ctr: 2.0, cpc: 1.75, cpl: 0.9, landingConversion: 50, conversionRate: 4, averageCheck: 50, marginality: 30 },
+  engagement: { cpm: 4, ctr: 1.8, cpc: 2.2, cpl: 1.1, landingConversion: 50, conversionRate: 5, averageCheck: 60, marginality: 30 },
+  leads: { cpm: 4.5, ctr: 1.2, cpc: 3.75, cpl: 1.5, landingConversion: 50, conversionRate: 5, averageCheck: 75, marginality: 32 },
+  app_promotion: { cpm: 3.5, ctr: 2.5, cpc: 1.4, cpl: 0.8, landingConversion: 50, conversionRate: 8, averageCheck: 40, marginality: 30 },
+  sales: { cpm: 5, ctr: 1.0, cpc: 5.0, cpl: 1.7, landingConversion: 50, conversionRate: 6, averageCheck: 100, marginality: 32 },
+  other: { cpm: 4, ctr: 1.5, cpc: 2.67, cpl: 1.2, landingConversion: 50, conversionRate: 5, averageCheck: 75, marginality: 30 },
 };
 
 const calcMetrics = (d: DecompositionScenario) => {
