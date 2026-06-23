@@ -1653,7 +1653,7 @@ const ScenarioBuilder: React.FC = () => {
 
         case 6: {
           const charCount = (currentCompanyDescription || '').length;
-          const canProcess = charCount >= 50;
+          const canProcess = true;
           const salesItems = [
             { icon: '📞', title: 'Скрипт дзвінка', type: 'call-script' },
             { icon: '💬', title: 'Скрипт переписки', type: 'chat-script' },
