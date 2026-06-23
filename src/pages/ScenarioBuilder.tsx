@@ -2535,7 +2535,13 @@ const ScenarioBuilder: React.FC = () => {
                           </div>
                         </button>
                         <button
-                          onClick={() => { setAudienceView('ai'); setAudienceTipsText(''); }}
+                          onClick={() => {
+                            const autoName = `Гіпотеза ${savedAudiences.length + 1}`;
+                            setAudienceName(autoName);
+                            setAudienceView('ai');
+                            setAudienceTipsText('');
+                            fetchAudienceTips({ force: true, previousAudiences: savedAudiences, audienceName: autoName });
+                          }}
                           className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
                         >
                           <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">✨</div>
@@ -2575,7 +2581,7 @@ const ScenarioBuilder: React.FC = () => {
                   {audienceView === 'ai' && (
                     <div className="space-y-3">
                       <div>
-                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Назва гіпотези *</label>
+                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Назва гіпотези</label>
                         <Input
                           value={audienceName}
                           onChange={(e) => setAudienceName(e.target.value)}
@@ -2584,7 +2590,7 @@ const ScenarioBuilder: React.FC = () => {
                       </div>
                       <Button
                         onClick={() => fetchAudienceTips({ force: true, previousAudiences: savedAudiences, audienceName })}
-                        disabled={audienceTipsLoading || !audienceName.trim()}
+                        disabled={audienceTipsLoading}
                         className="w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-semibold shadow-md"
                       >
                         {audienceTipsLoading ? (
