@@ -643,7 +643,7 @@ const ScenarioBuilder: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStep, activeLeadType, id]);
 
-  const sendToCurator = useCallback(() => {
+  const sendToCurator = useCallback(async () => {
     if (!scenario) return;
     const decompSet = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && activeLeadType
       ? (scenario.branchData?.[activeLeadType]?.decomposition || scenario.decomposition)
@@ -655,8 +655,30 @@ const ScenarioBuilder: React.FC = () => {
     const intMethod = (scenario.channel === 'leads' && activeLeadType && scenario.branchData?.[activeLeadType]?.integrationMethod) || scenario.integrationMethod || '';
     const compDesc = (scenario.channel === 'leads' && activeLeadType && scenario.branchData?.[activeLeadType]?.companyDescription) || scenario.companyDescription || '';
 
+    // Create a public, view-only share link for this funnel snapshot.
+    let shareUrl = '';
+    try {
+      const { data, error } = await supabase
+        .from('shared_scenarios')
+        .insert({
+          scenario: scenario as any,
+          ai_conclusion: aiConclusionText || null,
+          active_lead_type: activeLeadType || null,
+        })
+        .select('id')
+        .single();
+      if (error) throw error;
+      shareUrl = `${window.location.origin}/share/${data.id}`;
+    } catch (e: any) {
+      console.error('Failed to create share link', e);
+      toast({ title: 'Не вдалося створити посилання', description: e.message || 'Спробуйте ще раз', variant: 'destructive' });
+      return;
+    }
+
     const lines = [
       `Воронка: ${scenario.name}`,
+      `Публічне посилання (тільки перегляд): ${shareUrl}`,
+      ``,
       `Ніша: ${scenario.niche || '—'}`,
       `Джерело: ${sourceLabel}`,
       `Ціль: ${channelLabel}`,
@@ -676,9 +698,9 @@ const ScenarioBuilder: React.FC = () => {
     ];
     const body = lines.join('\n');
     const subject = `SmartFunnel: ${scenario.name}`;
-    try { navigator.clipboard?.writeText(body); } catch {}
+    try { await navigator.clipboard?.writeText(shareUrl); } catch {}
     window.open(`mailto:kurator@ads-school.online?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
-    toast({ title: 'Відправлено куратору', description: 'Підсумок скопійовано в буфер обміну та відкрито у пошті.' });
+    toast({ title: 'Посилання створено', description: 'Лінк скопійовано в буфер обміну та доданий у лист куратору.' });
   }, [scenario, activeLeadType, aiConclusionText, toast]);
 
   // savedSteps tracks global steps + per-branch steps (key format: "step" or "step:branchType")
