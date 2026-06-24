@@ -35,6 +35,30 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_scenarios: {
+        Row: {
+          active_lead_type: string | null
+          ai_conclusion: string | null
+          created_at: string
+          id: string
+          scenario: Json
+        }
+        Insert: {
+          active_lead_type?: string | null
+          ai_conclusion?: string | null
+          created_at?: string
+          id?: string
+          scenario: Json
+        }
+        Update: {
+          active_lead_type?: string | null
+          ai_conclusion?: string | null
+          created_at?: string
+          id?: string
+          scenario?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
