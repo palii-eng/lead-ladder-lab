@@ -127,7 +127,16 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
 
   const handleNext = () => {
     setRevealing(true);
-    setTimeout(() => setIndex(i => i + 1), 350);
+    setTimeout(() => {
+      setIndex(i => {
+        if (pool.length <= 1) return i + 1;
+        let next = i;
+        while (next === i) {
+          next = Math.floor(Math.random() * pool.length);
+        }
+        return next;
+      });
+    }, 350);
   };
 
   if (!current) return null;
