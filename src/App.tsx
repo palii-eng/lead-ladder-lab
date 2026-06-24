@@ -21,6 +21,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/scenario/:id" element={<ScenarioBuilder />} />
+            <Route path="/share/:shareId" element={<SharedScenario />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
