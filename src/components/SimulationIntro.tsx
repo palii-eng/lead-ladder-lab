@@ -248,9 +248,6 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
           </div>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-4">
-          Клієнт #{(index % pool.length) + 1} з {pool.length}
-        </p>
       </div>
 
       <style>{`
