@@ -93,7 +93,7 @@ interface Props {
 const REVEAL_MS = 1600;
 
 const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() => Math.floor(Math.random() * (LUCKY_CLIENTS.length + HARD_CLIENTS.length)));
   const [revealing, setRevealing] = useState(true);
 
   const pool = useMemo<(ClientBrief & { role?: string; _difficulty: 'lucky' | 'suffer' })[]>(() => {
