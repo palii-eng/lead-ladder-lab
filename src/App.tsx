@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ScenariosProvider } from "@/context/ScenariosContext";
 import Dashboard from "./pages/Dashboard";
 import ScenarioBuilder from "./pages/ScenarioBuilder";
+import SharedScenario from "./pages/SharedScenario";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
