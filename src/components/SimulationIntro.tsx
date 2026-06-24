@@ -93,7 +93,7 @@ interface Props {
 const REVEAL_MS = 1600;
 
 const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() => Math.floor(Math.random() * (LUCKY_CLIENTS.length + HARD_CLIENTS.length)));
   const [revealing, setRevealing] = useState(true);
 
   const pool = useMemo<(ClientBrief & { role?: string; _difficulty: 'lucky' | 'suffer' })[]>(() => {
@@ -127,7 +127,16 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
 
   const handleNext = () => {
     setRevealing(true);
-    setTimeout(() => setIndex(i => i + 1), 350);
+    setTimeout(() => {
+      setIndex(i => {
+        if (pool.length <= 1) return i + 1;
+        let next = i;
+        while (next === i) {
+          next = Math.floor(Math.random() * pool.length);
+        }
+        return next;
+      });
+    }, 350);
   };
 
   if (!current) return null;
@@ -239,9 +248,6 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
           </div>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-4">
-          Клієнт #{(index % pool.length) + 1} з {pool.length}
-        </p>
       </div>
 
       <style>{`
