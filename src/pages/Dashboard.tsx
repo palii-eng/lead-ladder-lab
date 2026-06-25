@@ -8,6 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { UserMenu } from '@/components/UserMenu';
 
 const Dashboard: React.FC = () => {
   const { scenarios, loading, addScenario, deleteScenario, duplicateScenario } = useScenarios();
@@ -90,10 +91,13 @@ const Dashboard: React.FC = () => {
               </a>
             </span>
           </div>
-          <Button onClick={handleCreate} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
-            <Plus className="w-4 h-4" />
-            Створити сценарій
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleCreate} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
+              <Plus className="w-4 h-4" />
+              Створити сценарій
+            </Button>
+            <UserMenu />
+          </div>
         </div>
       </header>
 
