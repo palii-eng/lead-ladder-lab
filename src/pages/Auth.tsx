@@ -131,7 +131,8 @@ const Auth: React.FC = () => {
                 </div>
                 <div>
                   <Label htmlFor="su-password">Пароль</Label>
-                  <Input id="su-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                  <PasswordInput id="su-password" value={password} onChange={setPassword} minLength={6} />
+
                 </div>
                 <Button type="submit" className="w-full" disabled={submitting}>
                   {submitting ? 'Відправка…' : 'Зареєструватися'}
