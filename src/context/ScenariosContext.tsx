@@ -119,12 +119,14 @@ export const createDefaultScenario = (name: string, description: string): Scenar
 
 interface ScenariosContextType {
   scenarios: Scenario[];
+  loading: boolean;
   addScenario: (name: string, description: string) => Scenario;
   updateScenario: (id: string, updates: Partial<Scenario>) => void;
   deleteScenario: (id: string) => void;
   duplicateScenario: (id: string) => void;
   getScenario: (id: string) => Scenario | undefined;
 }
+
 
 const ScenariosContext = createContext<ScenariosContextType | null>(null);
 
@@ -222,8 +224,10 @@ const persistScenariosToCloud = async (next: Scenario[]) => {
 
 export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [scenarios, setScenarios] = useState<Scenario[]>(readScenariosFromStorage);
+  const [loading, setLoading] = useState<boolean>(true);
   const hydratedRef = React.useRef(false);
   const cloudReadyRef = React.useRef(false);
+
 
   useEffect(() => {
     // Skip the very first effect run — it would just re-write what we read.
@@ -261,12 +265,15 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       } catch (e) {
         cloudReadyRef.current = false;
         console.error('Failed to load scenarios from cloud', e);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
 
     hydrateFromCloud();
     return () => { cancelled = true; };
   }, []);
+
 
   // Sync across tabs and recover if another tab/process updated storage.
   useEffect(() => {
@@ -344,7 +351,7 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [scenarios]);
 
   return (
-    <ScenariosContext.Provider value={{ scenarios, addScenario, updateScenario, deleteScenario, duplicateScenario, getScenario }}>
+    <ScenariosContext.Provider value={{ scenarios, loading, addScenario, updateScenario, deleteScenario, duplicateScenario, getScenario }}>
       {children}
     </ScenariosContext.Provider>
   );

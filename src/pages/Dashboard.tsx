@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 
 const Dashboard: React.FC = () => {
-  const { scenarios, addScenario, deleteScenario, duplicateScenario } = useScenarios();
+  const { scenarios, loading, addScenario, deleteScenario, duplicateScenario } = useScenarios();
   const navigate = useNavigate();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const scenarioToDelete = deleteId ? scenarios.find(s => s.id === deleteId) : null;
@@ -109,7 +109,13 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {scenarios.length === 0 ? (
+        {loading && scenarios.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-32 animate-fade-in">
+            <div className="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin mb-4" />
+            <p className="text-muted-foreground">Завантаження сценаріїв…</p>
+          </div>
+        ) : scenarios.length === 0 ? (
+
           <div className="flex flex-col items-center justify-center py-32 animate-fade-in">
             <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 bg-accent">
               <LayoutDashboard className="w-10 h-10 text-accent-foreground" />
