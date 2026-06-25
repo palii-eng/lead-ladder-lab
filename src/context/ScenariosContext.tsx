@@ -119,12 +119,14 @@ export const createDefaultScenario = (name: string, description: string): Scenar
 
 interface ScenariosContextType {
   scenarios: Scenario[];
+  loading: boolean;
   addScenario: (name: string, description: string) => Scenario;
   updateScenario: (id: string, updates: Partial<Scenario>) => void;
   deleteScenario: (id: string) => void;
   duplicateScenario: (id: string) => void;
   getScenario: (id: string) => Scenario | undefined;
 }
+
 
 const ScenariosContext = createContext<ScenariosContextType | null>(null);
 
