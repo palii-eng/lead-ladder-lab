@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 
 const Dashboard: React.FC = () => {
-  const { scenarios, addScenario, deleteScenario, duplicateScenario } = useScenarios();
+  const { scenarios, loading, addScenario, deleteScenario, duplicateScenario } = useScenarios();
   const navigate = useNavigate();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const scenarioToDelete = deleteId ? scenarios.find(s => s.id === deleteId) : null;
