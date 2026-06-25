@@ -818,6 +818,16 @@ const ScenarioBuilder: React.FC = () => {
 
 
   if (!scenario) {
+    if (scenariosLoading) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            <p className="text-muted-foreground">Завантаження сценарію…</p>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -837,7 +847,31 @@ const ScenarioBuilder: React.FC = () => {
     (scenario.branchData && Object.keys(scenario.branchData).length > 0)
   );
 
+  // If the scenario looks "thin" (only a brief, no progress) but cloud sync is still
+  // running, wait for cloud — otherwise we might briefly show the intro for a
+  // scenario that actually has full progress stored remotely.
+  if (scenariosLoading && scenario.clientBrief && !hasExistingProgress && scenario.status !== 'completed') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <p className="text-muted-foreground">Синхронізація з хмарою…</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!scenario.clientBrief && !hasExistingProgress) {
+    if (scenariosLoading) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            <p className="text-muted-foreground">Синхронізація з хмарою…</p>
+          </div>
+        </div>
+      );
+    }
     return (
       <SimulationIntro
         scenarioName={scenario.name}
@@ -855,6 +889,7 @@ const ScenarioBuilder: React.FC = () => {
       />
     );
   }
+
 
   // Legacy scenarios created before client brief — synthesize a minimal brief so the saved flow opens.
   if (!scenario.clientBrief && hasExistingProgress) {
