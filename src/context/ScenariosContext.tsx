@@ -265,12 +265,15 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       } catch (e) {
         cloudReadyRef.current = false;
         console.error('Failed to load scenarios from cloud', e);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
 
     hydrateFromCloud();
     return () => { cancelled = true; };
   }, []);
+
 
   // Sync across tabs and recover if another tab/process updated storage.
   useEffect(() => {
