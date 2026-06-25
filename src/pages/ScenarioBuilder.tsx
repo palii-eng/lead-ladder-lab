@@ -172,8 +172,9 @@ const calcMetrics = (d: DecompositionScenario) => {
 const ScenarioBuilder: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getScenario, updateScenario } = useScenarios();
+  const { getScenario, updateScenario, loading: scenariosLoading } = useScenarios();
   const scenario = getScenario(id!);
+
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [clientBriefOpen, setClientBriefOpen] = useState(false);
   const [filledBriefOpen, setFilledBriefOpen] = useState(false);
