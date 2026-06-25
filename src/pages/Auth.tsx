@@ -110,7 +110,8 @@ const Auth: React.FC = () => {
                 </div>
                 <div>
                   <Label htmlFor="si-password">Пароль</Label>
-                  <Input id="si-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                  <PasswordInput id="si-password" value={password} onChange={setPassword} />
+
                 </div>
                 <Button type="submit" className="w-full" disabled={submitting}>
                   {submitting ? 'Вхід…' : 'Увійти'}
