@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { useAuth } from '@/context/AuthContext';
@@ -128,7 +128,6 @@ interface ScenariosContextType {
   getScenario: (id: string) => Scenario | undefined;
 }
 
-
 const ScenariosContext = createContext<ScenariosContextType | null>(null);
 
 export const useScenarios = () => {
@@ -139,35 +138,45 @@ export const useScenarios = () => {
 
 const STORAGE_KEY_PREFIX = 'scenarios:';
 
-
-const persistScenariosToStorage = (next: Scenario[]) => {
+const persistLocal = (userId: string, next: Scenario[]) => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}${userId}`, JSON.stringify(next));
   } catch (e) {
-    console.error('Failed to save scenarios to localStorage', e);
+    console.error('Failed to save scenarios locally', e);
   }
 };
 
-const readScenariosFromStorage = (): Scenario[] => {
+const readLocal = (userId: string): Scenario[] => {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return [];
-    const parsed = JSON.parse(saved);
+    const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${userId}`);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
-    console.error('Failed to parse scenarios from localStorage', e);
-    // Preserve corrupted data for recovery instead of overwriting it.
-    try {
-      const corrupt = localStorage.getItem(STORAGE_KEY);
-      if (corrupt) localStorage.setItem(`${STORAGE_KEY}__corrupt_${Date.now()}`, corrupt);
-    } catch {}
+  } catch {
     return [];
   }
 };
 
-// Score how "populated" a scenario is — used to pick a winner when the same
-// scenario exists in both local and cloud (e.g. local was a stub created
-// before cloud sync, while cloud has the full filled-in version).
+const readCloud = async (userId: string): Promise<Scenario[]> => {
+  const { data, error } = await supabase
+    .from('scenario_workspaces')
+    .select('scenarios')
+    .eq('id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return Array.isArray(data?.scenarios) ? (data!.scenarios as unknown as Scenario[]) : [];
+};
+
+const persistCloud = async (userId: string, next: Scenario[]) => {
+  const { error } = await supabase
+    .from('scenario_workspaces')
+    .upsert(
+      { id: userId, user_id: userId, scenarios: next as unknown as Json },
+      { onConflict: 'id' }
+    );
+  if (error) throw error;
+};
+
 const scenarioCompleteness = (s: Scenario | undefined | null): number => {
   if (!s) return -1;
   let score = 0;
@@ -175,161 +184,107 @@ const scenarioCompleteness = (s: Scenario | undefined | null): number => {
   if (s.status === 'completed') score += 50;
   if (typeof s.currentStep === 'number') score += s.currentStep * 5;
   if (s.niche) score += 2;
-  if (s.leadSource) score += 2;
-  if (s.channel) score += 2;
-  if (s.leadTypes && s.leadTypes.length) score += s.leadTypes.length * 2;
   if (s.branchData && Object.keys(s.branchData).length) score += Object.keys(s.branchData).length * 3;
-  if (s.companyDescription) score += 2;
   return score;
 };
 
 const mergeScenarios = (local: Scenario[], cloud: Scenario[]): Scenario[] => {
-  const byId = new Map<string, Scenario>();
-  // Seed with whichever side has more data per id.
-  const seen = new Set<string>();
-  [...local, ...cloud].forEach(s => {
-    if (!s?.id || seen.has(s.id)) return;
-    seen.add(s.id);
-    const localVer = local.find(x => x.id === s.id);
-    const cloudVer = cloud.find(x => x.id === s.id);
-    const localScore = scenarioCompleteness(localVer);
-    const cloudScore = scenarioCompleteness(cloudVer);
-    const winner = cloudScore > localScore ? cloudVer! : (localVer || cloudVer!);
-    byId.set(s.id, winner);
+  const ids = new Set<string>();
+  [...local, ...cloud].forEach(s => s?.id && ids.add(s.id));
+  const out: Scenario[] = [];
+  ids.forEach(id => {
+    const l = local.find(x => x.id === id);
+    const c = cloud.find(x => x.id === id);
+    out.push(scenarioCompleteness(c) > scenarioCompleteness(l) ? c! : (l || c!));
   });
-  return Array.from(byId.values()).sort((a, b) => {
-    const aTime = new Date(a.createdAt || 0).getTime();
-    const bTime = new Date(b.createdAt || 0).getTime();
-    return bTime - aTime;
-  });
-};
-
-const readScenariosFromCloud = async (): Promise<Scenario[]> => {
-  const { data, error } = await supabase
-    .from('scenario_workspaces')
-    .select('scenarios')
-    .eq('id', CLOUD_WORKSPACE_ID)
-    .maybeSingle();
-
-  if (error) throw error;
-  return Array.isArray(data?.scenarios) ? data.scenarios as unknown as Scenario[] : [];
-};
-
-const persistScenariosToCloud = async (next: Scenario[]) => {
-  const { error } = await supabase
-    .from('scenario_workspaces')
-    .upsert({ id: CLOUD_WORKSPACE_ID, scenarios: next as unknown as Json }, { onConflict: 'id' });
-
-  if (error) throw error;
+  return out.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 };
 
 export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [scenarios, setScenarios] = useState<Scenario[]>(readScenariosFromStorage);
-  const [loading, setLoading] = useState<boolean>(true);
-  const hydratedRef = React.useRef(false);
-  const cloudReadyRef = React.useRef(false);
+  const { user, isApproved } = useAuth();
+  const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [loading, setLoading] = useState(true);
+  const cloudReadyRef = useRef(false);
+  const currentUserIdRef = useRef<string | null>(null);
 
-
+  // Reset and load whenever the user changes.
   useEffect(() => {
-    // Skip the very first effect run — it would just re-write what we read.
-    // This also prevents wiping localStorage if initial read returned [] due to a
-    // transient parse error while real data is still on disk.
-    if (!hydratedRef.current) {
-      hydratedRef.current = true;
+    const uid = user?.id ?? null;
+    currentUserIdRef.current = uid;
+    cloudReadyRef.current = false;
+
+    if (!uid) {
+      setScenarios([]);
+      setLoading(false);
       return;
     }
-    persistScenariosToStorage(scenarios);
-    if (cloudReadyRef.current) {
-      persistScenariosToCloud(scenarios).catch(e => console.error('Failed to save scenarios to cloud', e));
-    }
-  }, [scenarios]);
 
-  useEffect(() => {
+    // Seed from local immediately, then hydrate from cloud.
+    setScenarios(readLocal(uid));
+    setLoading(true);
+
     let cancelled = false;
-
-    const hydrateFromCloud = async () => {
+    (async () => {
       try {
-        const local = readScenariosFromStorage();
-        const cloud = await readScenariosFromCloud();
-        if (cancelled) return;
-
+        const local = readLocal(uid);
+        const cloud = await readCloud(uid);
+        if (cancelled || currentUserIdRef.current !== uid) return;
         const merged = mergeScenarios(local, cloud);
         cloudReadyRef.current = true;
-
-        if (merged.length) {
-          persistScenariosToStorage(merged);
-          setScenarios(prev => (JSON.stringify(prev) === JSON.stringify(merged) ? prev : merged));
-          if (JSON.stringify(merged) !== JSON.stringify(cloud)) {
-            persistScenariosToCloud(merged).catch(e => console.error('Failed to sync scenarios to cloud', e));
-          }
+        persistLocal(uid, merged);
+        setScenarios(merged);
+        if (isApproved && JSON.stringify(merged) !== JSON.stringify(cloud)) {
+          persistCloud(uid, merged).catch(e => console.error('cloud sync', e));
         }
       } catch (e) {
-        cloudReadyRef.current = false;
-        console.error('Failed to load scenarios from cloud', e);
+        console.error('Cloud hydrate failed', e);
       } finally {
         if (!cancelled) setLoading(false);
       }
-    };
+    })();
 
-    hydrateFromCloud();
     return () => { cancelled = true; };
-  }, []);
+  }, [user?.id, isApproved]);
 
-
-  // Sync across tabs and recover if another tab/process updated storage.
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key !== STORAGE_KEY) return;
-      const next = readScenariosFromStorage();
-      setScenarios(prev => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
+  const persistAll = useCallback((next: Scenario[]) => {
+    const uid = currentUserIdRef.current;
+    if (!uid) return;
+    persistLocal(uid, next);
+    if (cloudReadyRef.current && isApproved) {
+      persistCloud(uid, next).catch(e => console.error('cloud save', e));
+    }
+  }, [isApproved]);
 
   const addScenario = useCallback((name: string, description: string) => {
     const s = createDefaultScenario(name, description);
     setScenarios(prev => {
       const next = [s, ...prev];
-      persistScenariosToStorage(next);
-      if (cloudReadyRef.current) {
-        persistScenariosToCloud(next).catch(e => console.error('Failed to save scenarios to cloud', e));
-      }
+      persistAll(next);
       return next;
     });
     return s;
-  }, []);
+  }, [persistAll]);
 
   const updateScenario = useCallback((id: string, updates: Partial<Scenario>) => {
     setScenarios(prev => {
-      const hasInState = prev.some(s => s.id === id);
-      const base = hasInState ? prev : readScenariosFromStorage();
-      if (!base.some(s => s.id === id)) return prev;
-
-      const next = base.map(s => s.id === id ? { ...s, ...updates } : s);
-      persistScenariosToStorage(next);
-      if (cloudReadyRef.current) {
-        persistScenariosToCloud(next).catch(e => console.error('Failed to save scenarios to cloud', e));
-      }
+      if (!prev.some(s => s.id === id)) return prev;
+      const next = prev.map(s => s.id === id ? { ...s, ...updates } : s);
+      persistAll(next);
       return next;
     });
-  }, []);
+  }, [persistAll]);
 
   const deleteScenario = useCallback((id: string) => {
     setScenarios(prev => {
       const next = prev.filter(s => s.id !== id);
-      persistScenariosToStorage(next);
-      if (cloudReadyRef.current) {
-        persistScenariosToCloud(next).catch(e => console.error('Failed to save scenarios to cloud', e));
-      }
+      persistAll(next);
       return next;
     });
-  }, []);
+  }, [persistAll]);
 
   const duplicateScenario = useCallback((id: string) => {
     setScenarios(prev => {
-      const base = prev.some(s => s.id === id) ? prev : readScenariosFromStorage();
-      const original = base.find(s => s.id === id);
+      const original = prev.find(s => s.id === id);
       if (!original) return prev;
       const copy: Scenario = {
         ...JSON.parse(JSON.stringify(original)),
@@ -338,17 +293,15 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         createdAt: new Date().toISOString(),
         status: 'draft',
       };
-      const next = [copy, ...base];
-      persistScenariosToStorage(next);
-      if (cloudReadyRef.current) {
-        persistScenariosToCloud(next).catch(e => console.error('Failed to save scenarios to cloud', e));
-      }
+      const next = [copy, ...prev];
+      persistAll(next);
       return next;
     });
-  }, []);
+  }, [persistAll]);
 
   const getScenario = useCallback((id: string) => {
-    return scenarios.find(s => s.id === id) || readScenariosFromStorage().find(s => s.id === id);
+    return scenarios.find(s => s.id === id) ||
+      (currentUserIdRef.current ? readLocal(currentUserIdRef.current).find(s => s.id === id) : undefined);
   }, [scenarios]);
 
   return (
