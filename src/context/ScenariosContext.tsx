@@ -224,8 +224,10 @@ const persistScenariosToCloud = async (next: Scenario[]) => {
 
 export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [scenarios, setScenarios] = useState<Scenario[]>(readScenariosFromStorage);
+  const [loading, setLoading] = useState<boolean>(true);
   const hydratedRef = React.useRef(false);
   const cloudReadyRef = React.useRef(false);
+
 
   useEffect(() => {
     // Skip the very first effect run — it would just re-write what we read.
