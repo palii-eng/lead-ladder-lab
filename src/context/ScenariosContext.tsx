@@ -351,7 +351,7 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [scenarios]);
 
   return (
-    <ScenariosContext.Provider value={{ scenarios, addScenario, updateScenario, deleteScenario, duplicateScenario, getScenario }}>
+    <ScenariosContext.Provider value={{ scenarios, loading, addScenario, updateScenario, deleteScenario, duplicateScenario, getScenario }}>
       {children}
     </ScenariosContext.Provider>
   );
