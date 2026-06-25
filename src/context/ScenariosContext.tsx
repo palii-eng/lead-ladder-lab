@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
+import { useAuth } from '@/context/AuthContext';
 
 export interface DecompositionScenario {
   cpm: number;
@@ -136,8 +137,8 @@ export const useScenarios = () => {
   return ctx;
 };
 
-const STORAGE_KEY = 'scenarios';
-const CLOUD_WORKSPACE_ID = 'default';
+const STORAGE_KEY_PREFIX = 'scenarios:';
+
 
 const persistScenariosToStorage = (next: Scenario[]) => {
   try {
