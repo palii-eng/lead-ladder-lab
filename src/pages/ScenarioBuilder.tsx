@@ -830,6 +830,22 @@ const ScenarioBuilder: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStep, scenario?.clientBrief?.name]);
 
+  const scenarioHasExistingProgress = !!(scenario && (
+    (scenario.clientActions && scenario.clientActions.length >= 2) ||
+    scenario.niche ||
+    scenario.leadSource ||
+    scenario.channel ||
+    (scenario.leadTypes && scenario.leadTypes.length > 0) ||
+    (scenario.currentStep && scenario.currentStep > 0) ||
+    (scenario.branchData && Object.keys(scenario.branchData).length > 0)
+  ));
+
+  useEffect(() => {
+    if (!scenarioHasExistingProgress) return;
+    if (clientActions.has('brief') && clientActions.has('payment')) return;
+    setClientActions(new Set(['brief', 'payment']));
+  }, [scenarioHasExistingProgress, clientActions]);
+
 
   if (!scenario) {
     if (scenariosLoading) {
@@ -852,21 +868,7 @@ const ScenarioBuilder: React.FC = () => {
     );
   }
 
-  const hasExistingProgress = !!(
-    (scenario.clientActions && scenario.clientActions.length >= 2) ||
-    scenario.niche ||
-    scenario.leadSource ||
-    scenario.channel ||
-    (scenario.leadTypes && scenario.leadTypes.length > 0) ||
-    (scenario.currentStep && scenario.currentStep > 0) ||
-    (scenario.branchData && Object.keys(scenario.branchData).length > 0)
-  );
-
-  useEffect(() => {
-    if (!hasExistingProgress) return;
-    if (clientActions.has('brief') && clientActions.has('payment')) return;
-    setClientActions(new Set(['brief', 'payment']));
-  }, [hasExistingProgress, clientActions]);
+  const hasExistingProgress = scenarioHasExistingProgress;
 
   // If the scenario looks "thin" (only a brief, no progress) but cloud sync is still
   // running, wait for cloud — otherwise we might briefly show the intro for a
