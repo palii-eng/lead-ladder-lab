@@ -58,6 +58,7 @@ export interface Scenario {
   leadTypes: string[];
   status: 'draft' | 'completed';
   createdAt: string;
+  updatedAt?: string;
   currentStep: number;
   launchMethod: string;
   decomposition: DecompositionSet;
@@ -104,6 +105,7 @@ export const createDefaultScenario = (name: string, description: string): Scenar
   leadTypes: [],
   status: 'draft',
   createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
   currentStep: 0,
   launchMethod: '',
   decomposition: createDefaultDecompSet(),
@@ -137,10 +139,202 @@ export const useScenarios = () => {
 };
 
 const STORAGE_KEY_PREFIX = 'scenarios:';
+const LEGACY_STORAGE_KEY = 'scenarios';
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  !!value && typeof value === 'object' && !Array.isArray(value);
+
+const isEmptyValue = (value: unknown) => {
+  if (value === null || value === undefined || value === '') return true;
+  if (Array.isArray(value)) return value.length === 0;
+  if (isRecord(value)) return Object.keys(value).length === 0;
+  return false;
+};
+
+const normalizeDecompScenario = (value: unknown): DecompositionScenario => {
+  const raw = isRecord(value) ? value : {};
+  return {
+    cpm: Number(raw.cpm) || 0,
+    ctr: Number(raw.ctr) || 0,
+    cpc: Number(raw.cpc) || 0,
+    cpl: Number(raw.cpl) || 0,
+    landingConversion: Number(raw.landingConversion) || 0,
+    conversionRate: Number(raw.conversionRate) || 0,
+    averageCheck: Number(raw.averageCheck) || 0,
+    marginality: Number(raw.marginality) || 0,
+    budget: Number(raw.budget) || 10000,
+  };
+};
+
+const normalizeDecompSet = (value: unknown): DecompositionSet => {
+  const raw = isRecord(value) ? value : {};
+  return {
+    bad: normalizeDecompScenario(raw.bad),
+    realistic: normalizeDecompScenario(raw.realistic),
+    positive: normalizeDecompScenario(raw.positive),
+  };
+};
+
+const normalizeRetention = (value: unknown): RetentionData => {
+  const raw = isRecord(value) ? value : {};
+  return {
+    emailCount: Number(raw.emailCount) || 0,
+    telegramCount: Number(raw.telegramCount) || 0,
+    smsCount: Number(raw.smsCount) || 0,
+    pushCount: Number(raw.pushCount) || 0,
+  };
+};
+
+const normalizeBranchData = (value: unknown): BranchData => {
+  const raw = isRecord(value) ? value : {};
+  return {
+    decomposition: normalizeDecompSet(raw.decomposition),
+    leadDestinations: Array.isArray(raw.leadDestinations) ? raw.leadDestinations.filter(Boolean).map(String) : [],
+    integrationMethod: typeof raw.integrationMethod === 'string' ? raw.integrationMethod : '',
+    companyDescription: typeof raw.companyDescription === 'string' ? raw.companyDescription : '',
+    salesChannel: typeof raw.salesChannel === 'string' ? raw.salesChannel : '',
+    salesChannelOther: typeof raw.salesChannelOther === 'string' ? raw.salesChannelOther : '',
+    retention: normalizeRetention(raw.retention),
+  };
+};
+
+const normalizeScenario = (value: unknown): Scenario => {
+  const raw = isRecord(value) ? value : {};
+  const branchData: Record<string, BranchData> = {};
+  if (isRecord(raw.branchData)) {
+    Object.entries(raw.branchData).forEach(([key, branch]) => {
+      branchData[key] = normalizeBranchData(branch);
+    });
+  }
+
+  const decompositionsByType: Record<string, DecompositionSet> = {};
+  if (isRecord(raw.decompositionsByType)) {
+    Object.entries(raw.decompositionsByType).forEach(([key, decomp]) => {
+      decompositionsByType[key] = normalizeDecompSet(decomp);
+    });
+  }
+
+  const createdAt = typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString();
+  return {
+    id: typeof raw.id === 'string' && raw.id ? raw.id : crypto.randomUUID(),
+    name: typeof raw.name === 'string' && raw.name ? raw.name : 'Сценарій',
+    description: typeof raw.description === 'string' ? raw.description : '',
+    difficulty: raw.difficulty === 'lucky' || raw.difficulty === 'suffer' ? raw.difficulty : undefined,
+    clientBrief: isRecord(raw.clientBrief) ? raw.clientBrief as unknown as ClientBrief : undefined,
+    niche: typeof raw.niche === 'string' ? raw.niche : '',
+    leadSource: typeof raw.leadSource === 'string' ? raw.leadSource : '',
+    channel: typeof raw.channel === 'string' ? raw.channel : '',
+    leadTypes: Array.isArray(raw.leadTypes) ? raw.leadTypes.filter(Boolean).map(String) : [],
+    status: raw.status === 'completed' ? 'completed' : 'draft',
+    createdAt,
+    updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : createdAt,
+    currentStep: Number(raw.currentStep) || 0,
+    launchMethod: typeof raw.launchMethod === 'string' ? raw.launchMethod : '',
+    decomposition: normalizeDecompSet(raw.decomposition),
+    decompositionsByType,
+    leadDestinations: Array.isArray(raw.leadDestinations) ? raw.leadDestinations.filter(Boolean).map(String) : [],
+    crmSystem: typeof raw.crmSystem === 'string' ? raw.crmSystem : '',
+    integrationMethod: typeof raw.integrationMethod === 'string' ? raw.integrationMethod : '',
+    companyDescription: typeof raw.companyDescription === 'string' ? raw.companyDescription : '',
+    salesChannel: typeof raw.salesChannel === 'string' ? raw.salesChannel : '',
+    salesChannelOther: typeof raw.salesChannelOther === 'string' ? raw.salesChannelOther : '',
+    retention: normalizeRetention(raw.retention),
+    branchData,
+    aiCache: isRecord(raw.aiCache) ? raw.aiCache as Record<string, string> : undefined,
+  };
+};
+
+const decompScore = (set?: DecompositionSet) => {
+  if (!set) return 0;
+  return (['bad', 'realistic', 'positive'] as const).reduce((score, key) => {
+    const d = set[key];
+    return score + [d.cpm, d.ctr, d.cpc, d.cpl, d.landingConversion, d.conversionRate, d.averageCheck, d.marginality, d.budget]
+      .filter(v => Number(v) > 0).length;
+  }, 0);
+};
+
+const scenarioCompleteness = (raw: Scenario | undefined | null): number => {
+  if (!raw) return -1;
+  const s = normalizeScenario(raw);
+  let score = 0;
+  if (s.clientBrief && (s.clientBrief.name || s.clientBrief.task)) score += 20;
+  if (s.difficulty) score += 2;
+  if (s.status === 'completed') score += 120;
+  if (typeof s.currentStep === 'number') score += s.currentStep * 8;
+  if (s.niche) score += 25;
+  if (s.leadSource) score += 20;
+  if (s.channel) score += 20;
+  score += (s.leadTypes?.length || 0) * 12;
+  if (s.launchMethod) score += 8;
+  score += decompScore(s.decomposition) * 3;
+  score += Object.values(s.decompositionsByType || {}).reduce((sum, set) => sum + decompScore(set), 0);
+  score += (s.leadDestinations?.length || 0) * 8;
+  if (s.integrationMethod) score += 12;
+  if (s.companyDescription) score += 10;
+  if (s.salesChannel) score += 15;
+  score += Object.keys(s.branchData || {}).length * 35;
+  Object.values(s.branchData || {}).forEach(branch => {
+    score += decompScore(branch.decomposition) * 3;
+    score += (branch.leadDestinations?.length || 0) * 8;
+    if (branch.integrationMethod) score += 12;
+    if (branch.companyDescription) score += 10;
+    if (branch.salesChannel) score += 15;
+  });
+  score += Object.keys(s.aiCache || {}).length * 4;
+  return score;
+};
+
+const mergeValue = (preferred: unknown, fallback: unknown): unknown => {
+  if (Array.isArray(preferred) || Array.isArray(fallback)) {
+    const preferredArray = Array.isArray(preferred) ? preferred : [];
+    const fallbackArray = Array.isArray(fallback) ? fallback : [];
+    return preferredArray.length ? preferredArray : fallbackArray;
+  }
+  if (isRecord(preferred) || isRecord(fallback)) {
+    const p = isRecord(preferred) ? preferred : {};
+    const f = isRecord(fallback) ? fallback : {};
+    return Array.from(new Set([...Object.keys(f), ...Object.keys(p)])).reduce<Record<string, unknown>>((acc, key) => {
+      acc[key] = mergeValue(p[key], f[key]);
+      return acc;
+    }, {});
+  }
+  return isEmptyValue(preferred) ? fallback : preferred;
+};
+
+const mergeScenarioPair = (local?: Scenario, cloud?: Scenario): Scenario => {
+  const l = local ? normalizeScenario(local) : undefined;
+  const c = cloud ? normalizeScenario(cloud) : undefined;
+  if (!l && !c) return normalizeScenario({});
+  if (!l) return c!;
+  if (!c) return l;
+
+  const localScore = scenarioCompleteness(l);
+  const cloudScore = scenarioCompleteness(c);
+  const localTime = new Date(l.updatedAt || l.createdAt || 0).getTime();
+  const cloudTime = new Date(c.updatedAt || c.createdAt || 0).getTime();
+  const preferred = cloudScore === localScore
+    ? (cloudTime >= localTime ? c : l)
+    : (cloudScore > localScore ? c : l);
+  const fallback = preferred === c ? l : c;
+  return normalizeScenario(mergeValue(preferred, fallback));
+};
+
+const mergeScenarios = (local: Scenario[], cloud: Scenario[]): Scenario[] => {
+  const ids = new Set<string>();
+  [...local, ...cloud].forEach(s => s?.id && ids.add(s.id));
+  const out: Scenario[] = [];
+  ids.forEach(id => {
+    const l = local.find(x => x.id === id);
+    const c = cloud.find(x => x.id === id);
+    out.push(mergeScenarioPair(l, c));
+  });
+  return out.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+};
 
 const persistLocal = (userId: string, next: Scenario[]) => {
   try {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}${userId}`, JSON.stringify(next));
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}${userId}`, JSON.stringify(next.map(normalizeScenario)));
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}${userId}:legacyImported`, '1');
   } catch (e) {
     console.error('Failed to save scenarios locally', e);
   }
@@ -149,9 +343,15 @@ const persistLocal = (userId: string, next: Scenario[]) => {
 const readLocal = (userId: string): Scenario[] => {
   try {
     const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${userId}`);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed = raw ? JSON.parse(raw) : [];
+    const scoped = Array.isArray(parsed) ? parsed.map(normalizeScenario) : [];
+    const legacyImported = localStorage.getItem(`${STORAGE_KEY_PREFIX}${userId}:legacyImported`) === '1';
+    if (legacyImported) return scoped;
+
+    const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+    const legacyParsed = legacyRaw ? JSON.parse(legacyRaw) : [];
+    const legacy = Array.isArray(legacyParsed) ? legacyParsed.map(normalizeScenario) : [];
+    return mergeScenarios(scoped, legacy);
   } catch {
     return [];
   }
@@ -164,40 +364,17 @@ const readCloud = async (userId: string): Promise<Scenario[]> => {
     .eq('id', userId)
     .maybeSingle();
   if (error) throw error;
-  return Array.isArray(data?.scenarios) ? (data!.scenarios as unknown as Scenario[]) : [];
+  return Array.isArray(data?.scenarios) ? (data!.scenarios as unknown[]).map(normalizeScenario) : [];
 };
 
 const persistCloud = async (userId: string, next: Scenario[]) => {
   const { error } = await supabase
     .from('scenario_workspaces')
     .upsert(
-      { id: userId, user_id: userId, scenarios: next as unknown as Json },
+      { id: userId, user_id: userId, scenarios: next.map(normalizeScenario) as unknown as Json },
       { onConflict: 'id' }
     );
   if (error) throw error;
-};
-
-const scenarioCompleteness = (s: Scenario | undefined | null): number => {
-  if (!s) return -1;
-  let score = 0;
-  if (s.clientBrief && (s.clientBrief.name || s.clientBrief.task)) score += 100;
-  if (s.status === 'completed') score += 50;
-  if (typeof s.currentStep === 'number') score += s.currentStep * 5;
-  if (s.niche) score += 2;
-  if (s.branchData && Object.keys(s.branchData).length) score += Object.keys(s.branchData).length * 3;
-  return score;
-};
-
-const mergeScenarios = (local: Scenario[], cloud: Scenario[]): Scenario[] => {
-  const ids = new Set<string>();
-  [...local, ...cloud].forEach(s => s?.id && ids.add(s.id));
-  const out: Scenario[] = [];
-  ids.forEach(id => {
-    const l = local.find(x => x.id === id);
-    const c = cloud.find(x => x.id === id);
-    out.push(scenarioCompleteness(c) > scenarioCompleteness(l) ? c! : (l || c!));
-  });
-  return out.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 };
 
 export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -206,6 +383,27 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [loading, setLoading] = useState(true);
   const cloudReadyRef = useRef(false);
   const currentUserIdRef = useRef<string | null>(null);
+  const cloudSaveInFlightRef = useRef(false);
+  const pendingCloudSaveRef = useRef<{ userId: string; scenarios: Scenario[] } | null>(null);
+
+  const flushCloudSave = useCallback(() => {
+    if (cloudSaveInFlightRef.current) return;
+    const pending = pendingCloudSaveRef.current;
+    if (!pending) return;
+    pendingCloudSaveRef.current = null;
+    cloudSaveInFlightRef.current = true;
+    persistCloud(pending.userId, pending.scenarios)
+      .catch(e => console.error('cloud save', e))
+      .finally(() => {
+        cloudSaveInFlightRef.current = false;
+        if (pendingCloudSaveRef.current) flushCloudSave();
+      });
+  }, []);
+
+  const queueCloudSave = useCallback((userId: string, next: Scenario[]) => {
+    pendingCloudSaveRef.current = { userId, scenarios: next.map(normalizeScenario) };
+    flushCloudSave();
+  }, [flushCloudSave]);
 
   // Reset and load whenever the user changes.
   useEffect(() => {
@@ -234,7 +432,7 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         persistLocal(uid, merged);
         setScenarios(merged);
         if (isApproved && JSON.stringify(merged) !== JSON.stringify(cloud)) {
-          persistCloud(uid, merged).catch(e => console.error('cloud sync', e));
+          queueCloudSave(uid, merged);
         }
       } catch (e) {
         console.error('Cloud hydrate failed', e);
@@ -244,23 +442,25 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     })();
 
     return () => { cancelled = true; };
-  }, [user?.id, isApproved]);
+  }, [user?.id, isApproved, queueCloudSave]);
 
-  const persistAll = useCallback((next: Scenario[]) => {
+  const persistAll = useCallback((next: Scenario[], mergeExisting = true) => {
     const uid = currentUserIdRef.current;
-    if (!uid) return;
-    persistLocal(uid, next);
+    if (!uid) return next.map(normalizeScenario);
+    const normalized = next.map(normalizeScenario);
+    const safeNext = mergeExisting ? mergeScenarios(readLocal(uid), normalized) : normalized;
+    persistLocal(uid, safeNext);
     if (cloudReadyRef.current && isApproved) {
-      persistCloud(uid, next).catch(e => console.error('cloud save', e));
+      queueCloudSave(uid, safeNext);
     }
-  }, [isApproved]);
+    return safeNext;
+  }, [isApproved, queueCloudSave]);
 
   const addScenario = useCallback((name: string, description: string) => {
     const s = createDefaultScenario(name, description);
     setScenarios(prev => {
       const next = [s, ...prev];
-      persistAll(next);
-      return next;
+      return persistAll(next);
     });
     return s;
   }, [persistAll]);
@@ -268,17 +468,15 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const updateScenario = useCallback((id: string, updates: Partial<Scenario>) => {
     setScenarios(prev => {
       if (!prev.some(s => s.id === id)) return prev;
-      const next = prev.map(s => s.id === id ? { ...s, ...updates } : s);
-      persistAll(next);
-      return next;
+      const next = prev.map(s => s.id === id ? normalizeScenario({ ...s, ...updates, updatedAt: new Date().toISOString() }) : s);
+      return persistAll(next);
     });
   }, [persistAll]);
 
   const deleteScenario = useCallback((id: string) => {
     setScenarios(prev => {
       const next = prev.filter(s => s.id !== id);
-      persistAll(next);
-      return next;
+      return persistAll(next, false);
     });
   }, [persistAll]);
 
@@ -291,11 +489,11 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         id: crypto.randomUUID(),
         name: `${original.name} (копія)`,
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         status: 'draft',
       };
       const next = [copy, ...prev];
-      persistAll(next);
-      return next;
+      return persistAll(next);
     });
   }, [persistAll]);
 
