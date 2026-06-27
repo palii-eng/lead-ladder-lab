@@ -179,6 +179,11 @@ const ScenarioBuilder: React.FC = () => {
   const [clientBriefOpen, setClientBriefOpen] = useState(false);
   const [filledBriefOpen, setFilledBriefOpen] = useState(false);
   const [clientActions, setClientActions] = useState<Set<string>>(() => {
+    const saved = scenario?.clientActions;
+    if (Array.isArray(saved) && saved.length) return new Set(saved);
+    if (scenario?.niche || scenario?.leadSource || scenario?.channel || (scenario?.leadTypes && scenario.leadTypes.length > 0) || (scenario?.branchData && Object.keys(scenario.branchData).length > 0)) {
+      return new Set(['brief', 'payment']);
+    }
     try {
       const raw = localStorage.getItem(`clientActions:${id}`);
       if (raw) return new Set(JSON.parse(raw));
@@ -186,8 +191,17 @@ const ScenarioBuilder: React.FC = () => {
     return new Set();
   });
   useEffect(() => {
+    if (!id) return;
     try { localStorage.setItem(`clientActions:${id}`, JSON.stringify(Array.from(clientActions))); } catch {}
-  }, [clientActions, id]);
+    if (scenario && JSON.stringify(scenario.clientActions || []) !== JSON.stringify(Array.from(clientActions))) {
+      updateScenario(id, { clientActions: Array.from(clientActions) });
+    }
+  }, [clientActions, id, scenario?.clientActions, updateScenario]);
+  useEffect(() => {
+    if (Array.isArray(scenario?.clientActions) && scenario.clientActions.length > 0) {
+      setClientActions(new Set(scenario.clientActions));
+    }
+  }, [id, scenario?.clientActions]);
   const [decompTab, setDecompTab] = useState<'bad' | 'realistic' | 'positive'>('realistic');
   const [activeLeadType, setActiveLeadType] = useState<string>('');
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
@@ -816,6 +830,22 @@ const ScenarioBuilder: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStep, scenario?.clientBrief?.name]);
 
+  const scenarioHasExistingProgress = !!(scenario && (
+    (scenario.clientActions && scenario.clientActions.length >= 2) ||
+    scenario.niche ||
+    scenario.leadSource ||
+    scenario.channel ||
+    (scenario.leadTypes && scenario.leadTypes.length > 0) ||
+    (scenario.currentStep && scenario.currentStep > 0) ||
+    (scenario.branchData && Object.keys(scenario.branchData).length > 0)
+  ));
+
+  useEffect(() => {
+    if (!scenarioHasExistingProgress) return;
+    if (clientActions.has('brief') && clientActions.has('payment')) return;
+    setClientActions(new Set(['brief', 'payment']));
+  }, [scenarioHasExistingProgress, clientActions]);
+
 
   if (!scenario) {
     if (scenariosLoading) {
@@ -838,14 +868,7 @@ const ScenarioBuilder: React.FC = () => {
     );
   }
 
-  const hasExistingProgress = !!(
-    scenario.niche ||
-    scenario.leadSource ||
-    scenario.channel ||
-    (scenario.leadTypes && scenario.leadTypes.length > 0) ||
-    (scenario.currentStep && scenario.currentStep > 0) ||
-    (scenario.branchData && Object.keys(scenario.branchData).length > 0)
-  );
+  const hasExistingProgress = scenarioHasExistingProgress;
 
   // If the scenario looks "thin" (only a brief, no progress) but cloud sync is still
   // running, wait for cloud — otherwise we might briefly show the intro for a
@@ -902,6 +925,8 @@ const ScenarioBuilder: React.FC = () => {
     };
     scenario.clientBrief = fallbackBrief;
   }
+
+  const hasCompletedClientGate = clientActions.has('brief') && clientActions.has('payment');
 
   const ClientInfoCard: React.FC<{ compact?: boolean }> = ({ compact }) => {
     const b = scenario.clientBrief!;
@@ -1398,7 +1423,7 @@ const ScenarioBuilder: React.FC = () => {
   };
 
   const isStepUnlocked = (i: number, branchLeadType?: string): boolean => {
-    if (i === 0) return clientActions.has('brief') && clientActions.has('payment');
+    if (i === 0) return hasCompletedClientGate;
     if (i <= 2) return isStepCompleted(i - 1);
     // For branch steps (3+), check previous step in the same branch
     if (i === 3) return isStepCompleted(2); // step 2 is shared
@@ -2369,7 +2394,7 @@ const ScenarioBuilder: React.FC = () => {
                   );
                 };
 
-                const flowGated = !!scenario.clientBrief && clientActions.size < 2;
+                const flowGated = !!scenario.clientBrief && !hasCompletedClientGate;
 
                 if (!shouldBranch) {
                   // Single row — original behavior
