@@ -52,6 +52,7 @@ export interface Scenario {
   description: string;
   difficulty?: 'lucky' | 'suffer';
   clientBrief?: ClientBrief;
+  clientActions?: string[];
   niche: string;
   leadSource: string;
   channel: string;
@@ -221,6 +222,7 @@ const normalizeScenario = (value: unknown): Scenario => {
     description: typeof raw.description === 'string' ? raw.description : '',
     difficulty: raw.difficulty === 'lucky' || raw.difficulty === 'suffer' ? raw.difficulty : undefined,
     clientBrief: isRecord(raw.clientBrief) ? raw.clientBrief as unknown as ClientBrief : undefined,
+    clientActions: Array.isArray(raw.clientActions) ? raw.clientActions.filter(Boolean).map(String) : undefined,
     niche: typeof raw.niche === 'string' ? raw.niche : '',
     leadSource: typeof raw.leadSource === 'string' ? raw.leadSource : '',
     channel: typeof raw.channel === 'string' ? raw.channel : '',
@@ -258,6 +260,7 @@ const scenarioCompleteness = (raw: Scenario | undefined | null): number => {
   const s = normalizeScenario(raw);
   let score = 0;
   if (s.clientBrief && (s.clientBrief.name || s.clientBrief.task)) score += 20;
+  score += (s.clientActions?.length || 0) * 8;
   if (s.difficulty) score += 2;
   if (s.status === 'completed') score += 120;
   if (typeof s.currentStep === 'number') score += s.currentStep * 8;
