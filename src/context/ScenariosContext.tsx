@@ -427,10 +427,14 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     let cancelled = false;
     (async () => {
       try {
-        const local = readLocal(uid);
         const cloud = await readCloud(uid);
         if (cancelled || currentUserIdRef.current !== uid) return;
-        const merged = mergeScenarios(local, cloud);
+        // Re-read local after the cloud request finishes. A user can open/edit a
+        // scenario while hydration is still pending; using the pre-request local
+        // snapshot here could overwrite those fresh changes and make progress
+        // appear lost on the next visit.
+        const latestLocal = readLocal(uid);
+        const merged = mergeScenarios(latestLocal, cloud);
         cloudReadyRef.current = true;
         persistLocal(uid, merged);
         setScenarios(merged);
