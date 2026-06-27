@@ -1333,9 +1333,17 @@ const ScenarioBuilder: React.FC = () => {
 
   function isSalesCompletedFor(s: Scenario, lt?: string): boolean {
     const branch = lt ? s.branchData?.[lt] : null;
-    const salesChannel = (branch ? branch.salesChannel : s.salesChannel) || '';
-    const salesChannelOther = (branch ? branch.salesChannelOther : s.salesChannelOther) || '';
-    const salesProcessedSaved = (s.aiCache?.[`sales:processed:${lt || 'main'}`] || aiCacheRef.current[`sales:processed:${lt || 'main'}`]) === '1';
+    const salesChannel = (branch ? branch.salesChannel : s.salesChannel) || s.salesChannel || '';
+    const salesChannelOther = (branch ? branch.salesChannelOther : s.salesChannelOther) || s.salesChannelOther || '';
+    // Look for the processed flag under the explicit lead-type key, the implicit
+    // single-leadType key, and the legacy 'main' key — saving paths differ
+    // depending on whether the user was in a branching context at click time.
+    const candidates = new Set<string>();
+    candidates.add(`sales:processed:${lt || 'main'}`);
+    candidates.add('sales:processed:main');
+    (s.leadTypes || []).forEach(t => candidates.add(`sales:processed:${t}`));
+    const cache = { ...(s.aiCache || {}), ...aiCacheRef.current };
+    const salesProcessedSaved = Array.from(candidates).some(k => cache[k] === '1');
     return !!salesChannel && (salesChannel !== 'other' || salesChannelOther.trim().length > 0) && salesProcessedSaved;
   }
 
