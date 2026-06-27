@@ -380,7 +380,7 @@ const readLocal = (userId: string): Scenario[] => {
     const parsed = raw ? JSON.parse(raw) : [];
     const scoped = Array.isArray(parsed) ? parsed.map(normalizeScenario) : [];
     const legacyImported = localStorage.getItem(`${STORAGE_KEY_PREFIX}${userId}:legacyImported`) === '1';
-    if (legacyImported) return scoped;
+    if (legacyImported) return filterDeletedScenarios(userId, scoped);
 
     const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
     const legacyParsed = legacyRaw ? JSON.parse(legacyRaw) : [];
