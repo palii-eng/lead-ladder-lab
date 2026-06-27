@@ -198,7 +198,7 @@ const ScenarioBuilder: React.FC = () => {
     }
   }, [clientActions, id, scenario?.clientActions, updateScenario]);
   useEffect(() => {
-    if (Array.isArray(scenario?.clientActions)) {
+    if (Array.isArray(scenario?.clientActions) && scenario.clientActions.length > 0) {
       setClientActions(new Set(scenario.clientActions));
     }
   }, [id, scenario?.clientActions]);
