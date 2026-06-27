@@ -141,6 +141,7 @@ export const useScenarios = () => {
 
 const STORAGE_KEY_PREFIX = 'scenarios:';
 const LEGACY_STORAGE_KEY = 'scenarios';
+const DELETED_STORAGE_SUFFIX = ':deleted';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   !!value && typeof value === 'object' && !Array.isArray(value);
@@ -334,9 +335,39 @@ const mergeScenarios = (local: Scenario[], cloud: Scenario[]): Scenario[] => {
   return out.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 };
 
+const readDeletedScenarioIds = (userId: string): Record<string, string> => {
+  try {
+    const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${userId}${DELETED_STORAGE_SUFFIX}`);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return isRecord(parsed)
+      ? Object.fromEntries(Object.entries(parsed).filter(([id, ts]) => typeof id === 'string' && typeof ts === 'string')) as Record<string, string>
+      : {};
+  } catch {
+    return {};
+  }
+};
+
+const writeDeletedScenarioIds = (userId: string, deleted: Record<string, string>) => {
+  try {
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}${userId}${DELETED_STORAGE_SUFFIX}`, JSON.stringify(deleted));
+  } catch (e) {
+    console.error('Failed to save deleted scenario markers', e);
+  }
+};
+
+const markScenarioDeleted = (userId: string, id: string) => {
+  writeDeletedScenarioIds(userId, { ...readDeletedScenarioIds(userId), [id]: new Date().toISOString() });
+};
+
+const filterDeletedScenarios = (userId: string, list: Scenario[]): Scenario[] => {
+  const deleted = readDeletedScenarioIds(userId);
+  const deletedIds = new Set(Object.keys(deleted));
+  return deletedIds.size ? list.filter(s => !deletedIds.has(s.id)) : list;
+};
+
 const persistLocal = (userId: string, next: Scenario[]) => {
   try {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}${userId}`, JSON.stringify(next.map(normalizeScenario)));
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}${userId}`, JSON.stringify(filterDeletedScenarios(userId, next.map(normalizeScenario))));
     localStorage.setItem(`${STORAGE_KEY_PREFIX}${userId}:legacyImported`, '1');
   } catch (e) {
     console.error('Failed to save scenarios locally', e);
@@ -349,12 +380,12 @@ const readLocal = (userId: string): Scenario[] => {
     const parsed = raw ? JSON.parse(raw) : [];
     const scoped = Array.isArray(parsed) ? parsed.map(normalizeScenario) : [];
     const legacyImported = localStorage.getItem(`${STORAGE_KEY_PREFIX}${userId}:legacyImported`) === '1';
-    if (legacyImported) return scoped;
+    if (legacyImported) return filterDeletedScenarios(userId, scoped);
 
     const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
     const legacyParsed = legacyRaw ? JSON.parse(legacyRaw) : [];
     const legacy = Array.isArray(legacyParsed) ? legacyParsed.map(normalizeScenario) : [];
-    return mergeScenarios(scoped, legacy);
+    return filterDeletedScenarios(userId, mergeScenarios(scoped, legacy));
   } catch {
     return [];
   }
@@ -404,7 +435,7 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, []);
 
   const queueCloudSave = useCallback((userId: string, next: Scenario[]) => {
-    pendingCloudSaveRef.current = { userId, scenarios: next.map(normalizeScenario) };
+    pendingCloudSaveRef.current = { userId, scenarios: filterDeletedScenarios(userId, next.map(normalizeScenario)) };
     flushCloudSave();
   }, [flushCloudSave]);
 
@@ -434,7 +465,7 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         // snapshot here could overwrite those fresh changes and make progress
         // appear lost on the next visit.
         const latestLocal = readLocal(uid);
-        const merged = mergeScenarios(latestLocal, cloud);
+        const merged = filterDeletedScenarios(uid, mergeScenarios(latestLocal, cloud));
         cloudReadyRef.current = true;
         persistLocal(uid, merged);
         setScenarios(merged);
@@ -455,7 +486,7 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const uid = currentUserIdRef.current;
     if (!uid) return next.map(normalizeScenario);
     const normalized = next.map(normalizeScenario);
-    const safeNext = mergeExisting ? mergeScenarios(readLocal(uid), normalized) : normalized;
+    const safeNext = filterDeletedScenarios(uid, mergeExisting ? mergeScenarios(readLocal(uid), normalized) : normalized);
     persistLocal(uid, safeNext);
     if (cloudReadyRef.current && isApproved) {
       queueCloudSave(uid, safeNext);
@@ -482,6 +513,8 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const deleteScenario = useCallback((id: string) => {
     setScenarios(prev => {
+      const uid = currentUserIdRef.current;
+      if (uid) markScenarioDeleted(uid, id);
       const next = prev.filter(s => s.id !== id);
       return persistAll(next, false);
     });
