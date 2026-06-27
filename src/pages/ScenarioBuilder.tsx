@@ -181,6 +181,9 @@ const ScenarioBuilder: React.FC = () => {
   const [clientActions, setClientActions] = useState<Set<string>>(() => {
     const saved = scenario?.clientActions;
     if (Array.isArray(saved) && saved.length) return new Set(saved);
+    if (scenario?.niche || scenario?.leadSource || scenario?.channel || (scenario?.leadTypes && scenario.leadTypes.length > 0) || (scenario?.branchData && Object.keys(scenario.branchData).length > 0)) {
+      return new Set(['brief', 'payment']);
+    }
     try {
       const raw = localStorage.getItem(`clientActions:${id}`);
       if (raw) return new Set(JSON.parse(raw));
@@ -858,6 +861,12 @@ const ScenarioBuilder: React.FC = () => {
     (scenario.currentStep && scenario.currentStep > 0) ||
     (scenario.branchData && Object.keys(scenario.branchData).length > 0)
   );
+
+  useEffect(() => {
+    if (!hasExistingProgress) return;
+    if (clientActions.has('brief') && clientActions.has('payment')) return;
+    setClientActions(new Set(['brief', 'payment']));
+  }, [hasExistingProgress, clientActions]);
 
   // If the scenario looks "thin" (only a brief, no progress) but cloud sync is still
   // running, wait for cloud — otherwise we might briefly show the intro for a
