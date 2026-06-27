@@ -179,6 +179,8 @@ const ScenarioBuilder: React.FC = () => {
   const [clientBriefOpen, setClientBriefOpen] = useState(false);
   const [filledBriefOpen, setFilledBriefOpen] = useState(false);
   const [clientActions, setClientActions] = useState<Set<string>>(() => {
+    const saved = scenario?.clientActions;
+    if (Array.isArray(saved) && saved.length) return new Set(saved);
     try {
       const raw = localStorage.getItem(`clientActions:${id}`);
       if (raw) return new Set(JSON.parse(raw));
@@ -186,8 +188,17 @@ const ScenarioBuilder: React.FC = () => {
     return new Set();
   });
   useEffect(() => {
+    if (!id) return;
     try { localStorage.setItem(`clientActions:${id}`, JSON.stringify(Array.from(clientActions))); } catch {}
-  }, [clientActions, id]);
+    if (scenario && JSON.stringify(scenario.clientActions || []) !== JSON.stringify(Array.from(clientActions))) {
+      updateScenario(id, { clientActions: Array.from(clientActions) });
+    }
+  }, [clientActions, id, scenario?.clientActions, updateScenario]);
+  useEffect(() => {
+    if (Array.isArray(scenario?.clientActions)) {
+      setClientActions(new Set(scenario.clientActions));
+    }
+  }, [id, scenario?.clientActions]);
   const [decompTab, setDecompTab] = useState<'bad' | 'realistic' | 'positive'>('realistic');
   const [activeLeadType, setActiveLeadType] = useState<string>('');
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
@@ -839,6 +850,7 @@ const ScenarioBuilder: React.FC = () => {
   }
 
   const hasExistingProgress = !!(
+    (scenario.clientActions && scenario.clientActions.length >= 2) ||
     scenario.niche ||
     scenario.leadSource ||
     scenario.channel ||
@@ -902,6 +914,8 @@ const ScenarioBuilder: React.FC = () => {
     };
     scenario.clientBrief = fallbackBrief;
   }
+
+  const hasCompletedClientGate = clientActions.has('brief') && clientActions.has('payment');
 
   const ClientInfoCard: React.FC<{ compact?: boolean }> = ({ compact }) => {
     const b = scenario.clientBrief!;
@@ -1398,7 +1412,7 @@ const ScenarioBuilder: React.FC = () => {
   };
 
   const isStepUnlocked = (i: number, branchLeadType?: string): boolean => {
-    if (i === 0) return clientActions.has('brief') && clientActions.has('payment');
+    if (i === 0) return hasCompletedClientGate;
     if (i <= 2) return isStepCompleted(i - 1);
     // For branch steps (3+), check previous step in the same branch
     if (i === 3) return isStepCompleted(2); // step 2 is shared
@@ -2369,7 +2383,7 @@ const ScenarioBuilder: React.FC = () => {
                   );
                 };
 
-                const flowGated = !!scenario.clientBrief && clientActions.size < 2;
+                const flowGated = !!scenario.clientBrief && !hasCompletedClientGate;
 
                 if (!shouldBranch) {
                   // Single row — original behavior
