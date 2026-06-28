@@ -1910,11 +1910,30 @@ const ScenarioBuilder: React.FC = () => {
         case 6: {
           const charCount = (currentCompanyDescription || '').length;
           const canProcess = true;
-          const salesItems = [
-            { icon: '📞', title: 'Скрипт дзвінка', type: 'call-script' },
-            { icon: '💬', title: 'Скрипт переписки', type: 'chat-script' },
-            { icon: '🔄', title: 'Фоллоу-ап (Follow-up)', type: 'follow-up' },
-          ];
+          const ITEMS_BY_CHANNEL: Record<string, Array<{ icon: string; title: string; type: string }>> = {
+            direct_social: [{ icon: '💬', title: 'Скрипт переписки', type: 'chat-script' }],
+            sales_dept: [
+              { icon: '📞', title: 'Скрипт дзвінка', type: 'call-script' },
+              { icon: '💬', title: 'Скрипт переписки', type: 'chat-script' },
+            ],
+            combined: [
+              { icon: '📞', title: 'Скрипт дзвінка', type: 'call-script' },
+              { icon: '💬', title: 'Скрипт переписки', type: 'chat-script' },
+            ],
+            messengers: [{ icon: '💬', title: 'Скрипт переписки', type: 'chat-script' }],
+            other: [
+              { icon: '📞', title: 'Скрипт дзвінка', type: 'call-script' },
+              { icon: '💬', title: 'Скрипт переписки', type: 'chat-script' },
+            ],
+            auto_site: [],
+            marketplaces: [],
+          };
+          const salesItems = ITEMS_BY_CHANNEL[currentSalesChannel] || [];
+          const channelCacheKey = currentSalesChannel || 'none';
+          const allItemsFilled = salesItems.length === 0
+            ? true
+            : salesItems.every(s => !!aiCacheRef.current[`sales:${s.type}:${activeLeadType || 'main'}:${channelCacheKey}`]);
+          const noItemsChannel = hasSalesChannel && salesItems.length === 0;
           return (
             <div className="space-y-4 pb-16 relative">
               <h3 className="text-base font-bold text-foreground">Продажі</h3>
@@ -1959,17 +1978,16 @@ const ScenarioBuilder: React.FC = () => {
                 )}
               </div>
 
-              {hasSalesChannel && !salesProcessed && (
+              {hasSalesChannel && salesItems.length > 0 && !salesProcessed && (
                 <div className="flex justify-end">
                   <Button size="sm" onClick={() => setSalesProcessed(true)} className="gap-1.5 text-xs bg-primary text-primary-foreground">
                     <Sparkles className="w-3 h-3" /> Обробити
                   </Button>
                 </div>
               )}
-              {salesProcessed && (
+              {salesProcessed && salesItems.length > 0 && (
                 <div className="space-y-3">
                   {salesItems.map(s => {
-                    const channelCacheKey = currentSalesChannel || 'none';
                     const hasCached = !!aiCacheRef.current[`sales:${s.type}:${activeLeadType || 'main'}:${channelCacheKey}`];
                     return (
                       <div key={s.type} className="bg-secondary rounded-lg p-3 flex items-center justify-between">
@@ -1995,7 +2013,15 @@ const ScenarioBuilder: React.FC = () => {
                   })}
                 </div>
               )}
-              <SaveButton step={6} sticky disabled={!canProcess || !salesProcessed || !hasSalesChannel} />
+              <SaveButton
+                step={6}
+                sticky
+                label={salesItems.length > 0 ? 'Відправити рекомендації клієнту' : 'Зберегти та продовжити'}
+                disabled={
+                  !hasSalesChannel ||
+                  (salesItems.length > 0 && (!salesProcessed || !allItemsFilled))
+                }
+              />
             </div>
           );
         }
