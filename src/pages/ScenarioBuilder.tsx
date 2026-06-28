@@ -126,7 +126,6 @@ const SALES_CHANNELS = [
   { value: 'combined', icon: '🔀', label: 'Комбіновано', desc: 'Автоматизація + менеджер' },
   { value: 'messengers', icon: '📱', label: 'Через месенджери', desc: 'Telegram, Viber, WhatsApp' },
   { value: 'marketplaces', icon: '🛒', label: 'Через маркетплейси', desc: 'Rozetka, Prom тощо' },
-  { value: 'partners', icon: '🤝', label: 'Через партнерів або дилерів', desc: '' },
   { value: 'other', icon: '✏️', label: 'Інше', desc: 'Опишіть свій варіант' },
 ];
 
