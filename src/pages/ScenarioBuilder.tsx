@@ -957,15 +957,6 @@ const ScenarioBuilder: React.FC = () => {
               {b.source}
             </span>
           )}
-          {clientActions.has('brief') && (
-            <span
-              className="absolute top-2 left-2 w-7 h-7 rounded-full bg-white/95 backdrop-blur shadow-sm flex items-center justify-center text-primary"
-              title="Бриф заповнено"
-              onClick={(e) => { e.stopPropagation(); setFilledBriefOpen(true); }}
-            >
-              <FileText className="w-3.5 h-3.5" />
-            </span>
-          )}
         </div>
         <div className="p-4">
           <p className="text-[10px] font-bold text-foreground/60 uppercase tracking-wider mb-1.5">
@@ -2299,6 +2290,19 @@ const ScenarioBuilder: React.FC = () => {
             backgroundSize: `${24 * zoom}px ${24 * zoom}px`,
             backgroundPosition: `${canvasOffset.x % (24 * zoom)}px ${canvasOffset.y % (24 * zoom)}px`,
           }} />
+
+          {/* Persistent brief badge */}
+          {clientActions.has('brief') && scenario.clientBrief && (
+            <button
+              type="button"
+              onClick={() => setFilledBriefOpen(true)}
+              className="absolute top-4 left-4 z-20 flex items-center gap-2 px-3 h-10 rounded-full bg-card border border-border shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-primary"
+              title="Бриф заповнено — натисніть, щоб переглянути"
+            >
+              <FileText className="w-4 h-4" />
+              <span className="text-xs font-semibold">Бриф</span>
+            </button>
+          )}
 
           {/* Zoom controls */}
           <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-1 bg-card border border-border rounded-xl shadow-lg p-1">
