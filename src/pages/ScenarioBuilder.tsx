@@ -1527,14 +1527,14 @@ const ScenarioBuilder: React.FC = () => {
     </button>
   );
 
-  const SaveButton: React.FC<{ step: number; sticky?: boolean; disabled?: boolean }> = ({ step, disabled }) => (
+  const SaveButton: React.FC<{ step: number; sticky?: boolean; disabled?: boolean; label?: string }> = ({ step, disabled, label }) => (
     <div className="sticky bottom-0 bg-card pt-3 pb-2 -mx-4 px-4 border-t border-border mt-4 z-10">
       <Button
         onClick={() => handleSaveStep(step)}
         disabled={disabled !== undefined ? disabled : !canSaveStep(step, activeLeadType)}
         className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
       >
-        <Save className="w-4 h-4" /> Зберегти та продовжити
+        <Save className="w-4 h-4" /> {label || 'Зберегти та продовжити'}
       </Button>
     </div>
   );
