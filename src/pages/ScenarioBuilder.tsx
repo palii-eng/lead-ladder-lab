@@ -2291,6 +2291,19 @@ const ScenarioBuilder: React.FC = () => {
             backgroundPosition: `${canvasOffset.x % (24 * zoom)}px ${canvasOffset.y % (24 * zoom)}px`,
           }} />
 
+          {/* Persistent brief badge */}
+          {clientActions.has('brief') && scenario.clientBrief && (
+            <button
+              type="button"
+              onClick={() => setFilledBriefOpen(true)}
+              className="absolute top-4 left-4 z-20 flex items-center gap-2 px-3 h-10 rounded-full bg-card border border-border shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-primary"
+              title="Бриф заповнено — натисніть, щоб переглянути"
+            >
+              <FileText className="w-4 h-4" />
+              <span className="text-xs font-semibold">Бриф</span>
+            </button>
+          )}
+
           {/* Zoom controls */}
           <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-1 bg-card border border-border rounded-xl shadow-lg p-1">
             <button
