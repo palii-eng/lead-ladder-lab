@@ -957,15 +957,6 @@ const ScenarioBuilder: React.FC = () => {
               {b.source}
             </span>
           )}
-          {clientActions.has('brief') && (
-            <span
-              className="absolute top-2 left-2 w-7 h-7 rounded-full bg-white/95 backdrop-blur shadow-sm flex items-center justify-center text-primary"
-              title="Бриф заповнено"
-              onClick={(e) => { e.stopPropagation(); setFilledBriefOpen(true); }}
-            >
-              <FileText className="w-3.5 h-3.5" />
-            </span>
-          )}
         </div>
         <div className="p-4">
           <p className="text-[10px] font-bold text-foreground/60 uppercase tracking-wider mb-1.5">
