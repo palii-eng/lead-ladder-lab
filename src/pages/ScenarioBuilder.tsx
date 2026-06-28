@@ -1343,7 +1343,9 @@ const ScenarioBuilder: React.FC = () => {
     (s.leadTypes || []).forEach(t => candidates.add(`sales:processed:${t}`));
     const cache = { ...(s.aiCache || {}), ...aiCacheRef.current };
     const salesProcessedSaved = Array.from(candidates).some(k => cache[k] === '1');
-    return !!salesChannel && (salesChannel !== 'other' || salesChannelOther.trim().length > 0) && salesProcessedSaved;
+    const channelsWithoutItems = new Set(['auto_site', 'marketplaces']);
+    const needsProcessing = !channelsWithoutItems.has(salesChannel);
+    return !!salesChannel && (salesChannel !== 'other' || salesChannelOther.trim().length > 0) && (!needsProcessing || salesProcessedSaved);
   }
 
 
