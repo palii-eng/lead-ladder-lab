@@ -713,7 +713,13 @@ const ScenarioBuilder: React.FC = () => {
     const body = lines.join('\n');
     const subject = `SmartFunnel: ${scenario.name}`;
     try { await navigator.clipboard?.writeText(shareUrl); } catch {}
-    window.open(`mailto:kurator@ads-school.online?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+    const mailtoHref = `mailto:kurator@ads-school.online?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const a = document.createElement('a');
+    a.href = mailtoHref;
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     toast({ title: 'Посилання створено', description: 'Лінк скопійовано в буфер обміну та доданий у лист куратору.' });
   }, [scenario, activeLeadType, aiConclusionText, toast]);
 
