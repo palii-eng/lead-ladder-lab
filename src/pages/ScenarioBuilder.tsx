@@ -271,6 +271,7 @@ const ScenarioBuilder: React.FC = () => {
   const [aiRecommendation, setAiRecommendation] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const { toast } = useToast();
+  const { user, profile } = useAuth();
   const fetchAiRecommendation = useCallback(async () => {
     if (!scenario) return;
     setAiLoading(true);
