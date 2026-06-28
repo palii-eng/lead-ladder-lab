@@ -2594,6 +2594,16 @@ const ScenarioBuilder: React.FC = () => {
                 </span>
               </div>
             </DialogTitle>
+            <a
+              href="https://docs.google.com/document/d/17ntAv44e63d3A1EhitEhoJLTgnaYSj7LU7aBt2E-puY/edit?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute right-12 top-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-background hover:bg-accent text-xs font-medium text-foreground transition-colors"
+              title="Завантажити пустий шаблон брифа"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Шаблон брифа
+            </a>
           </DialogHeader>
           <div className="overflow-y-auto pr-1 -mr-1 space-y-3">
             {(() => {
