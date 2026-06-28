@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import adsSchoolLogo from '@/assets/ads-school-logo.png';
 import { getBriefForClient, BriefField } from '@/data/clientBriefs';
+import { useAuth } from '@/context/AuthContext';
 
 const STEPS = [
   { title: 'Вибір ніші', icon: '🎯' },
@@ -270,6 +271,7 @@ const ScenarioBuilder: React.FC = () => {
   const [aiRecommendation, setAiRecommendation] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const { toast } = useToast();
+  const { user, profile } = useAuth();
   const fetchAiRecommendation = useCallback(async () => {
     if (!scenario) return;
     setAiLoading(true);
@@ -710,18 +712,27 @@ const ScenarioBuilder: React.FC = () => {
       `AI Висновок:`,
       aiConclusionText || '(ще не згенеровано)',
     ];
-    const body = lines.join('\n');
+    const summary = lines.join('\n');
     const subject = `SmartFunnel: ${scenario.name}`;
-    try { await navigator.clipboard?.writeText(shareUrl); } catch {}
-    const mailtoHref = `mailto:kurator@ads-school.online?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    const a = document.createElement('a');
-    a.href = mailtoHref;
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    toast({ title: 'Посилання створено', description: 'Лінк скопійовано в буфер обміну та доданий у лист куратору.' });
-  }, [scenario, activeLeadType, aiConclusionText, toast]);
+
+    try {
+      const { error: reviewErr } = await supabase.from('scenario_reviews').insert({
+        user_id: user?.id as string,
+        user_email: user?.email || profile?.email || '',
+        user_name: profile?.full_name || null,
+        scenario_name: scenario.name,
+        shared_id: shareUrl ? shareUrl.split('/share/')[1] : null,
+        summary,
+        status: 'pending',
+      });
+      if (reviewErr) throw reviewErr;
+      try { await navigator.clipboard?.writeText(shareUrl); } catch {}
+      toast({ title: 'Відправлено куратору', description: 'Воронка з\'явиться в адмін-панелі на перевірку. Посилання скопійовано.' });
+    } catch (e: any) {
+      console.error('Failed to submit review', e);
+      toast({ title: 'Не вдалося відправити', description: e.message || 'Спробуйте ще раз', variant: 'destructive' });
+    }
+  }, [scenario, activeLeadType, aiConclusionText, toast, user, profile]);
 
   // savedSteps tracks global steps + per-branch steps (key format: "step" or "step:branchType")
   const [savedSteps, setSavedSteps] = useState<Set<string>>(() => {
