@@ -41,6 +41,56 @@ export type Database = {
         }
         Relationships: []
       }
+      scenario_reviews: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          id: string
+          scenario_name: string
+          shared_id: string | null
+          status: string
+          summary: string | null
+          updated_at: string
+          user_email: string
+          user_id: string
+          user_name: string | null
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          id?: string
+          scenario_name: string
+          shared_id?: string | null
+          status?: string
+          summary?: string | null
+          updated_at?: string
+          user_email: string
+          user_id: string
+          user_name?: string | null
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          id?: string
+          scenario_name?: string
+          shared_id?: string | null
+          status?: string
+          summary?: string | null
+          updated_at?: string
+          user_email?: string
+          user_id?: string
+          user_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scenario_reviews_shared_id_fkey"
+            columns: ["shared_id"]
+            isOneToOne: false
+            referencedRelation: "shared_scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scenario_workspaces: {
         Row: {
           created_at: string
