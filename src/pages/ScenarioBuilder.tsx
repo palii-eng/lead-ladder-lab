@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
 import { ArrowLeft, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign } from 'lucide-react';
@@ -204,6 +205,7 @@ const ScenarioBuilder: React.FC = () => {
   }, [id, scenario?.clientActions]);
   const [decompTab, setDecompTab] = useState<'bad' | 'realistic' | 'positive'>('realistic');
   const [activeLeadType, setActiveLeadType] = useState<string>('');
+  const [pendingRemoveLeadType, setPendingRemoveLeadType] = useState<string | null>(null);
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [videoDialogStep, setVideoDialogStep] = useState(0);
   const [aiTipsOpen, setAiTipsOpen] = useState(false);
@@ -1299,15 +1301,13 @@ const ScenarioBuilder: React.FC = () => {
     }
   };
 
-  const toggleLeadType = (lt: string) => {
+  const performLeadTypeToggle = (lt: string) => {
     const current = scenario.leadTypes || [];
     const newTypes = current.includes(lt) ? current.filter(t => t !== lt) : [...current, lt];
     const newBranchData = { ...(scenario.branchData || {}) };
-    // Add default branch data for new types
     newTypes.forEach(t => {
       if (!newBranchData[t]) newBranchData[t] = createDefaultBranchData();
     });
-    // Remove data for removed types
     Object.keys(newBranchData).forEach(k => {
       if (!newTypes.includes(k)) delete newBranchData[k];
     });
@@ -1316,6 +1316,16 @@ const ScenarioBuilder: React.FC = () => {
       setActiveLeadType(newTypes[0]);
     }
   };
+
+  const toggleLeadType = (lt: string) => {
+    const current = scenario.leadTypes || [];
+    if (current.includes(lt)) {
+      setPendingRemoveLeadType(lt);
+      return;
+    }
+    performLeadTypeToggle(lt);
+  };
+
 
   const toggleLeadDest = (dest: string) => {
     if (isBranching && activeLeadType) {
@@ -3460,7 +3470,31 @@ const ScenarioBuilder: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!pendingRemoveLeadType} onOpenChange={(o) => !o && setPendingRemoveLeadType(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Вимкнути канал?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Якщо вимкнути «{LEAD_TYPES.find(l => l.value === pendingRemoveLeadType)?.label}», усі дані по цій гілці воронки (декомпозиція, інтеграції, продажі тощо) будуть видалені.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Скасувати</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingRemoveLeadType) performLeadTypeToggle(pendingRemoveLeadType);
+                setPendingRemoveLeadType(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Так, вимкнути
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
 
   );
 };
