@@ -316,11 +316,20 @@ const mergeScenarioPair = (local?: Scenario, cloud?: Scenario): Scenario => {
   const cloudScore = scenarioCompleteness(c);
   const localTime = new Date(l.updatedAt || l.createdAt || 0).getTime();
   const cloudTime = new Date(c.updatedAt || c.createdAt || 0).getTime();
-  const preferred = cloudScore === localScore
-    ? (cloudTime >= localTime ? c : l)
-    : (cloudScore > localScore ? c : l);
+  // Prefer the most recently updated version — user edits (including deletions) must always win.
+  const preferred = cloudTime === localTime
+    ? (cloudScore >= localScore ? c : l)
+    : (cloudTime > localTime ? c : l);
   const fallback = preferred === c ? l : c;
-  return normalizeScenario(mergeValue(preferred, fallback));
+  const merged = normalizeScenario(mergeValue(preferred, fallback));
+  // Authoritative deletions: leadTypes and branchData come strictly from the preferred (latest) version,
+  // so removing a branch can't be undone by a stale copy on the other side.
+  merged.leadTypes = preferred.leadTypes || [];
+  const allowed = new Set(merged.leadTypes);
+  merged.branchData = Object.fromEntries(
+    Object.entries(preferred.branchData || {}).filter(([k]) => allowed.has(k))
+  );
+  return merged;
 };
 
 const mergeScenarios = (local: Scenario[], cloud: Scenario[]): Scenario[] => {
