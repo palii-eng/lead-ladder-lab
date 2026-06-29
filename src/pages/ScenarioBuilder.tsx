@@ -1574,7 +1574,7 @@ const ScenarioBuilder: React.FC = () => {
               { label: 'Інстаграм-крамниця', Icon: Instagram },
               { label: 'Стоматологія', Icon: Stethoscope },
               { label: 'Фітнес-студія', Icon: Dumbbell },
-              { label: 'Онлайн-школа', Icon: BookOpen },
+              
               { label: 'Салон краси', Icon: Sparkle },
               { label: 'Автосервіс', Icon: Wrench },
               { label: 'Туризм', Icon: Plane },
