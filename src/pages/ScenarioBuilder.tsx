@@ -3470,7 +3470,31 @@ const ScenarioBuilder: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!pendingRemoveLeadType} onOpenChange={(o) => !o && setPendingRemoveLeadType(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Вимкнути канал?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Якщо вимкнути «{LEAD_TYPES.find(l => l.value === pendingRemoveLeadType)?.label}», усі дані по цій гілці воронки (декомпозиція, інтеграції, продажі тощо) будуть видалені.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Скасувати</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingRemoveLeadType) performLeadTypeToggle(pendingRemoveLeadType);
+                setPendingRemoveLeadType(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Так, вимкнути
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
 
   );
 };
