@@ -1320,7 +1320,10 @@ const ScenarioBuilder: React.FC = () => {
   const toggleLeadType = (lt: string) => {
     const current = scenario.leadTypes || [];
     if (current.includes(lt)) {
-      setPendingRemoveLeadType(lt);
+      const label = LEAD_TYPES.find(l => l.value === lt)?.label || lt;
+      const ok = window.confirm(`Вимкнути «${label}»? Усі дані по цій гілці воронки (декомпозиція, інтеграції, продажі тощо) будуть видалені.`);
+      if (!ok) return;
+      performLeadTypeToggle(lt);
       return;
     }
     performLeadTypeToggle(lt);
