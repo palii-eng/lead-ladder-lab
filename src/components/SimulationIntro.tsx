@@ -173,7 +173,7 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
         name: x.c.name,
         niche: x.c.niche,
         source: x.c.source,
-        task: x.c.task,
+        task: x.c.tasks[Math.floor(Math.random() * x.c.tasks.length)],
         photo: photoFor(x.c.gender, seedBase + i * 7),
         role: x.c.role,
         _difficulty: x.d,
