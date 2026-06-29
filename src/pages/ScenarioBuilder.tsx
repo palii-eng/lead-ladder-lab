@@ -205,6 +205,7 @@ const ScenarioBuilder: React.FC = () => {
   }, [id, scenario?.clientActions]);
   const [decompTab, setDecompTab] = useState<'bad' | 'realistic' | 'positive'>('realistic');
   const [activeLeadType, setActiveLeadType] = useState<string>('');
+  const [pendingRemoveLeadType, setPendingRemoveLeadType] = useState<string | null>(null);
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [videoDialogStep, setVideoDialogStep] = useState(0);
   const [aiTipsOpen, setAiTipsOpen] = useState(false);
