@@ -1300,15 +1300,13 @@ const ScenarioBuilder: React.FC = () => {
     }
   };
 
-  const toggleLeadType = (lt: string) => {
+  const performLeadTypeToggle = (lt: string) => {
     const current = scenario.leadTypes || [];
     const newTypes = current.includes(lt) ? current.filter(t => t !== lt) : [...current, lt];
     const newBranchData = { ...(scenario.branchData || {}) };
-    // Add default branch data for new types
     newTypes.forEach(t => {
       if (!newBranchData[t]) newBranchData[t] = createDefaultBranchData();
     });
-    // Remove data for removed types
     Object.keys(newBranchData).forEach(k => {
       if (!newTypes.includes(k)) delete newBranchData[k];
     });
@@ -1317,6 +1315,16 @@ const ScenarioBuilder: React.FC = () => {
       setActiveLeadType(newTypes[0]);
     }
   };
+
+  const toggleLeadType = (lt: string) => {
+    const current = scenario.leadTypes || [];
+    if (current.includes(lt)) {
+      setPendingRemoveLeadType(lt);
+      return;
+    }
+    performLeadTypeToggle(lt);
+  };
+
 
   const toggleLeadDest = (dest: string) => {
     if (isBranching && activeLeadType) {
