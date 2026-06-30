@@ -1844,7 +1844,7 @@ const ScenarioBuilder: React.FC = () => {
                     <h3 className="text-base font-bold text-foreground">Деталізація · Формат воронки</h3>
                   </div>
                   <p className="text-xs text-muted-foreground">Оберіть формат воронки, з яким буде працювати інфобіз — від цього залежать туторіали та декомпозиція.</p>
-                  <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="grid gap-2 grid-cols-1">
                     {FUNNEL_FORMATS.map(f => (
                       <button
                         key={f}
