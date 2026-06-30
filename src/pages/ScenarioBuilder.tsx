@@ -2270,7 +2270,7 @@ const ScenarioBuilder: React.FC = () => {
                   })}
                 </div>
               )}
-              <SaveButton step={7} />
+              <SaveButton step={8} />
             </div>
           );
         }
