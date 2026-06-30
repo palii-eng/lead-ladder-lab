@@ -1945,11 +1945,11 @@ const ScenarioBuilder: React.FC = () => {
                   <div className="mt-2 space-y-1.5">
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/60">Туторіали по цьому формату</p>
                     {formatVideos.map((v, i) => (
-                      <a key={i} href={v.url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card hover:border-primary/40 transition-all">
-                        <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-primary"><Play className="w-3.5 h-3.5" /></div>
-                        <span className="text-xs font-medium text-foreground">{v.title}</span>
-                      </a>
+                      <div key={i}
+                        className="flex items-center gap-2 p-2 pr-2 rounded-lg border border-border bg-card hover:border-primary/40 transition-all">
+                        <span className="text-xs font-medium text-foreground flex-1">{v.title}</span>
+                        <VideoBadge url={v.url} title={v.title} size="sm" />
+                      </div>
                     ))}
                   </div>
                 )}
