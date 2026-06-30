@@ -1902,8 +1902,14 @@ const ScenarioBuilder: React.FC = () => {
                   )}
                 </div>
               )}
-              {needsFormat ? (
-                <p className="text-xs text-muted-foreground">Оберіть формат воронки, щоб перейти до декомпозиції.</p>
+              {isInfobiz && !formatConfirmed ? (
+                <Button
+                  onClick={() => setFormatConfirmed(true)}
+                  disabled={!funnelFormat}
+                  className="w-full gap-2"
+                >
+                  Перейти до декомпозиції <ArrowRight className="w-4 h-4" />
+                </Button>
               ) : (
               <>
               {isInfobiz && (
