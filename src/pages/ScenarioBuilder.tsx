@@ -2805,8 +2805,14 @@ const ScenarioBuilder: React.FC = () => {
           </SheetHeader>
           <div className="space-y-3 mt-4">
             {(() => {
-              const brief = getBriefForClient(scenario.clientBrief?.name)
-                ?? buildGenericBrief(scenario.clientBrief);
+              const brief = getBriefForClient(scenario.clientBrief?.name);
+              if (!brief) {
+                return (
+                  <p className="text-sm text-muted-foreground">
+                    Бриф для цього клієнта ще не підготовлений.
+                  </p>
+                );
+              }
               return brief.map((f: BriefField, i: number) => (
                 <div
                   key={i}
