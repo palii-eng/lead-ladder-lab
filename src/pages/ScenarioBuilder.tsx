@@ -2290,7 +2290,18 @@ const ScenarioBuilder: React.FC = () => {
                   })}
                 </div>
               )}
-              <SaveButton step={8} />
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => handleSaveStep(8)}
+                  className="flex-1"
+                >
+                  Пропустити
+                </Button>
+                <div className="flex-1">
+                  <SaveButton step={8} />
+                </div>
+              </div>
             </div>
           );
         }
