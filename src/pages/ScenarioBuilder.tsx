@@ -769,7 +769,7 @@ const ScenarioBuilder: React.FC = () => {
       for (let i = 0; i < STEPS.length; i++) {
         if (isStepCompletedStatic(scenario, i)) set.add(String(i));
         // Also check per-branch completion
-        if (scenario.channel === 'leads' && scenario.leadTypes?.length > 1 && i >= 3) {
+        if (scenario.channel === 'leads' && scenario.leadTypes?.length > 1 && i >= 4) {
           scenario.leadTypes.forEach(lt => {
             if (isStepCompletedForBranch(scenario, i, lt)) set.add(`${i}:${lt}`);
           });
