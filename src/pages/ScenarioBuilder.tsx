@@ -16,7 +16,7 @@ import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import adsSchoolLogo from '@/assets/ads-school-logo.png';
-import { getBriefForClient, buildGenericBrief, BriefField } from '@/data/clientBriefs';
+import { getBriefForClient, BriefField } from '@/data/clientBriefs';
 import { useAuth } from '@/context/AuthContext';
 
 const STEPS = [
@@ -2805,8 +2805,14 @@ const ScenarioBuilder: React.FC = () => {
           </SheetHeader>
           <div className="space-y-3 mt-4">
             {(() => {
-              const brief = getBriefForClient(scenario.clientBrief?.name)
-                ?? buildGenericBrief(scenario.clientBrief);
+              const brief = getBriefForClient(scenario.clientBrief?.name);
+              if (!brief) {
+                return (
+                  <p className="text-sm text-muted-foreground">
+                    Бриф для цього клієнта ще не підготовлений.
+                  </p>
+                );
+              }
               return brief.map((f: BriefField, i: number) => (
                 <div
                   key={i}
