@@ -2741,7 +2741,7 @@ const ScenarioBuilder: React.FC = () => {
                     <div className="flex items-start gap-0 flex-shrink-0" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
                       {(() => {
                         const visible: number[] = [];
-                        for (const i of [1, 2]) {
+                        for (const i of [0, 1, 2]) {
                           if (isStepUnlocked(i)) {
                             visible.push(i);
                             if (!isStepCompleted(i)) break;
