@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
-import { ArrowLeft, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -228,6 +228,7 @@ const ScenarioBuilder: React.FC = () => {
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [videoDialogStep, setVideoDialogStep] = useState(0);
   const [skillsOpen, setSkillsOpen] = useState(false);
+  const [formatConfirmed, setFormatConfirmed] = useState(false);
   const [aiTipsOpen, setAiTipsOpen] = useState(false);
   const [aiTipsText, setAiTipsText] = useState('');
   const [aiTipsLoading, setAiTipsLoading] = useState(false);
@@ -680,6 +681,14 @@ const ScenarioBuilder: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStep, activeLeadType, id]);
+
+  // Reset format confirmation gate when opening step 3
+  useEffect(() => {
+    if (activeStep === 3) {
+      const hasDecomp = !!(scenario as any)?.budget || !!(scenario as any)?.cpm;
+      setFormatConfirmed(hasDecomp);
+    }
+  }, [activeStep, scenario?.id]);
 
   const sendToCurator = useCallback(async () => {
     if (!scenario) return;
@@ -1893,8 +1902,14 @@ const ScenarioBuilder: React.FC = () => {
                   )}
                 </div>
               )}
-              {needsFormat ? (
-                <p className="text-xs text-muted-foreground">Оберіть формат воронки, щоб перейти до декомпозиції.</p>
+              {isInfobiz && !formatConfirmed ? (
+                <Button
+                  onClick={() => setFormatConfirmed(true)}
+                  disabled={!funnelFormat}
+                  className="w-full gap-2"
+                >
+                  Перейти до декомпозиції <ArrowRight className="w-4 h-4" />
+                </Button>
               ) : (
               <>
               {isInfobiz && (
