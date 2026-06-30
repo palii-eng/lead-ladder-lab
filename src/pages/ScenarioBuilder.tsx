@@ -2666,7 +2666,7 @@ const ScenarioBuilder: React.FC = () => {
                             ? `${s.title}\n${LEAD_TYPES.find(l => l.value === branchLeadType)?.icon || ''} ${LEAD_TYPES.find(l => l.value === branchLeadType)?.label || ''}`
                             : s.title}
                           index={stepIdx}
-                          isActive={activeStep === stepIdx && (!shouldBranch || stepIdx < 4 || activeLeadType === branchLeadType)}
+                          isActive={activeStep === stepIdx && (!shouldBranch || stepIdx < 3 || activeLeadType === branchLeadType)}
                           isCompleted={isStepCompleted(stepIdx, branchLeadType)}
                           isLast={isLastInRow}
                           isLocked={!isStepUnlocked(stepIdx, branchLeadType)}
