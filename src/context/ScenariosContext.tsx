@@ -526,8 +526,17 @@ export const ScenariosProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const updateScenario = useCallback((id: string, updates: Partial<Scenario>) => {
     setScenarios(prev => {
-      if (!prev.some(s => s.id === id)) return prev;
-      const next = prev.map(s => s.id === id ? normalizeScenario({ ...s, ...updates, updatedAt: new Date().toISOString() }) : s);
+      let base = prev;
+      if (!prev.some(s => s.id === id)) {
+        // Scenario might exist only in localStorage (cloud hydration still
+        // pending, or opened via getScenario fallback). Pull it in so the
+        // update doesn't silently no-op.
+        const uid = currentUserIdRef.current;
+        const fromLocal = uid ? readLocal(uid).find(s => s.id === id) : undefined;
+        if (!fromLocal) return prev;
+        base = [fromLocal, ...prev];
+      }
+      const next = base.map(s => s.id === id ? normalizeScenario({ ...s, ...updates, updatedAt: new Date().toISOString() }) : s);
       return persistAll(next);
     });
   }, [persistAll]);
