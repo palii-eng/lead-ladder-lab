@@ -16,6 +16,7 @@ export interface DecompositionScenario {
 }
 
 export interface BranchData {
+  funnelFormat?: string;
   decomposition: DecompositionSet;
   leadDestinations: string[];
   integrationMethod: string;
@@ -24,6 +25,7 @@ export interface BranchData {
   salesChannelOther?: string;
   retention: RetentionData;
 }
+
 
 export interface RetentionData {
   emailCount: number;
