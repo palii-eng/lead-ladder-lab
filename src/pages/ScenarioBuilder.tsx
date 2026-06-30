@@ -2625,18 +2625,18 @@ const ScenarioBuilder: React.FC = () => {
                     ? getSubtitleForStep(stepIdx, branchLeadType) : '';
                   
                   // Check if decomposition is completed for this branch to show AI hint
-                  const showAiHint = stepIdx === 3 && (branchLeadType ? isStepCompletedForBranch(scenario, 3, branchLeadType) : isStepCompletedStatic(scenario, 3));
+                  const showAiHint = stepIdx === 4 && (branchLeadType ? isStepCompletedForBranch(scenario, 4, branchLeadType) : isStepCompletedStatic(scenario, 4));
 
                   return (
                     <div key={`${stepIdx}-${branchLeadType || 'main'}`} className="flex items-start" data-flow-node data-step-index={stepIdx}>
                       <div className="relative">
                         <FlowNode
                           icon={s.icon}
-                          title={branchLeadType && stepIdx === 3
+                          title={branchLeadType && stepIdx === 4
                             ? `${s.title}\n${LEAD_TYPES.find(l => l.value === branchLeadType)?.icon || ''} ${LEAD_TYPES.find(l => l.value === branchLeadType)?.label || ''}`
                             : s.title}
                           index={stepIdx}
-                          isActive={activeStep === stepIdx && (!shouldBranch || stepIdx < 3 || activeLeadType === branchLeadType)}
+                          isActive={activeStep === stepIdx && (!shouldBranch || stepIdx < 4 || activeLeadType === branchLeadType)}
                           isCompleted={isStepCompleted(stepIdx, branchLeadType)}
                           isLast={isLastInRow}
                           isLocked={!isStepUnlocked(stepIdx, branchLeadType)}
