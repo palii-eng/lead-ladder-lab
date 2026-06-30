@@ -2038,7 +2038,7 @@ const ScenarioBuilder: React.FC = () => {
         }
 
 
-        case 4:
+        case 5:
           return (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground">Куди надходять ліди?</h3>
