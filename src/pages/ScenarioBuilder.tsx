@@ -2723,7 +2723,7 @@ const ScenarioBuilder: React.FC = () => {
 
       {/* Client brief sheet */}
       <Sheet open={clientBriefOpen} onOpenChange={setClientBriefOpen}>
-        <SheetContent side="right" className="bg-card border-border w-full sm:max-w-md overflow-y-auto">
+        <SheetContent side="left" className="bg-card border-border w-full sm:max-w-md overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="text-foreground font-bold flex items-center gap-3">
               <img
@@ -2760,7 +2760,7 @@ const ScenarioBuilder: React.FC = () => {
 
       {/* Filled brief sheet */}
       <Sheet open={filledBriefOpen} onOpenChange={setFilledBriefOpen}>
-        <SheetContent side="right" className="bg-card border-border w-full sm:max-w-2xl overflow-y-auto">
+        <SheetContent side="left" className="bg-card border-border w-full sm:max-w-2xl overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="text-foreground font-bold flex items-center gap-3 pr-32">
               {scenario.clientBrief?.photo && (
@@ -2822,7 +2822,7 @@ const ScenarioBuilder: React.FC = () => {
 
       {/* Required skills sheet */}
       <Sheet open={skillsOpen} onOpenChange={setSkillsOpen}>
-        <SheetContent side="right" className="bg-card border-border w-full sm:max-w-md overflow-y-auto">
+        <SheetContent side="left" className="bg-card border-border w-full sm:max-w-md overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="text-foreground font-bold flex items-center gap-2">
               <GraduationCap className="w-5 h-5 text-primary" />
