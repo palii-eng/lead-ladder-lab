@@ -1846,20 +1846,38 @@ const ScenarioBuilder: React.FC = () => {
                   </div>
                   <p className="text-xs text-muted-foreground">Оберіть формат воронки, з яким буде працювати інфобіз — від цього залежать туторіали та декомпозиція.</p>
                   <div className="flex flex-col gap-2 w-full">
-                    {FUNNEL_FORMATS.map(f => (
-                      <button
-                        key={f}
-                        onClick={() => update({ funnelFormat: f })}
-                        className={`w-full block p-2.5 rounded-lg border text-left text-sm transition-all ${
-                          funnelFormat === f
-                            ? 'border-primary bg-accent text-accent-foreground font-semibold'
-                            : 'border-border bg-card text-foreground hover:border-primary/40'
-                        }`}
-                      >
-                        {f}
-                      </button>
-                    ))}
+                    {FUNNEL_FORMATS.map(f => {
+                      const vids = FORMAT_VIDEOS[f] || [];
+                      const firstVid = vids[0];
+                      return (
+                        <div key={f} className="relative w-full">
+                          <button
+                            onClick={() => update({ funnelFormat: f })}
+                            className={`w-full block p-2.5 pr-12 rounded-lg border text-left text-sm transition-all ${
+                              funnelFormat === f
+                                ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                                : 'border-border bg-card text-foreground hover:border-primary/40'
+                            }`}
+                          >
+                            {f}
+                          </button>
+                          {firstVid && (
+                            <a
+                              href={firstVid.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              title={`Відео: ${firstVid.title}`}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/30 flex items-center justify-center text-primary transition-all"
+                            >
+                              <Play className="w-3.5 h-3.5" fill="currentColor" />
+                            </a>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
+
                   {formatVideos.length > 0 && (
                     <div className="mt-2 space-y-1.5">
                       <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/60">Туторіали по цьому формату</p>
