@@ -1514,30 +1514,38 @@ const ScenarioBuilder: React.FC = () => {
     }
   }
 
-  // For shared steps (0-3) use global key, for branch steps (4+) use branch-specific key
+  // For shared steps (0-2) use global key, for branch steps (3+) branch-aware when branching
   const isStepCompleted = (i: number, branchLeadType?: string): boolean => {
-    if (i < 4 || !isBranching) {
+    if (i < 3 || !isBranching) {
       return isStepCompletedStatic(scenario, i) && savedSteps.has(String(i));
     }
     // Branch-specific: check this specific branch
     const lt = branchLeadType || activeLeadType;
     if (!lt) return false;
+    // Non-Інфобіз: step 3 auto-completed per branch
+    if (i === 3 && scenario.niche !== 'Інфобізнес') return true;
     return isStepCompletedForBranch(scenario, i, lt) && savedSteps.has(`${i}:${lt}`);
   };
 
   const isStepUnlocked = (i: number, branchLeadType?: string): boolean => {
     if (i === 0) return hasCompletedClientGate;
-    if (i <= 3) return isStepCompleted(i - 1);
-    // For branch steps (4+), check previous step in the same branch
-    if (i === 4) return isStepCompleted(3); // step 3 (Деталізація) is shared
+    if (i <= 2) return isStepCompleted(i - 1);
+    if (i === 3) return isStepCompleted(2);
     // Висновок (Результат) розблоковується одразу після Продажів — Retention опціональний
     if (i === 9) return isStepCompleted(7, branchLeadType);
     return isStepCompleted(i - 1, branchLeadType);
   };
 
   const canSaveStep = (i: number, branchLeadType?: string): boolean => {
-    if (i === 3 && scenario.niche === 'Інфобізнес' && !scenario.funnelFormat) return false;
-    if (i < 4 || !isBranching) {
+    if (i === 3 && scenario.niche === 'Інфобізнес') {
+      if (isBranching) {
+        const lt = branchLeadType || activeLeadType;
+        if (!lt) return false;
+        return !!scenario.branchData?.[lt]?.funnelFormat;
+      }
+      return !!scenario.funnelFormat;
+    }
+    if (i < 3 || !isBranching) {
       return isStepCompletedStatic(scenario, i);
     }
     const lt = branchLeadType || activeLeadType;
@@ -1548,10 +1556,9 @@ const ScenarioBuilder: React.FC = () => {
   const handleSaveStep = (step: number) => {
     setSavedSteps(prev => {
       const next = new Set(prev);
-      if (step < 4 || !isBranching) {
+      if (step < 3 || !isBranching) {
         next.add(String(step));
       } else {
-        // Save for current active lead type
         if (activeLeadType) next.add(`${step}:${activeLeadType}`);
       }
       return next;
