@@ -2789,10 +2789,23 @@ const ScenarioBuilder: React.FC = () => {
                             {(() => {
                               const showDetailization = scenario.niche === 'Інфобізнес';
                               const branchStepIdxs: number[] = [];
-                              if (showDetailization && isStepUnlocked(3, lt)) branchStepIdxs.push(3);
-                              BRANCH_STEPS.forEach((_, bi) => {
-                                if (isStepUnlocked(bi + 4, lt)) branchStepIdxs.push(bi + 4);
-                              });
+                              const tryPush = (i: number): boolean => {
+                                if (!isStepUnlocked(i, lt)) return false;
+                                branchStepIdxs.push(i);
+                                return isStepCompleted(i, lt);
+                              };
+                              if (showDetailization) {
+                                if (!tryPush(3)) { /* stop */ }
+                                else {
+                                  for (let bi = 0; bi < BRANCH_STEPS.length; bi++) {
+                                    if (!tryPush(bi + 4)) break;
+                                  }
+                                }
+                              } else {
+                                for (let bi = 0; bi < BRANCH_STEPS.length; bi++) {
+                                  if (!tryPush(bi + 4)) break;
+                                }
+                              }
                               return branchStepIdxs.map((stepIdx, idx) => (
                                 <React.Fragment key={stepIdx}>
                                   {renderNode(stepIdx, lt, idx === branchStepIdxs.length - 1)}
