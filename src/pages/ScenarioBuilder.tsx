@@ -1469,6 +1469,7 @@ const ScenarioBuilder: React.FC = () => {
   };
 
   const canSaveStep = (i: number, branchLeadType?: string): boolean => {
+    if (i === 3 && scenario.niche === 'Інфобізнес' && !scenario.funnelFormat) return false;
     if (i < 3 || !isBranching) {
       return isStepCompletedStatic(scenario, i);
     }
