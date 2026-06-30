@@ -2775,16 +2775,22 @@ const ScenarioBuilder: React.FC = () => {
                         {leadTypes.map((lt, brIdx) => (
                           <div key={lt} className="flex items-start gap-0" style={{ height: `${branchRowHeight}px` }}>
                             {(() => {
-                              const visible = BRANCH_STEPS.map((_, bi) => bi).filter(bi => isStepUnlocked(bi + 4, lt));
-                              return visible.map((bi, idx) => (
-                                <React.Fragment key={bi}>
-                                  {renderNode(bi + 4, lt, idx === visible.length - 1)}
-                                  {bi === 0 && isStepCompletedForBranch(scenario, 4, lt) && <PrepWorksNode branchKey={lt} />}
+                              const showDetailization = scenario.niche === 'Інфобізнес';
+                              const branchStepIdxs: number[] = [];
+                              if (showDetailization && isStepUnlocked(3, lt)) branchStepIdxs.push(3);
+                              BRANCH_STEPS.forEach((_, bi) => {
+                                if (isStepUnlocked(bi + 4, lt)) branchStepIdxs.push(bi + 4);
+                              });
+                              return branchStepIdxs.map((stepIdx, idx) => (
+                                <React.Fragment key={stepIdx}>
+                                  {renderNode(stepIdx, lt, idx === branchStepIdxs.length - 1)}
+                                  {stepIdx === 4 && isStepCompletedForBranch(scenario, 4, lt) && <PrepWorksNode branchKey={lt} />}
                                 </React.Fragment>
                               ));
                             })()}
 
                           </div>
+
                         ))}
                       </div>
                     </div>
