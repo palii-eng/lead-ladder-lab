@@ -3055,7 +3055,7 @@ const ScenarioBuilder: React.FC = () => {
             )}
             {salesRecText && (
               <div className="prose prose-sm max-w-none text-foreground">
-                <ReactMarkdown>{salesRecText}</ReactMarkdown>
+                <ReactMarkdown>{salesRecText.replace(/(\*\*Варіант\s*\d+[^*]*\*\*)/g, '\n\n$1\n\n').replace(/\n{3,}/g, '\n\n')}</ReactMarkdown>
               </div>
             )}
             {salesRecLoading && salesRecText && (
