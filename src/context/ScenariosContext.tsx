@@ -110,6 +110,7 @@ export const createDefaultScenario = (name: string, description: string): Scenar
   updatedAt: new Date().toISOString(),
   currentStep: 0,
   launchMethod: '',
+  funnelFormat: '',
   decomposition: createDefaultDecompSet(),
   decompositionsByType: {},
   leadDestinations: [],
