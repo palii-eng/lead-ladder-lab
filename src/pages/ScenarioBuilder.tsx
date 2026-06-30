@@ -2698,10 +2698,16 @@ const ScenarioBuilder: React.FC = () => {
                           {!flowGated && <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />}
                         </div>
                         {!flowGated && (() => {
-                          const visible = STEPS.map((_, i) => i).filter(i => {
-                            if (i === 3 && scenario.niche !== 'Інфобізнес') return false;
-                            return i === 0 || isStepUnlocked(i);
-                          });
+                          const visible: number[] = [];
+                          for (let i = 0; i < STEPS.length; i++) {
+                            if (i === 3 && scenario.niche !== 'Інфобізнес') continue;
+                            if (i === 0 || isStepUnlocked(i)) {
+                              visible.push(i);
+                              if (!isStepCompleted(i)) break;
+                            } else {
+                              break;
+                            }
+                          }
                           return visible.map((i, idx) => (
                             <React.Fragment key={i}>
                               {renderNode(i, undefined, idx === visible.length - 1)}
