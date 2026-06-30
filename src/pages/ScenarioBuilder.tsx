@@ -680,19 +680,12 @@ const ScenarioBuilder: React.FC = () => {
     } else {
       setAiConclusionText('');
     }
-    if (activeStep === 8 && !cached && !aiConclusionLoading) {
+    if (activeStep === 9 && !cached && !aiConclusionLoading) {
       fetchAiConclusion();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStep, activeLeadType, id]);
 
-  // Reset format confirmation gate when opening step 3
-  useEffect(() => {
-    if (activeStep === 3) {
-      const hasDecomp = !!(scenario as any)?.budget || !!(scenario as any)?.cpm;
-      setFormatConfirmed(hasDecomp);
-    }
-  }, [activeStep, scenario?.id]);
 
   const sendToCurator = useCallback(async () => {
     if (!scenario) return;
