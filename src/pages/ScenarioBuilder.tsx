@@ -2694,7 +2694,7 @@ const ScenarioBuilder: React.FC = () => {
               className="absolute inset-0 bg-foreground/5 z-30"
               onClick={() => setActiveStep(null)}
             />
-            <div className="absolute right-6 top-6 bottom-6 z-40 animate-slide-in-right">
+            <div className="fixed right-0 top-0 bottom-0 z-40 animate-slide-in-right">
               {renderPanel()}
             </div>
           </>
