@@ -45,23 +45,26 @@ const STEP_VIDEOS: Record<number, { title: string; url: string }[]> = {
     { title: 'SEO vs PPC: що обрати', url: 'https://ads-school.online/' },
   ],
   3: [
+    { title: 'Деталізація формату воронки', url: 'https://ads-school.online/' },
+  ],
+  4: [
     { title: 'Як рахувати декомпозицію', url: 'https://ads-school.online/' },
     { title: 'Бенчмарки по нішах', url: 'https://ads-school.online/' },
   ],
-  4: [
+  5: [
     { title: 'Куди направляти ліди', url: 'https://ads-school.online/' },
   ],
-  5: [
+  6: [
     { title: 'Інтеграція CRM з рекламою', url: 'https://ads-school.online/' },
   ],
-  6: [
+  7: [
     { title: 'Скрипти продажів', url: 'https://ads-school.online/' },
     { title: 'Follow-up стратегії', url: 'https://ads-school.online/' },
   ],
-  7: [
+  8: [
     { title: 'Email-маркетинг для retention', url: 'https://ads-school.online/' },
   ],
-  8: [
+  9: [
     { title: 'Аналіз результатів', url: 'https://ads-school.online/' },
   ],
 };
