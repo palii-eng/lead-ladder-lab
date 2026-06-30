@@ -2592,7 +2592,11 @@ const ScenarioBuilder: React.FC = () => {
                       const base = seoEnabled ? (label ? `${label} + SEO` : 'SEO') : label;
                       return ltLabels ? `${base}\n${ltLabels}` : base;
                     }
-                    case 3: return scenario.niche === 'Інфобізнес' ? (scenario.funnelFormat || '') : '';
+                    case 3: {
+                      if (scenario.niche !== 'Інфобізнес') return '';
+                      const branch = branchLeadType && shouldBranch ? scenario.branchData?.[branchLeadType] : null;
+                      return (branch ? branch.funnelFormat : scenario.funnelFormat) || '';
+                    }
                     case 4: {
                       const branch = branchLeadType && shouldBranch ? scenario.branchData?.[branchLeadType] : null;
                       const decompSet = branch ? branch.decomposition : scenario.decomposition;
