@@ -2344,8 +2344,8 @@ const ScenarioBuilder: React.FC = () => {
     };
 
     return (
-      <div ref={panelRef} className={`bg-card border border-border rounded-2xl shadow-lg ${activeStep === 2 ? 'w-[760px]' : 'w-[400px]'} max-h-full overflow-y-auto`}>
-        <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between rounded-t-2xl z-10">
+      <div ref={panelRef} className={`bg-card border-l border-y border-border rounded-l-2xl shadow-2xl ${activeStep === 2 ? 'w-[760px]' : 'w-[460px]'} h-full overflow-y-auto`}>
+        <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between rounded-tl-2xl z-10">
           <div className="flex items-center gap-2">
             <span className="text-xl">{STEPS[activeStep].icon}</span>
             <div>
