@@ -255,6 +255,7 @@ const normalizeScenario = (value: unknown): Scenario => {
     aiCache: isRecord(raw.aiCache) ? raw.aiCache as Record<string, string> : undefined,
     ...(isRecord(raw.audienceSettings) ? { audienceSettings: raw.audienceSettings } : {}),
     ...(isRecord(raw.creoSettings) ? { creoSettings: raw.creoSettings } : {}),
+    ...(isRecord(raw.creoBriefs) ? { creoBriefs: raw.creoBriefs } : {}),
   } as Scenario;
 
 };
