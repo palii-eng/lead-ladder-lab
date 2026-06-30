@@ -16,7 +16,7 @@ import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import adsSchoolLogo from '@/assets/ads-school-logo.png';
-import { getBriefForClient, BriefField } from '@/data/clientBriefs';
+import { getBriefForClient, buildGenericBrief, BriefField } from '@/data/clientBriefs';
 import { useAuth } from '@/context/AuthContext';
 
 const STEPS = [
