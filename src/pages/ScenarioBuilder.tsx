@@ -2775,7 +2775,7 @@ const ScenarioBuilder: React.FC = () => {
 
       {/* Filled brief sheet */}
       <Sheet open={filledBriefOpen} onOpenChange={setFilledBriefOpen}>
-        <SheetContent side="left" className="bg-card border-border w-full sm:max-w-2xl overflow-y-auto">
+        <SheetContent side="left" className="bg-card border-border w-full sm:max-w-[806px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="text-foreground font-bold flex items-center gap-3 pr-32">
               {scenario.clientBrief?.photo && (
