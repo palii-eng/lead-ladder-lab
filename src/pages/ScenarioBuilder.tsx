@@ -2668,17 +2668,20 @@ const ScenarioBuilder: React.FC = () => {
                           {!flowGated && <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />}
                         </div>
                         {!flowGated && (() => {
-                          const visible = STEPS.map((_, i) => i).filter(i => i === 0 || isStepUnlocked(i));
+                          const visible = STEPS.map((_, i) => i).filter(i => {
+                            if (i === 3 && scenario.niche !== 'Інфобізнес') return false;
+                            return i === 0 || isStepUnlocked(i);
+                          });
                           return visible.map((i, idx) => (
                             <React.Fragment key={i}>
                               {renderNode(i, undefined, idx === visible.length - 1)}
-                              {i === 3 && isStepCompletedStatic(scenario, 3) && <PrepWorksNode />}
+                              {i === 4 && isStepCompletedStatic(scenario, 4) && <PrepWorksNode />}
                             </React.Fragment>
                           ));
                         })()}
 
                       </div>
-                      {scenario.retention.emailCount > 0 && savedSteps.has('7') && <RetentionArrow />}
+                      {scenario.retention.emailCount > 0 && savedSteps.has('8') && <RetentionArrow />}
                     </>
                   );
                 }
