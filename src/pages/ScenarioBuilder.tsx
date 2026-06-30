@@ -13,6 +13,7 @@ import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
 import { ArrowLeft, ArrowRight, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
+import { VideoBadge } from '@/components/VideoBadge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import adsSchoolLogo from '@/assets/ads-school-logo.png';
@@ -1922,7 +1923,7 @@ const ScenarioBuilder: React.FC = () => {
                       <div key={f} className="relative w-full">
                         <button
                           onClick={() => setFunnelFormat(f)}
-                          className={`w-full block p-2.5 ${firstVid ? 'pl-12' : ''} rounded-lg border text-left text-sm transition-all ${
+                          className={`w-full block p-2.5 ${firstVid ? 'pr-12' : ''} rounded-lg border text-left text-sm transition-all ${
                             funnelFormat === f
                               ? 'border-primary bg-accent text-accent-foreground font-semibold'
                               : 'border-border bg-card text-foreground hover:border-primary/40'
@@ -1931,16 +1932,9 @@ const ScenarioBuilder: React.FC = () => {
                           {f}
                         </button>
                         {firstVid && (
-                          <a
-                            href={firstVid.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            title={`Відео: ${firstVid.title}`}
-                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/30 flex items-center justify-center text-primary transition-all"
-                          >
-                            <Play className="w-3.5 h-3.5" fill="currentColor" />
-                          </a>
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                            <VideoBadge url={firstVid.url} title={firstVid.title} size="sm" />
+                          </div>
                         )}
                       </div>
                     );
@@ -1951,11 +1945,11 @@ const ScenarioBuilder: React.FC = () => {
                   <div className="mt-2 space-y-1.5">
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/60">Туторіали по цьому формату</p>
                     {formatVideos.map((v, i) => (
-                      <a key={i} href={v.url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card hover:border-primary/40 transition-all">
-                        <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-primary"><Play className="w-3.5 h-3.5" /></div>
-                        <span className="text-xs font-medium text-foreground">{v.title}</span>
-                      </a>
+                      <div key={i}
+                        className="flex items-center gap-2 p-2 pr-2 rounded-lg border border-border bg-card hover:border-primary/40 transition-all">
+                        <span className="text-xs font-medium text-foreground flex-1">{v.title}</span>
+                        <VideoBadge url={v.url} title={v.title} size="sm" />
+                      </div>
                     ))}
                   </div>
                 )}
@@ -1979,11 +1973,10 @@ const ScenarioBuilder: React.FC = () => {
           return (
             <div className="space-y-4">
               {isInfobiz && (
-                <a href={INFOBIZ_DECOMP_VIDEO.url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 p-2 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
-                  <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-primary"><Play className="w-3.5 h-3.5" /></div>
-                  <span className="text-xs font-medium text-foreground">{INFOBIZ_DECOMP_VIDEO.title}</span>
-                </a>
+                <div className="flex items-center gap-2 p-2 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
+                  <span className="text-xs font-medium text-foreground flex-1">{INFOBIZ_DECOMP_VIDEO.title}</span>
+                  <VideoBadge url={INFOBIZ_DECOMP_VIDEO.url} title={INFOBIZ_DECOMP_VIDEO.title} size="sm" />
+                </div>
               )}
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-foreground">
@@ -2961,11 +2954,11 @@ const ScenarioBuilder: React.FC = () => {
               if (scenario.niche === 'Інфобізнес') push(INFOBIZ_DECOMP_VIDEO);
               if (scenario.funnelFormat) (FORMAT_VIDEOS[scenario.funnelFormat] || []).forEach(push);
               return skills.map((v, i) => (
-                <a key={i} href={v.url} target="_blank" rel="noopener noreferrer"
+                <div key={i}
                   className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><Play className="w-5 h-5" /></div>
-                  <span className="text-sm font-medium text-foreground">{v.title}</span>
-                </a>
+                  <span className="text-sm font-medium text-foreground flex-1">{v.title}</span>
+                  <VideoBadge url={v.url} title={v.title} size="md" />
+                </div>
               ));
             })()}
           </div>
