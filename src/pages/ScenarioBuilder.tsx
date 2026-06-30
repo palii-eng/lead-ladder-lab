@@ -2061,7 +2061,7 @@ const ScenarioBuilder: React.FC = () => {
             </div>
           );
 
-        case 5:
+        case 6:
           return (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground">Спосіб інтеграції</h3>
