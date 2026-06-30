@@ -63,6 +63,24 @@ const STEP_VIDEOS: Record<number, { title: string; url: string }[]> = {
     { title: 'Аналіз результатів', url: 'https://ads-school.online/' },
   ],
 };
+
+const INFOBIZ_DECOMP_VIDEO = { title: 'Декомпозиція в інфобізі — мануал', url: 'https://youtu.be/HehGc_UQq_U' };
+
+const FORMAT_VIDEOS: Record<string, { title: string; url: string }[]> = {
+  'Міні-курс': [
+    { title: 'Міні-курс — розбір воронки', url: 'https://youtu.be/MEI0sIJ0No8' },
+  ],
+  'Вебінарна воронка': [
+    { title: 'Вебінарна воронка — стратегія', url: 'https://youtu.be/Uq34CUskaGo' },
+    { title: 'Вебінарна воронка — технічка', url: 'https://youtu.be/koF-yfdJyYU' },
+  ],
+  'Особистий бренд (прогрів та продаж через Instagram)': [
+    { title: 'Особистий бренд в Instagram — воронка', url: 'https://www.youtube.com/watch?v=97EaUJmeehk' },
+  ],
+  'Продаж та прогрів через Telegram-бот': [
+    { title: 'Воронка через Telegram-бот', url: 'https://youtu.be/NnjSjpG3N4Y' },
+  ],
+};
 const LEAD_SOURCES = [
   { value: 'meta', label: 'Meta реклама', LogoComponent: 'meta' as const },
   { value: 'tiktok', label: 'TikTok реклама', LogoComponent: 'tiktok' as const, soon: true },
@@ -208,6 +226,7 @@ const ScenarioBuilder: React.FC = () => {
   const [pendingRemoveLeadType, setPendingRemoveLeadType] = useState<string | null>(null);
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [videoDialogStep, setVideoDialogStep] = useState(0);
+  const [skillsOpen, setSkillsOpen] = useState(false);
   const [aiTipsOpen, setAiTipsOpen] = useState(false);
   const [aiTipsText, setAiTipsText] = useState('');
   const [aiTipsLoading, setAiTipsLoading] = useState(false);
@@ -1815,12 +1834,16 @@ const ScenarioBuilder: React.FC = () => {
           ];
           const funnelFormat = scenario.funnelFormat || '';
           const needsFormat = isInfobiz && !funnelFormat;
+          const formatVideos = funnelFormat ? (FORMAT_VIDEOS[funnelFormat] || []) : [];
           return (
             <div className="space-y-4">
               {isInfobiz && (
-                <div className="space-y-2 border border-border rounded-lg p-3 bg-card">
-                  <h3 className="text-base font-bold text-foreground">Деталізація · Формат воронки</h3>
-                  <p className="text-xs text-muted-foreground">Оберіть формат воронки, з яким буде працювати інфобіз.</p>
+                <div className="space-y-2 border-2 border-primary/30 rounded-lg p-3 bg-primary/5">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wide">Додатковий модуль</span>
+                    <h3 className="text-base font-bold text-foreground">Деталізація · Формат воронки</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Оберіть формат воронки, з яким буде працювати інфобіз — від цього залежать туторіали та декомпозиція.</p>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {FUNNEL_FORMATS.map(f => (
                       <button
@@ -1836,12 +1859,31 @@ const ScenarioBuilder: React.FC = () => {
                       </button>
                     ))}
                   </div>
+                  {formatVideos.length > 0 && (
+                    <div className="mt-2 space-y-1.5">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/60">Туторіали по цьому формату</p>
+                      {formatVideos.map((v, i) => (
+                        <a key={i} href={v.url} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card hover:border-primary/40 transition-all">
+                          <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-primary"><Play className="w-3.5 h-3.5" /></div>
+                          <span className="text-xs font-medium text-foreground">{v.title}</span>
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
               {needsFormat ? (
                 <p className="text-xs text-muted-foreground">Оберіть формат воронки, щоб перейти до декомпозиції.</p>
               ) : (
               <>
+              {isInfobiz && (
+                <a href={INFOBIZ_DECOMP_VIDEO.url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 p-2 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
+                  <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-primary"><Play className="w-3.5 h-3.5" /></div>
+                  <span className="text-xs font-medium text-foreground">{INFOBIZ_DECOMP_VIDEO.title}</span>
+                </a>
+              )}
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-foreground">
                   META AD CALCULATOR
@@ -2397,6 +2439,34 @@ const ScenarioBuilder: React.FC = () => {
             </button>
           )}
 
+          {/* Required skills (videos) button */}
+          {(() => {
+            const skills: { title: string; url: string }[] = [];
+            const seen = new Set<string>();
+            const push = (v: { title: string; url: string }) => {
+              if (v && v.url && !seen.has(v.url) && !v.url.startsWith('https://ads-school.online')) {
+                seen.add(v.url);
+                skills.push(v);
+              }
+            };
+            if (scenario.niche === 'Інфобізнес') push(INFOBIZ_DECOMP_VIDEO);
+            if (scenario.funnelFormat) (FORMAT_VIDEOS[scenario.funnelFormat] || []).forEach(push);
+            if (skills.length === 0) return null;
+            return (
+              <button
+                type="button"
+                onClick={() => setSkillsOpen(true)}
+                className="absolute top-4 left-32 z-20 flex items-center gap-2 px-3 h-10 rounded-full bg-card border border-border shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-primary"
+                title="Відео, які треба переглянути, щоб запустити цю воронку"
+              >
+                <GraduationCap className="w-4 h-4" />
+                <span className="text-xs font-semibold">Потрібні навички</span>
+                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none">{skills.length}</span>
+              </button>
+            );
+          })()}
+
+
           {/* Zoom controls */}
           <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-1 bg-card border border-border rounded-xl shadow-lg p-1">
             <button
@@ -2729,6 +2799,37 @@ const ScenarioBuilder: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Required skills dialog */}
+      <Dialog open={skillsOpen} onOpenChange={setSkillsOpen}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground font-bold flex items-center gap-2">
+              <GraduationCap className="w-5 h-5 text-primary" />
+              Потрібні навички для запуску
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">Перегляньте ці відео, щоб впевнено запустити обрану воронку.</p>
+          <div className="space-y-2 pt-2">
+            {(() => {
+              const skills: { title: string; url: string }[] = [];
+              const seen = new Set<string>();
+              const push = (v: { title: string; url: string }) => {
+                if (v && v.url && !seen.has(v.url)) { seen.add(v.url); skills.push(v); }
+              };
+              if (scenario.niche === 'Інфобізнес') push(INFOBIZ_DECOMP_VIDEO);
+              if (scenario.funnelFormat) (FORMAT_VIDEOS[scenario.funnelFormat] || []).forEach(push);
+              return skills.map((v, i) => (
+                <a key={i} href={v.url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><Play className="w-5 h-5" /></div>
+                  <span className="text-sm font-medium text-foreground">{v.title}</span>
+                </a>
+              ));
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Video dialog */}
       <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
