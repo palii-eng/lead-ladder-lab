@@ -2275,7 +2275,7 @@ const ScenarioBuilder: React.FC = () => {
           );
         }
 
-        case 8: {
+        case 9: {
           const decompSet = isBranching && activeLeadType ? getBranch().decomposition : scenario.decomposition;
           const real = calcMetrics(decompSet.realistic);
           const bad = calcMetrics(decompSet.bad);
