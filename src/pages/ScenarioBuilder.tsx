@@ -1973,11 +1973,10 @@ const ScenarioBuilder: React.FC = () => {
           return (
             <div className="space-y-4">
               {isInfobiz && (
-                <a href={INFOBIZ_DECOMP_VIDEO.url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 p-2 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
-                  <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-primary"><Play className="w-3.5 h-3.5" /></div>
-                  <span className="text-xs font-medium text-foreground">{INFOBIZ_DECOMP_VIDEO.title}</span>
-                </a>
+                <div className="flex items-center gap-2 p-2 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
+                  <span className="text-xs font-medium text-foreground flex-1">{INFOBIZ_DECOMP_VIDEO.title}</span>
+                  <VideoBadge url={INFOBIZ_DECOMP_VIDEO.url} title={INFOBIZ_DECOMP_VIDEO.title} size="sm" />
+                </div>
               )}
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-foreground">
