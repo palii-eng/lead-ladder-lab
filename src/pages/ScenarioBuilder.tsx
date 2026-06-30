@@ -1834,12 +1834,16 @@ const ScenarioBuilder: React.FC = () => {
           ];
           const funnelFormat = scenario.funnelFormat || '';
           const needsFormat = isInfobiz && !funnelFormat;
+          const formatVideos = funnelFormat ? (FORMAT_VIDEOS[funnelFormat] || []) : [];
           return (
             <div className="space-y-4">
               {isInfobiz && (
-                <div className="space-y-2 border border-border rounded-lg p-3 bg-card">
-                  <h3 className="text-base font-bold text-foreground">Деталізація · Формат воронки</h3>
-                  <p className="text-xs text-muted-foreground">Оберіть формат воронки, з яким буде працювати інфобіз.</p>
+                <div className="space-y-2 border-2 border-primary/30 rounded-lg p-3 bg-primary/5">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wide">Додатковий модуль</span>
+                    <h3 className="text-base font-bold text-foreground">Деталізація · Формат воронки</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Оберіть формат воронки, з яким буде працювати інфобіз — від цього залежать туторіали та декомпозиція.</p>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {FUNNEL_FORMATS.map(f => (
                       <button
@@ -1855,12 +1859,31 @@ const ScenarioBuilder: React.FC = () => {
                       </button>
                     ))}
                   </div>
+                  {formatVideos.length > 0 && (
+                    <div className="mt-2 space-y-1.5">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/60">Туторіали по цьому формату</p>
+                      {formatVideos.map((v, i) => (
+                        <a key={i} href={v.url} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card hover:border-primary/40 transition-all">
+                          <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-primary"><Play className="w-3.5 h-3.5" /></div>
+                          <span className="text-xs font-medium text-foreground">{v.title}</span>
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
               {needsFormat ? (
                 <p className="text-xs text-muted-foreground">Оберіть формат воронки, щоб перейти до декомпозиції.</p>
               ) : (
               <>
+              {isInfobiz && (
+                <a href={INFOBIZ_DECOMP_VIDEO.url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 p-2 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
+                  <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-primary"><Play className="w-3.5 h-3.5" /></div>
+                  <span className="text-xs font-medium text-foreground">{INFOBIZ_DECOMP_VIDEO.title}</span>
+                </a>
+              )}
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-foreground">
                   META AD CALCULATOR
