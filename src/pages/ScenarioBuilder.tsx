@@ -228,6 +228,7 @@ const ScenarioBuilder: React.FC = () => {
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [videoDialogStep, setVideoDialogStep] = useState(0);
   const [skillsOpen, setSkillsOpen] = useState(false);
+  const [formatConfirmed, setFormatConfirmed] = useState(false);
   const [aiTipsOpen, setAiTipsOpen] = useState(false);
   const [aiTipsText, setAiTipsText] = useState('');
   const [aiTipsLoading, setAiTipsLoading] = useState(false);
