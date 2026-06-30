@@ -1922,7 +1922,7 @@ const ScenarioBuilder: React.FC = () => {
                       <div key={f} className="relative w-full">
                         <button
                           onClick={() => setFunnelFormat(f)}
-                          className={`w-full block p-2.5 ${firstVid ? 'pl-12' : ''} rounded-lg border text-left text-sm transition-all ${
+                          className={`w-full block p-2.5 ${firstVid ? 'pr-12' : ''} rounded-lg border text-left text-sm transition-all ${
                             funnelFormat === f
                               ? 'border-primary bg-accent text-accent-foreground font-semibold'
                               : 'border-border bg-card text-foreground hover:border-primary/40'
@@ -1931,16 +1931,9 @@ const ScenarioBuilder: React.FC = () => {
                           {f}
                         </button>
                         {firstVid && (
-                          <a
-                            href={firstVid.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            title={`Відео: ${firstVid.title}`}
-                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/30 flex items-center justify-center text-primary transition-all"
-                          >
-                            <Play className="w-3.5 h-3.5" fill="currentColor" />
-                          </a>
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                            <VideoBadge url={firstVid.url} title={firstVid.title} size="sm" />
+                          </div>
                         )}
                       </div>
                     );
