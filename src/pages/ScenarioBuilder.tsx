@@ -171,8 +171,9 @@ const calcMetrics = (d: DecompositionScenario) => {
   const leads = clicks * ((d.landingConversion || 0) / 100);
   const sales = leads * ((d.conversionRate || 0) / 100);
   const revenue = sales * (d.averageCheck || 0);
-  const profitPerSale = (d.averageCheck || 0) * ((d.marginality || 0) / 100);
-  const totalProfit = sales * profitPerSale;
+  const grossPerSale = (d.averageCheck || 0) * ((d.marginality || 0) / 100);
+  const profitPerSale = grossPerSale - cpa;
+  const totalProfit = sales * grossPerSale;
   const cpa = sales > 0 ? d.budget / sales : 0;
   const roas = d.budget > 0 ? (revenue / d.budget) * 100 : 0;
   const netIncome = totalProfit - d.budget;
