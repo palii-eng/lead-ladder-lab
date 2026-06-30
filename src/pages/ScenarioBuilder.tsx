@@ -1855,15 +1855,6 @@ const ScenarioBuilder: React.FC = () => {
 
 
         case 3: {
-          const inputFields: { key: keyof DecompositionScenario; label: string; suffix: string }[] = [
-            { key: 'budget', label: 'FB Ad Бюджет', suffix: '$' },
-            { key: 'cpm', label: 'CPM', suffix: '$' },
-            { key: 'ctr', label: 'Ad CTR', suffix: '%' },
-            { key: 'landingConversion', label: 'Конверсія перегляду → заявка', suffix: '%' },
-            { key: 'conversionRate', label: 'Конверсія заявки → покупка', suffix: '%' },
-            { key: 'averageCheck', label: 'Середній чек', suffix: '$' },
-            { key: 'marginality', label: 'Маржинальність', suffix: '%' },
-          ];
           const isInfobiz = scenario.niche === 'Інфобізнес';
           const FUNNEL_FORMATS = [
             'Міні-курс',
@@ -1874,75 +1865,92 @@ const ScenarioBuilder: React.FC = () => {
             'Продаж та прогрів через Telegram-бот',
           ];
           const funnelFormat = scenario.funnelFormat || '';
-          const needsFormat = isInfobiz && !funnelFormat;
           const formatVideos = funnelFormat ? (FORMAT_VIDEOS[funnelFormat] || []) : [];
+          if (!isInfobiz) {
+            return (
+              <div className="space-y-4">
+                <div className="space-y-2 border-2 border-dashed border-border rounded-lg p-4 bg-secondary/40">
+                  <h3 className="text-base font-bold text-foreground">Деталізація формату</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Цей модуль доступний лише для ніші <span className="font-semibold">Інфобізнес</span>. Натисніть «Зберегти та продовжити», щоб перейти до декомпозиції.
+                  </p>
+                </div>
+                <SaveButton step={3} />
+              </div>
+            );
+          }
           return (
             <div className="space-y-4">
-              {isInfobiz && (
-                <div className="space-y-2 border-2 border-primary/30 rounded-lg p-3 bg-primary/5">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wide">Додатковий модуль</span>
-                    <h3 className="text-base font-bold text-foreground">Деталізація · Формат воронки</h3>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Оберіть формат воронки, з яким буде працювати інфобіз — від цього залежать туторіали та декомпозиція.</p>
-                  <div className="flex flex-col gap-2 w-full">
-                    {FUNNEL_FORMATS.map(f => {
-                      const vids = FORMAT_VIDEOS[f] || [];
-                      const firstVid = vids[0];
-                      return (
-                        <div key={f} className="relative w-full">
-                          <button
-                            onClick={() => update({ funnelFormat: f })}
-                            className={`w-full block p-2.5 ${firstVid ? 'pl-12' : ''} rounded-lg border text-left text-sm transition-all ${
-                              funnelFormat === f
-                                ? 'border-primary bg-accent text-accent-foreground font-semibold'
-                                : 'border-border bg-card text-foreground hover:border-primary/40'
-                            }`}
-                          >
-                            {f}
-                          </button>
-                          {firstVid && (
-                            <a
-                              href={firstVid.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              title={`Відео: ${firstVid.title}`}
-                              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/30 flex items-center justify-center text-primary transition-all"
-                            >
-                              <Play className="w-3.5 h-3.5" fill="currentColor" />
-                            </a>
-                          )}
-
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {formatVideos.length > 0 && (
-                    <div className="mt-2 space-y-1.5">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/60">Туторіали по цьому формату</p>
-                      {formatVideos.map((v, i) => (
-                        <a key={i} href={v.url} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card hover:border-primary/40 transition-all">
-                          <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-primary"><Play className="w-3.5 h-3.5" /></div>
-                          <span className="text-xs font-medium text-foreground">{v.title}</span>
-                        </a>
-                      ))}
-                    </div>
-                  )}
+              <div className="space-y-2 border-2 border-primary/30 rounded-lg p-3 bg-primary/5">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wide">Додатковий модуль</span>
+                  <h3 className="text-base font-bold text-foreground">Деталізація · Формат воронки</h3>
                 </div>
-              )}
-              {isInfobiz && !formatConfirmed ? (
-                <Button
-                  onClick={() => setFormatConfirmed(true)}
-                  disabled={!funnelFormat}
-                  className="w-full gap-2"
-                >
-                  Перейти до декомпозиції <ArrowRight className="w-4 h-4" />
-                </Button>
-              ) : (
-              <>
+                <p className="text-xs text-muted-foreground">Оберіть формат воронки, з яким буде працювати інфобіз — від цього залежать туторіали та декомпозиція.</p>
+                <div className="flex flex-col gap-2 w-full">
+                  {FUNNEL_FORMATS.map(f => {
+                    const vids = FORMAT_VIDEOS[f] || [];
+                    const firstVid = vids[0];
+                    return (
+                      <div key={f} className="relative w-full">
+                        <button
+                          onClick={() => update({ funnelFormat: f })}
+                          className={`w-full block p-2.5 ${firstVid ? 'pl-12' : ''} rounded-lg border text-left text-sm transition-all ${
+                            funnelFormat === f
+                              ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                              : 'border-border bg-card text-foreground hover:border-primary/40'
+                          }`}
+                        >
+                          {f}
+                        </button>
+                        {firstVid && (
+                          <a
+                            href={firstVid.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            title={`Відео: ${firstVid.title}`}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/30 flex items-center justify-center text-primary transition-all"
+                          >
+                            <Play className="w-3.5 h-3.5" fill="currentColor" />
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {formatVideos.length > 0 && (
+                  <div className="mt-2 space-y-1.5">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/60">Туторіали по цьому формату</p>
+                    {formatVideos.map((v, i) => (
+                      <a key={i} href={v.url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card hover:border-primary/40 transition-all">
+                        <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-primary"><Play className="w-3.5 h-3.5" /></div>
+                        <span className="text-xs font-medium text-foreground">{v.title}</span>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <SaveButton step={3} />
+            </div>
+          );
+        }
+
+        case 4: {
+          const inputFields: { key: keyof DecompositionScenario; label: string; suffix: string }[] = [
+            { key: 'budget', label: 'FB Ad Бюджет', suffix: '$' },
+            { key: 'cpm', label: 'CPM', suffix: '$' },
+            { key: 'ctr', label: 'Ad CTR', suffix: '%' },
+            { key: 'landingConversion', label: 'Конверсія перегляду → заявка', suffix: '%' },
+            { key: 'conversionRate', label: 'Конверсія заявки → покупка', suffix: '%' },
+            { key: 'averageCheck', label: 'Середній чек', suffix: '$' },
+            { key: 'marginality', label: 'Маржинальність', suffix: '%' },
+          ];
+          const isInfobiz = scenario.niche === 'Інфобізнес';
+          return (
+            <div className="space-y-4">
               {isInfobiz && (
                 <a href={INFOBIZ_DECOMP_VIDEO.url} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 p-2 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
@@ -2024,12 +2032,11 @@ const ScenarioBuilder: React.FC = () => {
                 ))}
               </div>
 
-              <SaveButton step={3} />
-              </>
-              )}
+              <SaveButton step={4} />
             </div>
           );
         }
+
 
         case 4:
           return (
