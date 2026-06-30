@@ -1,10 +1,8 @@
 import React from 'react';
+import metaAdsLogo from '@/assets/meta-ads.png.asset.json';
 
 export const MetaIcon: React.FC<{ className?: string }> = ({ className = 'w-6 h-6' }) => (
-  <svg viewBox="0 0 36 36" className={className} fill="none">
-    <path d="M6.5 18c0-3.56 1.26-6.94 2.87-9.09C11.07 6.48 13.12 5.4 15 5.4c1.36 0 2.72.7 4.28 2.73L20.7 10l1.42-1.87C23.68 6.1 25.04 5.4 26.4 5.4c3.84 0 7.6 5.64 7.6 12.6 0 5.04-2.8 8.4-6.6 8.4-1.8 0-3.24-.72-4.92-2.64l-4.08-4.8-4.08 4.8C12.64 25.68 11.2 26.4 9.4 26.4 5.72 26.4 2 23.04 2 18c0-4.32 1.92-8.28 4.5-8.28" fill="#0081FB"/>
-    <path d="M15 5.4c-1.88 0-3.93 1.08-5.63 3.51C7.76 11.06 6.5 14.44 6.5 18c0 3.36 1.32 5.4 2.9 5.4 1.08 0 2.04-.6 3.36-2.16l2.64-3.12 2.64 3.12c1.32 1.56 2.28 2.16 3.36 2.16 1.58 0 2.9-2.04 2.9-5.4 0-3.56-1.26-6.94-2.87-9.09C19.73 6.48 17.68 5.4 15.8 5.4" fill="#0081FB"/>
-  </svg>
+  <img src={metaAdsLogo.url} alt="Meta" className={`${className} object-contain`} />
 );
 
 export const TikTokIcon: React.FC<{ className?: string }> = ({ className = 'w-6 h-6' }) => (
