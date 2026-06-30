@@ -1844,12 +1844,12 @@ const ScenarioBuilder: React.FC = () => {
                     <h3 className="text-base font-bold text-foreground">Деталізація · Формат воронки</h3>
                   </div>
                   <p className="text-xs text-muted-foreground">Оберіть формат воронки, з яким буде працювати інфобіз — від цього залежать туторіали та декомпозиція.</p>
-                  <div className="grid gap-2 grid-cols-1">
+                  <div className="flex flex-col gap-2 w-full">
                     {FUNNEL_FORMATS.map(f => (
                       <button
                         key={f}
                         onClick={() => update({ funnelFormat: f })}
-                        className={`p-2.5 rounded-lg border text-left text-sm transition-all ${
+                        className={`w-full block p-2.5 rounded-lg border text-left text-sm transition-all ${
                           funnelFormat === f
                             ? 'border-primary bg-accent text-accent-foreground font-semibold'
                             : 'border-border bg-card text-foreground hover:border-primary/40'
