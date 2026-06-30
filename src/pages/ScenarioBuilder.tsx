@@ -890,6 +890,18 @@ const ScenarioBuilder: React.FC = () => {
     setClientActions(new Set(['brief', 'payment']));
   }, [scenarioHasExistingProgress, clientActions]);
 
+  // Auto-mark step 3 (Деталізація) saved when niche is not Інфобізнес
+  useEffect(() => {
+    if (scenario?.niche && scenario.niche !== 'Інфобізнес') {
+      setSavedSteps(prev => {
+        if (prev.has('3')) return prev;
+        const next = new Set(prev);
+        next.add('3');
+        return next;
+      });
+    }
+  }, [scenario?.niche]);
+
 
   if (!scenario) {
     if (scenariosLoading) {
@@ -1541,17 +1553,6 @@ const ScenarioBuilder: React.FC = () => {
     setActiveStep(null);
   };
 
-  // Auto-mark step 3 (Деталізація) saved when niche is not Інфобізнес
-  useEffect(() => {
-    if (scenario?.niche && scenario.niche !== 'Інфобізнес') {
-      setSavedSteps(prev => {
-        if (prev.has('3')) return prev;
-        const next = new Set(prev);
-        next.add('3');
-        return next;
-      });
-    }
-  }, [scenario?.niche]);
 
   const RetentionArrow: React.FC = () => {
     const [coords, setCoords] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
