@@ -890,6 +890,18 @@ const ScenarioBuilder: React.FC = () => {
     setClientActions(new Set(['brief', 'payment']));
   }, [scenarioHasExistingProgress, clientActions]);
 
+  // Auto-mark step 3 (Деталізація) saved when niche is not Інфобізнес
+  useEffect(() => {
+    if (scenario?.niche && scenario.niche !== 'Інфобізнес') {
+      setSavedSteps(prev => {
+        if (prev.has('3')) return prev;
+        const next = new Set(prev);
+        next.add('3');
+        return next;
+      });
+    }
+  }, [scenario?.niche]);
+
 
   if (!scenario) {
     if (scenariosLoading) {
