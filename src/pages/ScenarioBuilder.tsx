@@ -2799,6 +2799,37 @@ const ScenarioBuilder: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Required skills dialog */}
+      <Dialog open={skillsOpen} onOpenChange={setSkillsOpen}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground font-bold flex items-center gap-2">
+              <GraduationCap className="w-5 h-5 text-primary" />
+              Потрібні навички для запуску
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">Перегляньте ці відео, щоб впевнено запустити обрану воронку.</p>
+          <div className="space-y-2 pt-2">
+            {(() => {
+              const skills: { title: string; url: string }[] = [];
+              const seen = new Set<string>();
+              const push = (v: { title: string; url: string }) => {
+                if (v && v.url && !seen.has(v.url)) { seen.add(v.url); skills.push(v); }
+              };
+              if (scenario.niche === 'Інфобізнес') push(INFOBIZ_DECOMP_VIDEO);
+              if (scenario.funnelFormat) (FORMAT_VIDEOS[scenario.funnelFormat] || []).forEach(push);
+              return skills.map((v, i) => (
+                <a key={i} href={v.url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><Play className="w-5 h-5" /></div>
+                  <span className="text-sm font-medium text-foreground">{v.title}</span>
+                </a>
+              ));
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Video dialog */}
       <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
