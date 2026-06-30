@@ -2090,7 +2090,7 @@ const ScenarioBuilder: React.FC = () => {
             </div>
           );
 
-        case 6: {
+        case 7: {
           const charCount = (currentCompanyDescription || '').length;
           const canProcess = true;
           const ITEMS_BY_CHANNEL: Record<string, Array<{ icon: string; title: string; type: string }>> = {
