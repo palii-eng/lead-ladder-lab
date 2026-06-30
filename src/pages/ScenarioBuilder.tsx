@@ -2579,7 +2579,7 @@ const ScenarioBuilder: React.FC = () => {
               {(() => {
                 const leadTypes = scenario.leadTypes || [];
                 const shouldBranch = scenario.channel === 'leads' && leadTypes.length > 1 && savedSteps.has('2');
-                const BRANCH_STEPS = STEPS.slice(3); // steps 3-8
+                const BRANCH_STEPS = STEPS.slice(4); // branch-specific steps 4-8
 
                 const getSubtitleForStep = (i: number, branchLeadType?: string) => {
                   switch (i) {
@@ -2591,7 +2591,8 @@ const ScenarioBuilder: React.FC = () => {
                       const base = seoEnabled ? (label ? `${label} + SEO` : 'SEO') : label;
                       return ltLabels ? `${base}\n${ltLabels}` : base;
                     }
-                    case 3: {
+                    case 3: return scenario.niche === 'Інфобізнес' ? (scenario.funnelFormat || '') : '';
+                    case 4: {
                       const branch = branchLeadType && shouldBranch ? scenario.branchData?.[branchLeadType] : null;
                       const decompSet = branch ? branch.decomposition : scenario.decomposition;
                       const bad = calcMetrics(decompSet.bad);
@@ -2604,18 +2605,19 @@ const ScenarioBuilder: React.FC = () => {
                         `🟢 ${pos.leads} лідів → ${pos.revenue.toLocaleString()}$ → ${pos.romi}%`,
                       ].join('\n');
                     }
-                    case 4: {
+                    case 5: {
                       const branch = branchLeadType && shouldBranch ? scenario.branchData?.[branchLeadType] : null;
                       const dests = branch ? branch.leadDestinations : scenario.leadDestinations;
                       return dests.length > 0 ? dests.join('\n') : '';
                     }
-                    case 5: {
+                    case 6: {
                       const branch = branchLeadType && shouldBranch ? scenario.branchData?.[branchLeadType] : null;
                       return (branch ? branch.integrationMethod : scenario.integrationMethod) || '';
                     }
                     default: return '';
                   }
                 };
+
 
                 const renderNode = (stepIdx: number, branchLeadType?: string, isLastInRow = false) => {
                   const s = STEPS[stepIdx];
