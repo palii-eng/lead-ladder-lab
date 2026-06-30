@@ -253,7 +253,10 @@ const normalizeScenario = (value: unknown): Scenario => {
     retention: normalizeRetention(raw.retention),
     branchData,
     aiCache: isRecord(raw.aiCache) ? raw.aiCache as Record<string, string> : undefined,
-  };
+    ...(isRecord(raw.audienceSettings) ? { audienceSettings: raw.audienceSettings } : {}),
+    ...(isRecord(raw.creoSettings) ? { creoSettings: raw.creoSettings } : {}),
+  } as Scenario;
+
 };
 
 const decompScore = (set?: DecompositionSet) => {
