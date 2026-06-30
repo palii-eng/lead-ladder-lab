@@ -2747,11 +2747,11 @@ const ScenarioBuilder: React.FC = () => {
                         {leadTypes.map((lt, brIdx) => (
                           <div key={lt} className="flex items-start gap-0" style={{ height: `${branchRowHeight}px` }}>
                             {(() => {
-                              const visible = BRANCH_STEPS.map((_, bi) => bi).filter(bi => isStepUnlocked(bi + 3, lt));
+                              const visible = BRANCH_STEPS.map((_, bi) => bi).filter(bi => isStepUnlocked(bi + 4, lt));
                               return visible.map((bi, idx) => (
                                 <React.Fragment key={bi}>
-                                  {renderNode(bi + 3, lt, idx === visible.length - 1)}
-                                  {bi === 0 && isStepCompletedForBranch(scenario, 3, lt) && <PrepWorksNode branchKey={lt} />}
+                                  {renderNode(bi + 4, lt, idx === visible.length - 1)}
+                                  {bi === 0 && isStepCompletedForBranch(scenario, 4, lt) && <PrepWorksNode branchKey={lt} />}
                                 </React.Fragment>
                               ));
                             })()}
