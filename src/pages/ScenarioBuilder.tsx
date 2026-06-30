@@ -2731,16 +2731,14 @@ const ScenarioBuilder: React.FC = () => {
                       {!flowGated && <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />}
                     </div>
                     {!flowGated && <>
-                    {/* Shared steps (0, 1, 2, 3) — vertically centered, last node without connector */}
+                    {/* Shared steps (1, 2) — step 3 (Деталізація) moved into each branch */}
                     <div className="flex items-start gap-0 flex-shrink-0" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
                       {(() => {
-                        const visible = [1, 2, 3].filter(i => {
-                          if (i === 3 && scenario.niche !== 'Інфобізнес') return false;
-                          return isStepUnlocked(i);
-                        });
+                        const visible = [1, 2].filter(i => isStepUnlocked(i));
                         return visible.map((i, idx) => renderNode(i, undefined, idx === visible.length - 1));
                       })()}
                     </div>
+
 
                     {/* Branch lines + branch rows */}
                     <div className="relative flex-shrink-0">
