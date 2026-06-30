@@ -90,6 +90,7 @@ export const createDefaultDecompSet = (): DecompositionSet => ({
 });
 
 export const createDefaultBranchData = (): BranchData => ({
+  funnelFormat: '',
   decomposition: createDefaultDecompSet(),
   leadDestinations: [],
   integrationMethod: '',
@@ -98,6 +99,7 @@ export const createDefaultBranchData = (): BranchData => ({
   salesChannelOther: '',
   retention: { emailCount: 0, telegramCount: 0, smsCount: 0, pushCount: 0 },
 });
+
 
 export const createDefaultScenario = (name: string, description: string): Scenario => ({
   id: crypto.randomUUID(),
