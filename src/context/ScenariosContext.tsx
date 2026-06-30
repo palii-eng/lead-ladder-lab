@@ -16,6 +16,7 @@ export interface DecompositionScenario {
 }
 
 export interface BranchData {
+  funnelFormat?: string;
   decomposition: DecompositionSet;
   leadDestinations: string[];
   integrationMethod: string;
@@ -24,6 +25,7 @@ export interface BranchData {
   salesChannelOther?: string;
   retention: RetentionData;
 }
+
 
 export interface RetentionData {
   emailCount: number;
@@ -88,6 +90,7 @@ export const createDefaultDecompSet = (): DecompositionSet => ({
 });
 
 export const createDefaultBranchData = (): BranchData => ({
+  funnelFormat: '',
   decomposition: createDefaultDecompSet(),
   leadDestinations: [],
   integrationMethod: '',
@@ -96,6 +99,7 @@ export const createDefaultBranchData = (): BranchData => ({
   salesChannelOther: '',
   retention: { emailCount: 0, telegramCount: 0, smsCount: 0, pushCount: 0 },
 });
+
 
 export const createDefaultScenario = (name: string, description: string): Scenario => ({
   id: crypto.randomUUID(),
@@ -192,6 +196,7 @@ const normalizeRetention = (value: unknown): RetentionData => {
 const normalizeBranchData = (value: unknown): BranchData => {
   const raw = isRecord(value) ? value : {};
   return {
+    funnelFormat: typeof raw.funnelFormat === 'string' ? raw.funnelFormat : '',
     decomposition: normalizeDecompSet(raw.decomposition),
     leadDestinations: Array.isArray(raw.leadDestinations) ? raw.leadDestinations.filter(Boolean).map(String) : [],
     integrationMethod: typeof raw.integrationMethod === 'string' ? raw.integrationMethod : '',
@@ -201,6 +206,7 @@ const normalizeBranchData = (value: unknown): BranchData => {
     retention: normalizeRetention(raw.retention),
   };
 };
+
 
 const normalizeScenario = (value: unknown): Scenario => {
   const raw = isRecord(value) ? value : {};

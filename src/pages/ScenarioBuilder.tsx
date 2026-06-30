@@ -890,17 +890,22 @@ const ScenarioBuilder: React.FC = () => {
     setClientActions(new Set(['brief', 'payment']));
   }, [scenarioHasExistingProgress, clientActions]);
 
-  // Auto-mark step 3 (Деталізація) saved when niche is not Інфобізнес
+  // Auto-mark step 3 (Деталізація) saved when niche is not Інфобізнес (shared + each branch)
   useEffect(() => {
     if (scenario?.niche && scenario.niche !== 'Інфобізнес') {
       setSavedSteps(prev => {
-        if (prev.has('3')) return prev;
         const next = new Set(prev);
-        next.add('3');
-        return next;
+        let changed = false;
+        if (!next.has('3')) { next.add('3'); changed = true; }
+        (scenario.leadTypes || []).forEach(lt => {
+          const key = `3:${lt}`;
+          if (!next.has(key)) { next.add(key); changed = true; }
+        });
+        return changed ? next : prev;
       });
     }
-  }, [scenario?.niche]);
+  }, [scenario?.niche, scenario?.leadTypes]);
+
 
 
   if (!scenario) {
@@ -1457,6 +1462,7 @@ const ScenarioBuilder: React.FC = () => {
     const branch = s.branchData?.[lt];
     if (!branch) return false;
     switch (i) {
+      case 3: return s.niche !== 'Інфобізнес' || !!branch.funnelFormat;
       case 4: return branch.decomposition.realistic.cpl > 0;
       case 5: return (branch.leadDestinations?.length || 0) > 0;
       case 6: return !!branch.integrationMethod;
@@ -1471,7 +1477,13 @@ const ScenarioBuilder: React.FC = () => {
       case 0: return !!s.niche;
       case 1: return !!s.leadSource;
       case 2: return !!s.channel && (s.channel !== 'leads' || (s.leadTypes && s.leadTypes.length > 0));
-      case 3: return s.niche !== 'Інфобізнес' || !!s.funnelFormat;
+      case 3: {
+        if (s.niche !== 'Інфобізнес') return true;
+        if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
+          return s.leadTypes.every(lt => !!s.branchData?.[lt]?.funnelFormat);
+        }
+        return !!s.funnelFormat;
+      }
       case 4: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
           return s.leadTypes.every(lt => isStepCompletedForBranch(s, 4, lt));
@@ -1507,30 +1519,38 @@ const ScenarioBuilder: React.FC = () => {
     }
   }
 
-  // For shared steps (0-3) use global key, for branch steps (4+) use branch-specific key
+  // For shared steps (0-2) use global key, for branch steps (3+) branch-aware when branching
   const isStepCompleted = (i: number, branchLeadType?: string): boolean => {
-    if (i < 4 || !isBranching) {
+    if (i < 3 || !isBranching) {
       return isStepCompletedStatic(scenario, i) && savedSteps.has(String(i));
     }
     // Branch-specific: check this specific branch
     const lt = branchLeadType || activeLeadType;
     if (!lt) return false;
+    // Non-Інфобіз: step 3 auto-completed per branch
+    if (i === 3 && scenario.niche !== 'Інфобізнес') return true;
     return isStepCompletedForBranch(scenario, i, lt) && savedSteps.has(`${i}:${lt}`);
   };
 
   const isStepUnlocked = (i: number, branchLeadType?: string): boolean => {
     if (i === 0) return hasCompletedClientGate;
-    if (i <= 3) return isStepCompleted(i - 1);
-    // For branch steps (4+), check previous step in the same branch
-    if (i === 4) return isStepCompleted(3); // step 3 (Деталізація) is shared
+    if (i <= 2) return isStepCompleted(i - 1);
+    if (i === 3) return isStepCompleted(2);
     // Висновок (Результат) розблоковується одразу після Продажів — Retention опціональний
     if (i === 9) return isStepCompleted(7, branchLeadType);
     return isStepCompleted(i - 1, branchLeadType);
   };
 
   const canSaveStep = (i: number, branchLeadType?: string): boolean => {
-    if (i === 3 && scenario.niche === 'Інфобізнес' && !scenario.funnelFormat) return false;
-    if (i < 4 || !isBranching) {
+    if (i === 3 && scenario.niche === 'Інфобізнес') {
+      if (isBranching) {
+        const lt = branchLeadType || activeLeadType;
+        if (!lt) return false;
+        return !!scenario.branchData?.[lt]?.funnelFormat;
+      }
+      return !!scenario.funnelFormat;
+    }
+    if (i < 3 || !isBranching) {
       return isStepCompletedStatic(scenario, i);
     }
     const lt = branchLeadType || activeLeadType;
@@ -1541,10 +1561,9 @@ const ScenarioBuilder: React.FC = () => {
   const handleSaveStep = (step: number) => {
     setSavedSteps(prev => {
       const next = new Set(prev);
-      if (step < 4 || !isBranching) {
+      if (step < 3 || !isBranching) {
         next.add(String(step));
       } else {
-        // Save for current active lead type
         if (activeLeadType) next.add(`${step}:${activeLeadType}`);
       }
       return next;
@@ -1865,8 +1884,14 @@ const ScenarioBuilder: React.FC = () => {
             'Через марафон',
             'Продаж та прогрів через Telegram-бот',
           ];
-          const funnelFormat = scenario.funnelFormat || '';
+          const funnelFormat = (isBranching && activeLeadType
+            ? (scenario.branchData?.[activeLeadType]?.funnelFormat || '')
+            : (scenario.funnelFormat || ''));
           const formatVideos = funnelFormat ? (FORMAT_VIDEOS[funnelFormat] || []) : [];
+          const setFunnelFormat = (f: string) => {
+            if (isBranching && activeLeadType) updateBranch({ funnelFormat: f } as any);
+            else update({ funnelFormat: f });
+          };
           if (!isInfobiz) {
             return (
               <div className="space-y-4">
@@ -1895,7 +1920,7 @@ const ScenarioBuilder: React.FC = () => {
                     return (
                       <div key={f} className="relative w-full">
                         <button
-                          onClick={() => update({ funnelFormat: f })}
+                          onClick={() => setFunnelFormat(f)}
                           className={`w-full block p-2.5 ${firstVid ? 'pl-12' : ''} rounded-lg border text-left text-sm transition-all ${
                             funnelFormat === f
                               ? 'border-primary bg-accent text-accent-foreground font-semibold'
@@ -2592,7 +2617,11 @@ const ScenarioBuilder: React.FC = () => {
                       const base = seoEnabled ? (label ? `${label} + SEO` : 'SEO') : label;
                       return ltLabels ? `${base}\n${ltLabels}` : base;
                     }
-                    case 3: return scenario.niche === 'Інфобізнес' ? (scenario.funnelFormat || '') : '';
+                    case 3: {
+                      if (scenario.niche !== 'Інфобізнес') return '';
+                      const branch = branchLeadType && shouldBranch ? scenario.branchData?.[branchLeadType] : null;
+                      return (branch ? branch.funnelFormat : scenario.funnelFormat) || '';
+                    }
                     case 4: {
                       const branch = branchLeadType && shouldBranch ? scenario.branchData?.[branchLeadType] : null;
                       const decompSet = branch ? branch.decomposition : scenario.decomposition;
@@ -2633,11 +2662,11 @@ const ScenarioBuilder: React.FC = () => {
                       <div className="relative">
                         <FlowNode
                           icon={s.icon}
-                          title={branchLeadType && stepIdx === 4
+                          title={branchLeadType && (stepIdx === 3 || stepIdx === 4)
                             ? `${s.title}\n${LEAD_TYPES.find(l => l.value === branchLeadType)?.icon || ''} ${LEAD_TYPES.find(l => l.value === branchLeadType)?.label || ''}`
                             : s.title}
                           index={stepIdx}
-                          isActive={activeStep === stepIdx && (!shouldBranch || stepIdx < 4 || activeLeadType === branchLeadType)}
+                          isActive={activeStep === stepIdx && (!shouldBranch || stepIdx < 3 || activeLeadType === branchLeadType)}
                           isCompleted={isStepCompleted(stepIdx, branchLeadType)}
                           isLast={isLastInRow}
                           isLocked={!isStepUnlocked(stepIdx, branchLeadType)}
@@ -2702,16 +2731,14 @@ const ScenarioBuilder: React.FC = () => {
                       {!flowGated && <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />}
                     </div>
                     {!flowGated && <>
-                    {/* Shared steps (0, 1, 2, 3) — vertically centered, last node without connector */}
+                    {/* Shared steps (1, 2) — step 3 (Деталізація) moved into each branch */}
                     <div className="flex items-start gap-0 flex-shrink-0" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
                       {(() => {
-                        const visible = [1, 2, 3].filter(i => {
-                          if (i === 3 && scenario.niche !== 'Інфобізнес') return false;
-                          return isStepUnlocked(i);
-                        });
+                        const visible = [1, 2].filter(i => isStepUnlocked(i));
                         return visible.map((i, idx) => renderNode(i, undefined, idx === visible.length - 1));
                       })()}
                     </div>
+
 
                     {/* Branch lines + branch rows */}
                     <div className="relative flex-shrink-0">
@@ -2748,16 +2775,22 @@ const ScenarioBuilder: React.FC = () => {
                         {leadTypes.map((lt, brIdx) => (
                           <div key={lt} className="flex items-start gap-0" style={{ height: `${branchRowHeight}px` }}>
                             {(() => {
-                              const visible = BRANCH_STEPS.map((_, bi) => bi).filter(bi => isStepUnlocked(bi + 4, lt));
-                              return visible.map((bi, idx) => (
-                                <React.Fragment key={bi}>
-                                  {renderNode(bi + 4, lt, idx === visible.length - 1)}
-                                  {bi === 0 && isStepCompletedForBranch(scenario, 4, lt) && <PrepWorksNode branchKey={lt} />}
+                              const showDetailization = scenario.niche === 'Інфобізнес';
+                              const branchStepIdxs: number[] = [];
+                              if (showDetailization && isStepUnlocked(3, lt)) branchStepIdxs.push(3);
+                              BRANCH_STEPS.forEach((_, bi) => {
+                                if (isStepUnlocked(bi + 4, lt)) branchStepIdxs.push(bi + 4);
+                              });
+                              return branchStepIdxs.map((stepIdx, idx) => (
+                                <React.Fragment key={stepIdx}>
+                                  {renderNode(stepIdx, lt, idx === branchStepIdxs.length - 1)}
+                                  {stepIdx === 4 && isStepCompletedForBranch(scenario, 4, lt) && <PrepWorksNode branchKey={lt} />}
                                 </React.Fragment>
                               ));
                             })()}
 
                           </div>
+
                         ))}
                       </div>
                     </div>
