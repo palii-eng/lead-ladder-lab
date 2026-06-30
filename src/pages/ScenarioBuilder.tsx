@@ -63,6 +63,24 @@ const STEP_VIDEOS: Record<number, { title: string; url: string }[]> = {
     { title: 'Аналіз результатів', url: 'https://ads-school.online/' },
   ],
 };
+
+const INFOBIZ_DECOMP_VIDEO = { title: 'Декомпозиція в інфобізі — мануал', url: 'https://youtu.be/HehGc_UQq_U' };
+
+const FORMAT_VIDEOS: Record<string, { title: string; url: string }[]> = {
+  'Міні-курс': [
+    { title: 'Міні-курс — розбір воронки', url: 'https://youtu.be/MEI0sIJ0No8' },
+  ],
+  'Вебінарна воронка': [
+    { title: 'Вебінарна воронка — стратегія', url: 'https://youtu.be/Uq34CUskaGo' },
+    { title: 'Вебінарна воронка — технічка', url: 'https://youtu.be/koF-yfdJyYU' },
+  ],
+  'Особистий бренд (прогрів та продаж через Instagram)': [
+    { title: 'Особистий бренд в Instagram — воронка', url: 'https://www.youtube.com/watch?v=97EaUJmeehk' },
+  ],
+  'Продаж та прогрів через Telegram-бот': [
+    { title: 'Воронка через Telegram-бот', url: 'https://youtu.be/NnjSjpG3N4Y' },
+  ],
+};
 const LEAD_SOURCES = [
   { value: 'meta', label: 'Meta реклама', LogoComponent: 'meta' as const },
   { value: 'tiktok', label: 'TikTok реклама', LogoComponent: 'tiktok' as const, soon: true },
