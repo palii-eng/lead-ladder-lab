@@ -1559,8 +1559,8 @@ const ScenarioBuilder: React.FC = () => {
     useEffect(() => {
       const container = document.getElementById('flow-container');
       if (!container) return;
-      const salesNode = container.querySelector('[data-step-index="6"] button') as HTMLElement;
-      const retentionNode = container.querySelector('[data-step-index="7"] button') as HTMLElement;
+      const salesNode = container.querySelector('[data-step-index="7"] button') as HTMLElement;
+      const retentionNode = container.querySelector('[data-step-index="8"] button') as HTMLElement;
       if (!salesNode || !retentionNode) return;
 
       const containerRect = container.getBoundingClientRect();
