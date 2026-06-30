@@ -1879,8 +1879,14 @@ const ScenarioBuilder: React.FC = () => {
             'Через марафон',
             'Продаж та прогрів через Telegram-бот',
           ];
-          const funnelFormat = scenario.funnelFormat || '';
+          const funnelFormat = (isBranching && activeLeadType
+            ? (scenario.branchData?.[activeLeadType]?.funnelFormat || '')
+            : (scenario.funnelFormat || ''));
           const formatVideos = funnelFormat ? (FORMAT_VIDEOS[funnelFormat] || []) : [];
+          const setFunnelFormat = (f: string) => {
+            if (isBranching && activeLeadType) updateBranch({ funnelFormat: f } as any);
+            else update({ funnelFormat: f });
+          };
           if (!isInfobiz) {
             return (
               <div className="space-y-4">
