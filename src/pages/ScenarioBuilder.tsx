@@ -1472,7 +1472,13 @@ const ScenarioBuilder: React.FC = () => {
       case 0: return !!s.niche;
       case 1: return !!s.leadSource;
       case 2: return !!s.channel && (s.channel !== 'leads' || (s.leadTypes && s.leadTypes.length > 0));
-      case 3: return s.niche !== 'Інфобізнес' || !!s.funnelFormat;
+      case 3: {
+        if (s.niche !== 'Інфобізнес') return true;
+        if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
+          return s.leadTypes.every(lt => !!s.branchData?.[lt]?.funnelFormat);
+        }
+        return !!s.funnelFormat;
+      }
       case 4: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
           return s.leadTypes.every(lt => isStepCompletedForBranch(s, 4, lt));
