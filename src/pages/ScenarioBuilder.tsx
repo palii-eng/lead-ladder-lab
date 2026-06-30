@@ -1803,8 +1803,44 @@ const ScenarioBuilder: React.FC = () => {
             { key: 'averageCheck', label: 'Середній чек', suffix: '$' },
             { key: 'marginality', label: 'Маржинальність', suffix: '%' },
           ];
+          const isInfobiz = scenario.niche === 'Інфобізнес';
+          const FUNNEL_FORMATS = [
+            'Міні-курс',
+            'Продаж в холодну через ленд "в лоб"',
+            'Вебінарна воронка',
+            'Особистий бренд (прогрів та продаж через Instagram)',
+            'Через марафон',
+            'Продаж та прогрів через Telegram-бот',
+          ];
+          const funnelFormat = scenario.funnelFormat || '';
+          const needsFormat = isInfobiz && !funnelFormat;
           return (
             <div className="space-y-4">
+              {isInfobiz && (
+                <div className="space-y-2 border border-border rounded-lg p-3 bg-card">
+                  <h3 className="text-base font-bold text-foreground">Деталізація · Формат воронки</h3>
+                  <p className="text-xs text-muted-foreground">Оберіть формат воронки, з яким буде працювати інфобіз.</p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {FUNNEL_FORMATS.map(f => (
+                      <button
+                        key={f}
+                        onClick={() => update({ funnelFormat: f })}
+                        className={`p-2.5 rounded-lg border text-left text-sm transition-all ${
+                          funnelFormat === f
+                            ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                            : 'border-border bg-card text-foreground hover:border-primary/40'
+                        }`}
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {needsFormat ? (
+                <p className="text-xs text-muted-foreground">Оберіть формат воронки, щоб перейти до декомпозиції.</p>
+              ) : (
+              <>
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-foreground">
                   META AD CALCULATOR
