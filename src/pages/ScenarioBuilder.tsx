@@ -1915,7 +1915,7 @@ const ScenarioBuilder: React.FC = () => {
                     return (
                       <div key={f} className="relative w-full">
                         <button
-                          onClick={() => update({ funnelFormat: f })}
+                          onClick={() => setFunnelFormat(f)}
                           className={`w-full block p-2.5 ${firstVid ? 'pl-12' : ''} rounded-lg border text-left text-sm transition-all ${
                             funnelFormat === f
                               ? 'border-primary bg-accent text-accent-foreground font-semibold'
