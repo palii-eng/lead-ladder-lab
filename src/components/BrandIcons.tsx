@@ -1,5 +1,5 @@
 import React from 'react';
-import metaAdsLogo from '@/assets/meta-ads.png.asset.json';
+import metaAdsLogo from '@/assets/meta-ads-v2.png.asset.json';
 
 export const MetaIcon: React.FC<{ className?: string }> = ({ className = 'w-6 h-6' }) => (
   <img src={metaAdsLogo.url} alt="Meta" className={`${className} object-contain`} />
