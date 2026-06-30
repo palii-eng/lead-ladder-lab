@@ -196,6 +196,7 @@ const normalizeRetention = (value: unknown): RetentionData => {
 const normalizeBranchData = (value: unknown): BranchData => {
   const raw = isRecord(value) ? value : {};
   return {
+    funnelFormat: typeof raw.funnelFormat === 'string' ? raw.funnelFormat : '',
     decomposition: normalizeDecompSet(raw.decomposition),
     leadDestinations: Array.isArray(raw.leadDestinations) ? raw.leadDestinations.filter(Boolean).map(String) : [],
     integrationMethod: typeof raw.integrationMethod === 'string' ? raw.integrationMethod : '',
@@ -205,6 +206,7 @@ const normalizeBranchData = (value: unknown): BranchData => {
     retention: normalizeRetention(raw.retention),
   };
 };
+
 
 const normalizeScenario = (value: unknown): Scenario => {
   const raw = isRecord(value) ? value : {};
