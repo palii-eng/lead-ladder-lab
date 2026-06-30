@@ -16,7 +16,7 @@ import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import adsSchoolLogo from '@/assets/ads-school-logo.png';
-import { getBriefForClient, BriefField } from '@/data/clientBriefs';
+import { getBriefForClient, buildGenericBrief, BriefField } from '@/data/clientBriefs';
 import { useAuth } from '@/context/AuthContext';
 
 const STEPS = [
@@ -2775,7 +2775,7 @@ const ScenarioBuilder: React.FC = () => {
 
       {/* Filled brief sheet */}
       <Sheet open={filledBriefOpen} onOpenChange={setFilledBriefOpen}>
-        <SheetContent side="left" className="bg-card border-border w-full sm:max-w-2xl overflow-y-auto">
+        <SheetContent side="left" className="bg-card border-border w-full sm:max-w-[806px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="text-foreground font-bold flex items-center gap-3 pr-32">
               {scenario.clientBrief?.photo && (
@@ -2805,14 +2805,8 @@ const ScenarioBuilder: React.FC = () => {
           </SheetHeader>
           <div className="space-y-3 mt-4">
             {(() => {
-              const brief = getBriefForClient(scenario.clientBrief?.name);
-              if (!brief) {
-                return (
-                  <p className="text-sm text-muted-foreground">
-                    Клієнт ще не повернув заповнений бриф.
-                  </p>
-                );
-              }
+              const brief = getBriefForClient(scenario.clientBrief?.name)
+                ?? buildGenericBrief(scenario.clientBrief);
               return brief.map((f: BriefField, i: number) => (
                 <div
                   key={i}
