@@ -2662,7 +2662,7 @@ const ScenarioBuilder: React.FC = () => {
                       <div className="relative">
                         <FlowNode
                           icon={s.icon}
-                          title={branchLeadType && stepIdx === 4
+                          title={branchLeadType && (stepIdx === 3 || stepIdx === 4)
                             ? `${s.title}\n${LEAD_TYPES.find(l => l.value === branchLeadType)?.icon || ''} ${LEAD_TYPES.find(l => l.value === branchLeadType)?.label || ''}`
                             : s.title}
                           index={stepIdx}
