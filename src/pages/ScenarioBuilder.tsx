@@ -2954,11 +2954,11 @@ const ScenarioBuilder: React.FC = () => {
               if (scenario.niche === 'Інфобізнес') push(INFOBIZ_DECOMP_VIDEO);
               if (scenario.funnelFormat) (FORMAT_VIDEOS[scenario.funnelFormat] || []).forEach(push);
               return skills.map((v, i) => (
-                <a key={i} href={v.url} target="_blank" rel="noopener noreferrer"
+                <div key={i}
                   className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><Play className="w-5 h-5" /></div>
-                  <span className="text-sm font-medium text-foreground">{v.title}</span>
-                </a>
+                  <span className="text-sm font-medium text-foreground flex-1">{v.title}</span>
+                  <VideoBadge url={v.url} title={v.title} size="md" />
+                </div>
               ));
             })()}
           </div>
