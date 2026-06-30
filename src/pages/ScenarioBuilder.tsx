@@ -2209,7 +2209,7 @@ const ScenarioBuilder: React.FC = () => {
           );
         }
 
-        case 7: {
+        case 8: {
           return (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground">Retention — база</h3>
