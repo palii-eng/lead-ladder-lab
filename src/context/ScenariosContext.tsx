@@ -62,6 +62,7 @@ export interface Scenario {
   updatedAt?: string;
   currentStep: number;
   launchMethod: string;
+  funnelFormat?: string;
   decomposition: DecompositionSet;
   decompositionsByType: Record<string, DecompositionSet>;
   leadDestinations: string[];
