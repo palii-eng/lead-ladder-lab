@@ -2439,6 +2439,34 @@ const ScenarioBuilder: React.FC = () => {
             </button>
           )}
 
+          {/* Required skills (videos) button */}
+          {(() => {
+            const skills: { title: string; url: string }[] = [];
+            const seen = new Set<string>();
+            const push = (v: { title: string; url: string }) => {
+              if (v && v.url && !seen.has(v.url) && !v.url.startsWith('https://ads-school.online')) {
+                seen.add(v.url);
+                skills.push(v);
+              }
+            };
+            if (scenario.niche === 'Інфобізнес') push(INFOBIZ_DECOMP_VIDEO);
+            if (scenario.funnelFormat) (FORMAT_VIDEOS[scenario.funnelFormat] || []).forEach(push);
+            if (skills.length === 0) return null;
+            return (
+              <button
+                type="button"
+                onClick={() => setSkillsOpen(true)}
+                className="absolute top-4 left-32 z-20 flex items-center gap-2 px-3 h-10 rounded-full bg-card border border-border shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-primary"
+                title="Відео, які треба переглянути, щоб запустити цю воронку"
+              >
+                <GraduationCap className="w-4 h-4" />
+                <span className="text-xs font-semibold">Потрібні навички</span>
+                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none">{skills.length}</span>
+              </button>
+            );
+          })()}
+
+
           {/* Zoom controls */}
           <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-1 bg-card border border-border rounded-xl shadow-lg p-1">
             <button
