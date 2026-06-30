@@ -825,7 +825,7 @@ const ScenarioBuilder: React.FC = () => {
 
   // Initialize activeLeadType when entering decomposition
   useEffect(() => {
-    if (activeStep === 3 && scenario?.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0 && !scenario.leadTypes?.includes(activeLeadType)) {
+    if (activeStep === 4 && scenario?.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0 && !scenario.leadTypes?.includes(activeLeadType)) {
       setActiveLeadType(scenario.leadTypes[0]);
     }
   }, [activeStep, scenario?.channel, scenario?.leadTypes, activeLeadType]);
