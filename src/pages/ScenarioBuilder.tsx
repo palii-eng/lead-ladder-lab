@@ -2197,7 +2197,7 @@ const ScenarioBuilder: React.FC = () => {
                 </div>
               )}
               <SaveButton
-                step={6}
+                step={7}
                 sticky
                 label={salesItems.length > 0 ? 'Відправити рекомендації клієнту' : 'Зберегти та продовжити'}
                 disabled={
