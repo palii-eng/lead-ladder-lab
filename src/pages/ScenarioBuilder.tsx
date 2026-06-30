@@ -981,36 +981,57 @@ const ScenarioBuilder: React.FC = () => {
       <button
         type="button"
         onClick={() => { if (!wasDragged.current) setClientBriefOpen(true); }}
-        className={`flex-shrink-0 rounded-3xl bg-card border border-border shadow-sm overflow-hidden text-left hover:-translate-y-0.5 hover:shadow-md transition-all ${compact ? 'w-[260px]' : 'w-[280px]'}`}
-        style={{ boxShadow: '0 10px 30px -15px hsl(var(--foreground) / 0.18)' }}
+        className={`flex-shrink-0 flex items-end gap-3 text-left group ${compact ? 'w-[300px]' : 'w-[320px]'}`}
         data-flow-node
         title="Натисніть, щоб прочитати запит клієнта"
       >
-        <div className="relative aspect-square bg-secondary rounded-t-3xl overflow-hidden">
-          <img
-            src={b.photo}
-            alt={b.name}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${b.name}`;
-            }}
-          />
-          <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 via-black/30 to-transparent">
-            <p className="text-white font-bold text-base leading-tight">{b.name}</p>
-            {b.niche && <p className="text-white/85 text-xs mt-0.5">{b.niche}</p>}
+        {/* Round Telegram-style avatar */}
+        <div className="relative flex-shrink-0">
+          <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-card shadow-md bg-secondary">
+            <img
+              src={b.photo}
+              alt={b.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${b.name}`;
+              }}
+            />
           </div>
-          {b.source && (
-            <span className="absolute top-2 right-2 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur text-foreground text-[9px] font-semibold uppercase tracking-wide shadow-sm">
-              {b.source}
-            </span>
-          )}
+          <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-card" />
         </div>
-        <div className="p-4">
-          <p className="text-[10px] font-bold text-foreground/60 uppercase tracking-wider mb-1.5">
-            Клієнт
-          </p>
-          <p className="text-xs text-foreground leading-relaxed line-clamp-4">{b.task}</p>
-          <p className="text-[10px] text-primary font-semibold mt-2">Натисніть, щоб прочитати повністю →</p>
+
+        {/* Telegram-style message bubble */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2 mb-1 px-1">
+            <span className="text-sm font-semibold text-foreground truncate">{b.name}</span>
+            {b.source && (
+              <span className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground truncate">
+                · {b.source}
+              </span>
+            )}
+          </div>
+          <div
+            className="relative rounded-2xl rounded-bl-md bg-card border border-border px-3.5 py-2.5 shadow-sm group-hover:-translate-y-0.5 group-hover:shadow-md transition-all"
+            style={{ boxShadow: '0 8px 24px -12px hsl(var(--foreground) / 0.18)' }}
+          >
+            {/* Bubble tail */}
+            <span
+              className="absolute -left-1.5 bottom-2 w-3 h-3 bg-card border-l border-b border-border"
+              style={{ transform: 'rotate(45deg)' }}
+            />
+            {b.niche && (
+              <p className="text-[10px] font-bold text-foreground/50 uppercase tracking-wider mb-1">
+                {b.niche}
+              </p>
+            )}
+            <p className="text-xs text-foreground leading-relaxed line-clamp-4 whitespace-pre-wrap">
+              {b.task}
+            </p>
+            <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-border/60">
+              <span className="text-[10px] text-primary font-semibold">Читати повністю →</span>
+              <span className="text-[9px] text-muted-foreground">щойно</span>
+            </div>
+          </div>
         </div>
       </button>
     );
