@@ -2740,7 +2740,13 @@ const ScenarioBuilder: React.FC = () => {
                     {/* Shared steps (1, 2) — step 3 (Деталізація) moved into each branch */}
                     <div className="flex items-start gap-0 flex-shrink-0" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
                       {(() => {
-                        const visible = [1, 2].filter(i => isStepUnlocked(i));
+                        const visible: number[] = [];
+                        for (const i of [1, 2]) {
+                          if (isStepUnlocked(i)) {
+                            visible.push(i);
+                            if (!isStepCompleted(i)) break;
+                          } else break;
+                        }
                         return visible.map((i, idx) => renderNode(i, undefined, idx === visible.length - 1));
                       })()}
                     </div>
