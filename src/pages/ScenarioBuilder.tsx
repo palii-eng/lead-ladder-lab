@@ -1445,11 +1445,11 @@ const ScenarioBuilder: React.FC = () => {
     const branch = s.branchData?.[lt];
     if (!branch) return false;
     switch (i) {
-      case 3: return branch.decomposition.realistic.cpl > 0;
-      case 4: return (branch.leadDestinations?.length || 0) > 0;
-      case 5: return !!branch.integrationMethod;
-      case 6: return isSalesCompletedFor(s, lt);
-      case 7: return (branch.retention?.emailCount || 0) > 0;
+      case 4: return branch.decomposition.realistic.cpl > 0;
+      case 5: return (branch.leadDestinations?.length || 0) > 0;
+      case 6: return !!branch.integrationMethod;
+      case 7: return isSalesCompletedFor(s, lt);
+      case 8: return (branch.retention?.emailCount || 0) > 0;
       default: return false;
     }
   }
@@ -1459,37 +1459,38 @@ const ScenarioBuilder: React.FC = () => {
       case 0: return !!s.niche;
       case 1: return !!s.leadSource;
       case 2: return !!s.channel && (s.channel !== 'leads' || (s.leadTypes && s.leadTypes.length > 0));
-      case 3: {
-        if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
-          return s.leadTypes.every(lt => isStepCompletedForBranch(s, 3, lt));
-        }
-        return s.decomposition.realistic.cpl > 0;
-      }
+      case 3: return s.niche !== 'Інфобізнес' || !!s.funnelFormat;
       case 4: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
           return s.leadTypes.every(lt => isStepCompletedForBranch(s, 4, lt));
         }
-        return s.leadDestinations.length > 0;
+        return s.decomposition.realistic.cpl > 0;
       }
       case 5: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
           return s.leadTypes.every(lt => isStepCompletedForBranch(s, 5, lt));
         }
-        return !!s.integrationMethod;
+        return s.leadDestinations.length > 0;
       }
       case 6: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
           return s.leadTypes.every(lt => isStepCompletedForBranch(s, 6, lt));
         }
-        return isSalesCompletedFor(s);
+        return !!s.integrationMethod;
       }
       case 7: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
           return s.leadTypes.every(lt => isStepCompletedForBranch(s, 7, lt));
         }
+        return isSalesCompletedFor(s);
+      }
+      case 8: {
+        if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
+          return s.leadTypes.every(lt => isStepCompletedForBranch(s, 8, lt));
+        }
         return s.retention.emailCount > 0;
       }
-      case 8: return s.status === 'completed';
+      case 9: return s.status === 'completed';
       default: return false;
     }
   }
