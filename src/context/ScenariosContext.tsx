@@ -235,6 +235,7 @@ const normalizeScenario = (value: unknown): Scenario => {
     updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : createdAt,
     currentStep: Number(raw.currentStep) || 0,
     launchMethod: typeof raw.launchMethod === 'string' ? raw.launchMethod : '',
+    funnelFormat: typeof raw.funnelFormat === 'string' ? raw.funnelFormat : '',
     decomposition: normalizeDecompSet(raw.decomposition),
     decompositionsByType,
     leadDestinations: Array.isArray(raw.leadDestinations) ? raw.leadDestinations.filter(Boolean).map(String) : [],
