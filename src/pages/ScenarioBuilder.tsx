@@ -23,6 +23,7 @@ const STEPS = [
   { title: 'Вибір ніші', icon: '🎯' },
   { title: 'Джерело трафіку', icon: '📡' },
   { title: 'Ціль оптимізації', icon: '🚀' },
+  { title: 'Деталізація', icon: '🧩' },
   { title: 'Декомпозиція', icon: '📊' },
   { title: 'Куди йдуть ліди', icon: '📥' },
   { title: 'Інтеграція', icon: '🔗' },
@@ -44,23 +45,26 @@ const STEP_VIDEOS: Record<number, { title: string; url: string }[]> = {
     { title: 'SEO vs PPC: що обрати', url: 'https://ads-school.online/' },
   ],
   3: [
+    { title: 'Деталізація формату воронки', url: 'https://ads-school.online/' },
+  ],
+  4: [
     { title: 'Як рахувати декомпозицію', url: 'https://ads-school.online/' },
     { title: 'Бенчмарки по нішах', url: 'https://ads-school.online/' },
   ],
-  4: [
+  5: [
     { title: 'Куди направляти ліди', url: 'https://ads-school.online/' },
   ],
-  5: [
+  6: [
     { title: 'Інтеграція CRM з рекламою', url: 'https://ads-school.online/' },
   ],
-  6: [
+  7: [
     { title: 'Скрипти продажів', url: 'https://ads-school.online/' },
     { title: 'Follow-up стратегії', url: 'https://ads-school.online/' },
   ],
-  7: [
+  8: [
     { title: 'Email-маркетинг для retention', url: 'https://ads-school.online/' },
   ],
-  8: [
+  9: [
     { title: 'Аналіз результатів', url: 'https://ads-school.online/' },
   ],
 };
@@ -676,19 +680,12 @@ const ScenarioBuilder: React.FC = () => {
     } else {
       setAiConclusionText('');
     }
-    if (activeStep === 8 && !cached && !aiConclusionLoading) {
+    if (activeStep === 9 && !cached && !aiConclusionLoading) {
       fetchAiConclusion();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStep, activeLeadType, id]);
 
-  // Reset format confirmation gate when opening step 3
-  useEffect(() => {
-    if (activeStep === 3) {
-      const hasDecomp = !!(scenario as any)?.budget || !!(scenario as any)?.cpm;
-      setFormatConfirmed(hasDecomp);
-    }
-  }, [activeStep, scenario?.id]);
 
   const sendToCurator = useCallback(async () => {
     if (!scenario) return;
@@ -772,7 +769,7 @@ const ScenarioBuilder: React.FC = () => {
       for (let i = 0; i < STEPS.length; i++) {
         if (isStepCompletedStatic(scenario, i)) set.add(String(i));
         // Also check per-branch completion
-        if (scenario.channel === 'leads' && scenario.leadTypes?.length > 1 && i >= 3) {
+        if (scenario.channel === 'leads' && scenario.leadTypes?.length > 1 && i >= 4) {
           scenario.leadTypes.forEach(lt => {
             if (isStepCompletedForBranch(scenario, i, lt)) set.add(`${i}:${lt}`);
           });
@@ -828,7 +825,7 @@ const ScenarioBuilder: React.FC = () => {
 
   // Initialize activeLeadType when entering decomposition
   useEffect(() => {
-    if (activeStep === 3 && scenario?.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0 && !scenario.leadTypes?.includes(activeLeadType)) {
+    if (activeStep === 4 && scenario?.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0 && !scenario.leadTypes?.includes(activeLeadType)) {
       setActiveLeadType(scenario.leadTypes[0]);
     }
   }, [activeStep, scenario?.channel, scenario?.leadTypes, activeLeadType]);
@@ -1448,11 +1445,11 @@ const ScenarioBuilder: React.FC = () => {
     const branch = s.branchData?.[lt];
     if (!branch) return false;
     switch (i) {
-      case 3: return branch.decomposition.realistic.cpl > 0;
-      case 4: return (branch.leadDestinations?.length || 0) > 0;
-      case 5: return !!branch.integrationMethod;
-      case 6: return isSalesCompletedFor(s, lt);
-      case 7: return (branch.retention?.emailCount || 0) > 0;
+      case 4: return branch.decomposition.realistic.cpl > 0;
+      case 5: return (branch.leadDestinations?.length || 0) > 0;
+      case 6: return !!branch.integrationMethod;
+      case 7: return isSalesCompletedFor(s, lt);
+      case 8: return (branch.retention?.emailCount || 0) > 0;
       default: return false;
     }
   }
@@ -1462,44 +1459,45 @@ const ScenarioBuilder: React.FC = () => {
       case 0: return !!s.niche;
       case 1: return !!s.leadSource;
       case 2: return !!s.channel && (s.channel !== 'leads' || (s.leadTypes && s.leadTypes.length > 0));
-      case 3: {
-        if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
-          return s.leadTypes.every(lt => isStepCompletedForBranch(s, 3, lt));
-        }
-        return s.decomposition.realistic.cpl > 0;
-      }
+      case 3: return s.niche !== 'Інфобізнес' || !!s.funnelFormat;
       case 4: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
           return s.leadTypes.every(lt => isStepCompletedForBranch(s, 4, lt));
         }
-        return s.leadDestinations.length > 0;
+        return s.decomposition.realistic.cpl > 0;
       }
       case 5: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
           return s.leadTypes.every(lt => isStepCompletedForBranch(s, 5, lt));
         }
-        return !!s.integrationMethod;
+        return s.leadDestinations.length > 0;
       }
       case 6: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
           return s.leadTypes.every(lt => isStepCompletedForBranch(s, 6, lt));
         }
-        return isSalesCompletedFor(s);
+        return !!s.integrationMethod;
       }
       case 7: {
         if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
           return s.leadTypes.every(lt => isStepCompletedForBranch(s, 7, lt));
         }
+        return isSalesCompletedFor(s);
+      }
+      case 8: {
+        if (s.channel === 'leads' && s.leadTypes && s.leadTypes.length > 1) {
+          return s.leadTypes.every(lt => isStepCompletedForBranch(s, 8, lt));
+        }
         return s.retention.emailCount > 0;
       }
-      case 8: return s.status === 'completed';
+      case 9: return s.status === 'completed';
       default: return false;
     }
   }
 
-  // For shared steps (0-2) use global key, for branch steps (3+) use branch-specific key
+  // For shared steps (0-3) use global key, for branch steps (4+) use branch-specific key
   const isStepCompleted = (i: number, branchLeadType?: string): boolean => {
-    if (i < 3 || !isBranching) {
+    if (i < 4 || !isBranching) {
       return isStepCompletedStatic(scenario, i) && savedSteps.has(String(i));
     }
     // Branch-specific: check this specific branch
@@ -1510,17 +1508,17 @@ const ScenarioBuilder: React.FC = () => {
 
   const isStepUnlocked = (i: number, branchLeadType?: string): boolean => {
     if (i === 0) return hasCompletedClientGate;
-    if (i <= 2) return isStepCompleted(i - 1);
-    // For branch steps (3+), check previous step in the same branch
-    if (i === 3) return isStepCompleted(2); // step 2 is shared
+    if (i <= 3) return isStepCompleted(i - 1);
+    // For branch steps (4+), check previous step in the same branch
+    if (i === 4) return isStepCompleted(3); // step 3 (Деталізація) is shared
     // Висновок (Результат) розблоковується одразу після Продажів — Retention опціональний
-    if (i === 8) return isStepCompleted(6, branchLeadType);
+    if (i === 9) return isStepCompleted(7, branchLeadType);
     return isStepCompleted(i - 1, branchLeadType);
   };
 
   const canSaveStep = (i: number, branchLeadType?: string): boolean => {
     if (i === 3 && scenario.niche === 'Інфобізнес' && !scenario.funnelFormat) return false;
-    if (i < 3 || !isBranching) {
+    if (i < 4 || !isBranching) {
       return isStepCompletedStatic(scenario, i);
     }
     const lt = branchLeadType || activeLeadType;
@@ -1531,7 +1529,7 @@ const ScenarioBuilder: React.FC = () => {
   const handleSaveStep = (step: number) => {
     setSavedSteps(prev => {
       const next = new Set(prev);
-      if (step < 3 || !isBranching) {
+      if (step < 4 || !isBranching) {
         next.add(String(step));
       } else {
         // Save for current active lead type
@@ -1543,14 +1541,26 @@ const ScenarioBuilder: React.FC = () => {
     setActiveStep(null);
   };
 
+  // Auto-mark step 3 (Деталізація) saved when niche is not Інфобізнес
+  useEffect(() => {
+    if (scenario?.niche && scenario.niche !== 'Інфобізнес') {
+      setSavedSteps(prev => {
+        if (prev.has('3')) return prev;
+        const next = new Set(prev);
+        next.add('3');
+        return next;
+      });
+    }
+  }, [scenario?.niche]);
+
   const RetentionArrow: React.FC = () => {
     const [coords, setCoords] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
 
     useEffect(() => {
       const container = document.getElementById('flow-container');
       if (!container) return;
-      const salesNode = container.querySelector('[data-step-index="6"] button') as HTMLElement;
-      const retentionNode = container.querySelector('[data-step-index="7"] button') as HTMLElement;
+      const salesNode = container.querySelector('[data-step-index="7"] button') as HTMLElement;
+      const retentionNode = container.querySelector('[data-step-index="8"] button') as HTMLElement;
       if (!salesNode || !retentionNode) return;
 
       const containerRect = container.getBoundingClientRect();
@@ -1845,15 +1855,6 @@ const ScenarioBuilder: React.FC = () => {
 
 
         case 3: {
-          const inputFields: { key: keyof DecompositionScenario; label: string; suffix: string }[] = [
-            { key: 'budget', label: 'FB Ad Бюджет', suffix: '$' },
-            { key: 'cpm', label: 'CPM', suffix: '$' },
-            { key: 'ctr', label: 'Ad CTR', suffix: '%' },
-            { key: 'landingConversion', label: 'Конверсія перегляду → заявка', suffix: '%' },
-            { key: 'conversionRate', label: 'Конверсія заявки → покупка', suffix: '%' },
-            { key: 'averageCheck', label: 'Середній чек', suffix: '$' },
-            { key: 'marginality', label: 'Маржинальність', suffix: '%' },
-          ];
           const isInfobiz = scenario.niche === 'Інфобізнес';
           const FUNNEL_FORMATS = [
             'Міні-курс',
@@ -1864,75 +1865,92 @@ const ScenarioBuilder: React.FC = () => {
             'Продаж та прогрів через Telegram-бот',
           ];
           const funnelFormat = scenario.funnelFormat || '';
-          const needsFormat = isInfobiz && !funnelFormat;
           const formatVideos = funnelFormat ? (FORMAT_VIDEOS[funnelFormat] || []) : [];
+          if (!isInfobiz) {
+            return (
+              <div className="space-y-4">
+                <div className="space-y-2 border-2 border-dashed border-border rounded-lg p-4 bg-secondary/40">
+                  <h3 className="text-base font-bold text-foreground">Деталізація формату</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Цей модуль доступний лише для ніші <span className="font-semibold">Інфобізнес</span>. Натисніть «Зберегти та продовжити», щоб перейти до декомпозиції.
+                  </p>
+                </div>
+                <SaveButton step={3} />
+              </div>
+            );
+          }
           return (
             <div className="space-y-4">
-              {isInfobiz && (
-                <div className="space-y-2 border-2 border-primary/30 rounded-lg p-3 bg-primary/5">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wide">Додатковий модуль</span>
-                    <h3 className="text-base font-bold text-foreground">Деталізація · Формат воронки</h3>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Оберіть формат воронки, з яким буде працювати інфобіз — від цього залежать туторіали та декомпозиція.</p>
-                  <div className="flex flex-col gap-2 w-full">
-                    {FUNNEL_FORMATS.map(f => {
-                      const vids = FORMAT_VIDEOS[f] || [];
-                      const firstVid = vids[0];
-                      return (
-                        <div key={f} className="relative w-full">
-                          <button
-                            onClick={() => update({ funnelFormat: f })}
-                            className={`w-full block p-2.5 ${firstVid ? 'pl-12' : ''} rounded-lg border text-left text-sm transition-all ${
-                              funnelFormat === f
-                                ? 'border-primary bg-accent text-accent-foreground font-semibold'
-                                : 'border-border bg-card text-foreground hover:border-primary/40'
-                            }`}
-                          >
-                            {f}
-                          </button>
-                          {firstVid && (
-                            <a
-                              href={firstVid.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              title={`Відео: ${firstVid.title}`}
-                              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/30 flex items-center justify-center text-primary transition-all"
-                            >
-                              <Play className="w-3.5 h-3.5" fill="currentColor" />
-                            </a>
-                          )}
-
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {formatVideos.length > 0 && (
-                    <div className="mt-2 space-y-1.5">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/60">Туторіали по цьому формату</p>
-                      {formatVideos.map((v, i) => (
-                        <a key={i} href={v.url} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card hover:border-primary/40 transition-all">
-                          <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-primary"><Play className="w-3.5 h-3.5" /></div>
-                          <span className="text-xs font-medium text-foreground">{v.title}</span>
-                        </a>
-                      ))}
-                    </div>
-                  )}
+              <div className="space-y-2 border-2 border-primary/30 rounded-lg p-3 bg-primary/5">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wide">Додатковий модуль</span>
+                  <h3 className="text-base font-bold text-foreground">Деталізація · Формат воронки</h3>
                 </div>
-              )}
-              {isInfobiz && !formatConfirmed ? (
-                <Button
-                  onClick={() => setFormatConfirmed(true)}
-                  disabled={!funnelFormat}
-                  className="w-full gap-2"
-                >
-                  Перейти до декомпозиції <ArrowRight className="w-4 h-4" />
-                </Button>
-              ) : (
-              <>
+                <p className="text-xs text-muted-foreground">Оберіть формат воронки, з яким буде працювати інфобіз — від цього залежать туторіали та декомпозиція.</p>
+                <div className="flex flex-col gap-2 w-full">
+                  {FUNNEL_FORMATS.map(f => {
+                    const vids = FORMAT_VIDEOS[f] || [];
+                    const firstVid = vids[0];
+                    return (
+                      <div key={f} className="relative w-full">
+                        <button
+                          onClick={() => update({ funnelFormat: f })}
+                          className={`w-full block p-2.5 ${firstVid ? 'pl-12' : ''} rounded-lg border text-left text-sm transition-all ${
+                            funnelFormat === f
+                              ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                              : 'border-border bg-card text-foreground hover:border-primary/40'
+                          }`}
+                        >
+                          {f}
+                        </button>
+                        {firstVid && (
+                          <a
+                            href={firstVid.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            title={`Відео: ${firstVid.title}`}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/30 flex items-center justify-center text-primary transition-all"
+                          >
+                            <Play className="w-3.5 h-3.5" fill="currentColor" />
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {formatVideos.length > 0 && (
+                  <div className="mt-2 space-y-1.5">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/60">Туторіали по цьому формату</p>
+                    {formatVideos.map((v, i) => (
+                      <a key={i} href={v.url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card hover:border-primary/40 transition-all">
+                        <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-primary"><Play className="w-3.5 h-3.5" /></div>
+                        <span className="text-xs font-medium text-foreground">{v.title}</span>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <SaveButton step={3} />
+            </div>
+          );
+        }
+
+        case 4: {
+          const inputFields: { key: keyof DecompositionScenario; label: string; suffix: string }[] = [
+            { key: 'budget', label: 'FB Ad Бюджет', suffix: '$' },
+            { key: 'cpm', label: 'CPM', suffix: '$' },
+            { key: 'ctr', label: 'Ad CTR', suffix: '%' },
+            { key: 'landingConversion', label: 'Конверсія перегляду → заявка', suffix: '%' },
+            { key: 'conversionRate', label: 'Конверсія заявки → покупка', suffix: '%' },
+            { key: 'averageCheck', label: 'Середній чек', suffix: '$' },
+            { key: 'marginality', label: 'Маржинальність', suffix: '%' },
+          ];
+          const isInfobiz = scenario.niche === 'Інфобізнес';
+          return (
+            <div className="space-y-4">
               {isInfobiz && (
                 <a href={INFOBIZ_DECOMP_VIDEO.url} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 p-2 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
@@ -2014,14 +2032,13 @@ const ScenarioBuilder: React.FC = () => {
                 ))}
               </div>
 
-              <SaveButton step={3} />
-              </>
-              )}
+              <SaveButton step={4} />
             </div>
           );
         }
 
-        case 4:
+
+        case 5:
           return (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground">Куди надходять ліди?</h3>
@@ -2040,11 +2057,11 @@ const ScenarioBuilder: React.FC = () => {
                   </button>
                 ))}
               </div>
-              <SaveButton step={4} />
+              <SaveButton step={5} />
             </div>
           );
 
-        case 5:
+        case 6:
           return (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground">Спосіб інтеграції</h3>
@@ -2069,11 +2086,11 @@ const ScenarioBuilder: React.FC = () => {
                   </button>
                 ))}
               </div>
-              <SaveButton step={5} />
+              <SaveButton step={6} />
             </div>
           );
 
-        case 6: {
+        case 7: {
           const charCount = (currentCompanyDescription || '').length;
           const canProcess = true;
           const ITEMS_BY_CHANNEL: Record<string, Array<{ icon: string; title: string; type: string }>> = {
@@ -2180,7 +2197,7 @@ const ScenarioBuilder: React.FC = () => {
                 </div>
               )}
               <SaveButton
-                step={6}
+                step={7}
                 sticky
                 label={salesItems.length > 0 ? 'Відправити рекомендації клієнту' : 'Зберегти та продовжити'}
                 disabled={
@@ -2192,7 +2209,7 @@ const ScenarioBuilder: React.FC = () => {
           );
         }
 
-        case 7: {
+        case 8: {
           return (
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground">Retention — база</h3>
@@ -2253,12 +2270,12 @@ const ScenarioBuilder: React.FC = () => {
                   })}
                 </div>
               )}
-              <SaveButton step={7} />
+              <SaveButton step={8} />
             </div>
           );
         }
 
-        case 8: {
+        case 9: {
           const decompSet = isBranching && activeLeadType ? getBranch().decomposition : scenario.decomposition;
           const real = calcMetrics(decompSet.realistic);
           const bad = calcMetrics(decompSet.bad);
@@ -2562,7 +2579,7 @@ const ScenarioBuilder: React.FC = () => {
               {(() => {
                 const leadTypes = scenario.leadTypes || [];
                 const shouldBranch = scenario.channel === 'leads' && leadTypes.length > 1 && savedSteps.has('2');
-                const BRANCH_STEPS = STEPS.slice(3); // steps 3-8
+                const BRANCH_STEPS = STEPS.slice(4); // branch-specific steps 4-8
 
                 const getSubtitleForStep = (i: number, branchLeadType?: string) => {
                   switch (i) {
@@ -2574,7 +2591,8 @@ const ScenarioBuilder: React.FC = () => {
                       const base = seoEnabled ? (label ? `${label} + SEO` : 'SEO') : label;
                       return ltLabels ? `${base}\n${ltLabels}` : base;
                     }
-                    case 3: {
+                    case 3: return scenario.niche === 'Інфобізнес' ? (scenario.funnelFormat || '') : '';
+                    case 4: {
                       const branch = branchLeadType && shouldBranch ? scenario.branchData?.[branchLeadType] : null;
                       const decompSet = branch ? branch.decomposition : scenario.decomposition;
                       const bad = calcMetrics(decompSet.bad);
@@ -2587,12 +2605,12 @@ const ScenarioBuilder: React.FC = () => {
                         `🟢 ${pos.leads} лідів → ${pos.revenue.toLocaleString()}$ → ${pos.romi}%`,
                       ].join('\n');
                     }
-                    case 4: {
+                    case 5: {
                       const branch = branchLeadType && shouldBranch ? scenario.branchData?.[branchLeadType] : null;
                       const dests = branch ? branch.leadDestinations : scenario.leadDestinations;
                       return dests.length > 0 ? dests.join('\n') : '';
                     }
-                    case 5: {
+                    case 6: {
                       const branch = branchLeadType && shouldBranch ? scenario.branchData?.[branchLeadType] : null;
                       return (branch ? branch.integrationMethod : scenario.integrationMethod) || '';
                     }
@@ -2600,24 +2618,25 @@ const ScenarioBuilder: React.FC = () => {
                   }
                 };
 
+
                 const renderNode = (stepIdx: number, branchLeadType?: string, isLastInRow = false) => {
                   const s = STEPS[stepIdx];
                   const subtitle = (isStepCompleted(stepIdx, branchLeadType) || (branchLeadType ? isStepCompletedForBranch(scenario, stepIdx, branchLeadType) : isStepCompletedStatic(scenario, stepIdx))) 
                     ? getSubtitleForStep(stepIdx, branchLeadType) : '';
                   
                   // Check if decomposition is completed for this branch to show AI hint
-                  const showAiHint = stepIdx === 3 && (branchLeadType ? isStepCompletedForBranch(scenario, 3, branchLeadType) : isStepCompletedStatic(scenario, 3));
+                  const showAiHint = stepIdx === 4 && (branchLeadType ? isStepCompletedForBranch(scenario, 4, branchLeadType) : isStepCompletedStatic(scenario, 4));
 
                   return (
                     <div key={`${stepIdx}-${branchLeadType || 'main'}`} className="flex items-start" data-flow-node data-step-index={stepIdx}>
                       <div className="relative">
                         <FlowNode
                           icon={s.icon}
-                          title={branchLeadType && stepIdx === 3
+                          title={branchLeadType && stepIdx === 4
                             ? `${s.title}\n${LEAD_TYPES.find(l => l.value === branchLeadType)?.icon || ''} ${LEAD_TYPES.find(l => l.value === branchLeadType)?.label || ''}`
                             : s.title}
                           index={stepIdx}
-                          isActive={activeStep === stepIdx && (!shouldBranch || stepIdx < 3 || activeLeadType === branchLeadType)}
+                          isActive={activeStep === stepIdx && (!shouldBranch || stepIdx < 4 || activeLeadType === branchLeadType)}
                           isCompleted={isStepCompleted(stepIdx, branchLeadType)}
                           isLast={isLastInRow}
                           isLocked={!isStepUnlocked(stepIdx, branchLeadType)}
@@ -2649,17 +2668,20 @@ const ScenarioBuilder: React.FC = () => {
                           {!flowGated && <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />}
                         </div>
                         {!flowGated && (() => {
-                          const visible = STEPS.map((_, i) => i).filter(i => i === 0 || isStepUnlocked(i));
+                          const visible = STEPS.map((_, i) => i).filter(i => {
+                            if (i === 3 && scenario.niche !== 'Інфобізнес') return false;
+                            return i === 0 || isStepUnlocked(i);
+                          });
                           return visible.map((i, idx) => (
                             <React.Fragment key={i}>
                               {renderNode(i, undefined, idx === visible.length - 1)}
-                              {i === 3 && isStepCompletedStatic(scenario, 3) && <PrepWorksNode />}
+                              {i === 4 && isStepCompletedStatic(scenario, 4) && <PrepWorksNode />}
                             </React.Fragment>
                           ));
                         })()}
 
                       </div>
-                      {scenario.retention.emailCount > 0 && savedSteps.has('7') && <RetentionArrow />}
+                      {scenario.retention.emailCount > 0 && savedSteps.has('8') && <RetentionArrow />}
                     </>
                   );
                 }
@@ -2679,10 +2701,13 @@ const ScenarioBuilder: React.FC = () => {
                       {!flowGated && <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />}
                     </div>
                     {!flowGated && <>
-                    {/* Shared steps (0, 1, 2) — vertically centered, last node without connector */}
+                    {/* Shared steps (0, 1, 2, 3) — vertically centered, last node without connector */}
                     <div className="flex items-start gap-0 flex-shrink-0" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
                       {(() => {
-                        const visible = [1, 2].filter(i => isStepUnlocked(i));
+                        const visible = [1, 2, 3].filter(i => {
+                          if (i === 3 && scenario.niche !== 'Інфобізнес') return false;
+                          return isStepUnlocked(i);
+                        });
                         return visible.map((i, idx) => renderNode(i, undefined, idx === visible.length - 1));
                       })()}
                     </div>
@@ -2722,11 +2747,11 @@ const ScenarioBuilder: React.FC = () => {
                         {leadTypes.map((lt, brIdx) => (
                           <div key={lt} className="flex items-start gap-0" style={{ height: `${branchRowHeight}px` }}>
                             {(() => {
-                              const visible = BRANCH_STEPS.map((_, bi) => bi).filter(bi => isStepUnlocked(bi + 3, lt));
+                              const visible = BRANCH_STEPS.map((_, bi) => bi).filter(bi => isStepUnlocked(bi + 4, lt));
                               return visible.map((bi, idx) => (
                                 <React.Fragment key={bi}>
-                                  {renderNode(bi + 3, lt, idx === visible.length - 1)}
-                                  {bi === 0 && isStepCompletedForBranch(scenario, 3, lt) && <PrepWorksNode branchKey={lt} />}
+                                  {renderNode(bi + 4, lt, idx === visible.length - 1)}
+                                  {bi === 0 && isStepCompletedForBranch(scenario, 4, lt) && <PrepWorksNode branchKey={lt} />}
                                 </React.Fragment>
                               ));
                             })()}
