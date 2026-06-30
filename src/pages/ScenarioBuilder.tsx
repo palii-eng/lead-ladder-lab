@@ -1495,9 +1495,9 @@ const ScenarioBuilder: React.FC = () => {
     }
   }
 
-  // For shared steps (0-2) use global key, for branch steps (3+) use branch-specific key
+  // For shared steps (0-3) use global key, for branch steps (4+) use branch-specific key
   const isStepCompleted = (i: number, branchLeadType?: string): boolean => {
-    if (i < 3 || !isBranching) {
+    if (i < 4 || !isBranching) {
       return isStepCompletedStatic(scenario, i) && savedSteps.has(String(i));
     }
     // Branch-specific: check this specific branch
@@ -1508,17 +1508,17 @@ const ScenarioBuilder: React.FC = () => {
 
   const isStepUnlocked = (i: number, branchLeadType?: string): boolean => {
     if (i === 0) return hasCompletedClientGate;
-    if (i <= 2) return isStepCompleted(i - 1);
-    // For branch steps (3+), check previous step in the same branch
-    if (i === 3) return isStepCompleted(2); // step 2 is shared
+    if (i <= 3) return isStepCompleted(i - 1);
+    // For branch steps (4+), check previous step in the same branch
+    if (i === 4) return isStepCompleted(3); // step 3 (Деталізація) is shared
     // Висновок (Результат) розблоковується одразу після Продажів — Retention опціональний
-    if (i === 8) return isStepCompleted(6, branchLeadType);
+    if (i === 9) return isStepCompleted(7, branchLeadType);
     return isStepCompleted(i - 1, branchLeadType);
   };
 
   const canSaveStep = (i: number, branchLeadType?: string): boolean => {
     if (i === 3 && scenario.niche === 'Інфобізнес' && !scenario.funnelFormat) return false;
-    if (i < 3 || !isBranching) {
+    if (i < 4 || !isBranching) {
       return isStepCompletedStatic(scenario, i);
     }
     const lt = branchLeadType || activeLeadType;
@@ -1529,7 +1529,7 @@ const ScenarioBuilder: React.FC = () => {
   const handleSaveStep = (step: number) => {
     setSavedSteps(prev => {
       const next = new Set(prev);
-      if (step < 3 || !isBranching) {
+      if (step < 4 || !isBranching) {
         next.add(String(step));
       } else {
         // Save for current active lead type
@@ -1540,6 +1540,18 @@ const ScenarioBuilder: React.FC = () => {
     // Just close the panel after saving; don't auto-advance
     setActiveStep(null);
   };
+
+  // Auto-mark step 3 (Деталізація) saved when niche is not Інфобізнес
+  useEffect(() => {
+    if (scenario?.niche && scenario.niche !== 'Інфобізнес') {
+      setSavedSteps(prev => {
+        if (prev.has('3')) return prev;
+        const next = new Set(prev);
+        next.add('3');
+        return next;
+      });
+    }
+  }, [scenario?.niche]);
 
   const RetentionArrow: React.FC = () => {
     const [coords, setCoords] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
