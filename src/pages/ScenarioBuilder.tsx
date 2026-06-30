@@ -1457,6 +1457,7 @@ const ScenarioBuilder: React.FC = () => {
     const branch = s.branchData?.[lt];
     if (!branch) return false;
     switch (i) {
+      case 3: return s.niche !== 'Інфобізнес' || !!branch.funnelFormat;
       case 4: return branch.decomposition.realistic.cpl > 0;
       case 5: return (branch.leadDestinations?.length || 0) > 0;
       case 6: return !!branch.integrationMethod;
