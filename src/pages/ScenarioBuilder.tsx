@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
@@ -2701,11 +2702,11 @@ const ScenarioBuilder: React.FC = () => {
         )}
       </div>
 
-      {/* Client brief dialog */}
-      <Dialog open={clientBriefOpen} onOpenChange={setClientBriefOpen}>
-        <DialogContent className="bg-card border-border max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="text-foreground font-bold flex items-center gap-3">
+      {/* Client brief sheet */}
+      <Sheet open={clientBriefOpen} onOpenChange={setClientBriefOpen}>
+        <SheetContent side="right" className="bg-card border-border w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-foreground font-bold flex items-center gap-3">
               <img
                 src={scenario.clientBrief?.photo}
                 alt={scenario.clientBrief?.name}
@@ -2717,15 +2718,15 @@ const ScenarioBuilder: React.FC = () => {
                   <span className="text-xs text-muted-foreground font-normal">{scenario.clientBrief.niche}</span>
                 )}
               </div>
-            </DialogTitle>
-          </DialogHeader>
+            </SheetTitle>
+          </SheetHeader>
           {scenario.clientBrief?.source && (
-            <span className="self-start px-2.5 py-1 rounded-full bg-secondary text-foreground text-[10px] font-semibold uppercase tracking-wide">
+            <span className="inline-block mt-3 self-start px-2.5 py-1 rounded-full bg-secondary text-foreground text-[10px] font-semibold uppercase tracking-wide">
               {scenario.clientBrief.source}
             </span>
           )}
           <div
-            className="rounded-2xl p-4 mt-1"
+            className="rounded-2xl p-4 mt-3"
             style={{ background: 'linear-gradient(135deg, hsl(48 80% 96%), hsl(0 0% 100%))' }}
           >
             <p className="text-xs font-bold text-foreground/60 uppercase tracking-wider mb-2">
@@ -2735,14 +2736,14 @@ const ScenarioBuilder: React.FC = () => {
               {scenario.clientBrief?.task}
             </p>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
-      {/* Filled brief dialog */}
-      <Dialog open={filledBriefOpen} onOpenChange={setFilledBriefOpen}>
-        <DialogContent className="bg-card border-border max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="text-foreground font-bold flex items-center gap-3">
+      {/* Filled brief sheet */}
+      <Sheet open={filledBriefOpen} onOpenChange={setFilledBriefOpen}>
+        <SheetContent side="right" className="bg-card border-border w-full sm:max-w-2xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-foreground font-bold flex items-center gap-3 pr-32">
               {scenario.clientBrief?.photo && (
                 <img
                   src={scenario.clientBrief.photo}
@@ -2756,7 +2757,7 @@ const ScenarioBuilder: React.FC = () => {
                   Заповнив(ла): {scenario.clientBrief?.name || 'Клієнт'} · ~90% готовності
                 </span>
               </div>
-            </DialogTitle>
+            </SheetTitle>
             <a
               href="https://docs.google.com/document/d/17ntAv44e63d3A1EhitEhoJLTgnaYSj7LU7aBt2E-puY/edit?usp=sharing"
               target="_blank"
@@ -2767,8 +2768,8 @@ const ScenarioBuilder: React.FC = () => {
               <Download className="w-3.5 h-3.5" />
               Шаблон брифа
             </a>
-          </DialogHeader>
-          <div className="overflow-y-auto pr-1 -mr-1 space-y-3">
+          </SheetHeader>
+          <div className="space-y-3 mt-4">
             {(() => {
               const brief = getBriefForClient(scenario.clientBrief?.name);
               if (!brief) {
@@ -2797,19 +2798,20 @@ const ScenarioBuilder: React.FC = () => {
               ));
             })()}
           </div>
-        </DialogContent>
-      </Dialog>
-      {/* Required skills dialog */}
-      <Dialog open={skillsOpen} onOpenChange={setSkillsOpen}>
-        <DialogContent className="bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground font-bold flex items-center gap-2">
+        </SheetContent>
+      </Sheet>
+
+      {/* Required skills sheet */}
+      <Sheet open={skillsOpen} onOpenChange={setSkillsOpen}>
+        <SheetContent side="right" className="bg-card border-border w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-foreground font-bold flex items-center gap-2">
               <GraduationCap className="w-5 h-5 text-primary" />
               Потрібні навички для запуску
-            </DialogTitle>
-          </DialogHeader>
-          <p className="text-xs text-muted-foreground">Перегляньте ці відео, щоб впевнено запустити обрану воронку.</p>
-          <div className="space-y-2 pt-2">
+            </SheetTitle>
+          </SheetHeader>
+          <p className="text-xs text-muted-foreground mt-2">Перегляньте ці відео, щоб впевнено запустити обрану воронку.</p>
+          <div className="space-y-2 pt-3">
             {(() => {
               const skills: { title: string; url: string }[] = [];
               const seen = new Set<string>();
@@ -2827,8 +2829,9 @@ const ScenarioBuilder: React.FC = () => {
               ));
             })()}
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
+
 
 
       {/* Video dialog */}
