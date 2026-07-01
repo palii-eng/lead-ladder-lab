@@ -1134,11 +1134,30 @@ const ScenarioBuilder: React.FC = () => {
       </button>
     );
 
+    const goalObj = CAMPAIGN_GOALS.find(g => g.value === scenario.channel);
+    const GoalIcon = goalObj?.Icon;
+    let subgoalLabel = '';
+    if (scenario.channel === 'awareness') subgoalLabel = AWARENESS_TYPES.find(x => x.value === scenario.awarenessType)?.label || '';
+    else if (scenario.channel === 'traffic') subgoalLabel = TRAFFIC_TYPES.find(x => x.value === scenario.trafficType)?.label || '';
+    else if (scenario.channel === 'engagement') subgoalLabel = ENGAGEMENT_TYPES.find(x => x.value === scenario.engagementType)?.label || '';
+    else if (scenario.channel === 'sales') subgoalLabel = SALES_TYPES.find(x => x.value === scenario.salesType)?.label || '';
+    else if (scenario.channel === 'leads' && branchKey) subgoalLabel = LEAD_TYPES.find(x => x.value === branchKey)?.label || '';
+
+    const ColumnHeader: React.FC<{ tag: string; title: string; icon: string }> = ({ tag, title, icon }) => (
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-sm">{icon}</span>
+        <div className="flex flex-col leading-tight">
+          <span className="font-mono text-[9px] tracking-widest uppercase text-muted-foreground/70">{tag}</span>
+          <span className="text-[11px] font-bold text-foreground">{title}</span>
+        </div>
+      </div>
+    );
+
     return (
       <div className="flex items-start flex-shrink-0 mx-10" data-flow-node>
-        <div className="flex flex-col" style={{ width: '240px' }}>
+        <div className="flex flex-col" style={{ width: '720px' }}>
           <div className="flex items-center gap-2 mb-2 px-1 h-4">
-            <span className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground/70">ПІДГОТОВКА</span>
+            <span className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground/70">ПІДГОТОВКА · META ADS</span>
           </div>
           <div
             className="relative w-full rounded-2xl p-4"
@@ -1153,46 +1172,77 @@ const ScenarioBuilder: React.FC = () => {
             >
               🛠️
             </span>
-            <h3 className="text-[15px] font-bold leading-tight pr-8 text-foreground">Підготовчі роботи</h3>
-            <p className="text-[12px] leading-snug mt-1 text-muted-foreground">Налаштуйте аудиторії та підготуйте ТЗ для крео.</p>
 
-            <div className="flex flex-col gap-3 mt-3">
-              <div className="flex flex-col gap-1.5">
-                <Row icon="👥" title="Налаштування аудиторій" onClick={() => { if (branchKey) setActiveLeadType(branchKey); setAudienceView('list'); setAudienceOpen(true); }} />
-                {audiences.length > 0 && (
-                  <div className="pl-3 flex flex-col gap-1">
-                    {audiences.map((a, idx) => (
-                      <Row
-                        key={a.id || idx}
-                        compact
-                        icon={a.mode === 'ai' ? '✨' : '✍️'}
-                        title={`Гіпотеза ${idx + 1}${a.name ? ` · ${a.name}` : ''}`}
-                        onClick={() => { if (branchKey) setActiveLeadType(branchKey); setViewAudienceIdx(idx); setAudienceView('view'); setAudienceOpen(true); }}
-                      />
-                    ))}
+            <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-stretch gap-2">
+              {/* Column 1: Campaign (goal) */}
+              <div className="flex flex-col min-w-0">
+                <ColumnHeader tag="Рівень 1" title="Кампанія" icon="🎯" />
+                <div className="flex-1 rounded-xl border border-border/60 bg-foreground/[0.03] p-2.5 flex flex-col gap-1.5">
+                  <div className="flex items-center gap-2">
+                    {GoalIcon ? <GoalIcon className="w-4 h-4 text-primary" /> : <span className="text-sm">✅</span>}
+                    <span className="text-[12px] font-bold text-foreground truncate">{goalObj?.label || 'Ціль'}</span>
                   </div>
-                )}
+                  {subgoalLabel && (
+                    <span className="text-[10px] text-muted-foreground leading-snug line-clamp-2">{subgoalLabel}</span>
+                  )}
+                  <span className="text-[9px] font-mono uppercase tracking-wider text-success mt-auto">● обрано</span>
+                </div>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <Row
-                  icon="📝"
-                  title="ТЗ по крео"
-                  onClick={() => { if (branchKey) setActiveLeadType(branchKey); setCreoOpen(true); setCreoFormat(null); setViewCreoIdx(null); }}
-                />
-                {list.length > 0 && (
-                  <div className="pl-3 flex flex-col gap-1">
-                    {list.map((item, idx) => (
-                      <Row
-                        key={idx}
-                        compact
-                        icon={formatIcons[item.format] || '📝'}
-                        title={`Крео ${idx + 1}${item.fields?.h1 ? ` · ${item.fields.h1.slice(0, 20)}` : ''}`}
-                        onClick={() => { if (branchKey) setActiveLeadType(branchKey); setViewCreoIdx(idx); setCreoOpen(true); setCreoFormat(null); }}
-                      />
-                    ))}
-                  </div>
-                )}
+              {/* Connector */}
+              <div className="flex items-center justify-center pt-6 text-muted-foreground/50 text-lg">›</div>
+
+              {/* Column 2: Ad Set (audiences) */}
+              <div className="flex flex-col min-w-0">
+                <ColumnHeader tag="Рівень 2" title="Група оголошень" icon="👥" />
+                <div className="flex-1 rounded-xl border border-border/60 bg-foreground/[0.03] p-2 flex flex-col gap-1.5">
+                  <Row
+                    icon="👥"
+                    title="Налаштування аудиторій"
+                    onClick={() => { if (branchKey) setActiveLeadType(branchKey); setAudienceView('list'); setAudienceOpen(true); }}
+                  />
+                  {audiences.length > 0 && (
+                    <div className="pl-2 flex flex-col gap-1">
+                      {audiences.map((a, idx) => (
+                        <Row
+                          key={a.id || idx}
+                          compact
+                          icon={a.mode === 'ai' ? '✨' : '✍️'}
+                          title={`Гіпотеза ${idx + 1}${a.name ? ` · ${a.name}` : ''}`}
+                          onClick={() => { if (branchKey) setActiveLeadType(branchKey); setViewAudienceIdx(idx); setAudienceView('view'); setAudienceOpen(true); }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="flex items-center justify-center pt-6 text-muted-foreground/50 text-lg">›</div>
+
+              {/* Column 3: Ad (creo) */}
+              <div className="flex flex-col min-w-0">
+                <ColumnHeader tag="Рівень 3" title="Оголошення" icon="🖼️" />
+                <div className="flex-1 rounded-xl border border-border/60 bg-foreground/[0.03] p-2 flex flex-col gap-1.5">
+                  <Row
+                    icon="📝"
+                    title="ТЗ по крео"
+                    onClick={() => { if (branchKey) setActiveLeadType(branchKey); setCreoOpen(true); setCreoFormat(null); setViewCreoIdx(null); }}
+                  />
+                  {list.length > 0 && (
+                    <div className="pl-2 flex flex-col gap-1">
+                      {list.map((item, idx) => (
+                        <Row
+                          key={idx}
+                          compact
+                          icon={formatIcons[item.format] || '📝'}
+                          title={`Крео ${idx + 1}${item.fields?.h1 ? ` · ${item.fields.h1.slice(0, 20)}` : ''}`}
+                          onClick={() => { if (branchKey) setActiveLeadType(branchKey); setViewCreoIdx(idx); setCreoOpen(true); setCreoFormat(null); }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -1200,6 +1250,7 @@ const ScenarioBuilder: React.FC = () => {
       </div>
     );
   };
+
 
 
 
