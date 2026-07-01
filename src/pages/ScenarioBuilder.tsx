@@ -2752,7 +2752,9 @@ const ScenarioBuilder: React.FC = () => {
                             : s.title}
                           index={stepIdx}
                           isActive={activeStep === stepIdx && (!shouldBranch || stepIdx < 3 || activeLeadType === branchLeadType)}
-                          isCompleted={isStepCompleted(stepIdx, branchLeadType)}
+                           isCompleted={isStepCompleted(stepIdx, branchLeadType)}
+                           isSkipped={skippedSteps.has(branchLeadType ? `${stepIdx}:${branchLeadType}` : String(stepIdx))}
+
                           isLast={isLastInRow}
                           isLocked={!isStepUnlocked(stepIdx, branchLeadType)}
                           subtitle={subtitle}
