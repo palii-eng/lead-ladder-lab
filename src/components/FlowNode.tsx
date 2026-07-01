@@ -51,12 +51,14 @@ const FlowNode: React.FC<FlowNodeProps> = ({
   index,
   isActive,
   isCompleted,
+  isSkipped,
   isLast,
   isLocked,
   subtitle,
   onClick,
 }) => {
   const Icon = ICONS[index] || Sparkles;
+
 
   const state: 'active' | 'completed' | 'locked' | 'idle' = isActive
     ? 'active'
