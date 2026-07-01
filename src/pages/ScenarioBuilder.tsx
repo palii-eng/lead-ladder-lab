@@ -2365,18 +2365,23 @@ const ScenarioBuilder: React.FC = () => {
                   })}
                 </div>
               )}
-              <div className="flex gap-2">
+              <div className="sticky bottom-0 bg-card pt-3 pb-2 -mx-4 px-4 border-t border-border mt-4 z-10 flex gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => handleSaveStep(8)}
-                  className="flex-1"
+                  onClick={() => handleSaveStep(8, { skipped: true })}
+                  className="flex-1 gap-2"
                 >
-                  Пропустити
+                  <SkipForward className="w-4 h-4" /> Пропустити
                 </Button>
-                <div className="flex-1">
-                  <SaveButton step={8} />
-                </div>
+                <Button
+                  onClick={() => handleSaveStep(8)}
+                  disabled={!canSaveStep(8, activeLeadType)}
+                  className="flex-1 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+                >
+                  <Save className="w-4 h-4" /> Зберегти та продовжити
+                </Button>
               </div>
+
             </div>
           );
         }
