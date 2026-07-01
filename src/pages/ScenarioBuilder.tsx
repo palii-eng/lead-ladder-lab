@@ -1236,7 +1236,9 @@ const ScenarioBuilder: React.FC = () => {
     return scenario.decomposition;
   };
 
-  const updateDecomp = (type: 'bad' | 'realistic' | 'positive', field: keyof DecompositionScenario, value: number) => {
+  const updateDecomp = (type: 'bad' | 'realistic' | 'positive', field: keyof DecompositionScenario, rawValue: number) => {
+    const value = Math.max(0, Number.isFinite(rawValue) ? rawValue : 0);
+
     if (isBranching && activeLeadType) {
       const branch = getBranch();
       updateBranch({
