@@ -1617,19 +1617,24 @@ const ScenarioBuilder: React.FC = () => {
     return isStepCompletedForBranch(scenario, i, lt);
   };
 
-  const handleSaveStep = (step: number) => {
+  const handleSaveStep = (step: number, opts?: { skipped?: boolean }) => {
+    const branchSuffix = (step < 3 || !isBranching) ? '' : (activeLeadType ? `:${activeLeadType}` : '');
+    const key = branchSuffix ? `${step}${branchSuffix}` : String(step);
     setSavedSteps(prev => {
       const next = new Set(prev);
-      if (step < 3 || !isBranching) {
-        next.add(String(step));
-      } else {
-        if (activeLeadType) next.add(`${step}:${activeLeadType}`);
-      }
+      if (step < 3 || !isBranching) next.add(String(step));
+      else if (activeLeadType) next.add(`${step}:${activeLeadType}`);
+      return next;
+    });
+    setSkippedSteps(prev => {
+      const next = new Set(prev);
+      if (opts?.skipped) next.add(key); else next.delete(key);
       return next;
     });
     // Just close the panel after saving; don't auto-advance
     setActiveStep(null);
   };
+
 
 
   const RetentionArrow: React.FC = () => {
