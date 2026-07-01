@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import adsSchoolLogo from '@/assets/ads-school-logo.png';
 import { getBriefForClient, BriefField } from '@/data/clientBriefs';
+import { resolveClientPhoto } from '@/data/clientPhotos';
 import { useAuth } from '@/context/AuthContext';
 
 const STEPS = [
