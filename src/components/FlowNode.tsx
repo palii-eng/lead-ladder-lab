@@ -13,7 +13,9 @@ import {
   Lock,
   Check,
   Clock,
+  SkipForward,
 } from 'lucide-react';
+
 
 interface FlowNodeProps {
   icon: string;
@@ -21,11 +23,13 @@ interface FlowNodeProps {
   index: number;
   isActive: boolean;
   isCompleted: boolean;
+  isSkipped?: boolean;
   isLast: boolean;
   isLocked: boolean;
   subtitle?: string;
   onClick: () => void;
 }
+
 
 const ICONS = [Target, Megaphone, Users, FileText, Calculator, Send, Plug, PhoneCall, Repeat];
 
@@ -47,12 +51,14 @@ const FlowNode: React.FC<FlowNodeProps> = ({
   index,
   isActive,
   isCompleted,
+  isSkipped,
   isLast,
   isLocked,
   subtitle,
   onClick,
 }) => {
   const Icon = ICONS[index] || Sparkles;
+
 
   const state: 'active' | 'completed' | 'locked' | 'idle' = isActive
     ? 'active'
@@ -71,11 +77,17 @@ const FlowNode: React.FC<FlowNodeProps> = ({
             '0 20px 40px -18px hsl(232 60% 40% / 0.28), 0 4px 10px -4px hsl(0 0% 0% / 0.06), inset 0 0 0 2px hsl(232 80% 65% / 0.7)',
         }
       : state === 'completed'
-      ? {
-          background: 'linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(108 45% 97%) 100%)',
-          boxShadow:
-            '0 14px 28px -16px hsl(108 35% 35% / 0.22), 0 2px 6px -2px hsl(0 0% 0% / 0.04), inset 0 0 0 1.5px hsl(108 40% 75% / 0.55)',
-        }
+      ? (isSkipped
+          ? {
+              background: 'linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(36 90% 97%) 100%)',
+              boxShadow:
+                '0 14px 28px -16px hsl(28 45% 40% / 0.18), 0 2px 6px -2px hsl(0 0% 0% / 0.04), inset 0 0 0 1.5px hsl(36 70% 78% / 0.55)',
+            }
+          : {
+              background: 'linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(108 45% 97%) 100%)',
+              boxShadow:
+                '0 14px 28px -16px hsl(108 35% 35% / 0.22), 0 2px 6px -2px hsl(0 0% 0% / 0.04), inset 0 0 0 1.5px hsl(108 40% 75% / 0.55)',
+            })
       : state === 'locked'
       ? {
           background: 'hsl(var(--muted))',
@@ -87,12 +99,15 @@ const FlowNode: React.FC<FlowNodeProps> = ({
             '0 12px 26px -16px hsl(0 0% 0% / 0.18), 0 2px 6px -2px hsl(0 0% 0% / 0.05), inset 0 0 0 1px hsl(var(--border) / 0.7)',
         };
 
+
   // Icon badge (top-right) — colored circle like the reference
   const badgeBg =
     state === 'active'
       ? 'linear-gradient(135deg, hsl(232 80% 65%), hsl(232 70% 55%))'
       : state === 'completed'
-      ? 'linear-gradient(135deg, hsl(108 55% 80%), hsl(108 50% 65%))'
+      ? (isSkipped
+          ? 'linear-gradient(135deg, hsl(36 90% 78%), hsl(28 80% 62%))'
+          : 'linear-gradient(135deg, hsl(108 55% 80%), hsl(108 50% 65%))')
       : state === 'locked'
       ? 'hsl(var(--muted-foreground) / 0.15)'
       : 'linear-gradient(135deg, hsl(220 14% 96%), hsl(220 14% 90%))';
@@ -101,21 +116,25 @@ const FlowNode: React.FC<FlowNodeProps> = ({
     state === 'active'
       ? 'text-white'
       : state === 'completed'
-      ? 'text-[hsl(108_55%_22%)]'
+      ? (isSkipped ? 'text-[hsl(28_70%_25%)]' : 'text-[hsl(108_55%_22%)]')
       : state === 'locked'
       ? 'text-muted-foreground/50'
       : 'text-foreground/70';
+
 
   // Status pill
   const statusPill =
     state === 'active'
       ? { label: 'В роботі', bg: 'hsl(232 80% 95%)', text: 'hsl(232 60% 40%)', Icon: Sparkles }
       : state === 'completed'
-      ? { label: 'Готово', bg: 'hsl(108 50% 92%)', text: 'hsl(108 55% 28%)', Icon: Check }
+      ? (isSkipped
+          ? { label: 'Пропущено', bg: 'hsl(36 90% 92%)', text: 'hsl(28 70% 35%)', Icon: SkipForward }
+          : { label: 'Готово', bg: 'hsl(108 50% 92%)', text: 'hsl(108 55% 28%)', Icon: Check })
       : state === 'locked'
       ? { label: 'Заблоковано', bg: 'hsl(var(--muted))', text: 'hsl(var(--muted-foreground))', Icon: Lock }
       : { label: 'Очікує', bg: 'hsl(220 14% 96%)', text: 'hsl(220 10% 40%)', Icon: Clock };
   const StatusIcon = statusPill.Icon;
+
 
   const titleLines = title.split('\n');
   const mainTitle = titleLines[0];

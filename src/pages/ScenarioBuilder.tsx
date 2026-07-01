@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
-import { ArrowLeft, ArrowRight, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { VideoBadge } from '@/components/VideoBadge';
 import { supabase } from '@/integrations/supabase/client';
@@ -781,6 +781,9 @@ const ScenarioBuilder: React.FC = () => {
     }
     return set;
   });
+
+  const [skippedSteps, setSkippedSteps] = useState<Set<string>>(new Set());
+
 
   // Drag-scroll state
   const [isDragging, setIsDragging] = useState(false);
@@ -1614,19 +1617,24 @@ const ScenarioBuilder: React.FC = () => {
     return isStepCompletedForBranch(scenario, i, lt);
   };
 
-  const handleSaveStep = (step: number) => {
+  const handleSaveStep = (step: number, opts?: { skipped?: boolean }) => {
+    const branchSuffix = (step < 3 || !isBranching) ? '' : (activeLeadType ? `:${activeLeadType}` : '');
+    const key = branchSuffix ? `${step}${branchSuffix}` : String(step);
     setSavedSteps(prev => {
       const next = new Set(prev);
-      if (step < 3 || !isBranching) {
-        next.add(String(step));
-      } else {
-        if (activeLeadType) next.add(`${step}:${activeLeadType}`);
-      }
+      if (step < 3 || !isBranching) next.add(String(step));
+      else if (activeLeadType) next.add(`${step}:${activeLeadType}`);
+      return next;
+    });
+    setSkippedSteps(prev => {
+      const next = new Set(prev);
+      if (opts?.skipped) next.add(key); else next.delete(key);
       return next;
     });
     // Just close the panel after saving; don't auto-advance
     setActiveStep(null);
   };
+
 
 
   const RetentionArrow: React.FC = () => {
@@ -2357,18 +2365,23 @@ const ScenarioBuilder: React.FC = () => {
                   })}
                 </div>
               )}
-              <div className="flex gap-2">
+              <div className="sticky bottom-0 bg-card pt-3 pb-2 -mx-4 px-4 border-t border-border mt-4 z-10 flex gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => handleSaveStep(8)}
-                  className="flex-1"
+                  onClick={() => handleSaveStep(8, { skipped: true })}
+                  className="flex-1 gap-2"
                 >
-                  Пропустити
+                  <SkipForward className="w-4 h-4" /> Пропустити
                 </Button>
-                <div className="flex-1">
-                  <SaveButton step={8} />
-                </div>
+                <Button
+                  onClick={() => handleSaveStep(8)}
+                  disabled={!canSaveStep(8, activeLeadType)}
+                  className="flex-1 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+                >
+                  <Save className="w-4 h-4" /> Зберегти та продовжити
+                </Button>
               </div>
+
             </div>
           );
         }
@@ -2739,7 +2752,9 @@ const ScenarioBuilder: React.FC = () => {
                             : s.title}
                           index={stepIdx}
                           isActive={activeStep === stepIdx && (!shouldBranch || stepIdx < 3 || activeLeadType === branchLeadType)}
-                          isCompleted={isStepCompleted(stepIdx, branchLeadType)}
+                           isCompleted={isStepCompleted(stepIdx, branchLeadType)}
+                           isSkipped={skippedSteps.has(branchLeadType ? `${stepIdx}:${branchLeadType}` : String(stepIdx))}
+
                           isLast={isLastInRow}
                           isLocked={!isStepUnlocked(stepIdx, branchLeadType)}
                           subtitle={subtitle}
