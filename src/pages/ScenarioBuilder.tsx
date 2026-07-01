@@ -782,6 +782,9 @@ const ScenarioBuilder: React.FC = () => {
     return set;
   });
 
+  const [skippedSteps, setSkippedSteps] = useState<Set<string>>(new Set());
+
+
   // Drag-scroll state
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
