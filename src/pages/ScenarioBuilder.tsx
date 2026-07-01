@@ -1939,6 +1939,16 @@ const ScenarioBuilder: React.FC = () => {
                       </div>
                     );
                   })}
+                  <div className="mt-1 p-2.5 rounded-lg border border-dashed border-border bg-card/60">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-foreground/60">Свій варіант</label>
+                    <input
+                      type="text"
+                      value={FUNNEL_FORMATS.includes(funnelFormat) ? '' : funnelFormat}
+                      onChange={(e) => setFunnelFormat(e.target.value)}
+                      placeholder="Опишіть свій формат воронки..."
+                      className="mt-1 w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                    />
+                  </div>
                 </div>
 
                 {formatVideos.length > 0 && (
