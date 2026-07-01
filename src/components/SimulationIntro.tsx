@@ -160,15 +160,19 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
     return tagged
       .map((x, i) => ({ ...x, k: Math.random() + i }))
       .sort((a, z) => a.k - z.k)
-      .map((x, i) => ({
-        name: x.c.name,
-        niche: x.c.niche,
-        source: x.c.source,
-        task: x.c.tasks[Math.floor(Math.random() * x.c.tasks.length)],
-        photo: photoFor(x.c.gender, seedBase + i * 7),
-        role: x.c.role,
-        _difficulty: x.d,
-      }));
+      .map((x, i) => {
+        const key = photoKeyFor(x.c.gender, seedBase + i * 7);
+        return {
+          name: x.c.name,
+          niche: x.c.niche,
+          source: x.c.source,
+          task: x.c.tasks[Math.floor(Math.random() * x.c.tasks.length)],
+          photo: CLIENT_PHOTOS[key],
+          photoKey: key,
+          role: x.c.role,
+          _difficulty: x.d,
+        };
+      });
   }, []);
 
   // Trigger reveal animation on each new card
