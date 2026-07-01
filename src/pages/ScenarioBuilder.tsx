@@ -1006,7 +1006,7 @@ const ScenarioBuilder: React.FC = () => {
         <div className="relative flex-shrink-0">
           <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-card shadow-md bg-secondary">
             <img
-              src={b.photo}
+              src={resolveClientPhoto(b)}
               alt={b.name}
               className="w-full h-full object-cover"
               onError={(e) => {
