@@ -43,6 +43,7 @@ export interface DecompositionSet {
 export interface ClientBrief {
   name: string;
   photo: string;
+  photoKey?: string;
   task: string;
   niche?: string;
   source?: string;
