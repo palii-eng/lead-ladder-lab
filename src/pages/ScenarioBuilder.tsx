@@ -2865,7 +2865,7 @@ const ScenarioBuilder: React.FC = () => {
           <SheetHeader>
             <SheetTitle className="text-foreground font-bold flex items-center gap-3">
               <img
-                src={scenario.clientBrief?.photo}
+                src={resolveClientPhoto(scenario.clientBrief)}
                 alt={scenario.clientBrief?.name}
                 className="w-12 h-12 rounded-full object-cover"
               />
