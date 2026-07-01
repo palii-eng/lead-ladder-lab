@@ -23,11 +23,13 @@ interface FlowNodeProps {
   index: number;
   isActive: boolean;
   isCompleted: boolean;
+  isSkipped?: boolean;
   isLast: boolean;
   isLocked: boolean;
   subtitle?: string;
   onClick: () => void;
 }
+
 
 const ICONS = [Target, Megaphone, Users, FileText, Calculator, Send, Plug, PhoneCall, Repeat];
 
