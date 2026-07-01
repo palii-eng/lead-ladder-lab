@@ -1236,7 +1236,9 @@ const ScenarioBuilder: React.FC = () => {
     return scenario.decomposition;
   };
 
-  const updateDecomp = (type: 'bad' | 'realistic' | 'positive', field: keyof DecompositionScenario, value: number) => {
+  const updateDecomp = (type: 'bad' | 'realistic' | 'positive', field: keyof DecompositionScenario, rawValue: number) => {
+    const value = Math.max(0, Number.isFinite(rawValue) ? rawValue : 0);
+
     if (isBranching && activeLeadType) {
       const branch = getBranch();
       updateBranch({
@@ -2020,9 +2022,10 @@ const ScenarioBuilder: React.FC = () => {
                 {inputFields.map(f => (
                   <div key={f.key} className="flex items-center justify-between gap-3">
                     <label className="text-xs text-muted-foreground font-semibold whitespace-nowrap">{f.label} ({f.suffix})</label>
-                    <Input type="number" value={currentDecomp[f.key] || ''}
-                      onChange={e => updateDecomp(decompTab, f.key, parseFloat(e.target.value) || 0)}
+                    <Input type="number" min={0} value={currentDecomp[f.key] || ''}
+                      onChange={e => updateDecomp(decompTab, f.key, Math.max(0, parseFloat(e.target.value) || 0))}
                       className="bg-secondary border-border text-foreground h-8 text-sm w-28 text-right" />
+
                   </div>
                 ))}
               </div>
