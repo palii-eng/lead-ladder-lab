@@ -151,7 +151,7 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
   const [index, setIndex] = useState(() => Math.floor(Math.random() * (LUCKY_CLIENTS.length + HARD_CLIENTS.length)));
   const [revealing, setRevealing] = useState(true);
 
-  const pool = useMemo<(ClientBrief & { role?: string; _difficulty: 'lucky' | 'suffer' })[]>(() => {
+  const pool = useMemo<(ClientBrief & { role?: string; photoKey: string; _difficulty: 'lucky' | 'suffer' })[]>(() => {
     const seedBase = Math.floor(Math.random() * 1000);
     const tagged = [
       ...LUCKY_CLIENTS.map(c => ({ c, d: 'lucky' as const })),
