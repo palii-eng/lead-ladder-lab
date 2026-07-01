@@ -13,7 +13,9 @@ import {
   Lock,
   Check,
   Clock,
+  SkipForward,
 } from 'lucide-react';
+
 
 interface FlowNodeProps {
   icon: string;
