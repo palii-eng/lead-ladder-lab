@@ -2901,9 +2901,9 @@ const ScenarioBuilder: React.FC = () => {
         <SheetContent side="left" className="bg-card border-border w-full sm:max-w-[680px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="text-foreground font-bold flex items-center gap-3 pr-32">
-              {scenario.clientBrief?.photo && (
+              {(scenario.clientBrief?.photoKey || scenario.clientBrief?.photo) && (
                 <img
-                  src={scenario.clientBrief.photo}
+                  src={resolveClientPhoto(scenario.clientBrief)}
                   alt={scenario.clientBrief?.name}
                   className="w-10 h-10 rounded-full object-cover"
                 />
