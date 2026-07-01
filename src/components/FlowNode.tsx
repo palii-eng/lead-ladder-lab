@@ -105,7 +105,9 @@ const FlowNode: React.FC<FlowNodeProps> = ({
     state === 'active'
       ? 'linear-gradient(135deg, hsl(232 80% 65%), hsl(232 70% 55%))'
       : state === 'completed'
-      ? 'linear-gradient(135deg, hsl(108 55% 80%), hsl(108 50% 65%))'
+      ? (isSkipped
+          ? 'linear-gradient(135deg, hsl(36 90% 78%), hsl(28 80% 62%))'
+          : 'linear-gradient(135deg, hsl(108 55% 80%), hsl(108 50% 65%))')
       : state === 'locked'
       ? 'hsl(var(--muted-foreground) / 0.15)'
       : 'linear-gradient(135deg, hsl(220 14% 96%), hsl(220 14% 90%))';
@@ -114,10 +116,11 @@ const FlowNode: React.FC<FlowNodeProps> = ({
     state === 'active'
       ? 'text-white'
       : state === 'completed'
-      ? 'text-[hsl(108_55%_22%)]'
+      ? (isSkipped ? 'text-[hsl(28_70%_25%)]' : 'text-[hsl(108_55%_22%)]')
       : state === 'locked'
       ? 'text-muted-foreground/50'
       : 'text-foreground/70';
+
 
   // Status pill
   const statusPill =
