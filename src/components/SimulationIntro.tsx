@@ -2,16 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ClientBrief } from '@/context/ScenariosContext';
 import { Sparkles, Flame, X, Check, ArrowLeft, Loader2 } from 'lucide-react';
-import f1 from '@/assets/clients/f1.jpg';
-import f2 from '@/assets/clients/f2.jpg';
-import f3 from '@/assets/clients/f3.jpg';
-import f4 from '@/assets/clients/f4.jpg';
-import f5 from '@/assets/clients/f5.jpg';
-import m1 from '@/assets/clients/m1.jpg';
-import m2 from '@/assets/clients/m2.jpg';
-import m3 from '@/assets/clients/m3.jpg';
-import m4 from '@/assets/clients/m4.jpg';
-import m5 from '@/assets/clients/m5.jpg';
+import { CLIENT_PHOTOS, resolveClientPhoto } from '@/data/clientPhotos';
 
 type Gender = 'male' | 'female';
 type ClientTemplate = Omit<ClientBrief, 'photo' | 'task'> & { gender: Gender; role: string; tasks: string[] };
