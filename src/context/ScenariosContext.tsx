@@ -59,6 +59,10 @@ export interface Scenario {
   niche: string;
   leadSource: string;
   channel: string;
+  awarenessType?: string;
+  trafficType?: string;
+  engagementType?: string;
+  salesType?: string;
   leadTypes: string[];
   status: 'draft' | 'completed';
   createdAt: string;
