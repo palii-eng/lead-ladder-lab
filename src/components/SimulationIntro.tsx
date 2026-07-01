@@ -132,11 +132,11 @@ const HARD_CLIENTS: ClientTemplate[] = [
 ];
 
 // Hand-painted illustrated portraits (AI-generated, project assets)
-const FEMALE_PHOTOS = [f1, f2, f3, f4, f5];
-const MALE_PHOTOS = [m1, m2, m3, m4, m5];
+const FEMALE_KEYS = ['f1', 'f2', 'f3', 'f4', 'f5'];
+const MALE_KEYS = ['m1', 'm2', 'm3', 'm4', 'm5'];
 
-const photoFor = (gender: Gender, seed: number) => {
-  const list = gender === 'female' ? FEMALE_PHOTOS : MALE_PHOTOS;
+const photoKeyFor = (gender: Gender, seed: number) => {
+  const list = gender === 'female' ? FEMALE_KEYS : MALE_KEYS;
   return list[Math.abs(seed) % list.length];
 };
 
