@@ -77,11 +77,17 @@ const FlowNode: React.FC<FlowNodeProps> = ({
             '0 20px 40px -18px hsl(232 60% 40% / 0.28), 0 4px 10px -4px hsl(0 0% 0% / 0.06), inset 0 0 0 2px hsl(232 80% 65% / 0.7)',
         }
       : state === 'completed'
-      ? {
-          background: 'linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(108 45% 97%) 100%)',
-          boxShadow:
-            '0 14px 28px -16px hsl(108 35% 35% / 0.22), 0 2px 6px -2px hsl(0 0% 0% / 0.04), inset 0 0 0 1.5px hsl(108 40% 75% / 0.55)',
-        }
+      ? (isSkipped
+          ? {
+              background: 'linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(36 90% 97%) 100%)',
+              boxShadow:
+                '0 14px 28px -16px hsl(28 45% 40% / 0.18), 0 2px 6px -2px hsl(0 0% 0% / 0.04), inset 0 0 0 1.5px hsl(36 70% 78% / 0.55)',
+            }
+          : {
+              background: 'linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(108 45% 97%) 100%)',
+              boxShadow:
+                '0 14px 28px -16px hsl(108 35% 35% / 0.22), 0 2px 6px -2px hsl(0 0% 0% / 0.04), inset 0 0 0 1.5px hsl(108 40% 75% / 0.55)',
+            })
       : state === 'locked'
       ? {
           background: 'hsl(var(--muted))',
@@ -92,6 +98,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({
           boxShadow:
             '0 12px 26px -16px hsl(0 0% 0% / 0.18), 0 2px 6px -2px hsl(0 0% 0% / 0.05), inset 0 0 0 1px hsl(var(--border) / 0.7)',
         };
+
 
   // Icon badge (top-right) — colored circle like the reference
   const badgeBg =
