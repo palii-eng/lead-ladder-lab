@@ -59,6 +59,10 @@ export interface Scenario {
   niche: string;
   leadSource: string;
   channel: string;
+  awarenessType?: string;
+  trafficType?: string;
+  engagementType?: string;
+  salesType?: string;
   leadTypes: string[];
   status: 'draft' | 'completed';
   createdAt: string;
@@ -236,6 +240,10 @@ const normalizeScenario = (value: unknown): Scenario => {
     niche: typeof raw.niche === 'string' ? raw.niche : '',
     leadSource: typeof raw.leadSource === 'string' ? raw.leadSource : '',
     channel: typeof raw.channel === 'string' ? raw.channel : '',
+    awarenessType: typeof raw.awarenessType === 'string' ? raw.awarenessType : '',
+    trafficType: typeof raw.trafficType === 'string' ? raw.trafficType : '',
+    engagementType: typeof raw.engagementType === 'string' ? raw.engagementType : '',
+    salesType: typeof raw.salesType === 'string' ? raw.salesType : '',
     leadTypes: Array.isArray(raw.leadTypes) ? raw.leadTypes.filter(Boolean).map(String) : [],
     status: raw.status === 'completed' ? 'completed' : 'draft',
     createdAt,
