@@ -117,11 +117,14 @@ const FlowNode: React.FC<FlowNodeProps> = ({
     state === 'active'
       ? { label: 'В роботі', bg: 'hsl(232 80% 95%)', text: 'hsl(232 60% 40%)', Icon: Sparkles }
       : state === 'completed'
-      ? { label: 'Готово', bg: 'hsl(108 50% 92%)', text: 'hsl(108 55% 28%)', Icon: Check }
+      ? (isSkipped
+          ? { label: 'Пропущено', bg: 'hsl(36 90% 92%)', text: 'hsl(28 70% 35%)', Icon: SkipForward }
+          : { label: 'Готово', bg: 'hsl(108 50% 92%)', text: 'hsl(108 55% 28%)', Icon: Check })
       : state === 'locked'
       ? { label: 'Заблоковано', bg: 'hsl(var(--muted))', text: 'hsl(var(--muted-foreground))', Icon: Lock }
       : { label: 'Очікує', bg: 'hsl(220 14% 96%)', text: 'hsl(220 10% 40%)', Icon: Clock };
   const StatusIcon = statusPill.Icon;
+
 
   const titleLines = title.split('\n');
   const mainTitle = titleLines[0];
