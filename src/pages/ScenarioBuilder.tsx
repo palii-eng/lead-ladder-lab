@@ -1885,6 +1885,8 @@ const ScenarioBuilder: React.FC = () => {
             'Особистий бренд (прогрів та продаж через Instagram)',
             'Через марафон',
             'Продаж та прогрів через Telegram-бот',
+            'Квіз воронка з балами',
+            'Квіз воронка з оферами',
           ];
           const funnelFormat = (isBranching && activeLeadType
             ? (scenario.branchData?.[activeLeadType]?.funnelFormat || '')
