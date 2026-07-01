@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import adsSchoolLogo from '@/assets/ads-school-logo.png';
 import { getBriefForClient, BriefField } from '@/data/clientBriefs';
+import { resolveClientPhoto } from '@/data/clientPhotos';
 import { useAuth } from '@/context/AuthContext';
 
 const STEPS = [
@@ -1005,7 +1006,7 @@ const ScenarioBuilder: React.FC = () => {
         <div className="relative flex-shrink-0">
           <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-card shadow-md bg-secondary">
             <img
-              src={b.photo}
+              src={resolveClientPhoto(b)}
               alt={b.name}
               className="w-full h-full object-cover"
               onError={(e) => {
@@ -2864,7 +2865,7 @@ const ScenarioBuilder: React.FC = () => {
           <SheetHeader>
             <SheetTitle className="text-foreground font-bold flex items-center gap-3">
               <img
-                src={scenario.clientBrief?.photo}
+                src={resolveClientPhoto(scenario.clientBrief)}
                 alt={scenario.clientBrief?.name}
                 className="w-12 h-12 rounded-full object-cover"
               />
@@ -2900,9 +2901,9 @@ const ScenarioBuilder: React.FC = () => {
         <SheetContent side="left" className="bg-card border-border w-full sm:max-w-[680px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="text-foreground font-bold flex items-center gap-3 pr-32">
-              {scenario.clientBrief?.photo && (
+              {(scenario.clientBrief?.photoKey || scenario.clientBrief?.photo) && (
                 <img
-                  src={scenario.clientBrief.photo}
+                  src={resolveClientPhoto(scenario.clientBrief)}
                   alt={scenario.clientBrief?.name}
                   className="w-10 h-10 rounded-full object-cover"
                 />

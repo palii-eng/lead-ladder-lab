@@ -2,16 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ClientBrief } from '@/context/ScenariosContext';
 import { Sparkles, Flame, X, Check, ArrowLeft, Loader2 } from 'lucide-react';
-import f1 from '@/assets/clients/f1.jpg';
-import f2 from '@/assets/clients/f2.jpg';
-import f3 from '@/assets/clients/f3.jpg';
-import f4 from '@/assets/clients/f4.jpg';
-import f5 from '@/assets/clients/f5.jpg';
-import m1 from '@/assets/clients/m1.jpg';
-import m2 from '@/assets/clients/m2.jpg';
-import m3 from '@/assets/clients/m3.jpg';
-import m4 from '@/assets/clients/m4.jpg';
-import m5 from '@/assets/clients/m5.jpg';
+import { CLIENT_PHOTOS, resolveClientPhoto } from '@/data/clientPhotos';
 
 type Gender = 'male' | 'female';
 type ClientTemplate = Omit<ClientBrief, 'photo' | 'task'> & { gender: Gender; role: string; tasks: string[] };
@@ -141,11 +132,11 @@ const HARD_CLIENTS: ClientTemplate[] = [
 ];
 
 // Hand-painted illustrated portraits (AI-generated, project assets)
-const FEMALE_PHOTOS = [f1, f2, f3, f4, f5];
-const MALE_PHOTOS = [m1, m2, m3, m4, m5];
+const FEMALE_KEYS = ['f1', 'f2', 'f3', 'f4', 'f5'];
+const MALE_KEYS = ['m1', 'm2', 'm3', 'm4', 'm5'];
 
-const photoFor = (gender: Gender, seed: number) => {
-  const list = gender === 'female' ? FEMALE_PHOTOS : MALE_PHOTOS;
+const photoKeyFor = (gender: Gender, seed: number) => {
+  const list = gender === 'female' ? FEMALE_KEYS : MALE_KEYS;
   return list[Math.abs(seed) % list.length];
 };
 
@@ -160,7 +151,7 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
   const [index, setIndex] = useState(() => Math.floor(Math.random() * (LUCKY_CLIENTS.length + HARD_CLIENTS.length)));
   const [revealing, setRevealing] = useState(true);
 
-  const pool = useMemo<(ClientBrief & { role?: string; _difficulty: 'lucky' | 'suffer' })[]>(() => {
+  const pool = useMemo<(ClientBrief & { role?: string; photoKey: string; _difficulty: 'lucky' | 'suffer' })[]>(() => {
     const seedBase = Math.floor(Math.random() * 1000);
     const tagged = [
       ...LUCKY_CLIENTS.map(c => ({ c, d: 'lucky' as const })),
@@ -169,15 +160,19 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
     return tagged
       .map((x, i) => ({ ...x, k: Math.random() + i }))
       .sort((a, z) => a.k - z.k)
-      .map((x, i) => ({
-        name: x.c.name,
-        niche: x.c.niche,
-        source: x.c.source,
-        task: x.c.tasks[Math.floor(Math.random() * x.c.tasks.length)],
-        photo: photoFor(x.c.gender, seedBase + i * 7),
-        role: x.c.role,
-        _difficulty: x.d,
-      }));
+      .map((x, i) => {
+        const key = photoKeyFor(x.c.gender, seedBase + i * 7);
+        return {
+          name: x.c.name,
+          niche: x.c.niche,
+          source: x.c.source,
+          task: x.c.tasks[Math.floor(Math.random() * x.c.tasks.length)],
+          photo: CLIENT_PHOTOS[key],
+          photoKey: key,
+          role: x.c.role,
+          _difficulty: x.d,
+        };
+      });
   }, []);
 
   // Trigger reveal animation on each new card
