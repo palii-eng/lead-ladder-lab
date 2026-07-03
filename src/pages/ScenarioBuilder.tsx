@@ -2846,7 +2846,7 @@ const ScenarioBuilder: React.FC = () => {
                       )}
                       {emailStrategyText && (
                         <div className="prose prose-sm max-w-none text-xs text-foreground [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_ul]:my-1 [&_ol]:my-1 [&_p]:my-1 [&_strong]:text-foreground">
-                          <ReactMarkdown>{emailStrategyText}</ReactMarkdown>
+                          <ReactMarkdown>{stripJsonBlock(emailStrategyText)}</ReactMarkdown>
                         </div>
                       )}
                       {!emailStrategyLoading && !emailStrategyText && (
