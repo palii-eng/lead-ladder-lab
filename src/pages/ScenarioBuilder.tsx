@@ -296,6 +296,8 @@ const ScenarioBuilder: React.FC = () => {
   // Email strategy AI
   const [emailStrategyText, setEmailStrategyText] = useState('');
   const [emailStrategyLoading, setEmailStrategyLoading] = useState(false);
+  type EmailScen = { openRate: number; clicks: number; conversions: number; revenue: number };
+  const [emailScenarios, setEmailScenarios] = useState<{ bad: EmailScen; real: EmailScen; opt: EmailScen } | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
