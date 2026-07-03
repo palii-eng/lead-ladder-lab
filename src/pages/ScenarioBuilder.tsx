@@ -914,6 +914,48 @@ const ScenarioBuilder: React.FC = () => {
     }
   }, [scenario?.niche, scenario?.leadTypes]);
 
+  // Auto-mark step 2 (Ціль оптимізації) saved as soon as the goal + subtype
+  // are fully picked — this step no longer has its own node in the flow, it's
+  // driven from the Meta Ads prep block via "+ Додати ціль".
+  useEffect(() => {
+    if (!scenario) return;
+    const ch = scenario.channel;
+    const step2Ok = !!ch && (
+      (ch === 'leads' && (scenario.leadTypes?.length || 0) > 0) ||
+      (ch === 'awareness' && !!(scenario as any).awarenessType) ||
+      (ch === 'traffic' && !!(scenario as any).trafficType) ||
+      (ch === 'engagement' && !!(scenario as any).engagementType) ||
+      (ch === 'sales' && !!(scenario as any).salesType)
+    );
+    if (step2Ok) {
+      setSavedSteps(prev => {
+        if (prev.has('2')) return prev;
+        const next = new Set(prev);
+        next.add('2');
+        return next;
+      });
+    }
+  }, [scenario?.channel, scenario?.leadTypes, (scenario as any)?.awarenessType, (scenario as any)?.trafficType, (scenario as any)?.engagementType, (scenario as any)?.salesType]);
+
+  // Auto-mark step 3 (Деталізація) saved for infobiz when the funnel format
+  // is set — the flow no longer has a dedicated node, format is picked inline
+  // inside each campaign card of the Meta Ads prep block.
+  useEffect(() => {
+    if (!scenario || scenario.niche !== 'Інфобізнес') return;
+    setSavedSteps(prev => {
+      const next = new Set(prev);
+      let changed = false;
+      if (scenario.funnelFormat && !next.has('3')) { next.add('3'); changed = true; }
+      (scenario.leadTypes || []).forEach(lt => {
+        if (scenario.branchData?.[lt]?.funnelFormat) {
+          const key = `3:${lt}`;
+          if (!next.has(key)) { next.add(key); changed = true; }
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [scenario?.niche, scenario?.funnelFormat, scenario?.leadTypes, scenario?.branchData]);
+
 
 
   if (!scenario) {
