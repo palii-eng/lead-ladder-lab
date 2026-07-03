@@ -3178,22 +3178,24 @@ const ScenarioBuilder: React.FC = () => {
                       {!flowGated && <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />}
                     </div>
                     {!flowGated && <>
-                    {/* Shared steps (1, 2) — step 3 (Деталізація) moved into each branch */}
+                    {/* Shared steps (Ніша, Джерело) + unified Meta Ads prep block on the same row. */}
                     <div className="flex items-start gap-0 flex-shrink-0" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
                       {(() => {
                         const visible: number[] = [];
-                        for (const i of [0, 1, 2]) {
+                        for (const i of [0, 1]) {
                           if (isStepUnlocked(i)) {
                             visible.push(i);
                             if (!isStepCompleted(i)) break;
                           } else break;
                         }
-                        return visible.map((i, idx) => renderNode(i, undefined, idx === visible.length - 1));
+                        return visible.map((i) => renderNode(i, undefined, false));
                       })()}
+                      {isStepCompleted(1) && <PrepWorksNode campaignKeys={leadTypes} />}
                     </div>
 
 
-                    {/* Branch lines + branch rows */}
+                    {/* Branch lines + branch rows — start from Декомпозиція (step 4). */}
+                    {isStepCompleted(2) && isStepCompleted(3) && (
                     <div className="relative flex-shrink-0">
                       {/* SVG connector lines from router to each branch */}
                       <svg 
@@ -3228,24 +3230,14 @@ const ScenarioBuilder: React.FC = () => {
                         {leadTypes.map((lt, brIdx) => (
                           <div key={lt} className="flex items-start gap-0" style={{ height: `${branchRowHeight}px` }}>
                             {(() => {
-                              const showDetailization = scenario.niche === 'Інфобізнес';
                               const branchStepIdxs: number[] = [];
                               const tryPush = (i: number): boolean => {
                                 if (!isStepUnlocked(i, lt)) return false;
                                 branchStepIdxs.push(i);
                                 return isStepCompleted(i, lt);
                               };
-                              if (showDetailization) {
-                                if (!tryPush(3)) { /* stop */ }
-                                else {
-                                  for (let bi = 0; bi < BRANCH_STEPS.length; bi++) {
-                                    if (!tryPush(bi + 4)) break;
-                                  }
-                                }
-                              } else {
-                                for (let bi = 0; bi < BRANCH_STEPS.length; bi++) {
-                                  if (!tryPush(bi + 4)) break;
-                                }
+                              for (let bi = 0; bi < BRANCH_STEPS.length; bi++) {
+                                if (!tryPush(bi + 4)) break;
                               }
                               return branchStepIdxs.map((stepIdx, idx) => (
                                 <React.Fragment key={stepIdx}>
@@ -3258,18 +3250,8 @@ const ScenarioBuilder: React.FC = () => {
 
                         ))}
                       </div>
-
-                      {/* Unified Meta Ads prep block — keep existing campaign history visible while adding new lead goals. */}
-                      {leadTypes.some(lt =>
-                        isStepCompletedForBranch(scenario, 4, lt)
-                        || hasScopedValue((scenario as any)?.audienceSettings?.[lt])
-                        || hasScopedValue((scenario as any)?.creoBriefs?.[lt])
-                      ) && (
-                        <div className="mt-6 pt-6 border-t border-dashed border-border/70">
-                          <PrepWorksNode campaignKeys={leadTypes} />
-                        </div>
-                      )}
                     </div>
+                    )}
                     </>}
                   </div>
                 );
