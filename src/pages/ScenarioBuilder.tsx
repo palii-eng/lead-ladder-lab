@@ -1310,12 +1310,19 @@ const ScenarioBuilder: React.FC = () => {
               <TabBtn label="Кампанії" icon={<Filter className="w-3.5 h-3.5" />} count={campaigns.length} active />
               <TabBtn label="Групи оголошень" icon={<Users className="w-3.5 h-3.5" />} count={totalAudiences} active />
               <TabBtn label="Оголошення" icon={<Megaphone className="w-3.5 h-3.5" />} count={totalCreo} active />
+              <div className="ml-auto py-1.5">
+                <AddBtn label="Додати ціль" onClick={() => setActiveStep(2)} />
+              </div>
             </div>
 
             {/* Tree — one section per campaign */}
             <div className="p-3 space-y-4" style={{ background: 'hsl(220 20% 99%)' }}>
               {campaigns.map((c, cIdx) => {
                 const GoalIcon = c.GoalIcon;
+                const isInfobiz = scenario.niche === 'Інфобізнес';
+                const campaignFunnelFormat = c.key === 'main'
+                  ? (scenario.funnelFormat || '')
+                  : (scenario.branchData?.[c.key]?.funnelFormat || '');
                 return (
                   <div key={c.key} className="space-y-2">
                     {/* Campaign row */}
@@ -1337,10 +1344,29 @@ const ScenarioBuilder: React.FC = () => {
                         <div className="text-[13px] font-bold text-foreground truncate">{c.goalLabel}</div>
                         {c.subgoalLabel && <div className="text-[11px] text-muted-foreground truncate">{c.subgoalLabel}</div>}
                       </div>
+                      {isInfobiz && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (c.key !== 'main') setActiveLeadType(c.key);
+                            setActiveStep(3);
+                          }}
+                          className="text-[10px] font-semibold px-2 py-1 rounded border transition-colors shrink-0"
+                          style={
+                            campaignFunnelFormat
+                              ? { color: 'hsl(220 10% 30%)', background: 'hsl(220 14% 96%)', borderColor: 'hsl(var(--border))' }
+                              : { color: META, background: 'transparent', borderColor: META, borderStyle: 'dashed' }
+                          }
+                          title="Формат воронки"
+                        >
+                          {campaignFunnelFormat ? `🧩 ${campaignFunnelFormat}` : '+ Формат воронки'}
+                        </button>
+                      )}
                       <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ background: 'hsl(220 14% 94%)', color: 'hsl(220 10% 40%)' }}>
                         {c.audiences.length} груп · {c.creoList.length} крео
                       </span>
                     </div>
+
 
                     {/* Audiences (Ad Sets) */}
                     <div className="pl-4 space-y-1.5 border-l-2 border-dashed" style={{ borderColor: 'hsl(214 89% 52% / 0.25)' }}>
