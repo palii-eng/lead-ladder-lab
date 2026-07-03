@@ -2769,36 +2769,48 @@ const ScenarioBuilder: React.FC = () => {
                   }}
                   className="bg-secondary border-border text-foreground h-9 text-sm"
                   placeholder="Кількість контактів" />
-                <Popover>
+                <Popover onOpenChange={(open) => { if (open) fetchEmailStrategy(); }}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="mt-2 h-8 text-xs gap-1.5">
+                    <Button variant="outline" size="sm" className="mt-2 h-8 text-xs gap-1.5"
+                      disabled={!currentRetention.emailCount}>
                       <Sparkles className="w-3.5 h-3.5 text-primary" />
                       Стратегія
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent side="right" align="start" className="w-80 p-4 bg-card border-border">
+                  <PopoverContent side="right" align="start" className="w-[420px] max-h-[70vh] overflow-y-auto p-4 bg-card border-border">
                     <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-primary" />
-                        <h4 className="font-semibold text-sm text-foreground">Email-стратегія{scenario.niche ? ` для «${scenario.niche}»` : ''}</h4>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-primary" />
+                          <h4 className="font-semibold text-sm text-foreground">Email-стратегія{scenario.niche ? ` для «${scenario.niche}»` : ''}</h4>
+                        </div>
+                        <Button variant="ghost" size="sm" className="h-6 px-2 text-[11px]"
+                          onClick={() => fetchEmailStrategy({ force: true })}
+                          disabled={emailStrategyLoading}>
+                          ↻
+                        </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        База: <span className="font-semibold text-foreground">{currentRetention.emailCount || 0}</span> контактів. Рекомендована структура:
+                      <p className="text-[11px] text-muted-foreground">
+                        База: <span className="font-semibold text-foreground">{currentRetention.emailCount || 0}</span> контактів. Аналіз від AI email-маркетолога під ваш бриф.
                       </p>
-                      <ul className="space-y-2 text-xs text-foreground">
-                        <li className="flex gap-2"><span>📬</span><span><b>Welcome-воронка</b> — 3–5 листів для нових контактів (знайомство з брендом, цінність, соц. докази, CTA)</span></li>
-                        <li className="flex gap-2"><span>🔥</span><span><b>Воронка прогріву</b> — 4–6 листів з кейсами, історіями клієнтів, розбором болей та рішень</span></li>
-                        <li className="flex gap-2"><span>💰</span><span><b>Воронка дожиму</b> — 3–4 листи з обмеженою пропозицією, бонусами та FOMO для тих, хто не купив</span></li>
-                        <li className="flex gap-2"><span>🔁</span><span><b>Реактивація</b> — 2–3 листи для «сплячих» контактів (30+ днів без відкриттів)</span></li>
-                        <li className="flex gap-2"><span>📅</span><span><b>Регулярні розсилки</b> — 5–8 листів на місяць: новини, поради, кейси, спецпропозиції</span></li>
-                        <li className="flex gap-2"><span>🎯</span><span><b>Сегментація</b> — розділіть базу за активністю та інтересами для персоналізованих офферів</span></li>
-                      </ul>
-                      <div className="pt-2 border-t border-border">
-                        <p className="text-[11px] text-muted-foreground">💡 Порада: тестуйте теми листів (A/B), стежте за Open Rate ≥ 20% та CTR ≥ 2%.</p>
-                      </div>
+                      {emailStrategyLoading && !emailStrategyText && (
+                        <div className="text-xs text-muted-foreground py-6 text-center">
+                          <Sparkles className="w-4 h-4 text-primary inline-block animate-pulse mr-2" />
+                          Готую персональну стратегію…
+                        </div>
+                      )}
+                      {emailStrategyText && (
+                        <div className="prose prose-sm max-w-none text-xs text-foreground [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_ul]:my-1 [&_ol]:my-1 [&_p]:my-1 [&_strong]:text-foreground">
+                          <ReactMarkdown>{emailStrategyText}</ReactMarkdown>
+                        </div>
+                      )}
+                      {!emailStrategyLoading && !emailStrategyText && (
+                        <p className="text-xs text-muted-foreground">Введіть кількість контактів і натисніть «Стратегія».</p>
+                      )}
                     </div>
                   </PopoverContent>
                 </Popover>
+
               </div>
 
               {/* Disabled channels */}
