@@ -263,6 +263,7 @@ const ScenarioBuilder: React.FC = () => {
   const [creoAiLoading, setCreoAiLoading] = useState(false);
   const [viewCreoIdx, setViewCreoIdx] = useState<number | null>(null);
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
+  const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
   const [fillBenchLoading, setFillBenchLoading] = useState(false);
   // Cache for AI-generated content: key → text. Persisted on the scenario so
   // recommendations survive reload and aren't regenerated every time.
@@ -1113,7 +1114,6 @@ const ScenarioBuilder: React.FC = () => {
     </div>
   );
 
-  const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
   const toggleAdSet = (id: string) => setExpandedAdSets(prev => {
     const n = new Set(prev);
     if (n.has(id)) n.delete(id); else n.add(id);
