@@ -3085,7 +3085,6 @@ const ScenarioBuilder: React.FC = () => {
                               return branchStepIdxs.map((stepIdx, idx) => (
                                 <React.Fragment key={stepIdx}>
                                   {renderNode(stepIdx, lt, idx === branchStepIdxs.length - 1)}
-                                  {stepIdx === 4 && isStepCompletedForBranch(scenario, 4, lt) && <PrepWorksNode branchKey={lt} />}
                                 </React.Fragment>
                               ));
                             })()}
@@ -3094,6 +3093,13 @@ const ScenarioBuilder: React.FC = () => {
 
                         ))}
                       </div>
+
+                      {/* Unified Meta Ads prep block — one campaign per lead type */}
+                      {leadTypes.every(lt => isStepCompletedForBranch(scenario, 4, lt)) && (
+                        <div className="mt-6 pt-6 border-t border-dashed border-border/70">
+                          <PrepWorksNode campaignKeys={leadTypes} />
+                        </div>
+                      )}
                     </div>
                     </>}
                   </div>
