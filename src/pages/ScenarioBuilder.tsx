@@ -3159,7 +3159,16 @@ const ScenarioBuilder: React.FC = () => {
                           });
                           // Prep block appears right after "Джерело".
                           if (isStepCompleted(1)) {
-                            nodes.push(<PrepWorksNode key="prep-single" />);
+                            nodes.push(
+                              <PrepWorksNode
+                                key="prep-single"
+                                campaignKeys={
+                                  scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0
+                                    ? scenario.leadTypes
+                                    : undefined
+                                }
+                              />
+                            );
                           }
                           // Post-prep chain only after goal + format are set (auto-saved via useEffects).
                           if (isStepCompleted(1) && isStepCompleted(2) && isStepCompleted(3)) {
