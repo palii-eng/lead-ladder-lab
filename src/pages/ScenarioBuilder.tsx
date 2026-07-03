@@ -2873,36 +2873,34 @@ const ScenarioBuilder: React.FC = () => {
                 </div>
               ))}
 
-              {currentRetention.emailCount > 0 && (
+              {currentRetention.emailCount > 0 && emailScenarios && (
                 <div className="space-y-2">
-                  {emailScenarios && (
-                    <div className="text-[11px] text-primary flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" /> Заповнено AI email-маркетологом
-                    </div>
-                  )}
+                  <div className="text-[11px] text-primary flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" /> Заповнено AI email-маркетологом
+                  </div>
                   {[
-                    { key: 'bad' as const, label: '😟 Поганий', rate: 0.1 },
-                    { key: 'real' as const, label: '📊 Реалістичний', rate: 0.2 },
-                    { key: 'opt' as const, label: '🚀 Оптимістичний', rate: 0.35 },
+                    { key: 'bad' as const, label: '😟 Поганий' },
+                    { key: 'real' as const, label: '📊 Реалістичний' },
+                    { key: 'opt' as const, label: '🚀 Оптимістичний' },
                   ].map(s => {
-                    const ai = emailScenarios?.[s.key];
-                    const r = retentionCalc(s.rate);
-                    const openRate = ai ? ai.openRate : Math.round(s.rate * 100);
-                    const clicks = ai ? ai.clicks : r.clicks;
-                    const conversions = ai ? ai.conversions : r.conversions;
-                    const revenue = ai ? ai.revenue : r.revenue;
+                    const ai = emailScenarios[s.key];
                     return (
                       <div key={s.label} className="bg-secondary rounded-lg p-3">
                         <h4 className="font-semibold text-foreground text-sm">{s.label}</h4>
                         <div className="text-xs text-muted-foreground mt-1 grid grid-cols-2 gap-1">
-                          <span>Open: {openRate}%</span>
-                          <span>Кліки: {clicks.toLocaleString()}</span>
-                          <span>Конверсії: {conversions.toLocaleString()}</span>
-                          <span className="font-bold text-foreground">Дохід: {revenue.toLocaleString()} $</span>
+                          <span>Open: {ai.openRate}%</span>
+                          <span>Кліки: {ai.clicks.toLocaleString()}</span>
+                          <span>Конверсії: {ai.conversions.toLocaleString()}</span>
+                          <span className="font-bold text-foreground">Дохід: {ai.revenue.toLocaleString()} $</span>
                         </div>
                       </div>
                     );
                   })}
+                </div>
+              )}
+              {currentRetention.emailCount > 0 && !emailScenarios && (
+                <div className="text-xs text-muted-foreground bg-secondary/50 rounded-lg p-3 border border-dashed border-border">
+                  Натисніть «Стратегія», щоб AI email-маркетолог прорахував сценарії під вашу базу та бриф.
                 </div>
               )}
               <div className="sticky bottom-0 bg-card pt-3 pb-2 -mx-4 px-4 border-t border-border mt-4 z-10 flex gap-2">
