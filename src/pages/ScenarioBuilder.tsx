@@ -2875,20 +2875,30 @@ const ScenarioBuilder: React.FC = () => {
 
               {currentRetention.emailCount > 0 && (
                 <div className="space-y-2">
+                  {emailScenarios && (
+                    <div className="text-[11px] text-primary flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> Заповнено AI email-маркетологом
+                    </div>
+                  )}
                   {[
-                    { label: '😟 Поганий', rate: 0.1 },
-                    { label: '📊 Реалістичний', rate: 0.2 },
-                    { label: '🚀 Оптимістичний', rate: 0.35 },
+                    { key: 'bad' as const, label: '😟 Поганий', rate: 0.1 },
+                    { key: 'real' as const, label: '📊 Реалістичний', rate: 0.2 },
+                    { key: 'opt' as const, label: '🚀 Оптимістичний', rate: 0.35 },
                   ].map(s => {
+                    const ai = emailScenarios?.[s.key];
                     const r = retentionCalc(s.rate);
+                    const openRate = ai ? ai.openRate : Math.round(s.rate * 100);
+                    const clicks = ai ? ai.clicks : r.clicks;
+                    const conversions = ai ? ai.conversions : r.conversions;
+                    const revenue = ai ? ai.revenue : r.revenue;
                     return (
                       <div key={s.label} className="bg-secondary rounded-lg p-3">
                         <h4 className="font-semibold text-foreground text-sm">{s.label}</h4>
                         <div className="text-xs text-muted-foreground mt-1 grid grid-cols-2 gap-1">
-                          <span>Open: {Math.round(s.rate * 100)}%</span>
-                          <span>Кліки: {r.clicks}</span>
-                          <span>Конверсії: {r.conversions}</span>
-                          <span className="font-bold text-foreground">Дохід: {r.revenue.toLocaleString()} $</span>
+                          <span>Open: {openRate}%</span>
+                          <span>Кліки: {clicks.toLocaleString()}</span>
+                          <span>Конверсії: {conversions.toLocaleString()}</span>
+                          <span className="font-bold text-foreground">Дохід: {revenue.toLocaleString()} $</span>
                         </div>
                       </div>
                     );
