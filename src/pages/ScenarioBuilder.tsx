@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
-import { ArrowLeft, ArrowRight, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronRight, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { VideoBadge } from '@/components/VideoBadge';
 import { supabase } from '@/integrations/supabase/client';
