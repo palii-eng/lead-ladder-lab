@@ -262,6 +262,7 @@ const ScenarioBuilder: React.FC = () => {
   const [creoVideoFormat, setCreoVideoFormat] = useState<string>('');
   const [creoAiLoading, setCreoAiLoading] = useState(false);
   const [viewCreoIdx, setViewCreoIdx] = useState<number | null>(null);
+  const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [fillBenchLoading, setFillBenchLoading] = useState(false);
   // Cache for AI-generated content: key → text. Persisted on the scenario so
   // recommendations survive reload and aren't regenerated every time.
@@ -1115,8 +1116,12 @@ const ScenarioBuilder: React.FC = () => {
   const PrepWorksNode: React.FC<{ branchKey?: string }> = ({ branchKey }) => {
     const key = branchKey || activeLeadType || 'main';
     const raw = (scenario as any)?.creoBriefs?.[key];
-    const list: any[] = Array.isArray(raw) ? raw : (raw?.format ? [raw] : []);
-    const formatIcons: Record<string, string> = { static: '🖼️', carousel: '🎠', video: '🎬' };
+    const creoList: any[] = Array.isArray(raw) ? raw : (raw?.format ? [raw] : []);
+    const formatMeta: Record<string, { icon: string; label: string }> = {
+      static: { icon: '🖼️', label: 'Статика' },
+      carousel: { icon: '🎠', label: 'Карусель' },
+      video: { icon: '🎬', label: 'Відео' },
+    };
 
     const rawAud = (scenario as any)?.audienceSettings?.[key];
     const audiences: any[] = Array.isArray(rawAud)
@@ -1124,18 +1129,6 @@ const ScenarioBuilder: React.FC = () => {
       : (rawAud && (rawAud.tips || rawAud.checks)
           ? [{ id: 'legacy', name: 'Гіпотеза 1', mode: 'ai' }]
           : []);
-
-    const Row: React.FC<{ icon: string; title: string; meta?: React.ReactNode; onClick: () => void; compact?: boolean }> = ({ icon, title, meta, onClick, compact }) => (
-      <button
-        type="button"
-        onClick={onClick}
-        className={`w-full flex items-center gap-2 ${compact ? 'px-2 py-1.5' : 'px-2.5 py-2'} rounded-lg bg-foreground/[0.03] border border-border/60 hover:bg-primary/5 hover:border-primary/40 transition-all text-left`}
-      >
-        <span className={compact ? 'text-xs' : 'text-sm'}>{icon}</span>
-        <span className={`${compact ? 'text-[11px]' : 'text-[12px]'} font-semibold text-foreground leading-tight flex-1 truncate`}>{title}</span>
-        {meta}
-      </button>
-    );
 
     const goalObj = CAMPAIGN_GOALS.find(g => g.value === scenario.channel);
     const GoalIcon = goalObj?.Icon;
@@ -1146,113 +1139,249 @@ const ScenarioBuilder: React.FC = () => {
     else if (scenario.channel === 'sales') subgoalLabel = SALES_TYPES.find(x => x.value === scenario.salesType)?.label || '';
     else if (scenario.channel === 'leads' && branchKey) subgoalLabel = LEAD_TYPES.find(x => x.value === branchKey)?.label || '';
 
-    const ColumnHeader: React.FC<{ tag: string; title: string; icon: string }> = ({ tag, title, icon }) => (
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-sm">{icon}</span>
-        <div className="flex flex-col leading-tight">
-          <span className="font-mono text-[9px] tracking-widest uppercase text-muted-foreground/70">{tag}</span>
-          <span className="text-[11px] font-bold text-foreground">{title}</span>
-        </div>
+    const orphanCreo = creoList.filter(c => !c.audienceId || !audiences.some(a => a.id === c.audienceId));
+    const creoByAudience = (audId: string) => creoList.filter(c => c.audienceId === audId);
+
+    const openAudienceDialog = (view: 'list' | 'choose' = 'choose') => {
+      if (branchKey) setActiveLeadType(branchKey);
+      setAudienceView(view);
+      setAudienceOpen(true);
+    };
+    const openAudienceView = (idx: number) => {
+      if (branchKey) setActiveLeadType(branchKey);
+      setViewAudienceIdx(idx);
+      setAudienceView('view');
+      setAudienceOpen(true);
+    };
+    const openCreoCreate = (audId: string | null) => {
+      if (branchKey) setActiveLeadType(branchKey);
+      setPreselectedAudienceId(audId);
+      setViewCreoIdx(null);
+      setCreoFormat(null);
+      setCreoOpen(true);
+    };
+    const openCreoView = (idx: number) => {
+      if (branchKey) setActiveLeadType(branchKey);
+      setViewCreoIdx(idx);
+      setCreoFormat(null);
+      setCreoOpen(true);
+    };
+
+    // Meta blue
+    const META = 'hsl(214 89% 52%)';
+
+    const TabBtn: React.FC<{ label: string; icon: React.ReactNode; count?: number; active?: boolean }> = ({ label, icon, count, active }) => (
+      <div
+        className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border-b-2 transition-colors"
+        style={{
+          color: active ? META : 'hsl(220 10% 45%)',
+          borderColor: active ? META : 'transparent',
+        }}
+      >
+        {icon}
+        <span>{label}</span>
+        {typeof count === 'number' && (
+          <span
+            className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold"
+            style={{ background: active ? `${META.replace(')', ' / 0.12)').replace('hsl(', 'hsl(')}` : 'hsl(220 14% 94%)', color: active ? META : 'hsl(220 10% 40%)' }}
+          >
+            {count}
+          </span>
+        )}
       </div>
+    );
+
+    const AddBtn: React.FC<{ label: string; onClick: () => void; subtle?: boolean }> = ({ label, onClick, subtle }) => (
+      <button
+        type="button"
+        onClick={onClick}
+        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
+        style={
+          subtle
+            ? { color: META, background: 'transparent', border: `1px dashed ${META}` }
+            : { color: 'white', background: META, boxShadow: '0 2px 4px hsl(214 89% 52% / 0.25)' }
+        }
+      >
+        <Plus className="w-3 h-3" strokeWidth={2.5} />
+        {label}
+      </button>
     );
 
     return (
       <div className="flex items-start flex-shrink-0 mx-10" data-flow-node>
         <div className="flex flex-col" style={{ width: '720px' }}>
           <div className="flex items-center gap-2 mb-2 px-1 h-4">
-            <span className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground/70">ПІДГОТОВКА · META ADS</span>
+            <span className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground/70">ПІДГОТОВКА · META ADS MANAGER</span>
           </div>
+
           <div
-            className="relative w-full rounded-2xl p-4"
+            className="relative w-full rounded-2xl overflow-hidden"
             style={{
               background: 'hsl(0 0% 100%)',
               boxShadow: '0 12px 26px -16px hsl(0 0% 0% / 0.18), 0 2px 6px -2px hsl(0 0% 0% / 0.05), inset 0 0 0 1px hsl(var(--border) / 0.7)',
             }}
           >
-            <span
-              className="absolute -top-2 -right-2 flex items-center justify-center w-10 h-10 rounded-full border-2 border-background text-base"
-              style={{ background: 'linear-gradient(135deg, hsl(220 14% 96%), hsl(220 14% 90%))' }}
-            >
-              🛠️
-            </span>
+            {/* Meta-style header bar */}
+            <div className="flex items-center justify-between px-4 pt-3 pb-0 border-b border-border/60" style={{ background: 'hsl(220 20% 98%)' }}>
+              <div className="flex items-center gap-3">
+                <MetaIcon className="w-5 h-5" />
+                <span className="text-[12px] font-bold text-foreground">Ads Manager</span>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+                  {scenario.niche || 'акаунт'} {branchKey ? `· ${LEAD_TYPES.find(l => l.value === branchKey)?.label || ''}` : ''}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-success" />
+                <span className="text-[10px] text-muted-foreground font-medium">чернетка</span>
+              </div>
+            </div>
 
-            <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-stretch gap-2">
-              {/* Column 1: Campaign (goal) */}
-              <div className="flex flex-col min-w-0">
-                <ColumnHeader tag="Рівень 1" title="Кампанія" icon="🎯" />
-                <div className="flex-1 rounded-xl border border-border/60 bg-foreground/[0.03] p-2.5 flex flex-col gap-1.5">
+            {/* Tabs */}
+            <div className="flex items-center gap-1 px-3 border-b border-border/60" style={{ background: 'hsl(220 20% 98%)' }}>
+              <TabBtn label="Кампанії" icon={<Filter className="w-3.5 h-3.5" />} count={1} active />
+              <TabBtn label="Групи оголошень" icon={<Users className="w-3.5 h-3.5" />} count={audiences.length} active />
+              <TabBtn label="Оголошення" icon={<Megaphone className="w-3.5 h-3.5" />} count={creoList.length} active />
+            </div>
+
+            {/* Tree */}
+            <div className="p-3 space-y-2" style={{ background: 'hsl(220 20% 99%)' }}>
+              {/* Campaign row */}
+              <div
+                className="rounded-lg border p-2.5 flex items-center gap-2.5"
+                style={{ background: 'white', borderColor: 'hsl(214 89% 52% / 0.35)', boxShadow: '0 1px 2px hsl(0 0% 0% / 0.04)' }}
+              >
+                <span
+                  className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+                  style={{ background: 'hsl(214 89% 52% / 0.1)' }}
+                >
+                  {GoalIcon ? <GoalIcon className="w-4 h-4" style={{ color: META }} /> : <Filter className="w-4 h-4" style={{ color: META }} />}
+                </span>
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    {GoalIcon ? <GoalIcon className="w-4 h-4 text-primary" /> : <span className="text-sm">✅</span>}
-                    <span className="text-[12px] font-bold text-foreground truncate">{goalObj?.label || 'Ціль'}</span>
+                    <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Кампанія</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase" style={{ background: 'hsl(120 50% 92%)', color: 'hsl(120 55% 28%)' }}>активна</span>
                   </div>
-                  {subgoalLabel && (
-                    <span className="text-[10px] text-muted-foreground leading-snug line-clamp-2">{subgoalLabel}</span>
-                  )}
-                  <span className="text-[9px] font-mono uppercase tracking-wider text-success mt-auto">● обрано</span>
+                  <div className="text-[13px] font-bold text-foreground truncate">{goalObj?.label || 'Ціль кампанії'}</div>
+                  {subgoalLabel && <div className="text-[11px] text-muted-foreground truncate">{subgoalLabel}</div>}
                 </div>
               </div>
 
-              {/* Connector */}
-              <div className="flex items-center justify-center pt-6 text-muted-foreground/50 text-lg">›</div>
+              {/* Audiences (Ad Sets) */}
+              <div className="pl-4 space-y-2 border-l-2 border-dashed" style={{ borderColor: 'hsl(214 89% 52% / 0.25)' }}>
+                {audiences.map((a, idx) => {
+                  const linkedCreo = creoByAudience(a.id);
+                  return (
+                    <div key={a.id || idx} className="space-y-1.5">
+                      <div
+                        className="group rounded-lg border p-2 flex items-center gap-2 hover:border-primary/50 transition-colors"
+                        style={{ background: 'white', borderColor: 'hsl(var(--border))' }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => openAudienceView(idx)}
+                          className="flex-1 flex items-center gap-2 min-w-0 text-left"
+                        >
+                          <span
+                            className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+                            style={{ background: 'hsl(280 60% 96%)' }}
+                          >
+                            <Users className="w-3.5 h-3.5" style={{ color: 'hsl(280 55% 45%)' }} />
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Група оголошень #{idx + 1}</span>
+                              <span className="text-[9px]">{a.mode === 'ai' ? '✨ AI' : '✍️'}</span>
+                            </div>
+                            <div className="text-[12px] font-semibold text-foreground truncate">{a.name || 'Без назви'}</div>
+                          </div>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ background: 'hsl(220 14% 94%)', color: 'hsl(220 10% 40%)' }}>
+                            {linkedCreo.length} крео
+                          </span>
+                        </button>
+                        <AddBtn label="Крео" onClick={() => openCreoCreate(a.id)} />
+                      </div>
 
-              {/* Column 2: Ad Set (audiences) */}
-              <div className="flex flex-col min-w-0">
-                <ColumnHeader tag="Рівень 2" title="Група оголошень" icon="👥" />
-                <div className="flex-1 rounded-xl border border-border/60 bg-foreground/[0.03] p-2 flex flex-col gap-1.5">
-                  <Row
-                    icon="👥"
-                    title="Налаштування аудиторій"
-                    onClick={() => { if (branchKey) setActiveLeadType(branchKey); setAudienceView('list'); setAudienceOpen(true); }}
-                  />
-                  {audiences.length > 0 && (
-                    <div className="pl-2 flex flex-col gap-1">
-                      {audiences.map((a, idx) => (
-                        <Row
-                          key={a.id || idx}
-                          compact
-                          icon={a.mode === 'ai' ? '✨' : '✍️'}
-                          title={`Гіпотеза ${idx + 1}${a.name ? ` · ${a.name}` : ''}`}
-                          onClick={() => { if (branchKey) setActiveLeadType(branchKey); setViewAudienceIdx(idx); setAudienceView('view'); setAudienceOpen(true); }}
-                        />
-                      ))}
+                      {linkedCreo.length > 0 && (
+                        <div className="pl-6 space-y-1 border-l-2 border-dashed ml-3" style={{ borderColor: 'hsl(280 55% 60% / 0.25)' }}>
+                          {linkedCreo.map((c) => {
+                            const globalIdx = creoList.indexOf(c);
+                            const fmt = formatMeta[c.format] || { icon: '📝', label: 'Крео' };
+                            const title = c.fields?.h1 || c.fields?.script?.slice(0, 40) || fmt.label;
+                            return (
+                              <button
+                                key={globalIdx}
+                                type="button"
+                                onClick={() => openCreoView(globalIdx)}
+                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md border bg-white hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                                style={{ borderColor: 'hsl(var(--border))' }}
+                              >
+                                <span className="w-6 h-6 rounded flex items-center justify-center text-[12px] shrink-0" style={{ background: 'hsl(35 80% 94%)' }}>
+                                  {fmt.icon}
+                                </span>
+                                <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground shrink-0">#{globalIdx + 1}</span>
+                                <span className="text-[11px] font-semibold text-foreground flex-1 truncate">{title}</span>
+                                <span className="text-[9px] font-medium text-muted-foreground shrink-0">{fmt.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  );
+                })}
+
+                <div className="pt-0.5">
+                  <AddBtn subtle label="Створити групу оголошень" onClick={() => openAudienceDialog('choose')} />
                 </div>
               </div>
 
-              {/* Connector */}
-              <div className="flex items-center justify-center pt-6 text-muted-foreground/50 text-lg">›</div>
-
-              {/* Column 3: Ad (creo) */}
-              <div className="flex flex-col min-w-0">
-                <ColumnHeader tag="Рівень 3" title="Оголошення" icon="🖼️" />
-                <div className="flex-1 rounded-xl border border-border/60 bg-foreground/[0.03] p-2 flex flex-col gap-1.5">
-                  <Row
-                    icon="📝"
-                    title="ТЗ по крео"
-                    onClick={() => { if (branchKey) setActiveLeadType(branchKey); setCreoOpen(true); setCreoFormat(null); setViewCreoIdx(null); }}
-                  />
-                  {list.length > 0 && (
-                    <div className="pl-2 flex flex-col gap-1">
-                      {list.map((item, idx) => (
-                        <Row
-                          key={idx}
-                          compact
-                          icon={formatIcons[item.format] || '📝'}
-                          title={`Крео ${idx + 1}${item.fields?.h1 ? ` · ${item.fields.h1.slice(0, 20)}` : ''}`}
-                          onClick={() => { if (branchKey) setActiveLeadType(branchKey); setViewCreoIdx(idx); setCreoOpen(true); setCreoFormat(null); }}
-                        />
-                      ))}
-                    </div>
-                  )}
+              {/* Orphan creo (not linked to any audience) */}
+              {orphanCreo.length > 0 && (
+                <div className="pl-4 pt-2 space-y-1.5">
+                  <div className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Оголошення без групи</div>
+                  {orphanCreo.map((c) => {
+                    const globalIdx = creoList.indexOf(c);
+                    const fmt = formatMeta[c.format] || { icon: '📝', label: 'Крео' };
+                    const title = c.fields?.h1 || c.fields?.script?.slice(0, 40) || fmt.label;
+                    return (
+                      <button
+                        key={globalIdx}
+                        type="button"
+                        onClick={() => openCreoView(globalIdx)}
+                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md border bg-white hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                        style={{ borderColor: 'hsl(var(--border))' }}
+                      >
+                        <span className="w-6 h-6 rounded flex items-center justify-center text-[12px] shrink-0" style={{ background: 'hsl(35 80% 94%)' }}>
+                          {fmt.icon}
+                        </span>
+                        <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground shrink-0">#{globalIdx + 1}</span>
+                        <span className="text-[11px] font-semibold text-foreground flex-1 truncate">{title}</span>
+                        <span className="text-[9px] font-medium text-muted-foreground shrink-0">{fmt.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-              </div>
+              )}
+            </div>
+
+            {/* Footer summary */}
+            <div className="flex items-center justify-between px-4 py-2 border-t border-border/60 text-[10px] text-muted-foreground" style={{ background: 'hsl(220 20% 98%)' }}>
+              <span>Структура акаунту: 1 кампанія · {audiences.length} груп · {creoList.length} оголошень</span>
+              <button
+                type="button"
+                onClick={() => openAudienceDialog('list')}
+                className="text-[10px] font-semibold hover:underline"
+                style={{ color: META }}
+              >
+                Відкрити менеджер аудиторій →
+              </button>
             </div>
           </div>
         </div>
       </div>
     );
   };
+
 
 
 
@@ -3500,7 +3629,7 @@ const ScenarioBuilder: React.FC = () => {
 
 
       {/* Creo brief dialog */}
-      <Dialog open={creoOpen} onOpenChange={(o) => { setCreoOpen(o); if (!o) { setCreoFormat(null); setCreoFields({}); setCreoVideoFormat(''); setViewCreoIdx(null); } }}>
+      <Dialog open={creoOpen} onOpenChange={(o) => { setCreoOpen(o); if (!o) { setCreoFormat(null); setCreoFields({}); setCreoVideoFormat(''); setViewCreoIdx(null); setPreselectedAudienceId(null); } }}>
         <DialogContent className="bg-card border-border max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-foreground font-bold flex items-center gap-2">
@@ -3820,6 +3949,7 @@ const ScenarioBuilder: React.FC = () => {
                         format: creoFormat,
                         videoFormat: creoFormat === 'video' ? creoVideoFormat : undefined,
                         fields: creoFields,
+                        audienceId: preselectedAudienceId || null,
                         savedAt: new Date().toISOString(),
                       },
                     ];
