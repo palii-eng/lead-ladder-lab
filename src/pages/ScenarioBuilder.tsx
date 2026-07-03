@@ -296,6 +296,8 @@ const ScenarioBuilder: React.FC = () => {
   // Email strategy AI
   const [emailStrategyText, setEmailStrategyText] = useState('');
   const [emailStrategyLoading, setEmailStrategyLoading] = useState(false);
+  type EmailScen = { openRate: number; clicks: number; conversions: number; revenue: number };
+  const [emailScenarios, setEmailScenarios] = useState<{ bad: EmailScen; real: EmailScen; opt: EmailScen } | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
@@ -679,6 +681,25 @@ const ScenarioBuilder: React.FC = () => {
     }
   }, [scenario, activeLeadType, toast]);
 
+  const parseEmailScenarios = useCallback((text: string) => {
+    try {
+      const m = text.match(/```json\s*([\s\S]*?)```/);
+      const raw = m ? m[1] : (text.match(/\{[\s\S]*?"scenarios"[\s\S]*?\}\s*\}/)?.[0] ?? '');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      const s = parsed.scenarios;
+      if (!s?.bad || !s?.real || !s?.opt) return null;
+      const norm = (x: any): EmailScen => ({
+        openRate: Number(x.openRate) || 0,
+        clicks: Number(x.clicks) || 0,
+        conversions: Number(x.conversions) || 0,
+        revenue: Number(x.revenue) || 0,
+      });
+      return { bad: norm(s.bad), real: norm(s.real), opt: norm(s.opt) };
+    } catch { return null; }
+  }, []);
+  const stripJsonBlock = (text: string) => text.replace(/```json[\s\S]*?```\s*/, '').trim();
+
   const fetchEmailStrategy = useCallback(async (opts?: { force?: boolean }) => {
     if (!scenario) return;
     const isBr = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && activeLeadType;
@@ -687,11 +708,14 @@ const ScenarioBuilder: React.FC = () => {
     const base = ret?.emailCount || 0;
     const cacheKey = `email-strategy:${activeLeadType || 'main'}:${base}`;
     if (!opts?.force && aiCacheRef.current[cacheKey]) {
-      setEmailStrategyText(aiCacheRef.current[cacheKey]);
+      const cached = aiCacheRef.current[cacheKey];
+      setEmailStrategyText(cached);
+      setEmailScenarios(parseEmailScenarios(cached));
       return;
     }
     setEmailStrategyLoading(true);
     setEmailStrategyText('');
+    setEmailScenarios(null);
     const decompSet = branch ? branch.decomposition : scenario.decomposition;
     const compDesc = branch ? branch.companyDescription : scenario.companyDescription;
     const salesCh = branch ? (branch as any).salesChannel : (scenario as any).salesChannel;
@@ -749,13 +773,34 @@ const ScenarioBuilder: React.FC = () => {
           }
         }
       }
-      if (fullText) setAiCache(cacheKey, fullText);
+      if (fullText) {
+        setAiCache(cacheKey, fullText);
+        setEmailScenarios(parseEmailScenarios(fullText));
+      }
     } catch (e: any) {
       toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати стратегію', variant: 'destructive' });
     } finally {
       setEmailStrategyLoading(false);
     }
-  }, [scenario, activeLeadType, toast, setAiCache]);
+  }, [scenario, activeLeadType, toast, setAiCache, parseEmailScenarios]);
+
+  // Hydrate scenarios from cache when switching branches / entering step
+  useEffect(() => {
+    if (!scenario) return;
+    const isBr = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && activeLeadType;
+    const branch = isBr ? scenario.branchData?.[activeLeadType] : null;
+    const base = (branch ? branch.retention?.emailCount : scenario.retention?.emailCount) || 0;
+    const cacheKey = `email-strategy:${activeLeadType || 'main'}:${base}`;
+    const cached = aiCacheRef.current[cacheKey];
+    if (cached) {
+      setEmailStrategyText(cached);
+      setEmailScenarios(parseEmailScenarios(cached));
+    } else {
+      setEmailStrategyText('');
+      setEmailScenarios(null);
+    }
+  }, [scenario?.id, activeLeadType, scenario?.retention?.emailCount, parseEmailScenarios]);
+
 
 
   // Hydrate cached conclusion + auto-generate when entering Результат step
@@ -2801,7 +2846,7 @@ const ScenarioBuilder: React.FC = () => {
                       )}
                       {emailStrategyText && (
                         <div className="prose prose-sm max-w-none text-xs text-foreground [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_ul]:my-1 [&_ol]:my-1 [&_p]:my-1 [&_strong]:text-foreground">
-                          <ReactMarkdown>{emailStrategyText}</ReactMarkdown>
+                          <ReactMarkdown>{stripJsonBlock(emailStrategyText)}</ReactMarkdown>
                         </div>
                       )}
                       {!emailStrategyLoading && !emailStrategyText && (
@@ -2830,20 +2875,30 @@ const ScenarioBuilder: React.FC = () => {
 
               {currentRetention.emailCount > 0 && (
                 <div className="space-y-2">
+                  {emailScenarios && (
+                    <div className="text-[11px] text-primary flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> Заповнено AI email-маркетологом
+                    </div>
+                  )}
                   {[
-                    { label: '😟 Поганий', rate: 0.1 },
-                    { label: '📊 Реалістичний', rate: 0.2 },
-                    { label: '🚀 Оптимістичний', rate: 0.35 },
+                    { key: 'bad' as const, label: '😟 Поганий', rate: 0.1 },
+                    { key: 'real' as const, label: '📊 Реалістичний', rate: 0.2 },
+                    { key: 'opt' as const, label: '🚀 Оптимістичний', rate: 0.35 },
                   ].map(s => {
+                    const ai = emailScenarios?.[s.key];
                     const r = retentionCalc(s.rate);
+                    const openRate = ai ? ai.openRate : Math.round(s.rate * 100);
+                    const clicks = ai ? ai.clicks : r.clicks;
+                    const conversions = ai ? ai.conversions : r.conversions;
+                    const revenue = ai ? ai.revenue : r.revenue;
                     return (
                       <div key={s.label} className="bg-secondary rounded-lg p-3">
                         <h4 className="font-semibold text-foreground text-sm">{s.label}</h4>
                         <div className="text-xs text-muted-foreground mt-1 grid grid-cols-2 gap-1">
-                          <span>Open: {Math.round(s.rate * 100)}%</span>
-                          <span>Кліки: {r.clicks}</span>
-                          <span>Конверсії: {r.conversions}</span>
-                          <span className="font-bold text-foreground">Дохід: {r.revenue.toLocaleString()} $</span>
+                          <span>Open: {openRate}%</span>
+                          <span>Кліки: {clicks.toLocaleString()}</span>
+                          <span>Конверсії: {conversions.toLocaleString()}</span>
+                          <span className="font-bold text-foreground">Дохід: {revenue.toLocaleString()} $</span>
                         </div>
                       </div>
                     );
