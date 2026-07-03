@@ -1114,7 +1114,6 @@ const ScenarioBuilder: React.FC = () => {
     </div>
   );
 
-  const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
   const toggleAdSet = (id: string) => setExpandedAdSets(prev => {
     const n = new Set(prev);
     if (n.has(id)) n.delete(id); else n.add(id);
