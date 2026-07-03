@@ -681,6 +681,25 @@ const ScenarioBuilder: React.FC = () => {
     }
   }, [scenario, activeLeadType, toast]);
 
+  const parseEmailScenarios = useCallback((text: string) => {
+    try {
+      const m = text.match(/```json\s*([\s\S]*?)```/);
+      const raw = m ? m[1] : (text.match(/\{[\s\S]*?"scenarios"[\s\S]*?\}\s*\}/)?.[0] ?? '');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      const s = parsed.scenarios;
+      if (!s?.bad || !s?.real || !s?.opt) return null;
+      const norm = (x: any): EmailScen => ({
+        openRate: Number(x.openRate) || 0,
+        clicks: Number(x.clicks) || 0,
+        conversions: Number(x.conversions) || 0,
+        revenue: Number(x.revenue) || 0,
+      });
+      return { bad: norm(s.bad), real: norm(s.real), opt: norm(s.opt) };
+    } catch { return null; }
+  }, []);
+  const stripJsonBlock = (text: string) => text.replace(/```json[\s\S]*?```\s*/, '').trim();
+
   const fetchEmailStrategy = useCallback(async (opts?: { force?: boolean }) => {
     if (!scenario) return;
     const isBr = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && activeLeadType;
@@ -689,11 +708,14 @@ const ScenarioBuilder: React.FC = () => {
     const base = ret?.emailCount || 0;
     const cacheKey = `email-strategy:${activeLeadType || 'main'}:${base}`;
     if (!opts?.force && aiCacheRef.current[cacheKey]) {
-      setEmailStrategyText(aiCacheRef.current[cacheKey]);
+      const cached = aiCacheRef.current[cacheKey];
+      setEmailStrategyText(cached);
+      setEmailScenarios(parseEmailScenarios(cached));
       return;
     }
     setEmailStrategyLoading(true);
     setEmailStrategyText('');
+    setEmailScenarios(null);
     const decompSet = branch ? branch.decomposition : scenario.decomposition;
     const compDesc = branch ? branch.companyDescription : scenario.companyDescription;
     const salesCh = branch ? (branch as any).salesChannel : (scenario as any).salesChannel;
@@ -751,13 +773,34 @@ const ScenarioBuilder: React.FC = () => {
           }
         }
       }
-      if (fullText) setAiCache(cacheKey, fullText);
+      if (fullText) {
+        setAiCache(cacheKey, fullText);
+        setEmailScenarios(parseEmailScenarios(fullText));
+      }
     } catch (e: any) {
       toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати стратегію', variant: 'destructive' });
     } finally {
       setEmailStrategyLoading(false);
     }
-  }, [scenario, activeLeadType, toast, setAiCache]);
+  }, [scenario, activeLeadType, toast, setAiCache, parseEmailScenarios]);
+
+  // Hydrate scenarios from cache when switching branches / entering step
+  useEffect(() => {
+    if (!scenario) return;
+    const isBr = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && activeLeadType;
+    const branch = isBr ? scenario.branchData?.[activeLeadType] : null;
+    const base = (branch ? branch.retention?.emailCount : scenario.retention?.emailCount) || 0;
+    const cacheKey = `email-strategy:${activeLeadType || 'main'}:${base}`;
+    const cached = aiCacheRef.current[cacheKey];
+    if (cached) {
+      setEmailStrategyText(cached);
+      setEmailScenarios(parseEmailScenarios(cached));
+    } else {
+      setEmailStrategyText('');
+      setEmailScenarios(null);
+    }
+  }, [scenario?.id, activeLeadType, scenario?.retention?.emailCount, parseEmailScenarios]);
+
 
 
   // Hydrate cached conclusion + auto-generate when entering Результат step
