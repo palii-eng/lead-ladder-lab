@@ -3197,8 +3197,12 @@ const ScenarioBuilder: React.FC = () => {
                         ))}
                       </div>
 
-                      {/* Unified Meta Ads prep block — one campaign per lead type */}
-                      {leadTypes.every(lt => isStepCompletedForBranch(scenario, 4, lt)) && (
+                      {/* Unified Meta Ads prep block — keep existing campaign history visible while adding new lead goals. */}
+                      {leadTypes.some(lt =>
+                        isStepCompletedForBranch(scenario, 4, lt)
+                        || hasScopedValue((scenario as any)?.audienceSettings?.[lt])
+                        || hasScopedValue((scenario as any)?.creoBriefs?.[lt])
+                      ) && (
                         <div className="mt-6 pt-6 border-t border-dashed border-border/70">
                           <PrepWorksNode campaignKeys={leadTypes} />
                         </div>
