@@ -679,6 +679,85 @@ const ScenarioBuilder: React.FC = () => {
     }
   }, [scenario, activeLeadType, toast]);
 
+  const fetchEmailStrategy = useCallback(async (opts?: { force?: boolean }) => {
+    if (!scenario) return;
+    const isBr = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && activeLeadType;
+    const branch = isBr ? scenario.branchData?.[activeLeadType] : null;
+    const ret = branch ? branch.retention : scenario.retention;
+    const base = ret?.emailCount || 0;
+    const cacheKey = `email-strategy:${activeLeadType || 'main'}:${base}`;
+    if (!opts?.force && aiCacheRef.current[cacheKey]) {
+      setEmailStrategyText(aiCacheRef.current[cacheKey]);
+      return;
+    }
+    setEmailStrategyLoading(true);
+    setEmailStrategyText('');
+    const decompSet = branch ? branch.decomposition : scenario.decomposition;
+    const compDesc = branch ? branch.companyDescription : scenario.companyDescription;
+    const salesCh = branch ? (branch as any).salesChannel : (scenario as any).salesChannel;
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/email-strategy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          niche: scenario.niche,
+          companyDescription: compDesc,
+          clientBrief: scenario.clientBrief,
+          decomposition: decompSet,
+          emailCount: base,
+          channel: scenario.channel,
+          leadType: activeLeadType || (scenario.leadTypes?.[0] || ''),
+          salesChannel: salesCh,
+        }),
+      });
+      if (!resp.ok || !resp.body) {
+        const err = await resp.json().catch(() => ({ error: 'Помилка' }));
+        toast({ title: 'AI помилка', description: err.error || 'Не вдалося отримати стратегію', variant: 'destructive' });
+        setEmailStrategyLoading(false);
+        return;
+      }
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullText = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let newlineIdx: number;
+        while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
+          let line = buffer.slice(0, newlineIdx);
+          buffer = buffer.slice(newlineIdx + 1);
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.startsWith(':') || line.trim() === '') continue;
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              fullText += content;
+              setEmailStrategyText(fullText);
+            }
+          } catch {
+            buffer = line + '\n' + buffer;
+            break;
+          }
+        }
+      }
+      if (fullText) setAiCache(cacheKey, fullText);
+    } catch (e: any) {
+      toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати стратегію', variant: 'destructive' });
+    } finally {
+      setEmailStrategyLoading(false);
+    }
+  }, [scenario, activeLeadType, toast, setAiCache]);
+
+
   // Hydrate cached conclusion + auto-generate when entering Результат step
   useEffect(() => {
     if (!scenario) return;
