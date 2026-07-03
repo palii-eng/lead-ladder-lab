@@ -293,6 +293,9 @@ const ScenarioBuilder: React.FC = () => {
   // AI conclusion for result step
   const [aiConclusionText, setAiConclusionText] = useState('');
   const [aiConclusionLoading, setAiConclusionLoading] = useState(false);
+  // Email strategy AI
+  const [emailStrategyText, setEmailStrategyText] = useState('');
+  const [emailStrategyLoading, setEmailStrategyLoading] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
@@ -675,6 +678,85 @@ const ScenarioBuilder: React.FC = () => {
       setAiConclusionLoading(false);
     }
   }, [scenario, activeLeadType, toast]);
+
+  const fetchEmailStrategy = useCallback(async (opts?: { force?: boolean }) => {
+    if (!scenario) return;
+    const isBr = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && activeLeadType;
+    const branch = isBr ? scenario.branchData?.[activeLeadType] : null;
+    const ret = branch ? branch.retention : scenario.retention;
+    const base = ret?.emailCount || 0;
+    const cacheKey = `email-strategy:${activeLeadType || 'main'}:${base}`;
+    if (!opts?.force && aiCacheRef.current[cacheKey]) {
+      setEmailStrategyText(aiCacheRef.current[cacheKey]);
+      return;
+    }
+    setEmailStrategyLoading(true);
+    setEmailStrategyText('');
+    const decompSet = branch ? branch.decomposition : scenario.decomposition;
+    const compDesc = branch ? branch.companyDescription : scenario.companyDescription;
+    const salesCh = branch ? (branch as any).salesChannel : (scenario as any).salesChannel;
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/email-strategy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          niche: scenario.niche,
+          companyDescription: compDesc,
+          clientBrief: scenario.clientBrief,
+          decomposition: decompSet,
+          emailCount: base,
+          channel: scenario.channel,
+          leadType: activeLeadType || (scenario.leadTypes?.[0] || ''),
+          salesChannel: salesCh,
+        }),
+      });
+      if (!resp.ok || !resp.body) {
+        const err = await resp.json().catch(() => ({ error: 'Помилка' }));
+        toast({ title: 'AI помилка', description: err.error || 'Не вдалося отримати стратегію', variant: 'destructive' });
+        setEmailStrategyLoading(false);
+        return;
+      }
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullText = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let newlineIdx: number;
+        while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
+          let line = buffer.slice(0, newlineIdx);
+          buffer = buffer.slice(newlineIdx + 1);
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.startsWith(':') || line.trim() === '') continue;
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              fullText += content;
+              setEmailStrategyText(fullText);
+            }
+          } catch {
+            buffer = line + '\n' + buffer;
+            break;
+          }
+        }
+      }
+      if (fullText) setAiCache(cacheKey, fullText);
+    } catch (e: any) {
+      toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати стратегію', variant: 'destructive' });
+    } finally {
+      setEmailStrategyLoading(false);
+    }
+  }, [scenario, activeLeadType, toast, setAiCache]);
+
 
   // Hydrate cached conclusion + auto-generate when entering Результат step
   useEffect(() => {
@@ -2687,36 +2769,48 @@ const ScenarioBuilder: React.FC = () => {
                   }}
                   className="bg-secondary border-border text-foreground h-9 text-sm"
                   placeholder="Кількість контактів" />
-                <Popover>
+                <Popover onOpenChange={(open) => { if (open) fetchEmailStrategy(); }}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="mt-2 h-8 text-xs gap-1.5">
+                    <Button variant="outline" size="sm" className="mt-2 h-8 text-xs gap-1.5"
+                      disabled={!currentRetention.emailCount}>
                       <Sparkles className="w-3.5 h-3.5 text-primary" />
                       Стратегія
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent side="right" align="start" className="w-80 p-4 bg-card border-border">
+                  <PopoverContent side="right" align="start" className="w-[420px] max-h-[70vh] overflow-y-auto p-4 bg-card border-border">
                     <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-primary" />
-                        <h4 className="font-semibold text-sm text-foreground">Email-стратегія{scenario.niche ? ` для «${scenario.niche}»` : ''}</h4>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-primary" />
+                          <h4 className="font-semibold text-sm text-foreground">Email-стратегія{scenario.niche ? ` для «${scenario.niche}»` : ''}</h4>
+                        </div>
+                        <Button variant="ghost" size="sm" className="h-6 px-2 text-[11px]"
+                          onClick={() => fetchEmailStrategy({ force: true })}
+                          disabled={emailStrategyLoading}>
+                          ↻
+                        </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        База: <span className="font-semibold text-foreground">{currentRetention.emailCount || 0}</span> контактів. Рекомендована структура:
+                      <p className="text-[11px] text-muted-foreground">
+                        База: <span className="font-semibold text-foreground">{currentRetention.emailCount || 0}</span> контактів. Аналіз від AI email-маркетолога під ваш бриф.
                       </p>
-                      <ul className="space-y-2 text-xs text-foreground">
-                        <li className="flex gap-2"><span>📬</span><span><b>Welcome-воронка</b> — 3–5 листів для нових контактів (знайомство з брендом, цінність, соц. докази, CTA)</span></li>
-                        <li className="flex gap-2"><span>🔥</span><span><b>Воронка прогріву</b> — 4–6 листів з кейсами, історіями клієнтів, розбором болей та рішень</span></li>
-                        <li className="flex gap-2"><span>💰</span><span><b>Воронка дожиму</b> — 3–4 листи з обмеженою пропозицією, бонусами та FOMO для тих, хто не купив</span></li>
-                        <li className="flex gap-2"><span>🔁</span><span><b>Реактивація</b> — 2–3 листи для «сплячих» контактів (30+ днів без відкриттів)</span></li>
-                        <li className="flex gap-2"><span>📅</span><span><b>Регулярні розсилки</b> — 5–8 листів на місяць: новини, поради, кейси, спецпропозиції</span></li>
-                        <li className="flex gap-2"><span>🎯</span><span><b>Сегментація</b> — розділіть базу за активністю та інтересами для персоналізованих офферів</span></li>
-                      </ul>
-                      <div className="pt-2 border-t border-border">
-                        <p className="text-[11px] text-muted-foreground">💡 Порада: тестуйте теми листів (A/B), стежте за Open Rate ≥ 20% та CTR ≥ 2%.</p>
-                      </div>
+                      {emailStrategyLoading && !emailStrategyText && (
+                        <div className="text-xs text-muted-foreground py-6 text-center">
+                          <Sparkles className="w-4 h-4 text-primary inline-block animate-pulse mr-2" />
+                          Готую персональну стратегію…
+                        </div>
+                      )}
+                      {emailStrategyText && (
+                        <div className="prose prose-sm max-w-none text-xs text-foreground [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_ul]:my-1 [&_ol]:my-1 [&_p]:my-1 [&_strong]:text-foreground">
+                          <ReactMarkdown>{emailStrategyText}</ReactMarkdown>
+                        </div>
+                      )}
+                      {!emailStrategyLoading && !emailStrategyText && (
+                        <p className="text-xs text-muted-foreground">Введіть кількість контактів і натисніть «Стратегія».</p>
+                      )}
                     </div>
                   </PopoverContent>
                 </Popover>
+
               </div>
 
               {/* Disabled channels */}
