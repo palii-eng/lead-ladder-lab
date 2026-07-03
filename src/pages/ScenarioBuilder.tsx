@@ -262,6 +262,7 @@ const ScenarioBuilder: React.FC = () => {
   const [creoVideoFormat, setCreoVideoFormat] = useState<string>('');
   const [creoAiLoading, setCreoAiLoading] = useState(false);
   const [viewCreoIdx, setViewCreoIdx] = useState<number | null>(null);
+  const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [fillBenchLoading, setFillBenchLoading] = useState(false);
   // Cache for AI-generated content: key → text. Persisted on the scenario so
   // recommendations survive reload and aren't regenerated every time.
