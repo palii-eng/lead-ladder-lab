@@ -3821,6 +3821,7 @@ const ScenarioBuilder: React.FC = () => {
                         format: creoFormat,
                         videoFormat: creoFormat === 'video' ? creoVideoFormat : undefined,
                         fields: creoFields,
+                        audienceId: preselectedAudienceId || null,
                         savedAt: new Date().toISOString(),
                       },
                     ];
