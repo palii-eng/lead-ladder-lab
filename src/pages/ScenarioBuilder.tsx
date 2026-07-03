@@ -293,6 +293,9 @@ const ScenarioBuilder: React.FC = () => {
   // AI conclusion for result step
   const [aiConclusionText, setAiConclusionText] = useState('');
   const [aiConclusionLoading, setAiConclusionLoading] = useState(false);
+  // Email strategy AI
+  const [emailStrategyText, setEmailStrategyText] = useState('');
+  const [emailStrategyLoading, setEmailStrategyLoading] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
