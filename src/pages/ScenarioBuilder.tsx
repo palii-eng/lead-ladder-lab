@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
@@ -2686,6 +2687,36 @@ const ScenarioBuilder: React.FC = () => {
                   }}
                   className="bg-secondary border-border text-foreground h-9 text-sm"
                   placeholder="Кількість контактів" />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="mt-2 h-8 text-xs gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-primary" />
+                      Стратегія
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent side="right" align="start" className="w-80 p-4 bg-card border-border">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-primary" />
+                        <h4 className="font-semibold text-sm text-foreground">Email-стратегія{scenario.niche ? ` для «${scenario.niche}»` : ''}</h4>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        База: <span className="font-semibold text-foreground">{currentRetention.emailCount || 0}</span> контактів. Рекомендована структура:
+                      </p>
+                      <ul className="space-y-2 text-xs text-foreground">
+                        <li className="flex gap-2"><span>📬</span><span><b>Welcome-воронка</b> — 3–5 листів для нових контактів (знайомство з брендом, цінність, соц. докази, CTA)</span></li>
+                        <li className="flex gap-2"><span>🔥</span><span><b>Воронка прогріву</b> — 4–6 листів з кейсами, історіями клієнтів, розбором болей та рішень</span></li>
+                        <li className="flex gap-2"><span>💰</span><span><b>Воронка дожиму</b> — 3–4 листи з обмеженою пропозицією, бонусами та FOMO для тих, хто не купив</span></li>
+                        <li className="flex gap-2"><span>🔁</span><span><b>Реактивація</b> — 2–3 листи для «сплячих» контактів (30+ днів без відкриттів)</span></li>
+                        <li className="flex gap-2"><span>📅</span><span><b>Регулярні розсилки</b> — 5–8 листів на місяць: новини, поради, кейси, спецпропозиції</span></li>
+                        <li className="flex gap-2"><span>🎯</span><span><b>Сегментація</b> — розділіть базу за активністю та інтересами для персоналізованих офферів</span></li>
+                      </ul>
+                      <div className="pt-2 border-t border-border">
+                        <p className="text-[11px] text-muted-foreground">💡 Порада: тестуйте теми листів (A/B), стежте за Open Rate ≥ 20% та CTR ≥ 2%.</p>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               {/* Disabled channels */}
