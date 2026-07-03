@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
-import { ArrowLeft, ArrowRight, Check, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronRight, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { VideoBadge } from '@/components/VideoBadge';
 import { supabase } from '@/integrations/supabase/client';
@@ -1113,62 +1113,89 @@ const ScenarioBuilder: React.FC = () => {
     </div>
   );
 
-  const PrepWorksNode: React.FC<{ branchKey?: string }> = ({ branchKey }) => {
-    const key = branchKey || activeLeadType || 'main';
-    const raw = (scenario as any)?.creoBriefs?.[key];
-    const creoList: any[] = Array.isArray(raw) ? raw : (raw?.format ? [raw] : []);
+  const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
+  const toggleAdSet = (id: string) => setExpandedAdSets(prev => {
+    const n = new Set(prev);
+    if (n.has(id)) n.delete(id); else n.add(id);
+    return n;
+  });
+
+  const PrepWorksNode: React.FC<{ branchKey?: string; campaignKeys?: string[] }> = ({ branchKey, campaignKeys }) => {
     const formatMeta: Record<string, { icon: string; label: string }> = {
       static: { icon: '🖼️', label: 'Статика' },
       carousel: { icon: '🎠', label: 'Карусель' },
       video: { icon: '🎬', label: 'Відео' },
     };
 
-    const rawAud = (scenario as any)?.audienceSettings?.[key];
-    const audiences: any[] = Array.isArray(rawAud)
-      ? rawAud
-      : (rawAud && (rawAud.tips || rawAud.checks)
-          ? [{ id: 'legacy', name: 'Гіпотеза 1', mode: 'ai' }]
-          : []);
+    // Meta blue
+    const META = 'hsl(214 89% 52%)';
 
-    const goalObj = CAMPAIGN_GOALS.find(g => g.value === scenario.channel);
-    const GoalIcon = goalObj?.Icon;
-    let subgoalLabel = '';
-    if (scenario.channel === 'awareness') subgoalLabel = AWARENESS_TYPES.find(x => x.value === scenario.awarenessType)?.label || '';
-    else if (scenario.channel === 'traffic') subgoalLabel = TRAFFIC_TYPES.find(x => x.value === scenario.trafficType)?.label || '';
-    else if (scenario.channel === 'engagement') subgoalLabel = ENGAGEMENT_TYPES.find(x => x.value === scenario.engagementType)?.label || '';
-    else if (scenario.channel === 'sales') subgoalLabel = SALES_TYPES.find(x => x.value === scenario.salesType)?.label || '';
-    else if (scenario.channel === 'leads' && branchKey) subgoalLabel = LEAD_TYPES.find(x => x.value === branchKey)?.label || '';
+    const isMulti = !!campaignKeys && campaignKeys.length > 0;
+    const keys: string[] = isMulti ? campaignKeys! : [branchKey || activeLeadType || 'main'];
 
-    const orphanCreo = creoList.filter(c => !c.audienceId || !audiences.some(a => a.id === c.audienceId));
-    const creoByAudience = (audId: string) => creoList.filter(c => c.audienceId === audId);
+    // Build per-campaign data
+    type CampaignData = {
+      key: string;
+      audiences: any[];
+      creoList: any[];
+      goalLabel: string;
+      subgoalLabel: string;
+      GoalIcon: any;
+    };
+    const campaigns: CampaignData[] = keys.map(key => {
+      const raw = (scenario as any)?.creoBriefs?.[key];
+      const creoList: any[] = Array.isArray(raw) ? raw : (raw?.format ? [raw] : []);
+      const rawAud = (scenario as any)?.audienceSettings?.[key];
+      const audiences: any[] = Array.isArray(rawAud)
+        ? rawAud
+        : (rawAud && (rawAud.tips || rawAud.checks)
+            ? [{ id: 'legacy', name: 'Гіпотеза 1', mode: 'ai' }]
+            : []);
 
-    const openAudienceDialog = (view: 'list' | 'choose' = 'choose') => {
-      if (branchKey) setActiveLeadType(branchKey);
+      // For multi (leads branching), each campaign is a "leads" goal with subgoal = leadType
+      let goalObj = CAMPAIGN_GOALS.find(g => g.value === scenario.channel);
+      let subgoalLabel = '';
+      if (isMulti || (scenario.channel === 'leads' && key !== 'main')) {
+        goalObj = CAMPAIGN_GOALS.find(g => g.value === 'leads') || goalObj;
+        subgoalLabel = LEAD_TYPES.find(x => x.value === key)?.label || key;
+      } else {
+        if (scenario.channel === 'awareness') subgoalLabel = AWARENESS_TYPES.find(x => x.value === scenario.awarenessType)?.label || '';
+        else if (scenario.channel === 'traffic') subgoalLabel = TRAFFIC_TYPES.find(x => x.value === scenario.trafficType)?.label || '';
+        else if (scenario.channel === 'engagement') subgoalLabel = ENGAGEMENT_TYPES.find(x => x.value === scenario.engagementType)?.label || '';
+        else if (scenario.channel === 'sales') subgoalLabel = SALES_TYPES.find(x => x.value === scenario.salesType)?.label || '';
+        else if (scenario.channel === 'leads' && branchKey) subgoalLabel = LEAD_TYPES.find(x => x.value === branchKey)?.label || '';
+      }
+
+      return { key, audiences, creoList, goalLabel: goalObj?.label || 'Ціль', subgoalLabel, GoalIcon: goalObj?.Icon };
+    });
+
+    const totalAudiences = campaigns.reduce((s, c) => s + c.audiences.length, 0);
+    const totalCreo = campaigns.reduce((s, c) => s + c.creoList.length, 0);
+
+    const openAudienceDialog = (key: string, view: 'list' | 'choose' = 'choose') => {
+      setActiveLeadType(key === 'main' ? '' : key);
       setAudienceView(view);
       setAudienceOpen(true);
     };
-    const openAudienceView = (idx: number) => {
-      if (branchKey) setActiveLeadType(branchKey);
+    const openAudienceView = (key: string, idx: number) => {
+      setActiveLeadType(key === 'main' ? '' : key);
       setViewAudienceIdx(idx);
       setAudienceView('view');
       setAudienceOpen(true);
     };
-    const openCreoCreate = (audId: string | null) => {
-      if (branchKey) setActiveLeadType(branchKey);
+    const openCreoCreate = (key: string, audId: string | null) => {
+      setActiveLeadType(key === 'main' ? '' : key);
       setPreselectedAudienceId(audId);
       setViewCreoIdx(null);
       setCreoFormat(null);
       setCreoOpen(true);
     };
-    const openCreoView = (idx: number) => {
-      if (branchKey) setActiveLeadType(branchKey);
+    const openCreoView = (key: string, idx: number) => {
+      setActiveLeadType(key === 'main' ? '' : key);
       setViewCreoIdx(idx);
       setCreoFormat(null);
       setCreoOpen(true);
     };
-
-    // Meta blue
-    const META = 'hsl(214 89% 52%)';
 
     const TabBtn: React.FC<{ label: string; icon: React.ReactNode; count?: number; active?: boolean }> = ({ label, icon, count, active }) => (
       <div
@@ -1183,7 +1210,7 @@ const ScenarioBuilder: React.FC = () => {
         {typeof count === 'number' && (
           <span
             className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold"
-            style={{ background: active ? `${META.replace(')', ' / 0.12)').replace('hsl(', 'hsl(')}` : 'hsl(220 14% 94%)', color: active ? META : 'hsl(220 10% 40%)' }}
+            style={{ background: active ? 'hsl(214 89% 52% / 0.12)' : 'hsl(220 14% 94%)', color: active ? META : 'hsl(220 10% 40%)' }}
           >
             {count}
           </span>
@@ -1209,7 +1236,7 @@ const ScenarioBuilder: React.FC = () => {
 
     return (
       <div className="flex items-start flex-shrink-0 mx-10" data-flow-node>
-        <div className="flex flex-col" style={{ width: '720px' }}>
+        <div className="flex flex-col" style={{ width: isMulti ? '820px' : '720px' }}>
           <div className="flex items-center gap-2 mb-2 px-1 h-4">
             <span className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground/70">ПІДГОТОВКА · META ADS MANAGER</span>
           </div>
@@ -1227,7 +1254,7 @@ const ScenarioBuilder: React.FC = () => {
                 <MetaIcon className="w-5 h-5" />
                 <span className="text-[12px] font-bold text-foreground">Ads Manager</span>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-                  {scenario.niche || 'акаунт'} {branchKey ? `· ${LEAD_TYPES.find(l => l.value === branchKey)?.label || ''}` : ''}
+                  {scenario.niche || 'акаунт'}
                 </span>
               </div>
               <div className="flex items-center gap-1">
@@ -1238,138 +1265,172 @@ const ScenarioBuilder: React.FC = () => {
 
             {/* Tabs */}
             <div className="flex items-center gap-1 px-3 border-b border-border/60" style={{ background: 'hsl(220 20% 98%)' }}>
-              <TabBtn label="Кампанії" icon={<Filter className="w-3.5 h-3.5" />} count={1} active />
-              <TabBtn label="Групи оголошень" icon={<Users className="w-3.5 h-3.5" />} count={audiences.length} active />
-              <TabBtn label="Оголошення" icon={<Megaphone className="w-3.5 h-3.5" />} count={creoList.length} active />
+              <TabBtn label="Кампанії" icon={<Filter className="w-3.5 h-3.5" />} count={campaigns.length} active />
+              <TabBtn label="Групи оголошень" icon={<Users className="w-3.5 h-3.5" />} count={totalAudiences} active />
+              <TabBtn label="Оголошення" icon={<Megaphone className="w-3.5 h-3.5" />} count={totalCreo} active />
             </div>
 
-            {/* Tree */}
-            <div className="p-3 space-y-2" style={{ background: 'hsl(220 20% 99%)' }}>
-              {/* Campaign row */}
-              <div
-                className="rounded-lg border p-2.5 flex items-center gap-2.5"
-                style={{ background: 'white', borderColor: 'hsl(214 89% 52% / 0.35)', boxShadow: '0 1px 2px hsl(0 0% 0% / 0.04)' }}
-              >
-                <span
-                  className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
-                  style={{ background: 'hsl(214 89% 52% / 0.1)' }}
-                >
-                  {GoalIcon ? <GoalIcon className="w-4 h-4" style={{ color: META }} /> : <Filter className="w-4 h-4" style={{ color: META }} />}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Кампанія</span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase" style={{ background: 'hsl(120 50% 92%)', color: 'hsl(120 55% 28%)' }}>активна</span>
-                  </div>
-                  <div className="text-[13px] font-bold text-foreground truncate">{goalObj?.label || 'Ціль кампанії'}</div>
-                  {subgoalLabel && <div className="text-[11px] text-muted-foreground truncate">{subgoalLabel}</div>}
-                </div>
-              </div>
-
-              {/* Audiences (Ad Sets) */}
-              <div className="pl-4 space-y-2 border-l-2 border-dashed" style={{ borderColor: 'hsl(214 89% 52% / 0.25)' }}>
-                {audiences.map((a, idx) => {
-                  const linkedCreo = creoByAudience(a.id);
-                  return (
-                    <div key={a.id || idx} className="space-y-1.5">
-                      <div
-                        className="group rounded-lg border p-2 flex items-center gap-2 hover:border-primary/50 transition-colors"
-                        style={{ background: 'white', borderColor: 'hsl(var(--border))' }}
+            {/* Tree — one section per campaign */}
+            <div className="p-3 space-y-4" style={{ background: 'hsl(220 20% 99%)' }}>
+              {campaigns.map((c, cIdx) => {
+                const GoalIcon = c.GoalIcon;
+                return (
+                  <div key={c.key} className="space-y-2">
+                    {/* Campaign row */}
+                    <div
+                      className="rounded-lg border p-2.5 flex items-center gap-2.5"
+                      style={{ background: 'white', borderColor: 'hsl(214 89% 52% / 0.35)', boxShadow: '0 1px 2px hsl(0 0% 0% / 0.04)' }}
+                    >
+                      <span
+                        className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+                        style={{ background: 'hsl(214 89% 52% / 0.1)' }}
                       >
-                        <button
-                          type="button"
-                          onClick={() => openAudienceView(idx)}
-                          className="flex-1 flex items-center gap-2 min-w-0 text-left"
-                        >
-                          <span
-                            className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
-                            style={{ background: 'hsl(280 60% 96%)' }}
-                          >
-                            <Users className="w-3.5 h-3.5" style={{ color: 'hsl(280 55% 45%)' }} />
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Група оголошень #{idx + 1}</span>
-                              <span className="text-[9px]">{a.mode === 'ai' ? '✨ AI' : '✍️'}</span>
+                        {GoalIcon ? <GoalIcon className="w-4 h-4" style={{ color: META }} /> : <Filter className="w-4 h-4" style={{ color: META }} />}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Кампанія #{cIdx + 1}</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase" style={{ background: 'hsl(120 50% 92%)', color: 'hsl(120 55% 28%)' }}>активна</span>
+                        </div>
+                        <div className="text-[13px] font-bold text-foreground truncate">{c.goalLabel}</div>
+                        {c.subgoalLabel && <div className="text-[11px] text-muted-foreground truncate">{c.subgoalLabel}</div>}
+                      </div>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ background: 'hsl(220 14% 94%)', color: 'hsl(220 10% 40%)' }}>
+                        {c.audiences.length} груп · {c.creoList.length} крео
+                      </span>
+                    </div>
+
+                    {/* Audiences (Ad Sets) */}
+                    <div className="pl-4 space-y-1.5 border-l-2 border-dashed" style={{ borderColor: 'hsl(214 89% 52% / 0.25)' }}>
+                      {c.audiences.map((a, idx) => {
+                        const setId = `${c.key}::${a.id || idx}`;
+                        const isOpen = expandedAdSets.has(setId);
+                        const linkedCreo = c.creoList.filter(x => x.audienceId === a.id);
+                        return (
+                          <div key={a.id || idx} className="space-y-1">
+                            <div
+                              className="group rounded-lg border p-2 flex items-center gap-2 hover:border-primary/50 transition-colors"
+                              style={{ background: 'white', borderColor: isOpen ? 'hsl(214 89% 52% / 0.5)' : 'hsl(var(--border))' }}
+                            >
+                              <button
+                                type="button"
+                                onClick={() => toggleAdSet(setId)}
+                                className="flex-1 flex items-center gap-2 min-w-0 text-left"
+                                title="Показати оголошення / ТЗ"
+                              >
+                                <ChevronRight
+                                  className="w-3.5 h-3.5 text-muted-foreground shrink-0 transition-transform"
+                                  style={{ transform: isOpen ? 'rotate(90deg)' : 'none' }}
+                                />
+                                <span
+                                  className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+                                  style={{ background: 'hsl(280 60% 96%)' }}
+                                >
+                                  <Users className="w-3.5 h-3.5" style={{ color: 'hsl(280 55% 45%)' }} />
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Група оголошень #{idx + 1}</span>
+                                    <span className="text-[9px]">{a.mode === 'ai' ? '✨ AI' : '✍️'}</span>
+                                  </div>
+                                  <div className="text-[12px] font-semibold text-foreground truncate">{a.name || 'Без назви'}</div>
+                                </div>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ background: 'hsl(220 14% 94%)', color: 'hsl(220 10% 40%)' }}>
+                                  {linkedCreo.length} крео
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => openAudienceView(c.key, idx)}
+                                className="text-[10px] font-semibold px-2 py-1 rounded hover:bg-muted transition-colors"
+                                style={{ color: 'hsl(220 10% 40%)' }}
+                                title="Переглянути аудиторію"
+                              >
+                                Деталі
+                              </button>
+                              <AddBtn label="Крео" onClick={() => openCreoCreate(c.key, a.id)} />
                             </div>
-                            <div className="text-[12px] font-semibold text-foreground truncate">{a.name || 'Без назви'}</div>
+
+                            {isOpen && (
+                              <div className="pl-6 space-y-1 border-l-2 border-dashed ml-3 py-1" style={{ borderColor: 'hsl(280 55% 60% / 0.25)' }}>
+                                {linkedCreo.length === 0 ? (
+                                  <div className="text-[11px] text-muted-foreground italic px-2 py-1.5">
+                                    Ще немає оголошень. Натисніть <span className="font-semibold">+ Крео</span>, щоб додати ТЗ.
+                                  </div>
+                                ) : linkedCreo.map((cr) => {
+                                  const globalIdx = c.creoList.indexOf(cr);
+                                  const fmt = formatMeta[cr.format] || { icon: '📝', label: 'Крео' };
+                                  const title = cr.fields?.h1 || cr.fields?.script?.slice(0, 40) || fmt.label;
+                                  return (
+                                    <button
+                                      key={globalIdx}
+                                      type="button"
+                                      onClick={() => openCreoView(c.key, globalIdx)}
+                                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md border bg-white hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                                      style={{ borderColor: 'hsl(var(--border))' }}
+                                    >
+                                      <span className="w-6 h-6 rounded flex items-center justify-center text-[12px] shrink-0" style={{ background: 'hsl(35 80% 94%)' }}>
+                                        {fmt.icon}
+                                      </span>
+                                      <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground shrink-0">ТЗ #{globalIdx + 1}</span>
+                                      <span className="text-[11px] font-semibold text-foreground flex-1 truncate">{title}</span>
+                                      <span className="text-[9px] font-medium text-muted-foreground shrink-0">{fmt.label}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
                           </div>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ background: 'hsl(220 14% 94%)', color: 'hsl(220 10% 40%)' }}>
-                            {linkedCreo.length} крео
-                          </span>
-                        </button>
-                        <AddBtn label="Крео" onClick={() => openCreoCreate(a.id)} />
+                        );
+                      })}
+
+                      <div className="pt-0.5">
+                        <AddBtn subtle label="Створити групу оголошень" onClick={() => openAudienceDialog(c.key, 'choose')} />
                       </div>
 
-                      {linkedCreo.length > 0 && (
-                        <div className="pl-6 space-y-1 border-l-2 border-dashed ml-3" style={{ borderColor: 'hsl(280 55% 60% / 0.25)' }}>
-                          {linkedCreo.map((c) => {
-                            const globalIdx = creoList.indexOf(c);
-                            const fmt = formatMeta[c.format] || { icon: '📝', label: 'Крео' };
-                            const title = c.fields?.h1 || c.fields?.script?.slice(0, 40) || fmt.label;
-                            return (
-                              <button
-                                key={globalIdx}
-                                type="button"
-                                onClick={() => openCreoView(globalIdx)}
-                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md border bg-white hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
-                                style={{ borderColor: 'hsl(var(--border))' }}
-                              >
-                                <span className="w-6 h-6 rounded flex items-center justify-center text-[12px] shrink-0" style={{ background: 'hsl(35 80% 94%)' }}>
-                                  {fmt.icon}
-                                </span>
-                                <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground shrink-0">#{globalIdx + 1}</span>
-                                <span className="text-[11px] font-semibold text-foreground flex-1 truncate">{title}</span>
-                                <span className="text-[9px] font-medium text-muted-foreground shrink-0">{fmt.label}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
+                      {/* Orphan creo for this campaign */}
+                      {(() => {
+                        const orphans = c.creoList.filter(x => !x.audienceId || !c.audiences.some(a => a.id === x.audienceId));
+                        if (orphans.length === 0) return null;
+                        return (
+                          <div className="pt-2 space-y-1">
+                            <div className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Оголошення без групи</div>
+                            {orphans.map((cr) => {
+                              const globalIdx = c.creoList.indexOf(cr);
+                              const fmt = formatMeta[cr.format] || { icon: '📝', label: 'Крео' };
+                              const title = cr.fields?.h1 || cr.fields?.script?.slice(0, 40) || fmt.label;
+                              return (
+                                <button
+                                  key={globalIdx}
+                                  type="button"
+                                  onClick={() => openCreoView(c.key, globalIdx)}
+                                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md border bg-white hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                                  style={{ borderColor: 'hsl(var(--border))' }}
+                                >
+                                  <span className="w-6 h-6 rounded flex items-center justify-center text-[12px] shrink-0" style={{ background: 'hsl(35 80% 94%)' }}>
+                                    {fmt.icon}
+                                  </span>
+                                  <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground shrink-0">#{globalIdx + 1}</span>
+                                  <span className="text-[11px] font-semibold text-foreground flex-1 truncate">{title}</span>
+                                  <span className="text-[9px] font-medium text-muted-foreground shrink-0">{fmt.label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
                     </div>
-                  );
-                })}
-
-                <div className="pt-0.5">
-                  <AddBtn subtle label="Створити групу оголошень" onClick={() => openAudienceDialog('choose')} />
-                </div>
-              </div>
-
-              {/* Orphan creo (not linked to any audience) */}
-              {orphanCreo.length > 0 && (
-                <div className="pl-4 pt-2 space-y-1.5">
-                  <div className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">Оголошення без групи</div>
-                  {orphanCreo.map((c) => {
-                    const globalIdx = creoList.indexOf(c);
-                    const fmt = formatMeta[c.format] || { icon: '📝', label: 'Крео' };
-                    const title = c.fields?.h1 || c.fields?.script?.slice(0, 40) || fmt.label;
-                    return (
-                      <button
-                        key={globalIdx}
-                        type="button"
-                        onClick={() => openCreoView(globalIdx)}
-                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md border bg-white hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
-                        style={{ borderColor: 'hsl(var(--border))' }}
-                      >
-                        <span className="w-6 h-6 rounded flex items-center justify-center text-[12px] shrink-0" style={{ background: 'hsl(35 80% 94%)' }}>
-                          {fmt.icon}
-                        </span>
-                        <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground shrink-0">#{globalIdx + 1}</span>
-                        <span className="text-[11px] font-semibold text-foreground flex-1 truncate">{title}</span>
-                        <span className="text-[9px] font-medium text-muted-foreground shrink-0">{fmt.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Footer summary */}
             <div className="flex items-center justify-between px-4 py-2 border-t border-border/60 text-[10px] text-muted-foreground" style={{ background: 'hsl(220 20% 98%)' }}>
-              <span>Структура акаунту: 1 кампанія · {audiences.length} груп · {creoList.length} оголошень</span>
+              <span>Структура акаунту: {campaigns.length} {campaigns.length === 1 ? 'кампанія' : 'кампаній'} · {totalAudiences} груп · {totalCreo} оголошень</span>
               <button
                 type="button"
-                onClick={() => openAudienceDialog('list')}
+                onClick={() => openAudienceDialog(campaigns[0]?.key || 'main', 'list')}
                 className="text-[10px] font-semibold hover:underline"
                 style={{ color: META }}
               >
@@ -3024,7 +3085,6 @@ const ScenarioBuilder: React.FC = () => {
                               return branchStepIdxs.map((stepIdx, idx) => (
                                 <React.Fragment key={stepIdx}>
                                   {renderNode(stepIdx, lt, idx === branchStepIdxs.length - 1)}
-                                  {stepIdx === 4 && isStepCompletedForBranch(scenario, 4, lt) && <PrepWorksNode branchKey={lt} />}
                                 </React.Fragment>
                               ));
                             })()}
@@ -3033,6 +3093,13 @@ const ScenarioBuilder: React.FC = () => {
 
                         ))}
                       </div>
+
+                      {/* Unified Meta Ads prep block — one campaign per lead type */}
+                      {leadTypes.every(lt => isStepCompletedForBranch(scenario, 4, lt)) && (
+                        <div className="mt-6 pt-6 border-t border-dashed border-border/70">
+                          <PrepWorksNode campaignKeys={leadTypes} />
+                        </div>
+                      )}
                     </div>
                     </>}
                   </div>
