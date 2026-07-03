@@ -914,6 +914,48 @@ const ScenarioBuilder: React.FC = () => {
     }
   }, [scenario?.niche, scenario?.leadTypes]);
 
+  // Auto-mark step 2 (Ціль оптимізації) saved as soon as the goal + subtype
+  // are fully picked — this step no longer has its own node in the flow, it's
+  // driven from the Meta Ads prep block via "+ Додати ціль".
+  useEffect(() => {
+    if (!scenario) return;
+    const ch = scenario.channel;
+    const step2Ok = !!ch && (
+      (ch === 'leads' && (scenario.leadTypes?.length || 0) > 0) ||
+      (ch === 'awareness' && !!(scenario as any).awarenessType) ||
+      (ch === 'traffic' && !!(scenario as any).trafficType) ||
+      (ch === 'engagement' && !!(scenario as any).engagementType) ||
+      (ch === 'sales' && !!(scenario as any).salesType)
+    );
+    if (step2Ok) {
+      setSavedSteps(prev => {
+        if (prev.has('2')) return prev;
+        const next = new Set(prev);
+        next.add('2');
+        return next;
+      });
+    }
+  }, [scenario?.channel, scenario?.leadTypes, (scenario as any)?.awarenessType, (scenario as any)?.trafficType, (scenario as any)?.engagementType, (scenario as any)?.salesType]);
+
+  // Auto-mark step 3 (Деталізація) saved for infobiz when the funnel format
+  // is set — the flow no longer has a dedicated node, format is picked inline
+  // inside each campaign card of the Meta Ads prep block.
+  useEffect(() => {
+    if (!scenario || scenario.niche !== 'Інфобізнес') return;
+    setSavedSteps(prev => {
+      const next = new Set(prev);
+      let changed = false;
+      if (scenario.funnelFormat && !next.has('3')) { next.add('3'); changed = true; }
+      (scenario.leadTypes || []).forEach(lt => {
+        if (scenario.branchData?.[lt]?.funnelFormat) {
+          const key = `3:${lt}`;
+          if (!next.has(key)) { next.add(key); changed = true; }
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [scenario?.niche, scenario?.funnelFormat, scenario?.leadTypes, scenario?.branchData]);
+
 
 
   if (!scenario) {
@@ -1268,12 +1310,19 @@ const ScenarioBuilder: React.FC = () => {
               <TabBtn label="Кампанії" icon={<Filter className="w-3.5 h-3.5" />} count={campaigns.length} active />
               <TabBtn label="Групи оголошень" icon={<Users className="w-3.5 h-3.5" />} count={totalAudiences} active />
               <TabBtn label="Оголошення" icon={<Megaphone className="w-3.5 h-3.5" />} count={totalCreo} active />
+              <div className="ml-auto py-1.5">
+                <AddBtn label="Додати ціль" onClick={() => setActiveStep(2)} />
+              </div>
             </div>
 
             {/* Tree — one section per campaign */}
             <div className="p-3 space-y-4" style={{ background: 'hsl(220 20% 99%)' }}>
               {campaigns.map((c, cIdx) => {
                 const GoalIcon = c.GoalIcon;
+                const isInfobiz = scenario.niche === 'Інфобізнес';
+                const campaignFunnelFormat = c.key === 'main'
+                  ? (scenario.funnelFormat || '')
+                  : (scenario.branchData?.[c.key]?.funnelFormat || '');
                 return (
                   <div key={c.key} className="space-y-2">
                     {/* Campaign row */}
@@ -1295,10 +1344,29 @@ const ScenarioBuilder: React.FC = () => {
                         <div className="text-[13px] font-bold text-foreground truncate">{c.goalLabel}</div>
                         {c.subgoalLabel && <div className="text-[11px] text-muted-foreground truncate">{c.subgoalLabel}</div>}
                       </div>
+                      {isInfobiz && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (c.key !== 'main') setActiveLeadType(c.key);
+                            setActiveStep(3);
+                          }}
+                          className="text-[10px] font-semibold px-2 py-1 rounded border transition-colors shrink-0"
+                          style={
+                            campaignFunnelFormat
+                              ? { color: 'hsl(220 10% 30%)', background: 'hsl(220 14% 96%)', borderColor: 'hsl(var(--border))' }
+                              : { color: META, background: 'transparent', borderColor: META, borderStyle: 'dashed' }
+                          }
+                          title="Формат воронки"
+                        >
+                          {campaignFunnelFormat ? `🧩 ${campaignFunnelFormat}` : '+ Формат воронки'}
+                        </button>
+                      )}
                       <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ background: 'hsl(220 14% 94%)', color: 'hsl(220 10% 40%)' }}>
                         {c.audiences.length} груп · {c.creoList.length} крео
                       </span>
                     </div>
+
 
                     {/* Audiences (Ad Sets) */}
                     <div className="pl-4 space-y-1.5 border-l-2 border-dashed" style={{ borderColor: 'hsl(214 89% 52% / 0.25)' }}>
@@ -3077,22 +3145,51 @@ const ScenarioBuilder: React.FC = () => {
                           {!flowGated && <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />}
                         </div>
                         {!flowGated && (() => {
-                          const visible: number[] = [];
-                          for (let i = 0; i < STEPS.length; i++) {
-                            if (i === 3 && scenario.niche !== 'Інфобізнес') continue;
-                            if (i === 0 || isStepUnlocked(i)) {
-                              visible.push(i);
-                              if (!isStepCompleted(i)) break;
-                            } else {
-                              break;
-                            }
+                          // New order: Ніша → Джерело → Meta Ads prep block (goal + format live inside it)
+                          // → Декомпозиція → Куди йдуть ліди → Інтеграція → Продажі → Retention → Результат.
+                          const nodes: React.ReactNode[] = [];
+                          const preSteps: number[] = [0];
+                          if (isStepUnlocked(1)) preSteps.push(1);
+                          preSteps.forEach((i) => {
+                            nodes.push(
+                              <React.Fragment key={`pre-${i}`}>
+                                {renderNode(i, undefined, false)}
+                              </React.Fragment>
+                            );
+                          });
+                          // Prep block appears right after "Джерело".
+                          if (isStepCompleted(1)) {
+                            nodes.push(
+                              <PrepWorksNode
+                                key="prep-single"
+                                campaignKeys={
+                                  scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0
+                                    ? scenario.leadTypes
+                                    : undefined
+                                }
+                              />
+                            );
                           }
-                          return visible.map((i, idx) => (
-                            <React.Fragment key={i}>
-                              {renderNode(i, undefined, idx === visible.length - 1)}
-                              {i === 4 && isStepCompletedStatic(scenario, 4) && <PrepWorksNode />}
-                            </React.Fragment>
-                          ));
+                          // Post-prep chain only after goal + format are set (auto-saved via useEffects).
+                          if (isStepCompleted(1) && isStepCompleted(2) && isStepCompleted(3)) {
+                            const postSteps: number[] = [];
+                            for (let i = 4; i < STEPS.length; i++) {
+                              if (isStepUnlocked(i)) {
+                                postSteps.push(i);
+                                if (!isStepCompleted(i)) break;
+                              } else {
+                                break;
+                              }
+                            }
+                            postSteps.forEach((i, idx) => {
+                              nodes.push(
+                                <React.Fragment key={`post-${i}`}>
+                                  {renderNode(i, undefined, idx === postSteps.length - 1)}
+                                </React.Fragment>
+                              );
+                            });
+                          }
+                          return nodes;
                         })()}
 
                       </div>
@@ -3116,22 +3213,24 @@ const ScenarioBuilder: React.FC = () => {
                       {!flowGated && <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />}
                     </div>
                     {!flowGated && <>
-                    {/* Shared steps (1, 2) — step 3 (Деталізація) moved into each branch */}
+                    {/* Shared steps (Ніша, Джерело) + unified Meta Ads prep block on the same row. */}
                     <div className="flex items-start gap-0 flex-shrink-0" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
                       {(() => {
                         const visible: number[] = [];
-                        for (const i of [0, 1, 2]) {
+                        for (const i of [0, 1]) {
                           if (isStepUnlocked(i)) {
                             visible.push(i);
                             if (!isStepCompleted(i)) break;
                           } else break;
                         }
-                        return visible.map((i, idx) => renderNode(i, undefined, idx === visible.length - 1));
+                        return visible.map((i) => renderNode(i, undefined, false));
                       })()}
+                      {isStepCompleted(1) && <PrepWorksNode campaignKeys={leadTypes} />}
                     </div>
 
 
-                    {/* Branch lines + branch rows */}
+                    {/* Branch lines + branch rows — start from Декомпозиція (step 4). */}
+                    {isStepCompleted(2) && isStepCompleted(3) && (
                     <div className="relative flex-shrink-0">
                       {/* SVG connector lines from router to each branch */}
                       <svg 
@@ -3166,24 +3265,14 @@ const ScenarioBuilder: React.FC = () => {
                         {leadTypes.map((lt, brIdx) => (
                           <div key={lt} className="flex items-start gap-0" style={{ height: `${branchRowHeight}px` }}>
                             {(() => {
-                              const showDetailization = scenario.niche === 'Інфобізнес';
                               const branchStepIdxs: number[] = [];
                               const tryPush = (i: number): boolean => {
                                 if (!isStepUnlocked(i, lt)) return false;
                                 branchStepIdxs.push(i);
                                 return isStepCompleted(i, lt);
                               };
-                              if (showDetailization) {
-                                if (!tryPush(3)) { /* stop */ }
-                                else {
-                                  for (let bi = 0; bi < BRANCH_STEPS.length; bi++) {
-                                    if (!tryPush(bi + 4)) break;
-                                  }
-                                }
-                              } else {
-                                for (let bi = 0; bi < BRANCH_STEPS.length; bi++) {
-                                  if (!tryPush(bi + 4)) break;
-                                }
+                              for (let bi = 0; bi < BRANCH_STEPS.length; bi++) {
+                                if (!tryPush(bi + 4)) break;
                               }
                               return branchStepIdxs.map((stepIdx, idx) => (
                                 <React.Fragment key={stepIdx}>
@@ -3196,18 +3285,8 @@ const ScenarioBuilder: React.FC = () => {
 
                         ))}
                       </div>
-
-                      {/* Unified Meta Ads prep block — keep existing campaign history visible while adding new lead goals. */}
-                      {leadTypes.some(lt =>
-                        isStepCompletedForBranch(scenario, 4, lt)
-                        || hasScopedValue((scenario as any)?.audienceSettings?.[lt])
-                        || hasScopedValue((scenario as any)?.creoBriefs?.[lt])
-                      ) && (
-                        <div className="mt-6 pt-6 border-t border-dashed border-border/70">
-                          <PrepWorksNode campaignKeys={leadTypes} />
-                        </div>
-                      )}
                     </div>
+                    )}
                     </>}
                   </div>
                 );
