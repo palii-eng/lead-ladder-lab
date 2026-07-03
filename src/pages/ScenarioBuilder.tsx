@@ -1618,6 +1618,37 @@ const ScenarioBuilder: React.FC = () => {
     const current = scenario.leadTypes || [];
     const newTypes = current.includes(lt) ? current.filter(t => t !== lt) : [...current, lt];
     const newBranchData = { ...(scenario.branchData || {}) };
+
+    // When transitioning from single-branch mode (≤1 leadType) to multi-branch (>1),
+    // seed the pre-existing branch(es) with the top-level scenario setup so previously
+    // configured decomposition / destinations / integration / retention aren't lost.
+    const wasSingle = current.length <= 1;
+    const willBeMulti = newTypes.length > 1;
+    if (wasSingle && willBeMulti) {
+      current.forEach(existingLt => {
+        const existing = newBranchData[existingLt];
+        const isEmpty = !existing
+          || (!existing.funnelFormat
+            && !existing.integrationMethod
+            && !existing.companyDescription
+            && !existing.salesChannel
+            && (!existing.leadDestinations || existing.leadDestinations.length === 0));
+        if (isEmpty) {
+          newBranchData[existingLt] = {
+            ...createDefaultBranchData(),
+            funnelFormat: scenario.funnelFormat || '',
+            decomposition: scenario.decomposition,
+            leadDestinations: [...(scenario.leadDestinations || [])],
+            integrationMethod: scenario.integrationMethod || '',
+            companyDescription: scenario.companyDescription || '',
+            salesChannel: scenario.salesChannel || '',
+            salesChannelOther: scenario.salesChannelOther || '',
+            retention: { ...scenario.retention },
+          };
+        }
+      });
+    }
+
     newTypes.forEach(t => {
       if (!newBranchData[t]) newBranchData[t] = createDefaultBranchData();
     });
