@@ -1614,37 +1614,84 @@ const ScenarioBuilder: React.FC = () => {
     }
   };
 
+  const cloneDecompSet = (set: DecompositionSet): DecompositionSet => ({
+    bad: { ...set.bad },
+    realistic: { ...set.realistic },
+    positive: { ...set.positive },
+  });
+
+  const hasDecompProgress = (set?: DecompositionSet) => {
+    if (!set) return false;
+    return (['bad', 'realistic', 'positive'] as const).some(key => {
+      const d = set[key];
+      return [d.cpm, d.ctr, d.cpc, d.cpl, d.landingConversion, d.conversionRate, d.averageCheck, d.marginality]
+        .some(v => Number(v) > 0);
+    });
+  };
+
+  const hasRetentionProgress = (ret?: BranchData['retention']) => !!ret &&
+    [ret.emailCount, ret.telegramCount, ret.smsCount, ret.pushCount].some(v => Number(v) > 0);
+
+  const hasScopedValue = (value: unknown) => {
+    if (Array.isArray(value)) return value.length > 0;
+    return !!value && typeof value === 'object' && Object.keys(value as Record<string, unknown>).length > 0;
+  };
+
+  const cloneScopedValue = <T,>(value: T): T => {
+    try {
+      return JSON.parse(JSON.stringify(value)) as T;
+    } catch {
+      return value;
+    }
+  };
+
   const performLeadTypeToggle = (lt: string) => {
     const current = scenario.leadTypes || [];
     const newTypes = current.includes(lt) ? current.filter(t => t !== lt) : [...current, lt];
     const newBranchData = { ...(scenario.branchData || {}) };
+    const newAudienceSettings: Record<string, unknown> = { ...((scenario as any).audienceSettings || {}) };
+    const newCreoBriefs: Record<string, unknown> = { ...((scenario as any).creoBriefs || {}) };
 
     // When transitioning from single-branch mode (≤1 leadType) to multi-branch (>1),
-    // seed the pre-existing branch(es) with the top-level scenario setup so previously
-    // configured decomposition / destinations / integration / retention aren't lost.
+    // seed the pre-existing branch(es) with the top-level scenario setup + prep history
+    // so previously configured decomposition / audiences / creatives aren't lost.
     const wasSingle = current.length <= 1;
     const willBeMulti = newTypes.length > 1;
     if (wasSingle && willBeMulti) {
       current.forEach(existingLt => {
         const existing = newBranchData[existingLt];
-        const isEmpty = !existing
-          || (!existing.funnelFormat
-            && !existing.integrationMethod
-            && !existing.companyDescription
-            && !existing.salesChannel
-            && (!existing.leadDestinations || existing.leadDestinations.length === 0));
-        if (isEmpty) {
-          newBranchData[existingLt] = {
-            ...createDefaultBranchData(),
-            funnelFormat: scenario.funnelFormat || '',
-            decomposition: scenario.decomposition,
-            leadDestinations: [...(scenario.leadDestinations || [])],
-            integrationMethod: scenario.integrationMethod || '',
-            companyDescription: scenario.companyDescription || '',
-            salesChannel: scenario.salesChannel || '',
-            salesChannelOther: scenario.salesChannelOther || '',
-            retention: { ...scenario.retention },
-          };
+        const seeded: BranchData = { ...createDefaultBranchData(), ...(existing || {}) };
+        if (!seeded.funnelFormat && scenario.funnelFormat) seeded.funnelFormat = scenario.funnelFormat;
+        if (!hasDecompProgress(seeded.decomposition) && hasDecompProgress(scenario.decomposition)) {
+          seeded.decomposition = cloneDecompSet(scenario.decomposition);
+        }
+        if ((!seeded.leadDestinations || seeded.leadDestinations.length === 0) && scenario.leadDestinations?.length) {
+          seeded.leadDestinations = [...scenario.leadDestinations];
+        }
+        if (!seeded.integrationMethod && scenario.integrationMethod) seeded.integrationMethod = scenario.integrationMethod;
+        if (!seeded.companyDescription && scenario.companyDescription) seeded.companyDescription = scenario.companyDescription;
+        if (!seeded.salesChannel && scenario.salesChannel) seeded.salesChannel = scenario.salesChannel;
+        if (!seeded.salesChannelOther && scenario.salesChannelOther) seeded.salesChannelOther = scenario.salesChannelOther;
+        if (!hasRetentionProgress(seeded.retention) && hasRetentionProgress(scenario.retention)) {
+          seeded.retention = { ...scenario.retention };
+        }
+        newBranchData[existingLt] = seeded;
+
+        const scopedSourceKeys = [existingLt, activeLeadType, 'main'].filter(Boolean);
+        const audienceSource = scopedSourceKeys.find(key => hasScopedValue(newAudienceSettings[key]));
+        if (!hasScopedValue(newAudienceSettings[existingLt]) && audienceSource) {
+          newAudienceSettings[existingLt] = cloneScopedValue(newAudienceSettings[audienceSource]);
+        }
+        const checksKey = `${existingLt}__checks`;
+        const checksSource = [`${existingLt}__checks`, activeLeadType ? `${activeLeadType}__checks` : '', 'main__checks']
+          .filter(Boolean)
+          .find(key => hasScopedValue(newAudienceSettings[key]));
+        if (!hasScopedValue(newAudienceSettings[checksKey]) && checksSource) {
+          newAudienceSettings[checksKey] = cloneScopedValue(newAudienceSettings[checksSource]);
+        }
+        const creoSource = scopedSourceKeys.find(key => hasScopedValue(newCreoBriefs[key]));
+        if (!hasScopedValue(newCreoBriefs[existingLt]) && creoSource) {
+          newCreoBriefs[existingLt] = cloneScopedValue(newCreoBriefs[creoSource]);
         }
       });
     }
@@ -1655,7 +1702,32 @@ const ScenarioBuilder: React.FC = () => {
     Object.keys(newBranchData).forEach(k => {
       if (!newTypes.includes(k)) delete newBranchData[k];
     });
-    update({ leadTypes: newTypes, branchData: newBranchData });
+    const nextScenarioForCompletion = {
+      ...(scenario as any),
+      leadTypes: newTypes,
+      branchData: newBranchData,
+      audienceSettings: newAudienceSettings,
+      creoBriefs: newCreoBriefs,
+    } as Scenario;
+    update({
+      leadTypes: newTypes,
+      branchData: newBranchData,
+      audienceSettings: newAudienceSettings,
+      creoBriefs: newCreoBriefs,
+    } as any);
+    if (wasSingle && willBeMulti) {
+      setSavedSteps(prev => {
+        const next = new Set(prev);
+        current.forEach(existingLt => {
+          [3, 4, 5, 6, 7, 8].forEach(step => {
+            if ((step === 3 && scenario.niche !== 'Інфобізнес') || prev.has(String(step)) || isStepCompletedForBranch(nextScenarioForCompletion, step, existingLt)) {
+              next.add(`${step}:${existingLt}`);
+            }
+          });
+        });
+        return next;
+      });
+    }
     if (newTypes.length > 0 && !newTypes.includes(activeLeadType)) {
       setActiveLeadType(newTypes[0]);
     }
@@ -3125,8 +3197,12 @@ const ScenarioBuilder: React.FC = () => {
                         ))}
                       </div>
 
-                      {/* Unified Meta Ads prep block — one campaign per lead type */}
-                      {leadTypes.every(lt => isStepCompletedForBranch(scenario, 4, lt)) && (
+                      {/* Unified Meta Ads prep block — keep existing campaign history visible while adding new lead goals. */}
+                      {leadTypes.some(lt =>
+                        isStepCompletedForBranch(scenario, 4, lt)
+                        || hasScopedValue((scenario as any)?.audienceSettings?.[lt])
+                        || hasScopedValue((scenario as any)?.creoBriefs?.[lt])
+                      ) && (
                         <div className="mt-6 pt-6 border-t border-dashed border-border/70">
                           <PrepWorksNode campaignKeys={leadTypes} />
                         </div>
