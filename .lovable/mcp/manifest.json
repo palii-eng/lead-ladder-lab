@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "smartfunnel-mcp",
+      "version": "0.1.0",
+      "title": "SmartFunnel AI MCP"
+    },
+    "tools": [
+      {
+        "name": "list_recent_shared_scenarios",
+        "title": "List recent shared scenarios",
+        "description": "List the most recently created public shared SmartFunnel scenarios (id, active lead type, created_at). Useful for browsing available shared funnels.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "Maximum number of scenarios to return (default 10, max 50)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_shared_scenario",
+        "title": "Get shared scenario",
+        "description": "Fetch a publicly shared SmartFunnel scenario by its share ID. Returns the full scenario JSON, active lead type, AI conclusion, and creation date.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "share_id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The share ID (uuid) of the shared scenario, as found in the /share/:shareId URL."
+            }
+          },
+          "required": [
+            "share_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
