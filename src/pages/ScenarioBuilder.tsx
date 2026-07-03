@@ -3119,22 +3119,42 @@ const ScenarioBuilder: React.FC = () => {
                           {!flowGated && <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />}
                         </div>
                         {!flowGated && (() => {
-                          const visible: number[] = [];
-                          for (let i = 0; i < STEPS.length; i++) {
-                            if (i === 3 && scenario.niche !== 'Інфобізнес') continue;
-                            if (i === 0 || isStepUnlocked(i)) {
-                              visible.push(i);
-                              if (!isStepCompleted(i)) break;
-                            } else {
-                              break;
-                            }
+                          // New order: Ніша → Джерело → Meta Ads prep block (goal + format live inside it)
+                          // → Декомпозиція → Куди йдуть ліди → Інтеграція → Продажі → Retention → Результат.
+                          const nodes: React.ReactNode[] = [];
+                          const preSteps: number[] = [0];
+                          if (isStepUnlocked(1)) preSteps.push(1);
+                          preSteps.forEach((i) => {
+                            nodes.push(
+                              <React.Fragment key={`pre-${i}`}>
+                                {renderNode(i, undefined, false)}
+                              </React.Fragment>
+                            );
+                          });
+                          // Prep block appears right after "Джерело".
+                          if (isStepCompleted(1)) {
+                            nodes.push(<PrepWorksNode key="prep-single" />);
                           }
-                          return visible.map((i, idx) => (
-                            <React.Fragment key={i}>
-                              {renderNode(i, undefined, idx === visible.length - 1)}
-                              {i === 4 && isStepCompletedStatic(scenario, 4) && <PrepWorksNode />}
-                            </React.Fragment>
-                          ));
+                          // Post-prep chain only after goal + format are set (auto-saved via useEffects).
+                          if (isStepCompleted(1) && isStepCompleted(2) && isStepCompleted(3)) {
+                            const postSteps: number[] = [];
+                            for (let i = 4; i < STEPS.length; i++) {
+                              if (isStepUnlocked(i)) {
+                                postSteps.push(i);
+                                if (!isStepCompleted(i)) break;
+                              } else {
+                                break;
+                              }
+                            }
+                            postSteps.forEach((i, idx) => {
+                              nodes.push(
+                                <React.Fragment key={`post-${i}`}>
+                                  {renderNode(i, undefined, idx === postSteps.length - 1)}
+                                </React.Fragment>
+                              );
+                            });
+                          }
+                          return nodes;
                         })()}
 
                       </div>
