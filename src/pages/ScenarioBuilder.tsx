@@ -3501,7 +3501,7 @@ const ScenarioBuilder: React.FC = () => {
 
 
       {/* Creo brief dialog */}
-      <Dialog open={creoOpen} onOpenChange={(o) => { setCreoOpen(o); if (!o) { setCreoFormat(null); setCreoFields({}); setCreoVideoFormat(''); setViewCreoIdx(null); } }}>
+      <Dialog open={creoOpen} onOpenChange={(o) => { setCreoOpen(o); if (!o) { setCreoFormat(null); setCreoFields({}); setCreoVideoFormat(''); setViewCreoIdx(null); setPreselectedAudienceId(null); } }}>
         <DialogContent className="bg-card border-border max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-foreground font-bold flex items-center gap-2">
