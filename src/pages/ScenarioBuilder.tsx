@@ -74,6 +74,14 @@ const STEP_VIDEOS: Record<number, { title: string; url: string }[]> = {
 
 const INFOBIZ_DECOMP_VIDEO = { title: 'Декомпозиція в інфобізі — мануал', url: 'https://youtu.be/HehGc_UQq_U' };
 
+const REQUIRED_MATERIALS: { title: string; url: string }[] = [
+  { title: 'Підготовка, цілі, методи — як бути хорошим маркетологом', url: 'https://youtu.be/atDbG51Z75o' },
+  { title: 'Система маркетингу та маркетинговий відділ', url: 'https://youtu.be/40s2fjtXlIM' },
+  { title: 'Шлях клієнта', url: 'https://youtu.be/XjflWtggD0w' },
+  { title: 'Типова маркетингова воронка', url: 'https://youtu.be/9KPgRWEJm4Y' },
+  { title: 'Складові маркетингової воронки', url: 'https://youtu.be/_PTpQY22XuQ' },
+];
+
 const FORMAT_VIDEOS: Record<string, { title: string; url: string }[]> = {
   'Міні-курс': [
     { title: 'Міні-курс — розбір воронки', url: 'https://youtu.be/MEI0sIJ0No8' },
