@@ -3182,7 +3182,7 @@ const ScenarioBuilder: React.FC = () => {
             {clientActions.has('brief') && clientActions.has('payment') && (() => {
               const materials = [
                 ...REQUIRED_MATERIALS,
-                ...(scenario.leadSource ? TRAFFIC_STRATEGY_MATERIALS : []),
+                ...(scenario.niche ? TRAFFIC_STRATEGY_MATERIALS : []),
               ];
               return (
                 <button
@@ -3676,7 +3676,7 @@ const ScenarioBuilder: React.FC = () => {
                 </div>
               ))}
             </div>
-            {scenario.leadSource && (
+            {scenario.niche && (
               <div className="space-y-2">
                 <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">Трафік-стратегія</div>
                 {TRAFFIC_STRATEGY_MATERIALS.map((v, i) => (
