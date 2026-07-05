@@ -3666,13 +3666,27 @@ const ScenarioBuilder: React.FC = () => {
           <p className="text-xs text-muted-foreground mt-2">
             Оплату отримано та бриф зібрано — перегляньте ці відео, щоб зайти в проєкт з рівнем сильного маркетолога.
           </p>
-          <div className="space-y-2 pt-3">
-            {REQUIRED_MATERIALS.map((v, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
-                <span className="text-sm font-medium text-foreground flex-1">{v.title}</span>
-                <VideoBadge url={v.url} title={v.title} size="md" />
+          <div className="space-y-4 pt-3">
+            <div className="space-y-2">
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">База маркетолога</div>
+              {REQUIRED_MATERIALS.map((v, i) => (
+                <div key={`base-${i}`} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
+                  <span className="text-sm font-medium text-foreground flex-1">{v.title}</span>
+                  <VideoBadge url={v.url} title={v.title} size="md" />
+                </div>
+              ))}
+            </div>
+            {scenario.leadSource && (
+              <div className="space-y-2">
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">Трафік-стратегія</div>
+                {TRAFFIC_STRATEGY_MATERIALS.map((v, i) => (
+                  <div key={`traffic-${i}`} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
+                    <span className="text-sm font-medium text-foreground flex-1">{v.title}</span>
+                    <VideoBadge url={v.url} title={v.title} size="md" />
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         </SheetContent>
       </Sheet>
