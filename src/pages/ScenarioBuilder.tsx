@@ -3640,6 +3640,29 @@ const ScenarioBuilder: React.FC = () => {
         </SheetContent>
       </Sheet>
 
+      {/* Required materials sheet */}
+      <Sheet open={materialsOpen} onOpenChange={setMaterialsOpen}>
+        <SheetContent side="left" className="bg-card border-border w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-foreground font-bold flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-primary" />
+              Матеріали для перегляду
+            </SheetTitle>
+          </SheetHeader>
+          <p className="text-xs text-muted-foreground mt-2">
+            Оплату отримано та бриф зібрано — перегляньте ці відео, щоб зайти в проєкт з рівнем сильного маркетолога.
+          </p>
+          <div className="space-y-2 pt-3">
+            {REQUIRED_MATERIALS.map((v, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
+                <span className="text-sm font-medium text-foreground flex-1">{v.title}</span>
+                <VideoBadge url={v.url} title={v.title} size="md" />
+              </div>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+
 
 
       {/* Video dialog */}
