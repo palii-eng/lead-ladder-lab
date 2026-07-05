@@ -3179,18 +3179,24 @@ const ScenarioBuilder: React.FC = () => {
               </button>
             )}
 
-            {clientActions.has('brief') && clientActions.has('payment') && (
-              <button
-                type="button"
-                onClick={() => setMaterialsOpen(true)}
-                className="flex items-center gap-2 px-3 h-10 rounded-full bg-card border border-border shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-primary"
-                title="Матеріали, які треба переглянути перед стартом роботи"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span className="text-xs font-semibold">Матеріали для перегляду</span>
-                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none">{REQUIRED_MATERIALS.length}</span>
-              </button>
-            )}
+            {clientActions.has('brief') && clientActions.has('payment') && (() => {
+              const materials = [
+                ...REQUIRED_MATERIALS,
+                ...(scenario.leadSource ? TRAFFIC_STRATEGY_MATERIALS : []),
+              ];
+              return (
+                <button
+                  type="button"
+                  onClick={() => setMaterialsOpen(true)}
+                  className="flex items-center gap-2 px-3 h-10 rounded-full bg-card border border-border shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-primary"
+                  title="Матеріали, які треба переглянути перед стартом роботи"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Матеріали для перегляду</span>
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none">{materials.length}</span>
+                </button>
+              );
+            })()}
 
             {(() => {
               const skills: { title: string; url: string }[] = [];
