@@ -82,6 +82,14 @@ const REQUIRED_MATERIALS: { title: string; url: string }[] = [
   { title: 'Складові маркетингової воронки', url: 'https://youtu.be/_PTpQY22XuQ' },
 ];
 
+const TRAFFIC_STRATEGY_MATERIALS: { title: string; url: string }[] = [
+  { title: 'Від чого залежить вибір воронки для бізнес-проекту', url: 'https://youtu.be/I_8hZTgb1Is' },
+  { title: 'Типи трафіка: TOF, MOF, BOF', url: 'https://youtu.be/7AAmpv9ibnc' },
+  { title: 'Підготовка до створення трафік-стратегії', url: 'https://youtu.be/qW3AaW-Pwx4' },
+  { title: 'Створення стратегії', url: 'https://youtu.be/7DqzeEAiYoU' },
+  { title: 'Комунікаційна стратегія', url: 'https://youtu.be/8QQ6t-4nc1A' },
+];
+
 const FORMAT_VIDEOS: Record<string, { title: string; url: string }[]> = {
   'Міні-курс': [
     { title: 'Міні-курс — розбір воронки', url: 'https://youtu.be/MEI0sIJ0No8' },
@@ -3171,18 +3179,24 @@ const ScenarioBuilder: React.FC = () => {
               </button>
             )}
 
-            {clientActions.has('brief') && clientActions.has('payment') && (
-              <button
-                type="button"
-                onClick={() => setMaterialsOpen(true)}
-                className="flex items-center gap-2 px-3 h-10 rounded-full bg-card border border-border shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-primary"
-                title="Матеріали, які треба переглянути перед стартом роботи"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span className="text-xs font-semibold">Матеріали для перегляду</span>
-                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none">{REQUIRED_MATERIALS.length}</span>
-              </button>
-            )}
+            {clientActions.has('brief') && clientActions.has('payment') && (() => {
+              const materials = [
+                ...REQUIRED_MATERIALS,
+                ...(scenario.leadSource ? TRAFFIC_STRATEGY_MATERIALS : []),
+              ];
+              return (
+                <button
+                  type="button"
+                  onClick={() => setMaterialsOpen(true)}
+                  className="flex items-center gap-2 px-3 h-10 rounded-full bg-card border border-border shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-primary"
+                  title="Матеріали, які треба переглянути перед стартом роботи"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Матеріали для перегляду</span>
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none">{materials.length}</span>
+                </button>
+              );
+            })()}
 
             {(() => {
               const skills: { title: string; url: string }[] = [];
@@ -3652,13 +3666,27 @@ const ScenarioBuilder: React.FC = () => {
           <p className="text-xs text-muted-foreground mt-2">
             Оплату отримано та бриф зібрано — перегляньте ці відео, щоб зайти в проєкт з рівнем сильного маркетолога.
           </p>
-          <div className="space-y-2 pt-3">
-            {REQUIRED_MATERIALS.map((v, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
-                <span className="text-sm font-medium text-foreground flex-1">{v.title}</span>
-                <VideoBadge url={v.url} title={v.title} size="md" />
+          <div className="space-y-4 pt-3">
+            <div className="space-y-2">
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">База маркетолога</div>
+              {REQUIRED_MATERIALS.map((v, i) => (
+                <div key={`base-${i}`} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
+                  <span className="text-sm font-medium text-foreground flex-1">{v.title}</span>
+                  <VideoBadge url={v.url} title={v.title} size="md" />
+                </div>
+              ))}
+            </div>
+            {scenario.leadSource && (
+              <div className="space-y-2">
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">Трафік-стратегія</div>
+                {TRAFFIC_STRATEGY_MATERIALS.map((v, i) => (
+                  <div key={`traffic-${i}`} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
+                    <span className="text-sm font-medium text-foreground flex-1">{v.title}</span>
+                    <VideoBadge url={v.url} title={v.title} size="md" />
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         </SheetContent>
       </Sheet>
