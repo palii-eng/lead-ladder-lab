@@ -3182,7 +3182,7 @@ const ScenarioBuilder: React.FC = () => {
             {clientActions.has('brief') && clientActions.has('payment') && (() => {
               const materials = [
                 ...REQUIRED_MATERIALS,
-                ...(scenario.leadSource ? TRAFFIC_STRATEGY_MATERIALS : []),
+                ...(scenario.niche ? TRAFFIC_STRATEGY_MATERIALS : []),
               ];
               return (
                 <button
