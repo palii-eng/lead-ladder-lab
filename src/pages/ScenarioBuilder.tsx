@@ -82,6 +82,14 @@ const REQUIRED_MATERIALS: { title: string; url: string }[] = [
   { title: 'Складові маркетингової воронки', url: 'https://youtu.be/_PTpQY22XuQ' },
 ];
 
+const TRAFFIC_STRATEGY_MATERIALS: { title: string; url: string }[] = [
+  { title: 'Від чого залежить вибір воронки для бізнес-проекту', url: 'https://youtu.be/I_8hZTgb1Is' },
+  { title: 'Типи трафіка: TOF, MOF, BOF', url: 'https://youtu.be/7AAmpv9ibnc' },
+  { title: 'Підготовка до створення трафік-стратегії', url: 'https://youtu.be/qW3AaW-Pwx4' },
+  { title: 'Створення стратегії', url: 'https://youtu.be/7DqzeEAiYoU' },
+  { title: 'Комунікаційна стратегія', url: 'https://youtu.be/8QQ6t-4nc1A' },
+];
+
 const FORMAT_VIDEOS: Record<string, { title: string; url: string }[]> = {
   'Міні-курс': [
     { title: 'Міні-курс — розбір воронки', url: 'https://youtu.be/MEI0sIJ0No8' },
