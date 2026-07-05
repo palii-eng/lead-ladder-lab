@@ -74,6 +74,14 @@ const STEP_VIDEOS: Record<number, { title: string; url: string }[]> = {
 
 const INFOBIZ_DECOMP_VIDEO = { title: 'Декомпозиція в інфобізі — мануал', url: 'https://youtu.be/HehGc_UQq_U' };
 
+const REQUIRED_MATERIALS: { title: string; url: string }[] = [
+  { title: 'Підготовка, цілі, методи — як бути хорошим маркетологом', url: 'https://youtu.be/atDbG51Z75o' },
+  { title: 'Система маркетингу та маркетинговий відділ', url: 'https://youtu.be/40s2fjtXlIM' },
+  { title: 'Шлях клієнта', url: 'https://youtu.be/XjflWtggD0w' },
+  { title: 'Типова маркетингова воронка', url: 'https://youtu.be/9KPgRWEJm4Y' },
+  { title: 'Складові маркетингової воронки', url: 'https://youtu.be/_PTpQY22XuQ' },
+];
+
 const FORMAT_VIDEOS: Record<string, { title: string; url: string }[]> = {
   'Міні-курс': [
     { title: 'Міні-курс — розбір воронки', url: 'https://youtu.be/MEI0sIJ0No8' },
@@ -236,6 +244,7 @@ const ScenarioBuilder: React.FC = () => {
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [videoDialogStep, setVideoDialogStep] = useState(0);
   const [skillsOpen, setSkillsOpen] = useState(false);
+  const [materialsOpen, setMaterialsOpen] = useState(false);
   const [formatConfirmed, setFormatConfirmed] = useState(false);
   const [aiTipsOpen, setAiTipsOpen] = useState(false);
   const [aiTipsText, setAiTipsText] = useState('');
@@ -3148,45 +3157,59 @@ const ScenarioBuilder: React.FC = () => {
             backgroundPosition: `${canvasOffset.x % (24 * zoom)}px ${canvasOffset.y % (24 * zoom)}px`,
           }} />
 
-          {/* Persistent brief badge */}
-          {clientActions.has('brief') && scenario.clientBrief && (
-            <button
-              type="button"
-              onClick={() => setFilledBriefOpen(true)}
-              className="absolute top-4 left-4 z-20 flex items-center gap-2 px-3 h-10 rounded-full bg-card border border-border shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-primary"
-              title="Бриф заповнено — натисніть, щоб переглянути"
-            >
-              <FileText className="w-4 h-4" />
-              <span className="text-xs font-semibold">Бриф</span>
-            </button>
-          )}
-
-          {/* Required skills (videos) button */}
-          {(() => {
-            const skills: { title: string; url: string }[] = [];
-            const seen = new Set<string>();
-            const push = (v: { title: string; url: string }) => {
-              if (v && v.url && !seen.has(v.url) && !v.url.startsWith('https://ads-school.online')) {
-                seen.add(v.url);
-                skills.push(v);
-              }
-            };
-            if (scenario.niche === 'Інфобізнес') push(INFOBIZ_DECOMP_VIDEO);
-            if (scenario.funnelFormat) (FORMAT_VIDEOS[scenario.funnelFormat] || []).forEach(push);
-            if (skills.length === 0) return null;
-            return (
+          {/* Top-left plates */}
+          <div className="absolute top-4 left-4 z-20 flex flex-wrap items-center gap-2">
+            {clientActions.has('brief') && scenario.clientBrief && (
               <button
                 type="button"
-                onClick={() => setSkillsOpen(true)}
-                className="absolute top-4 left-32 z-20 flex items-center gap-2 px-3 h-10 rounded-full bg-card border border-border shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-primary"
-                title="Відео, які треба переглянути, щоб запустити цю воронку"
+                onClick={() => setFilledBriefOpen(true)}
+                className="flex items-center gap-2 px-3 h-10 rounded-full bg-card border border-border shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-primary"
+                title="Бриф заповнено — натисніть, щоб переглянути"
               >
-                <GraduationCap className="w-4 h-4" />
-                <span className="text-xs font-semibold">Потрібні навички</span>
-                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none">{skills.length}</span>
+                <FileText className="w-4 h-4" />
+                <span className="text-xs font-semibold">Бриф</span>
               </button>
-            );
-          })()}
+            )}
+
+            {clientActions.has('brief') && clientActions.has('payment') && (
+              <button
+                type="button"
+                onClick={() => setMaterialsOpen(true)}
+                className="flex items-center gap-2 px-3 h-10 rounded-full bg-card border border-border shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-primary"
+                title="Матеріали, які треба переглянути перед стартом роботи"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span className="text-xs font-semibold">Матеріали для перегляду</span>
+                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none">{REQUIRED_MATERIALS.length}</span>
+              </button>
+            )}
+
+            {(() => {
+              const skills: { title: string; url: string }[] = [];
+              const seen = new Set<string>();
+              const push = (v: { title: string; url: string }) => {
+                if (v && v.url && !seen.has(v.url) && !v.url.startsWith('https://ads-school.online')) {
+                  seen.add(v.url);
+                  skills.push(v);
+                }
+              };
+              if (scenario.niche === 'Інфобізнес') push(INFOBIZ_DECOMP_VIDEO);
+              if (scenario.funnelFormat) (FORMAT_VIDEOS[scenario.funnelFormat] || []).forEach(push);
+              if (skills.length === 0) return null;
+              return (
+                <button
+                  type="button"
+                  onClick={() => setSkillsOpen(true)}
+                  className="flex items-center gap-2 px-3 h-10 rounded-full bg-card border border-border shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-primary"
+                  title="Відео, які треба переглянути, щоб запустити цю воронку"
+                >
+                  <GraduationCap className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Потрібні навички</span>
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none">{skills.length}</span>
+                </button>
+              );
+            })()}
+          </div>
 
 
           {/* Zoom controls */}
@@ -3613,6 +3636,29 @@ const ScenarioBuilder: React.FC = () => {
                 </div>
               ));
             })()}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Required materials sheet */}
+      <Sheet open={materialsOpen} onOpenChange={setMaterialsOpen}>
+        <SheetContent side="left" className="bg-card border-border w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-foreground font-bold flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-primary" />
+              Матеріали для перегляду
+            </SheetTitle>
+          </SheetHeader>
+          <p className="text-xs text-muted-foreground mt-2">
+            Оплату отримано та бриф зібрано — перегляньте ці відео, щоб зайти в проєкт з рівнем сильного маркетолога.
+          </p>
+          <div className="space-y-2 pt-3">
+            {REQUIRED_MATERIALS.map((v, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
+                <span className="text-sm font-medium text-foreground flex-1">{v.title}</span>
+                <VideoBadge url={v.url} title={v.title} size="md" />
+              </div>
+            ))}
           </div>
         </SheetContent>
       </Sheet>
