@@ -731,7 +731,7 @@ const ScenarioBuilder: React.FC = () => {
       setEmailScenarios(p.scenarios);
       setEmailSummary(p.summary);
     } else {
-      setEmailScenarios(null);
+      setEmailScenarios(null); setEmailSummary(null);
       setEmailSummary(null);
     }
   }, [parseEmailScenarios]);
@@ -751,7 +751,7 @@ const ScenarioBuilder: React.FC = () => {
     }
     setEmailStrategyLoading(true);
     setEmailStrategyText('');
-    setEmailScenarios(null);
+    setEmailScenarios(null); setEmailSummary(null);
     const decompSet = branch ? branch.decomposition : scenario.decomposition;
     const compDesc = branch ? branch.companyDescription : scenario.companyDescription;
     const salesCh = branch ? (branch as any).salesChannel : (scenario as any).salesChannel;
@@ -833,7 +833,7 @@ const ScenarioBuilder: React.FC = () => {
       applyEmailParsed(cached);
     } else {
       setEmailStrategyText('');
-      setEmailScenarios(null);
+      setEmailScenarios(null); setEmailSummary(null);
     }
   }, [scenario?.id, activeLeadType, scenario?.retention?.emailCount, parseEmailScenarios]);
 
