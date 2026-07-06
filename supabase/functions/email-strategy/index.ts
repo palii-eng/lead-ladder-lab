@@ -59,7 +59,7 @@ serve(async (req) => {
 Спочатку одним рядком виведи fenced JSON-блок з прогнозом сценаріїв на місяць (для авто-заповнення карток UI). Використовуй ту саму валюту, що й середній чек з декомпозиції (${decomposition?.positive?.averageCheck ? decomposition.positive.averageCheck + " грн" : "грн"}). Дохід — числом (без валюти, без пробілів). Формат строго:
 
 \`\`\`json
-{"scenarios":{"bad":{"openRate":10,"clicks":150,"conversions":8,"revenue":10000},"real":{"openRate":20,"clicks":300,"conversions":15,"revenue":18750},"opt":{"openRate":35,"clicks":525,"conversions":26,"revenue":32500}}}
+{"scenarios":{"bad":{"openRate":10,"clicks":150,"conversions":8,"revenue":10000},"real":{"openRate":20,"clicks":300,"conversions":15,"revenue":18750},"opt":{"openRate":35,"clicks":525,"conversions":26,"revenue":32500}},"summary":{"emailsSent":24000,"touchesPerContact":12,"conclusion":"Коротке резюме 1-2 речення під цю нішу та базу."}}
 \`\`\`
 
 Де:
@@ -68,6 +68,9 @@ serve(async (req) => {
 - conversions — кількість продажів з email за місяць.
 - revenue — виручка за місяць у тій самій валюті, що середній чек.
 - Цифри реалістичні під базу ${base} контактів, середній чек ${decomposition?.positive?.averageCheck || 0}, ніша "${niche || ""}".
+- summary.emailsSent — сумарна кількість відправлених листів за місяць (welcome + прогрів + дожим + регулярні + реактивація × активна частина бази).
+- summary.touchesPerContact — середня кількість торкань на 1 контакт за місяць.
+- summary.conclusion — коротке резюме (1-2 речення) з ключовим інсайтом саме під цю нішу та обсяг бази.
 
 Потім після JSON-блока — стратегія у markdown з такими розділами:
 
