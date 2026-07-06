@@ -314,7 +314,9 @@ const ScenarioBuilder: React.FC = () => {
   const [emailStrategyText, setEmailStrategyText] = useState('');
   const [emailStrategyLoading, setEmailStrategyLoading] = useState(false);
   type EmailScen = { openRate: number; clicks: number; conversions: number; revenue: number };
+  type EmailSummary = { emailsSent: number; touchesPerContact: number; conclusion: string };
   const [emailScenarios, setEmailScenarios] = useState<{ bad: EmailScen; real: EmailScen; opt: EmailScen } | null>(null);
+  const [emailSummary, setEmailSummary] = useState<EmailSummary | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
