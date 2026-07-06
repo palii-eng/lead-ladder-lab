@@ -2885,6 +2885,26 @@ const ScenarioBuilder: React.FC = () => {
                           <ReactMarkdown>{stripJsonBlock(emailStrategyText)}</ReactMarkdown>
                         </div>
                       )}
+                      {emailSummary && !emailStrategyLoading && (
+                        <div className="mt-3 rounded-lg border-2 border-primary/40 bg-primary/5 p-3 space-y-2">
+                          <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wide">
+                            <Sparkles className="w-3.5 h-3.5" /> Висновок AI
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="rounded-md bg-background border border-border p-2">
+                              <div className="text-[10px] text-muted-foreground uppercase">Відправлено листів / міс</div>
+                              <div className="text-lg font-bold text-foreground">{emailSummary.emailsSent.toLocaleString('uk-UA')}</div>
+                            </div>
+                            <div className="rounded-md bg-background border border-border p-2">
+                              <div className="text-[10px] text-muted-foreground uppercase">Торкань / контакт</div>
+                              <div className="text-lg font-bold text-foreground">{emailSummary.touchesPerContact}</div>
+                            </div>
+                          </div>
+                          {emailSummary.conclusion && (
+                            <p className="text-xs text-foreground leading-relaxed">{emailSummary.conclusion}</p>
+                          )}
+                        </div>
+                      )}
                       {!emailStrategyLoading && !emailStrategyText && (
                         <p className="text-xs text-muted-foreground">Введіть кількість контактів і натисніть «Стратегія».</p>
                       )}
