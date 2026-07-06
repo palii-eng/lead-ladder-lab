@@ -2108,11 +2108,12 @@ const ScenarioBuilder: React.FC = () => {
     if (i < 3 || !isBranching) {
       return isStepCompletedStatic(scenario, i) && savedSteps.has(String(i));
     }
+    // Non-Інфобіз: step 3 auto-completed per branch — checked before we need a
+    // concrete lt, since this shortcut doesn't depend on which branch is active.
+    if (i === 3 && scenario.niche !== 'Інфобізнес') return true;
     // Branch-specific: check this specific branch
     const lt = branchLeadType || activeLeadType;
     if (!lt) return false;
-    // Non-Інфобіз: step 3 auto-completed per branch
-    if (i === 3 && scenario.niche !== 'Інфобізнес') return true;
     return isStepCompletedForBranch(scenario, i, lt) && savedSteps.has(`${i}:${lt}`);
   };
 
