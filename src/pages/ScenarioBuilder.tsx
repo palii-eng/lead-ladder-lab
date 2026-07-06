@@ -725,6 +725,16 @@ const ScenarioBuilder: React.FC = () => {
     } catch { return null; }
   }, []);
   const stripJsonBlock = (text: string) => text.replace(/```json[\s\S]*?```\s*/, '').trim();
+  const applyEmailParsed = useCallback((text: string) => {
+    const p = parseEmailScenarios(text);
+    if (p) {
+      setEmailScenarios(p.scenarios);
+      setEmailSummary(p.summary);
+    } else {
+      setEmailScenarios(null);
+      setEmailSummary(null);
+    }
+  }, [parseEmailScenarios]);
 
   const fetchEmailStrategy = useCallback(async (opts?: { force?: boolean }) => {
     if (!scenario) return;
