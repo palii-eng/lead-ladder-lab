@@ -703,7 +703,7 @@ const ScenarioBuilder: React.FC = () => {
   const parseEmailScenarios = useCallback((text: string) => {
     try {
       const m = text.match(/```json\s*([\s\S]*?)```/);
-      const raw = m ? m[1] : (text.match(/\{[\s\S]*?"scenarios"[\s\S]*?\}\s*\}/)?.[0] ?? '');
+      const raw = m ? m[1] : (text.match(/\{[\s\S]*"scenarios"[\s\S]*\}/)?.[0] ?? '');
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       const s = parsed.scenarios;
@@ -714,7 +714,14 @@ const ScenarioBuilder: React.FC = () => {
         conversions: Number(x.conversions) || 0,
         revenue: Number(x.revenue) || 0,
       });
-      return { bad: norm(s.bad), real: norm(s.real), opt: norm(s.opt) };
+      const sum = parsed.summary
+        ? {
+            emailsSent: Number(parsed.summary.emailsSent) || 0,
+            touchesPerContact: Number(parsed.summary.touchesPerContact) || 0,
+            conclusion: String(parsed.summary.conclusion || ''),
+          }
+        : null;
+      return { scenarios: { bad: norm(s.bad), real: norm(s.real), opt: norm(s.opt) }, summary: sum };
     } catch { return null; }
   }, []);
   const stripJsonBlock = (text: string) => text.replace(/```json[\s\S]*?```\s*/, '').trim();
