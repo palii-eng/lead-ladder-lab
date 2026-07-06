@@ -746,7 +746,7 @@ const ScenarioBuilder: React.FC = () => {
     if (!opts?.force && aiCacheRef.current[cacheKey]) {
       const cached = aiCacheRef.current[cacheKey];
       setEmailStrategyText(cached);
-      setEmailScenarios(parseEmailScenarios(cached));
+      applyEmailParsed(cached);
       return;
     }
     setEmailStrategyLoading(true);
@@ -811,7 +811,7 @@ const ScenarioBuilder: React.FC = () => {
       }
       if (fullText) {
         setAiCache(cacheKey, fullText);
-        setEmailScenarios(parseEmailScenarios(fullText));
+        applyEmailParsed(fullText);
       }
     } catch (e: any) {
       toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати стратегію', variant: 'destructive' });
@@ -830,7 +830,7 @@ const ScenarioBuilder: React.FC = () => {
     const cached = aiCacheRef.current[cacheKey];
     if (cached) {
       setEmailStrategyText(cached);
-      setEmailScenarios(parseEmailScenarios(cached));
+      applyEmailParsed(cached);
     } else {
       setEmailStrategyText('');
       setEmailScenarios(null);
