@@ -314,7 +314,9 @@ const ScenarioBuilder: React.FC = () => {
   const [emailStrategyText, setEmailStrategyText] = useState('');
   const [emailStrategyLoading, setEmailStrategyLoading] = useState(false);
   type EmailScen = { openRate: number; clicks: number; conversions: number; revenue: number };
+  type EmailSummary = { emailsSent: number; touchesPerContact: number; conclusion: string };
   const [emailScenarios, setEmailScenarios] = useState<{ bad: EmailScen; real: EmailScen; opt: EmailScen } | null>(null);
+  const [emailSummary, setEmailSummary] = useState<EmailSummary | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
@@ -701,7 +703,7 @@ const ScenarioBuilder: React.FC = () => {
   const parseEmailScenarios = useCallback((text: string) => {
     try {
       const m = text.match(/```json\s*([\s\S]*?)```/);
-      const raw = m ? m[1] : (text.match(/\{[\s\S]*?"scenarios"[\s\S]*?\}\s*\}/)?.[0] ?? '');
+      const raw = m ? m[1] : (text.match(/\{[\s\S]*"scenarios"[\s\S]*\}/)?.[0] ?? '');
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       const s = parsed.scenarios;
@@ -712,10 +714,27 @@ const ScenarioBuilder: React.FC = () => {
         conversions: Number(x.conversions) || 0,
         revenue: Number(x.revenue) || 0,
       });
-      return { bad: norm(s.bad), real: norm(s.real), opt: norm(s.opt) };
+      const sum = parsed.summary
+        ? {
+            emailsSent: Number(parsed.summary.emailsSent) || 0,
+            touchesPerContact: Number(parsed.summary.touchesPerContact) || 0,
+            conclusion: String(parsed.summary.conclusion || ''),
+          }
+        : null;
+      return { scenarios: { bad: norm(s.bad), real: norm(s.real), opt: norm(s.opt) }, summary: sum };
     } catch { return null; }
   }, []);
   const stripJsonBlock = (text: string) => text.replace(/```json[\s\S]*?```\s*/, '').trim();
+  const applyEmailParsed = useCallback((text: string) => {
+    const p = parseEmailScenarios(text);
+    if (p) {
+      setEmailScenarios(p.scenarios);
+      setEmailSummary(p.summary);
+    } else {
+      setEmailScenarios(null); setEmailSummary(null);
+      setEmailSummary(null);
+    }
+  }, [parseEmailScenarios]);
 
   const fetchEmailStrategy = useCallback(async (opts?: { force?: boolean }) => {
     if (!scenario) return;
@@ -727,12 +746,12 @@ const ScenarioBuilder: React.FC = () => {
     if (!opts?.force && aiCacheRef.current[cacheKey]) {
       const cached = aiCacheRef.current[cacheKey];
       setEmailStrategyText(cached);
-      setEmailScenarios(parseEmailScenarios(cached));
+      applyEmailParsed(cached);
       return;
     }
     setEmailStrategyLoading(true);
     setEmailStrategyText('');
-    setEmailScenarios(null);
+    setEmailScenarios(null); setEmailSummary(null);
     const decompSet = branch ? branch.decomposition : scenario.decomposition;
     const compDesc = branch ? branch.companyDescription : scenario.companyDescription;
     const salesCh = branch ? (branch as any).salesChannel : (scenario as any).salesChannel;
@@ -792,7 +811,7 @@ const ScenarioBuilder: React.FC = () => {
       }
       if (fullText) {
         setAiCache(cacheKey, fullText);
-        setEmailScenarios(parseEmailScenarios(fullText));
+        applyEmailParsed(fullText);
       }
     } catch (e: any) {
       toast({ title: 'Помилка', description: e.message || 'Не вдалося отримати стратегію', variant: 'destructive' });
@@ -811,10 +830,10 @@ const ScenarioBuilder: React.FC = () => {
     const cached = aiCacheRef.current[cacheKey];
     if (cached) {
       setEmailStrategyText(cached);
-      setEmailScenarios(parseEmailScenarios(cached));
+      applyEmailParsed(cached);
     } else {
       setEmailStrategyText('');
-      setEmailScenarios(null);
+      setEmailScenarios(null); setEmailSummary(null);
     }
   }, [scenario?.id, activeLeadType, scenario?.retention?.emailCount, parseEmailScenarios]);
 
@@ -2864,6 +2883,26 @@ const ScenarioBuilder: React.FC = () => {
                       {emailStrategyText && (
                         <div className="prose prose-sm max-w-none text-xs text-foreground [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_ul]:my-1 [&_ol]:my-1 [&_p]:my-1 [&_strong]:text-foreground">
                           <ReactMarkdown>{stripJsonBlock(emailStrategyText)}</ReactMarkdown>
+                        </div>
+                      )}
+                      {emailSummary && !emailStrategyLoading && (
+                        <div className="mt-3 rounded-lg border-2 border-primary/40 bg-primary/5 p-3 space-y-2">
+                          <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wide">
+                            <Sparkles className="w-3.5 h-3.5" /> Висновок AI
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="rounded-md bg-background border border-border p-2">
+                              <div className="text-[10px] text-muted-foreground uppercase">Відправлено листів / міс</div>
+                              <div className="text-lg font-bold text-foreground">{emailSummary.emailsSent.toLocaleString('uk-UA')}</div>
+                            </div>
+                            <div className="rounded-md bg-background border border-border p-2">
+                              <div className="text-[10px] text-muted-foreground uppercase">Торкань / контакт</div>
+                              <div className="text-lg font-bold text-foreground">{emailSummary.touchesPerContact}</div>
+                            </div>
+                          </div>
+                          {emailSummary.conclusion && (
+                            <p className="text-xs text-foreground leading-relaxed">{emailSummary.conclusion}</p>
+                          )}
                         </div>
                       )}
                       {!emailStrategyLoading && !emailStrategyText && (
