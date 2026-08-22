@@ -1332,8 +1332,16 @@ const ScenarioBuilder: React.FC = () => {
       video: { icon: '🎬', label: 'Відео' },
     };
 
-    // Meta blue
+    // Platform brand color/icon/label, driven by the chosen ad source.
     const META = 'hsl(214 89% 52%)';
+    const TIKTOK_COLOR = 'hsl(340 82% 52%)';
+    const isTikTok = scenario.leadSource === 'tiktok';
+    const PLATFORM_COLOR = isTikTok ? TIKTOK_COLOR : META;
+    const PLATFORM_COLOR_SOFT = isTikTok ? 'hsl(340 82% 52% / 0.12)' : 'hsl(214 89% 52% / 0.12)';
+    const PLATFORM_COLOR_SHADOW = isTikTok ? 'hsl(340 82% 52% / 0.25)' : 'hsl(214 89% 52% / 0.25)';
+    const PlatformIcon = isTikTok ? TikTokIcon : MetaIcon;
+    const platformManagerName = isTikTok ? 'TikTok Ads Manager' : 'Ads Manager';
+    const platformPrepLabel = isTikTok ? 'ПІДГОТОВКА · TIKTOK ADS MANAGER' : 'ПІДГОТОВКА · META ADS MANAGER';
 
     const isMulti = !!campaignKeys && campaignKeys.length > 0;
     const keys: string[] = isMulti ? campaignKeys! : [branchKey || activeLeadType || 'main'];
@@ -1406,8 +1414,8 @@ const ScenarioBuilder: React.FC = () => {
       <div
         className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border-b-2 transition-colors"
         style={{
-          color: active ? META : 'hsl(220 10% 45%)',
-          borderColor: active ? META : 'transparent',
+          color: active ? PLATFORM_COLOR : 'hsl(220 10% 45%)',
+          borderColor: active ? PLATFORM_COLOR : 'transparent',
         }}
       >
         {icon}
@@ -1415,7 +1423,7 @@ const ScenarioBuilder: React.FC = () => {
         {typeof count === 'number' && (
           <span
             className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold"
-            style={{ background: active ? 'hsl(214 89% 52% / 0.12)' : 'hsl(220 14% 94%)', color: active ? META : 'hsl(220 10% 40%)' }}
+            style={{ background: active ? PLATFORM_COLOR_SOFT : 'hsl(220 14% 94%)', color: active ? PLATFORM_COLOR : 'hsl(220 10% 40%)' }}
           >
             {count}
           </span>
@@ -1430,8 +1438,8 @@ const ScenarioBuilder: React.FC = () => {
         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
         style={
           subtle
-            ? { color: META, background: 'transparent', border: `1px dashed ${META}` }
-            : { color: 'white', background: META, boxShadow: '0 2px 4px hsl(214 89% 52% / 0.25)' }
+            ? { color: PLATFORM_COLOR, background: 'transparent', border: `1px dashed ${PLATFORM_COLOR}` }
+            : { color: 'white', background: PLATFORM_COLOR, boxShadow: `0 2px 4px ${PLATFORM_COLOR_SHADOW}` }
         }
       >
         <Plus className="w-3 h-3" strokeWidth={2.5} />
@@ -1443,7 +1451,7 @@ const ScenarioBuilder: React.FC = () => {
       <div className="flex items-start flex-shrink-0 mx-10" data-flow-node>
         <div className="flex flex-col" style={{ width: isMulti ? '820px' : '720px' }}>
           <div className="flex items-center gap-2 mb-2 px-1 h-4">
-            <span className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground/70">ПІДГОТОВКА · META ADS MANAGER</span>
+            <span className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground/70">{platformPrepLabel}</span>
           </div>
 
           <div
@@ -1453,11 +1461,11 @@ const ScenarioBuilder: React.FC = () => {
               boxShadow: '0 12px 26px -16px hsl(0 0% 0% / 0.18), 0 2px 6px -2px hsl(0 0% 0% / 0.05), inset 0 0 0 1px hsl(var(--border) / 0.7)',
             }}
           >
-            {/* Meta-style header bar */}
+            {/* Platform-style header bar */}
             <div className="flex items-center justify-between px-4 pt-3 pb-0 border-b border-border/60" style={{ background: 'hsl(220 20% 98%)' }}>
               <div className="flex items-center gap-3">
-                <MetaIcon className="w-5 h-5" />
-                <span className="text-[12px] font-bold text-foreground">Ads Manager</span>
+                <PlatformIcon className="w-5 h-5" />
+                <span className="text-[12px] font-bold text-foreground">{platformManagerName}</span>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
                   {scenario.niche || 'акаунт'}
                 </span>
@@ -1491,13 +1499,13 @@ const ScenarioBuilder: React.FC = () => {
                     {/* Campaign row */}
                     <div
                       className="rounded-lg border p-2.5 flex items-center gap-2.5"
-                      style={{ background: 'white', borderColor: 'hsl(214 89% 52% / 0.35)', boxShadow: '0 1px 2px hsl(0 0% 0% / 0.04)' }}
+                      style={{ background: 'white', borderColor: PLATFORM_COLOR_SOFT.replace('0.12', '0.35'), boxShadow: '0 1px 2px hsl(0 0% 0% / 0.04)' }}
                     >
                       <span
                         className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
-                        style={{ background: 'hsl(214 89% 52% / 0.1)' }}
+                        style={{ background: PLATFORM_COLOR_SOFT.replace('0.12', '0.1') }}
                       >
-                        {GoalIcon ? <GoalIcon className="w-4 h-4" style={{ color: META }} /> : <Filter className="w-4 h-4" style={{ color: META }} />}
+                        {GoalIcon ? <GoalIcon className="w-4 h-4" style={{ color: PLATFORM_COLOR }} /> : <Filter className="w-4 h-4" style={{ color: PLATFORM_COLOR }} />}
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
@@ -1518,7 +1526,7 @@ const ScenarioBuilder: React.FC = () => {
                           style={
                             campaignFunnelFormat
                               ? { color: 'hsl(220 10% 30%)', background: 'hsl(220 14% 96%)', borderColor: 'hsl(var(--border))' }
-                              : { color: META, background: 'transparent', borderColor: META, borderStyle: 'dashed' }
+                              : { color: PLATFORM_COLOR, background: 'transparent', borderColor: PLATFORM_COLOR, borderStyle: 'dashed' }
                           }
                           title="Формат воронки"
                         >
@@ -1663,7 +1671,7 @@ const ScenarioBuilder: React.FC = () => {
                 type="button"
                 onClick={() => openAudienceDialog(campaigns[0]?.key || 'main', 'list')}
                 className="text-[10px] font-semibold hover:underline"
-                style={{ color: META }}
+                style={{ color: PLATFORM_COLOR }}
               >
                 Відкрити менеджер аудиторій →
               </button>
