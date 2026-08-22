@@ -8,12 +8,10 @@ export const MetaIcon: React.FC<{ className?: string }> = ({ className = 'w-6 h-
   <img src={metaLogoPng} alt="Meta" className={className} style={{ objectFit: 'contain' }} />
 );
 
+import tiktokLogoPng from '@/assets/icons/tiktok-logo.png';
+
 export const TikTokIcon: React.FC<{ className?: string }> = ({ className = 'w-6 h-6' }) => (
-  <svg viewBox="0 0 48 48" className={className} fill="none">
-    <path d="M38.4 10.2c-2.06-1.38-3.5-3.6-3.86-6.18h.02A9.14 9.14 0 0134.4 2h-7.56v28.44c0 .1 0 .2-.01.3v.1A5.28 5.28 0 0121.6 36a5.28 5.28 0 01-5.24-5.32 5.28 5.28 0 015.24-5.32c.54 0 1.08.08 1.58.24v-7.72A13.04 13.04 0 008.8 30.68 13.04 13.04 0 0021.6 43.48a13.04 13.04 0 0012.8-12.8V16.34A16.54 16.54 0 0044 19.6v-7.62a9.16 9.16 0 01-5.6-1.78z" fill="#000"/>
-    <path d="M36.4 8.2c1.52 1.12 3.38 1.78 5.6 1.78v3.48a12.54 12.54 0 01-7.6-3.26v14.48A9.04 9.04 0 0125.6 33.48 9.04 9.04 0 0116.8 24.68 9.04 9.04 0 0125.6 15.88c.36 0 .72.02 1.08.06v3.66a5.28 5.28 0 00-1.08-.12 5.28 5.28 0 00-5.24 5.32A5.28 5.28 0 0025.6 30.12a5.28 5.28 0 005.23-5.22V2h3.56c.04.7.16 1.38.36 2.02.64 2.06 2.1 3.72 3.86 4.18h-.21z" fill="#25F4EE"/>
-    <path d="M30.84 24.9V6h3.56s-.04-.68 0-2h-7.56v28.44c0 .1 0 .2-.01.3v.1A5.28 5.28 0 0121.6 38a5.22 5.22 0 01-3.72-1.56A5.28 5.28 0 0025.6 30.12a5.28 5.28 0 005.24-5.22z" fill="#FE2C55"/>
-  </svg>
+  <img src={tiktokLogoPng} alt="TikTok" className={className} style={{ objectFit: 'contain' }} />
 );
 
 export const GoogleIcon: React.FC<{ className?: string }> = ({ className = 'w-6 h-6' }) => (
