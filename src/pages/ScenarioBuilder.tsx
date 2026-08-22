@@ -4337,11 +4337,18 @@ const ScenarioBuilder: React.FC = () => {
                       {savedList.length > 0 ? 'Додати новий адсет — оберіть формат:' : 'Оберіть формат крео:'}
                     </p>
                     <div className="grid gap-3">
-                      {[
-                        { key: 'static', icon: '🖼️', title: 'Статика (банер)', desc: 'Одне зображення з текстом' },
-                        { key: 'carousel', icon: '🎠', title: 'Кільцева галерея', desc: 'Кілька карток з єдиною логікою' },
-                        { key: 'video', icon: '🎬', title: 'Відео', desc: 'Динамічний відеоконтент' },
-                      ].map(opt => (
+                      {(isTikTokSource
+                        ? [
+                            { key: 'video', icon: '🎬', title: 'Відео', desc: 'Вертикальне 9:16, основний формат TikTok', recommended: true },
+                            { key: 'carousel', icon: '🎠', title: 'Кільцева галерея', desc: 'Кілька вертикальних карток, обов’язково з музикою' },
+                            { key: 'static', icon: '🖼️', title: 'Статика', desc: 'Одне вертикальне зображення (9:16) з текстом' },
+                          ]
+                        : [
+                            { key: 'static', icon: '🖼️', title: 'Статика (банер)', desc: 'Одне зображення з текстом' },
+                            { key: 'carousel', icon: '🎠', title: 'Кільцева галерея', desc: 'Кілька карток з єдиною логікою' },
+                            { key: 'video', icon: '🎬', title: 'Відео', desc: 'Динамічний відеоконтент' },
+                          ]
+                      ).map(opt => (
                         <button
                           key={opt.key}
                           onClick={() => { setCreoFormat(opt.key as any); setCreoFields({}); setCreoVideoFormat(''); }}
@@ -4350,8 +4357,13 @@ const ScenarioBuilder: React.FC = () => {
                           <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">
                             <span>{opt.icon}</span>
                           </div>
-                          <div>
-                            <div className="font-semibold text-foreground">+ {opt.title}</div>
+                          <div className="flex-1">
+                            <div className="font-semibold text-foreground flex items-center gap-2">
+                              + {opt.title}
+                              {'recommended' in opt && opt.recommended && (
+                                <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-success/15 text-success">рекомендовано</span>
+                              )}
+                            </div>
                             <div className="text-xs text-muted-foreground">{opt.desc}</div>
                           </div>
                         </button>
@@ -4382,7 +4394,10 @@ const ScenarioBuilder: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-foreground mb-1.5 block">Опис основного зображення *</label>
+                  <label className="text-sm font-semibold text-foreground mb-1.5 block">
+                    Опис основного зображення *
+                    {isTikTokSource && <span className="text-muted-foreground font-normal"> (вертикальне, 9:16)</span>}
+                  </label>
                   <Textarea
                     value={creoFields.imageDesc || ''}
                     onChange={(e) => setCreoFields(prev => ({ ...prev, imageDesc: e.target.value }))}
@@ -4423,7 +4438,10 @@ const ScenarioBuilder: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-foreground mb-1.5 block">Опис основного зображення *</label>
+                  <label className="text-sm font-semibold text-foreground mb-1.5 block">
+                    Опис основного зображення *
+                    {isTikTokSource && <span className="text-muted-foreground font-normal"> (вертикальне, 9:16)</span>}
+                  </label>
                   <Textarea
                     value={creoFields.imageDesc || ''}
                     onChange={(e) => setCreoFields(prev => ({ ...prev, imageDesc: e.target.value }))}
@@ -4431,6 +4449,16 @@ const ScenarioBuilder: React.FC = () => {
                     rows={3}
                   />
                 </div>
+                {isTikTokSource && (
+                  <div>
+                    <label className="text-sm font-semibold text-foreground mb-1.5 block">Музика *</label>
+                    <Input
+                      value={creoFields.music || ''}
+                      onChange={(e) => setCreoFields(prev => ({ ...prev, music: e.target.value }))}
+                      placeholder="Трек із CML (Commercial Music Library) або власний — обов'язково для каруселі в TikTok"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="text-sm font-semibold text-foreground mb-1.5 block">Єдина логіка карток *</label>
                   <Textarea
