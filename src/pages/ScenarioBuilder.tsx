@@ -2181,7 +2181,8 @@ const ScenarioBuilder: React.FC = () => {
   // For shared steps (0-2) use global key, for branch steps (3+) branch-aware when branching
   const isStepCompleted = (i: number, branchLeadType?: string): boolean => {
     if (i < 3 || !isBranching) {
-      return isStepCompletedStatic(scenario, i) && savedSteps.has(String(i));
+      const key = String(i);
+      return (isStepCompletedStatic(scenario, i) || skippedSteps.has(key)) && savedSteps.has(key);
     }
     // Non-Інфобіз: step 3 auto-completed per branch — checked before we need a
     // concrete lt, since this shortcut doesn't depend on which branch is active.
@@ -2189,7 +2190,8 @@ const ScenarioBuilder: React.FC = () => {
     // Branch-specific: check this specific branch
     const lt = branchLeadType || activeLeadType;
     if (!lt) return false;
-    return isStepCompletedForBranch(scenario, i, lt) && savedSteps.has(`${i}:${lt}`);
+    const key = `${i}:${lt}`;
+    return (isStepCompletedForBranch(scenario, i, lt) || skippedSteps.has(key)) && savedSteps.has(key);
   };
 
   const isStepUnlocked = (i: number, branchLeadType?: string): boolean => {
