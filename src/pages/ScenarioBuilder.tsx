@@ -110,22 +110,44 @@ const LEAD_SOURCES = [
   { value: 'tiktok', label: 'TikTok реклама', LogoComponent: 'tiktok' as const },
 ];
 
-const CAMPAIGN_GOALS = [
+const CAMPAIGN_GOALS_META = [
   { value: 'awareness', label: 'Упізнаваність', desc: 'Покажіть рекламу максимальній кількості людей із вашої аудиторії', Icon: Megaphone },
   { value: 'traffic', label: 'Трафік', desc: 'Спрямуйте людей на сайт, у застосунок, Messenger, WhatsApp або Instagram-профіль', Icon: MousePointerClick },
   { value: 'engagement', label: 'Взаємодія', desc: 'Більше повідомлень, перегляди відео, реакції, коментарі та підписки', Icon: MessageCircle },
   { value: 'leads', label: 'Ліди', desc: 'Збирайте контакти через лід-форми, дзвінки або повідомлення', Icon: Filter },
-  
+
   { value: 'sales', label: 'Продажі', desc: 'Знаходьте людей, які з найбільшою ймовірністю куплять ваш продукт', Icon: ShoppingBag },
 ];
 
-const LEAD_TYPES = [
+// Real TikTok Ads Manager objective categories (2026): Awareness (Reach only),
+// Consideration (Traffic, Video Views, Community Interaction, Lead Generation, App Promotion),
+// Conversion (Website Conversions / Product Sales). Mapped onto the same top-level
+// value keys as Meta so downstream scenario.channel logic stays compatible —
+// only the labels/descriptions/sub-goals differ per platform.
+const CAMPAIGN_GOALS_TIKTOK = [
+  { value: 'awareness', label: 'Охоплення', desc: 'Покажіть рекламу максимальній кількості людей із вашої аудиторії (об’єднана ціль Reach)', Icon: Megaphone },
+  { value: 'traffic', label: 'Трафік', desc: 'Спрямуйте людей на сайт, у застосунок або на TikTok Instant Page', Icon: MousePointerClick },
+  { value: 'engagement', label: 'Взаємодія', desc: 'Підписники, відвідування профілю, перегляди відео та повідомлення в директ', Icon: MessageCircle },
+  { value: 'leads', label: 'Ліди', desc: 'Збирайте контакти через миттєву форму, форму на сайті або директ', Icon: Filter },
+
+  { value: 'sales', label: 'Продажі', desc: 'Конверсії на сайті або продажі товарів через TikTok Shop і каталог', Icon: ShoppingBag },
+];
+
+const LEAD_TYPES_META = [
   { value: 'leadform', label: 'Лідформи', icon: '📋' },
   { value: 'quiz', label: 'Квізи', icon: '❓' },
   { value: 'landing', label: 'Лендінг', icon: '🌐' },
 ];
 
-const AWARENESS_TYPES = [
+// TikTok lead-gen sub-types: Instant Form (native on-platform form),
+// a form hosted on your own website, or collecting leads via Direct Message.
+const LEAD_TYPES_TIKTOK = [
+  { value: 'leadform', label: 'Миттєва форма (Instant Form)', icon: '📋' },
+  { value: 'landing', label: 'Форма на сайті', icon: '🌐' },
+  { value: 'dm', label: 'Повідомлення в директ', icon: '💬' },
+];
+
+const AWARENESS_TYPES_META = [
   { value: 'reach', label: 'Максимізувати охоплення реклами', icon: '📡' },
   { value: 'impressions', label: 'Максимізувати кількість показів', icon: '👁️' },
   { value: 'ad_recall', label: 'Максимізувати запам’ятовуваність реклами', icon: '🧠' },
@@ -133,7 +155,15 @@ const AWARENESS_TYPES = [
   { value: 'continuous_2s', label: 'Максимізувати безперервні перегляди тривалістю 2 секунди', icon: '⏱️' },
 ];
 
-const TRAFFIC_TYPES = [
+// TikTok's Awareness category has just one real objective — Reach — with a
+// frequency-cap buying option (Reach & Frequency) rather than Meta-style
+// sub-optimization events.
+const AWARENESS_TYPES_TIKTOK = [
+  { value: 'reach', label: 'Максимізувати охоплення (Reach)', icon: '📡' },
+  { value: 'reach_frequency', label: 'Reach & Frequency (контроль частоти показів)', icon: '🔁' },
+];
+
+const TRAFFIC_TYPES_META = [
   { value: 'website', label: 'Вебсайт', desc: 'Спрямувати трафік на ваш сайт.', icon: '🌐' },
   { value: 'app', label: 'Застосунок', desc: 'Спрямувати трафік у ваш застосунок.', icon: '📱' },
   { value: 'messages', label: 'Повідомлення', desc: 'Спрямувати трафік у Messenger, Instagram та WhatsApp.', icon: '💬' },
@@ -142,7 +172,16 @@ const TRAFFIC_TYPES = [
   { value: 'website_calls', label: 'Вебсайт і дзвінки', desc: 'Спрямувати трафік на ваш сайт і отримати дзвінки від клієнтів.', icon: '🔗' },
 ];
 
-const ENGAGEMENT_TYPES = [
+// TikTok Traffic supports website/app clicks and Landing Page View (LPV)
+// optimization on TikTok's own Instant Page — there's no Messenger/WhatsApp
+// equivalent since TikTok doesn't own cross-app messaging destinations.
+const TRAFFIC_TYPES_TIKTOK = [
+  { value: 'website', label: 'Вебсайт', desc: 'Спрямувати трафік на ваш сайт.', icon: '🌐' },
+  { value: 'app', label: 'Застосунок', desc: 'Спрямувати трафік у ваш застосунок.', icon: '📱' },
+  { value: 'ig_fb', label: 'TikTok Instant Page', desc: 'Швидка вбудована сторінка на TikTok замість зовнішнього сайту.', icon: '📸' },
+];
+
+const ENGAGEMENT_TYPES_META = [
   { value: 'messages', label: 'Messenger, Instagram та WhatsApp', desc: 'Більше повідомлень у месенджерах.', icon: '💬' },
   { value: 'video_views', label: 'Перегляди відео', desc: 'Максимум переглядів вашого відео.', icon: '🎬' },
   { value: 'interactions', label: 'Взаємодії', desc: 'Реакції, коментарі, поширення та збереження.', icon: '❤️' },
@@ -150,9 +189,25 @@ const ENGAGEMENT_TYPES = [
   { value: 'calls', label: 'Дзвінки', desc: 'Дзвінки на ваш номер.', icon: '📞' },
 ];
 
-const SALES_TYPES = [
+// TikTok's Community Interaction objective: grow followers/profile visits,
+// video views, and Direct Messages — there's no calls or cross-app messaging.
+const ENGAGEMENT_TYPES_TIKTOK = [
+  { value: 'messages', label: 'Повідомлення в директ', desc: 'Більше повідомлень у Direct Message.', icon: '💬' },
+  { value: 'video_views', label: 'Перегляди відео', desc: 'Максимум переглядів вашого відео.', icon: '🎬' },
+  { value: 'interactions', label: 'Підписники та відвідування профілю', desc: 'Більше підписок, лайків, коментарів і візитів у профіль.', icon: '❤️' },
+  { value: 'conversions', label: 'Конверсії', desc: 'Цільові дії на сайті чи в застосунку.', icon: '🎯' },
+];
+
+const SALES_TYPES_META = [
   { value: 'conversions', label: 'Конверсії', desc: 'Цільові дії на сайті, у застосунку чи в месенджерах.', icon: '🎯' },
   { value: 'catalog_sales', label: 'Продажі за каталогом', desc: 'Реклама товарів із вашого каталогу цільовій аудиторії.', icon: '🛍️' },
+];
+
+// TikTok merged Website Conversions + Catalog Sales into a unified
+// "Product Sales" objective in 2026.
+const SALES_TYPES_TIKTOK = [
+  { value: 'conversions', label: 'Конверсії на сайті', desc: 'Цільові дії на вашому сайті чи в застосунку.', icon: '🎯' },
+  { value: 'catalog_sales', label: 'Продажі (TikTok Shop і каталог)', desc: 'Об’єднана ціль Product Sales — каталог, TikTok Shop і сайт.', icon: '🛍️' },
 ];
 
 
@@ -217,6 +272,19 @@ const ScenarioBuilder: React.FC = () => {
   const navigate = useNavigate();
   const { getScenario, updateScenario, loading: scenariosLoading } = useScenarios();
   const scenario = getScenario(id!);
+
+  // Which set of campaign goals / sub-goals to show depends on the chosen ad
+  // platform — TikTok's objective taxonomy differs from Meta's (see the
+  // _META / _TIKTOK constant definitions above). Shadowing the original
+  // names here means every render branch and nested closure below
+  // automatically uses the right platform's list without threading a prop.
+  const isTikTokSource = scenario?.leadSource === 'tiktok';
+  const CAMPAIGN_GOALS = isTikTokSource ? CAMPAIGN_GOALS_TIKTOK : CAMPAIGN_GOALS_META;
+  const LEAD_TYPES = isTikTokSource ? LEAD_TYPES_TIKTOK : LEAD_TYPES_META;
+  const AWARENESS_TYPES = isTikTokSource ? AWARENESS_TYPES_TIKTOK : AWARENESS_TYPES_META;
+  const TRAFFIC_TYPES = isTikTokSource ? TRAFFIC_TYPES_TIKTOK : TRAFFIC_TYPES_META;
+  const ENGAGEMENT_TYPES = isTikTokSource ? ENGAGEMENT_TYPES_TIKTOK : ENGAGEMENT_TYPES_META;
+  const SALES_TYPES = isTikTokSource ? SALES_TYPES_TIKTOK : SALES_TYPES_META;
 
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [clientBriefOpen, setClientBriefOpen] = useState(false);
