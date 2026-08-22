@@ -2635,7 +2635,7 @@ const ScenarioBuilder: React.FC = () => {
 
         case 4: {
           const inputFields: { key: keyof DecompositionScenario; label: string; suffix: string }[] = [
-            { key: 'budget', label: 'FB Ad Бюджет', suffix: '$' },
+            { key: 'budget', label: isTikTokSource ? 'TikTok Ad Бюджет' : 'FB Ad Бюджет', suffix: '$' },
             { key: 'cpm', label: 'CPM', suffix: '$' },
             { key: 'ctr', label: 'Ad CTR', suffix: '%' },
             { key: 'landingConversion', label: 'Конверсія перегляду → заявка', suffix: '%' },
@@ -2654,7 +2654,7 @@ const ScenarioBuilder: React.FC = () => {
               )}
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-foreground">
-                  META AD CALCULATOR
+                  {isTikTokSource ? 'TIKTOK AD CALCULATOR' : 'META AD CALCULATOR'}
                 </h3>
                 <Button variant="secondary" size="sm" onClick={fillBenchmarks} disabled={fillBenchLoading} className="gap-1 text-xs">
                   {fillBenchLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
