@@ -1,27 +1,11 @@
 import React from 'react';
 
-// Rendered as an inline SVG (like TikTokIcon/GoogleIcon below) instead of an
-// <img> pointing at a Lovable-only "*.asset.json" reference. That JSON's url
-// field is a relative path served by Lovable's own preview proxy
-// (/__l5e/assets-v1/...) — it 404s on any other host (e.g. Vercel), which is
-// why the icon showed as a broken image in production.
+// Real Meta logo, bundled as a static asset via Vite's normal import pipeline
+// (not Lovable's "*.asset.json" proxy references, which 404 on Vercel).
+import metaLogoPng from '@/assets/icons/meta-logo.png';
+
 export const MetaIcon: React.FC<{ className?: string }> = ({ className = 'w-6 h-6' }) => (
-  <svg viewBox="0 0 48 48" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="metaLoopGradient" x1="4" y1="24" x2="44" y2="24" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#0064E1" />
-        <stop offset="50%" stopColor="#0082FB" />
-        <stop offset="100%" stopColor="#0064E1" />
-      </linearGradient>
-    </defs>
-    <path
-      d="M12 24C12 16 18 16 24 24C30 32 36 32 36 24C36 16 30 16 24 24C18 32 12 32 12 24Z"
-      stroke="url(#metaLoopGradient)"
-      strokeWidth="7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
+  <img src={metaLogoPng} alt="Meta" className={className} style={{ objectFit: 'contain' }} />
 );
 
 export const TikTokIcon: React.FC<{ className?: string }> = ({ className = 'w-6 h-6' }) => (
