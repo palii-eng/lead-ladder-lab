@@ -58,6 +58,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({
   onClick,
 }) => {
   const Icon = ICONS[index] || Sparkles;
+  const isRetentionStep = index === 8;
 
 
   const state: 'active' | 'completed' | 'locked' | 'idle' = isActive
@@ -71,11 +72,17 @@ const FlowNode: React.FC<FlowNodeProps> = ({
   // Card surface — white base, subtle accent for active, soft mint tint when completed
   const cardStyle: React.CSSProperties =
     state === 'active'
-      ? {
-          background: 'linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(232 60% 98%) 100%)',
-          boxShadow:
-            '0 20px 40px -18px hsl(232 60% 40% / 0.28), 0 4px 10px -4px hsl(0 0% 0% / 0.06), inset 0 0 0 2px hsl(232 80% 65% / 0.7)',
-        }
+      ? (isRetentionStep
+          ? {
+              background: 'linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(28 90% 96%) 100%)',
+              boxShadow:
+                '0 20px 40px -18px hsl(28 85% 45% / 0.28), 0 4px 10px -4px hsl(0 0% 0% / 0.06), inset 0 0 0 2px hsl(28 90% 60% / 0.7)',
+            }
+          : {
+              background: 'linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(232 60% 98%) 100%)',
+              boxShadow:
+                '0 20px 40px -18px hsl(232 60% 40% / 0.28), 0 4px 10px -4px hsl(0 0% 0% / 0.06), inset 0 0 0 2px hsl(232 80% 65% / 0.7)',
+            })
       : state === 'completed'
       ? (isSkipped
           ? {
@@ -103,7 +110,9 @@ const FlowNode: React.FC<FlowNodeProps> = ({
   // Icon badge (top-right) — colored circle like the reference
   const badgeBg =
     state === 'active'
-      ? 'linear-gradient(135deg, hsl(232 80% 65%), hsl(232 70% 55%))'
+      ? (isRetentionStep
+          ? 'linear-gradient(135deg, hsl(28 90% 65%), hsl(20 85% 55%))'
+          : 'linear-gradient(135deg, hsl(232 80% 65%), hsl(232 70% 55%))')
       : state === 'completed'
       ? (isSkipped
           ? 'linear-gradient(135deg, hsl(36 90% 78%), hsl(28 80% 62%))'
@@ -125,7 +134,9 @@ const FlowNode: React.FC<FlowNodeProps> = ({
   // Status pill
   const statusPill =
     state === 'active'
-      ? { label: 'В роботі', bg: 'hsl(232 80% 95%)', text: 'hsl(232 60% 40%)', Icon: Sparkles }
+      ? (isRetentionStep
+          ? { label: 'В роботі', bg: 'hsl(28 90% 95%)', text: 'hsl(20 80% 40%)', Icon: Sparkles }
+          : { label: 'В роботі', bg: 'hsl(232 80% 95%)', text: 'hsl(232 60% 40%)', Icon: Sparkles })
       : state === 'completed'
       ? (isSkipped
           ? { label: 'Пропущено', bg: 'hsl(36 90% 92%)', text: 'hsl(28 70% 35%)', Icon: SkipForward }
@@ -146,7 +157,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({
         {/* Step badge above */}
         <div className="flex items-center gap-2 mb-2 px-1 h-4">
           <span className={`font-mono text-[10px] tracking-widest uppercase ${
-            state === 'active' ? 'text-primary font-bold' :
+            state === 'active' ? (isRetentionStep ? 'font-bold text-[hsl(20_80%_45%)]' : 'text-primary font-bold') :
             state === 'completed' ? 'text-success font-semibold' :
             'text-muted-foreground/70'
           }`}>
@@ -154,8 +165,14 @@ const FlowNode: React.FC<FlowNodeProps> = ({
           </span>
           {isActive && (
             <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-60" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary" />
+              <span
+                className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60"
+                style={{ background: isRetentionStep ? 'hsl(28 90% 55%)' : 'hsl(var(--primary))' }}
+              />
+              <span
+                className="relative inline-flex rounded-full h-1.5 w-1.5"
+                style={{ background: isRetentionStep ? 'hsl(28 90% 55%)' : 'hsl(var(--primary))' }}
+              />
             </span>
           )}
         </div>
