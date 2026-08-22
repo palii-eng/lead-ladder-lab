@@ -108,7 +108,6 @@ const FORMAT_VIDEOS: Record<string, { title: string; url: string }[]> = {
 const LEAD_SOURCES = [
   { value: 'meta', label: 'Meta реклама', LogoComponent: 'meta' as const },
   { value: 'tiktok', label: 'TikTok реклама', LogoComponent: 'tiktok' as const },
-  { value: 'google', label: 'Google реклама', LogoComponent: 'google' as const, soon: true },
 ];
 
 const CAMPAIGN_GOALS = [
