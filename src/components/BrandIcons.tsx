@@ -6,17 +6,30 @@ import React from 'react';
 // (/__l5e/assets-v1/...) — it 404s on any other host (e.g. Vercel), which is
 // why the icon showed as a broken image in production.
 export const MetaIcon: React.FC<{ className?: string }> = ({ className = 'w-6 h-6' }) => (
-  <svg viewBox="0 0 48 48" className={className} fill="none">
+  <svg viewBox="0 0 48 48" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <linearGradient id="metaIconGradient" x1="2" y1="2" x2="46" y2="46" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#0081FB" />
+      <linearGradient id="metaLoopGradientLeft" x1="6" y1="18" x2="6" y2="34" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#0064E1" />
+        <stop offset="40%" stopColor="#0064E1" />
+        <stop offset="83%" stopColor="#0073EE" />
+        <stop offset="100%" stopColor="#0082FB" />
+      </linearGradient>
+      <linearGradient id="metaLoopGradientRight" x1="42" y1="15.5" x2="42" y2="34.5" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#0082FB" />
         <stop offset="100%" stopColor="#0064E0" />
       </linearGradient>
     </defs>
-    <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#metaIconGradient)" />
     <path
-      d="M10 24c0-6 4-10.5 9.5-10.5 3.3 0 5.7 1.9 7.9 5.1.6.9 1.2 1.9 1.7 2.9.5-1 1.1-2 1.7-2.9 2.2-3.2 4.6-5.1 7.9-5.1C44.3 13.5 38 24 38 24s6.3 10.5.3 10.5c-3.3 0-5.7-1.9-7.9-5.1a29 29 0 01-1.7-2.9c-.5 1-1.1 2-1.7 2.9-2.2 3.2-4.6 5.1-7.9 5.1C14 34.5 10 30 10 24z"
-      fill="white"
+      d="M8.4 27.9c0 1.9.4 3.4 1 4.3.7 1.2 1.8 1.7 2.9 1.7 1.4 0 2.7-.4 5.2-3.7 2-2.6 4.3-6.3 5.9-8.6l2.7-4.1c1.8-2.8 4-5.9 6.4-8 2-1.7 4.1-2.7 6.3-2.7 3.6 0 7 2.1 9.6 6 2.8 4.2 4.2 9.5 4.2 15 0 3.3-.6 5.6-1.7 7.5-1.1 1.8-3.1 3.6-6.5 3.6v-5.2c2.9 0 3.6-2.7 3.6-5.7 0-4.5-1-9.5-3.4-13.2-1.7-2.6-3.8-4.2-6.2-4.2-2.6 0-4.6 1.9-6.9 5.4-1.2 1.8-2.4 4-3.8 6.5l-1.5 2.7c-3 5.4-3.8 6.6-5.3 8.6C18.1 39.3 15.9 40.5 13 40.5c-3.6 0-5.9-1.6-7.3-4-1.2-2-1.8-4.6-1.8-7.5l4.5-1.1z"
+      fill="url(#metaLoopGradientLeft)"
+    />
+    <path
+      d="M7.4 15.1c2.4-3.7 5.9-6.3 9.9-6.3 2.3 0 4.6.7 7 2.6 2.6 2.1 5.4 5.6 8.9 11.3l1.2 2c3 4.8 4.7 7.3 5.7 8.5 1.3 1.5 2.2 2 3.4 2 2.9 0 3.6-2.7 3.6-5.7l4-.1c0 3.3-.6 5.6-1.7 7.5-1.1 1.8-3.1 3.6-6.5 3.6-2.1 0-4-.5-6.1-2.4-1.6-1.5-3.5-4.1-4.9-6.4l-4.3-7.2c-2.2-3.6-4.1-6.3-5.3-7.5-1.2-1.3-2.8-2.9-5.4-2.9-2.1 0-3.9 1.4-5.4 3.7l-4.1-2.7z"
+      fill="url(#metaLoopGradientRight)"
+    />
+    <path
+      d="M17.3 12.8c-2.1 0-3.9 1.4-5.4 3.7-2 3.1-3.5 7.8-3.5 12.3 0 1.8.3 3.3.9 4.5l-4.5 1.1C4 32.7 3.6 30.5 3.6 28c0-5.1 1.5-10.5 4.4-14.9 2.4-3.7 5.9-6.3 9.9-6.3l-0.6 6z"
+      fill="#0082FB"
     />
   </svg>
 );
