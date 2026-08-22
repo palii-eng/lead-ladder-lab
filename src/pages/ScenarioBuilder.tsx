@@ -2808,9 +2808,20 @@ const ScenarioBuilder: React.FC = () => {
           };
           const salesItems = ITEMS_BY_CHANNEL[currentSalesChannel] || [];
           const channelCacheKey = currentSalesChannel || 'none';
+          const isSalesItemDone = (type: string) => {
+            const aiKey = `sales:${type}:${activeLeadType || 'main'}:${channelCacheKey}`;
+            const manualKey = `sales:manual:${type}:${activeLeadType || 'main'}:${channelCacheKey}`;
+            return !!aiCacheRef.current[aiKey] || aiCacheRef.current[manualKey] === '1';
+          };
+          const toggleSalesItemManual = (type: string) => {
+            const manualKey = `sales:manual:${type}:${activeLeadType || 'main'}:${channelCacheKey}`;
+            const isChecked = aiCacheRef.current[manualKey] === '1';
+            aiCacheRef.current[manualKey] = isChecked ? '' : '1';
+            if (id) updateScenario(id, { aiCache: { ...aiCacheRef.current } });
+          };
           const allItemsFilled = salesItems.length === 0
             ? true
-            : salesItems.every(s => !!aiCacheRef.current[`sales:${s.type}:${activeLeadType || 'main'}:${channelCacheKey}`]);
+            : salesItems.every(s => isSalesItemDone(s.type));
           const noItemsChannel = hasSalesChannel && salesItems.length === 0;
           return (
             <div className="space-y-4 pb-16 relative">
@@ -2867,20 +2878,32 @@ const ScenarioBuilder: React.FC = () => {
                 <div className="space-y-3">
                   {salesItems.map(s => {
                     const hasCached = !!aiCacheRef.current[`sales:${s.type}:${activeLeadType || 'main'}:${channelCacheKey}`];
+                    const manualKey = `sales:manual:${s.type}:${activeLeadType || 'main'}:${channelCacheKey}`;
+                    const isManualChecked = aiCacheRef.current[manualKey] === '1';
+                    const isDone = hasCached || isManualChecked;
                     return (
-                      <div key={s.type} className="bg-secondary rounded-lg p-3 flex items-center justify-between">
-                        <span className="font-semibold text-foreground text-sm flex items-center gap-2">
+                      <div key={s.type} className="bg-secondary rounded-lg p-3 flex items-center justify-between gap-3">
+                        <label className="flex items-center gap-2 cursor-pointer shrink-0" title="Позначити вручну без AI">
+                          <input
+                            type="checkbox"
+                            checked={isManualChecked}
+                            disabled={hasCached}
+                            onChange={() => toggleSalesItemManual(s.type)}
+                            className="w-4 h-4 rounded border-border accent-primary cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                          />
+                        </label>
+                        <span className="font-semibold text-foreground text-sm flex items-center gap-2 flex-1 min-w-0">
                           {s.icon} {s.title}
-                          {hasCached && (
-                            <span className="text-[10px] font-medium text-success bg-success/10 px-1.5 py-0.5 rounded-full">
-                              ✓ збережено
+                          {isDone && (
+                            <span className="text-[10px] font-medium text-success bg-success/10 px-1.5 py-0.5 rounded-full shrink-0">
+                              ✓ {hasCached ? 'збережено' : 'вручну'}
                             </span>
                           )}
                         </span>
                         <Button
                           variant="secondary"
                           size="sm"
-                          className="gap-1.5 text-xs"
+                          className="gap-1.5 text-xs shrink-0"
                           disabled={!hasSalesChannel}
                           onClick={() => fetchSalesRecommendation(s.type, `${s.icon} ${s.title}`)}
                         >
