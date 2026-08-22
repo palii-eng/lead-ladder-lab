@@ -3203,17 +3203,19 @@ const ScenarioBuilder: React.FC = () => {
                 )}
               </div>
 
-              <Button
-                variant="outline"
-                className="w-full gap-2 border-primary text-primary hover:bg-primary/5 font-bold"
-                onClick={sendToCurator}
-              >
-                📤 Відправити куратору
-              </Button>
-              <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
-                onClick={() => { update({ status: 'completed' }); navigate('/'); }}>
-                <Check className="w-4 h-4" /> Завершити
-              </Button>
+              <div className="sticky bottom-0 bg-card pt-3 pb-2 -mx-4 px-4 border-t border-border mt-4 z-10 space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 border-primary text-primary hover:bg-primary/5 font-bold"
+                  onClick={sendToCurator}
+                >
+                  📤 Відправити куратору
+                </Button>
+                <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
+                  onClick={() => { update({ status: 'completed' }); navigate('/'); }}>
+                  <Check className="w-4 h-4" /> Завершити
+                </Button>
+              </div>
             </div>
           );
         }
