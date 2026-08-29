@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
-import { ArrowLeft, ArrowRight, Check, ChevronRight, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronRight, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward, AlertTriangle, Database, User, Send, Copy, Bitcoin, TrendingUp } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { VideoBadge } from '@/components/VideoBadge';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,6 +34,52 @@ const STEPS = [
   { title: 'Retention', icon: '🔄' },
   { title: 'Результат', icon: '🏆' },
 ];
+
+// Red/grey flag metadata for client-brief risk hints. Red = serious structural
+// gaps or outright scam signals; grey = borderline/gray-zone niches that need
+// extra caution but aren't disqualifying on their own.
+const RED_FLAG_META: Record<string, { label: string; Icon: React.ComponentType<{ className?: string }> }> = {
+  no_sales_team: { label: 'Немає відділу продажів', Icon: Users },
+  no_crm: { label: 'Немає CRM-системи', Icon: Database },
+  solo_owner: { label: 'Власник — єдина людина в бізнесі (ремісник)', Icon: User },
+  scam: { label: 'Схоже на шахрайство / скам', Icon: AlertTriangle },
+};
+const GREY_FLAG_META: Record<string, { label: string; Icon: React.ComponentType<{ className?: string }> }> = {
+  telegram_ads: { label: 'Реклама веде в Telegram, не нативно для Meta/TikTok', Icon: Send },
+  counterfeit: { label: 'Товар — репліка/копія бренду, не оригінал', Icon: Copy },
+  crypto: { label: 'Крипто-тематика', Icon: Bitcoin },
+  questionable_infobiz: { label: 'Сумнівний інфобізнес / нереалістичні обіцянки', Icon: TrendingUp },
+};
+
+const ClientFlagsPanel: React.FC<{ redFlags?: string[]; greyFlags?: string[] }> = ({ redFlags, greyFlags }) => {
+  const reds = (redFlags || []).map(k => RED_FLAG_META[k]).filter(Boolean);
+  const greys = (greyFlags || []).map(k => GREY_FLAG_META[k]).filter(Boolean);
+  if (reds.length === 0 && greys.length === 0) return null;
+  return (
+    <div className="space-y-2 mt-3">
+      {reds.map(({ label, Icon }, i) => (
+        <div
+          key={`red-${i}`}
+          className="flex items-center gap-2.5 rounded-lg px-3 py-2 border"
+          style={{ background: 'hsl(0 75% 96%)', borderColor: 'hsl(0 75% 85%)' }}
+        >
+          <Icon className="w-4 h-4 shrink-0" style={{ color: 'hsl(0 75% 45%)' }} />
+          <span className="text-xs font-semibold" style={{ color: 'hsl(0 65% 35%)' }}>{label}</span>
+        </div>
+      ))}
+      {greys.map(({ label, Icon }, i) => (
+        <div
+          key={`grey-${i}`}
+          className="flex items-center gap-2.5 rounded-lg px-3 py-2 border"
+          style={{ background: 'hsl(220 10% 95%)', borderColor: 'hsl(220 10% 82%)' }}
+        >
+          <Icon className="w-4 h-4 shrink-0" style={{ color: 'hsl(220 10% 40%)' }} />
+          <span className="text-xs font-semibold" style={{ color: 'hsl(220 10% 30%)' }}>{label}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const STEP_VIDEOS: Record<number, { title: string; url: string }[]> = {
   0: [
@@ -1327,6 +1373,40 @@ const ScenarioBuilder: React.FC = () => {
               <span className="text-[9px] text-muted-foreground">щойно</span>
             </div>
           </div>
+          {((b.redFlags?.length || 0) > 0 || (b.greyFlags?.length || 0) > 0) && (
+            <div className="flex items-center gap-1 mt-1.5 px-1">
+              {(b.redFlags || []).map((k, i) => {
+                const meta = RED_FLAG_META[k];
+                if (!meta) return null;
+                const { Icon } = meta;
+                return (
+                  <span
+                    key={`rf-${i}`}
+                    title={meta.label}
+                    className="w-5 h-5 rounded-full flex items-center justify-center"
+                    style={{ background: 'hsl(0 75% 94%)' }}
+                  >
+                    <Icon className="w-3 h-3" style={{ color: 'hsl(0 75% 45%)' }} />
+                  </span>
+                );
+              })}
+              {(b.greyFlags || []).map((k, i) => {
+                const meta = GREY_FLAG_META[k];
+                if (!meta) return null;
+                const { Icon } = meta;
+                return (
+                  <span
+                    key={`gf-${i}`}
+                    title={meta.label}
+                    className="w-5 h-5 rounded-full flex items-center justify-center"
+                    style={{ background: 'hsl(220 10% 92%)' }}
+                  >
+                    <Icon className="w-3 h-3" style={{ color: 'hsl(220 10% 40%)' }} />
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
       </button>
     );
@@ -3700,6 +3780,7 @@ const ScenarioBuilder: React.FC = () => {
               {scenario.clientBrief?.task}
             </p>
           </div>
+          <ClientFlagsPanel redFlags={scenario.clientBrief?.redFlags} greyFlags={scenario.clientBrief?.greyFlags} />
         </SheetContent>
       </Sheet>
 
@@ -3762,6 +3843,7 @@ const ScenarioBuilder: React.FC = () => {
               ));
             })()}
           </div>
+          <ClientFlagsPanel redFlags={scenario.clientBrief?.redFlags} greyFlags={scenario.clientBrief?.greyFlags} />
         </SheetContent>
       </Sheet>
 

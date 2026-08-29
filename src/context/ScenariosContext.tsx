@@ -47,6 +47,8 @@ export interface ClientBrief {
   task: string;
   niche?: string;
   source?: string;
+  redFlags?: string[];
+  greyFlags?: string[];
 }
 
 export interface Scenario {
