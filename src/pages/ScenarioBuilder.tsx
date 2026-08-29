@@ -1898,8 +1898,11 @@ const ScenarioBuilder: React.FC = () => {
       retention: { emailCount: 0, telegramCount: 0, smsCount: 0, pushCount: 0 },
       branchData: {},
       aiCache: {},
-    });
+      audienceSettings: {},
+      creoBriefs: {},
+    } as Partial<Scenario>);
     aiCacheRef.current = {};
+    setAudienceChecks({});
     setSavedSteps(prev => {
       const next = new Set<string>();
       prev.forEach(key => {
@@ -4827,7 +4830,7 @@ const ScenarioBuilder: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Змінити джерело трафіку?</AlertDialogTitle>
             <AlertDialogDescription>
-              Ви впевнені, що хочете поміняти канал на «{LEAD_SOURCES.find(s => s.value === pendingLeadSourceSwitch)?.label}»? Усі попередні налаштування (ціль, деталізація, декомпозиція, куди йдуть ліди, інтеграція, продажі, retention) будуть видалені — крео, аудиторії та інші дані доведеться наповнювати заново.
+              Ви впевнені, що хочете поміняти канал на «{LEAD_SOURCES.find(s => s.value === pendingLeadSourceSwitch)?.label}»? Усі попередні налаштування (ціль, деталізація, декомпозиція, куди йдуть ліди, інтеграція, продажі, retention, аудиторії та крео) будуть видалені — все доведеться наповнювати заново.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
