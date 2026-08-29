@@ -56,27 +56,41 @@ const ClientFlagsPanel: React.FC<{ redFlags?: string[]; greyFlags?: string[] }> 
   const greys = (greyFlags || []).map(k => GREY_FLAG_META[k]).filter(Boolean);
   if (reds.length === 0 && greys.length === 0) return null;
   return (
-    <div className="space-y-2 mt-3">
-      {reds.map(({ label, Icon }, i) => (
-        <div
-          key={`red-${i}`}
-          className="flex items-center gap-2.5 rounded-lg px-3 py-2 border"
-          style={{ background: 'hsl(0 75% 96%)', borderColor: 'hsl(0 75% 85%)' }}
-        >
-          <Icon className="w-4 h-4 shrink-0" style={{ color: 'hsl(0 75% 45%)' }} />
-          <span className="text-xs font-semibold" style={{ color: 'hsl(0 65% 35%)' }}>{label}</span>
+    <div className="space-y-3 mt-3">
+      {reds.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'hsl(0 65% 45%)' }}>
+            🚩 Ред флаги
+          </p>
+          {reds.map(({ label, Icon }, i) => (
+            <div
+              key={`red-${i}`}
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 border"
+              style={{ background: 'hsl(0 75% 96%)', borderColor: 'hsl(0 75% 85%)' }}
+            >
+              <Icon className="w-4 h-4 shrink-0" style={{ color: 'hsl(0 75% 45%)' }} />
+              <span className="text-xs font-semibold" style={{ color: 'hsl(0 65% 35%)' }}>{label}</span>
+            </div>
+          ))}
         </div>
-      ))}
-      {greys.map(({ label, Icon }, i) => (
-        <div
-          key={`grey-${i}`}
-          className="flex items-center gap-2.5 rounded-lg px-3 py-2 border"
-          style={{ background: 'hsl(220 10% 95%)', borderColor: 'hsl(220 10% 82%)' }}
-        >
-          <Icon className="w-4 h-4 shrink-0" style={{ color: 'hsl(220 10% 40%)' }} />
-          <span className="text-xs font-semibold" style={{ color: 'hsl(220 10% 30%)' }}>{label}</span>
+      )}
+      {greys.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'hsl(220 10% 45%)' }}>
+            🏳️ Сірі флаги
+          </p>
+          {greys.map(({ label, Icon }, i) => (
+            <div
+              key={`grey-${i}`}
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 border"
+              style={{ background: 'hsl(220 10% 95%)', borderColor: 'hsl(220 10% 82%)' }}
+            >
+              <Icon className="w-4 h-4 shrink-0" style={{ color: 'hsl(220 10% 40%)' }} />
+              <span className="text-xs font-semibold" style={{ color: 'hsl(220 10% 30%)' }}>{label}</span>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 };
