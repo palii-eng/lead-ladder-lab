@@ -376,6 +376,7 @@ const ScenarioBuilder: React.FC = () => {
   const [decompTab, setDecompTab] = useState<'bad' | 'realistic' | 'positive'>('realistic');
   const [activeLeadType, setActiveLeadType] = useState<string>('');
   const [pendingRemoveLeadType, setPendingRemoveLeadType] = useState<string | null>(null);
+  const [pendingLeadSourceSwitch, setPendingLeadSourceSwitch] = useState<string | null>(null);
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [videoDialogStep, setVideoDialogStep] = useState(0);
   const [skillsOpen, setSkillsOpen] = useState(false);
@@ -1853,8 +1854,6 @@ const ScenarioBuilder: React.FC = () => {
 
 
   const update = (u: Partial<Scenario>) => updateScenario(id!, u);
-
-  const [pendingLeadSourceSwitch, setPendingLeadSourceSwitch] = useState<string | null>(null);
 
   // Whether any progress exists downstream of the traffic-source step (2..8)
   // that would be invalidated by switching platforms.
