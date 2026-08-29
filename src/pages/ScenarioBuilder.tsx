@@ -1854,6 +1854,65 @@ const ScenarioBuilder: React.FC = () => {
 
   const update = (u: Partial<Scenario>) => updateScenario(id!, u);
 
+  const [pendingLeadSourceSwitch, setPendingLeadSourceSwitch] = useState<string | null>(null);
+
+  // Whether any progress exists downstream of the traffic-source step (2..8)
+  // that would be invalidated by switching platforms.
+  const hasDownstreamProgress = (): boolean => {
+    if (scenario.channel) return true;
+    for (const key of savedSteps) {
+      const stepNum = parseInt(key.split(':')[0], 10);
+      if (stepNum >= 2) return true;
+    }
+    return false;
+  };
+
+  const handleLeadSourceSelect = (value: string) => {
+    if (scenario.leadSource === value) return;
+    if (scenario.leadSource && hasDownstreamProgress()) {
+      setPendingLeadSourceSwitch(value);
+      return;
+    }
+    update({ leadSource: value });
+  };
+
+  const confirmLeadSourceSwitch = () => {
+    if (!pendingLeadSourceSwitch) return;
+    update({
+      leadSource: pendingLeadSourceSwitch,
+      channel: '',
+      awarenessType: '',
+      trafficType: '',
+      engagementType: '',
+      salesType: '',
+      leadTypes: [],
+      funnelFormat: '',
+      decomposition: createDefaultDecompSet(),
+      decompositionsByType: {},
+      leadDestinations: [],
+      crmSystem: '',
+      integrationMethod: '',
+      companyDescription: '',
+      salesChannel: '',
+      salesChannelOther: '',
+      retention: { emailCount: 0, telegramCount: 0, smsCount: 0, pushCount: 0 },
+      branchData: {},
+      aiCache: {},
+    });
+    aiCacheRef.current = {};
+    setSavedSteps(prev => {
+      const next = new Set<string>();
+      prev.forEach(key => {
+        const stepNum = parseInt(key.split(':')[0], 10);
+        if (stepNum < 2) next.add(key);
+      });
+      return next;
+    });
+    setSkippedSteps(new Set());
+    setActiveLeadType('');
+    setPendingLeadSourceSwitch(null);
+  };
+
   const hasMultipleLeadTypes = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1;
   const isBranching = hasMultipleLeadTypes && savedSteps.has('2');
 
@@ -2479,7 +2538,7 @@ const ScenarioBuilder: React.FC = () => {
                 {LEAD_SOURCES.map(src => {
                   const LogoIcon = src.LogoComponent === 'meta' ? MetaIcon : src.LogoComponent === 'tiktok' ? TikTokIcon : GoogleIcon;
                   return (
-                    <button key={src.value} disabled={src.soon} onClick={() => update({ leadSource: src.value })}
+                    <button key={src.value} disabled={src.soon} onClick={() => handleLeadSourceSelect(src.value)}
                       className={`p-3 rounded-lg border text-left text-sm transition-all flex items-center gap-3 ${
                         scenario.leadSource === src.value
                           ? 'border-primary bg-accent text-accent-foreground font-semibold'
@@ -4758,6 +4817,26 @@ const ScenarioBuilder: React.FC = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Так, вимкнути
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!pendingLeadSourceSwitch} onOpenChange={(o) => !o && setPendingLeadSourceSwitch(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Змінити джерело трафіку?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ви впевнені, що хочете поміняти канал на «{LEAD_SOURCES.find(s => s.value === pendingLeadSourceSwitch)?.label}»? Усі попередні налаштування (ціль, деталізація, декомпозиція, куди йдуть ліди, інтеграція, продажі, retention) будуть видалені — крео, аудиторії та інші дані доведеться наповнювати заново.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Скасувати</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmLeadSourceSwitch}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Так, поміняти
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
