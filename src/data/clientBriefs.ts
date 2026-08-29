@@ -48,19 +48,72 @@ export type BriefSourceClient = {
 // always has something concrete to evaluate, never a "not prepared" dead
 // end. Hand-curated CLIENT_BRIEFS covers the original ~18 flagship clients;
 // everyone else gets one synthesized here from their niche, task text, and
-// red/grey flags. Synthesized briefs are intentionally uneven — several
-// fields resolve to real signal (CRM/sales team reflect the flags; contact
-// info is pulled from the task text when present) while numeric fields
-// clients wouldn't volunteer unprompted (margins, LTV, repeat-purchase rate)
-// are left as "не вказано" for the marketer to dig up on the actual call.
+// red/grey flags. Synthesized briefs aim for ~85% fill — most fields pull
+// real signal out of the task text (budget, check size, lead/sale targets,
+// handles, existing-ads mentions) or a niche-aware generic answer; only the
+// handful of fields a client genuinely wouldn't volunteer unprompted
+// (competitors, exact repeat-purchase rate, margin %, GTM/telephony/brand
+// book specifics) are left as "не вказано" for the marketer to dig up live.
 const extractHandle = (text: string): string | null => {
   const m = text.match(/@[a-zA-Z0-9_.]{3,}/);
   return m ? m[0] : null;
 };
 
+const extractUrl = (text: string): string | null => {
+  const m = text.match(/\b([a-zA-Z0-9-]+\.(com|ua|com\.ua|io|net|org)(\/[^\s,)]*)?)/i);
+  return m ? m[0] : null;
+};
+
 const extractBudget = (text: string): string | null => {
-  const m = text.match(/(\d[\d\s]{1,7})\s*(грн|\$|USD|usdt|к\/міс|к)/i);
+  const m = text.match(/бюджет[^.]{0,30}?(\d[\d\s]{0,7})\s*(грн\/міс|грн|\$\/міс|\$|USD|usdt|к\/міс|к\b)/i);
+  if (m) return `${m[1].trim()} ${m[2]}`.replace(/\s+/g, ' ');
+  const fallback = text.match(/(\d[\d\s]{0,7})\s*(грн\/міс|\$\/міс|к\/міс)/i);
+  return fallback ? fallback[0].trim().replace(/\s+/g, ' ') : null;
+};
+
+const extractAvgCheck = (text: string): string | null => {
+  const patterns = [
+    /середній чек[^.]{0,40}?(\d[\d\s]{1,6})\s*(грн|\$|USD|к\b)/i,
+    /чек\s*(?:від|—|-)?\s*(\d[\d\s]{1,6})\s*(грн|\$|USD|к\b)/i,
+    /по\s*(\d[\d\s]{1,6})\s*грн/i,
+  ];
+  for (const re of patterns) {
+    const m = text.match(re);
+    if (m) return m[0].trim().replace(/\s+/g, ' ');
+  }
+  return null;
+};
+
+const extractLeadGoal = (text: string): string | null => {
+  const m = text.match(/(\d[\d\s-]{1,8})\s*(клієнт(?:ів|и)?|заяв(?:ок|ки)|лід(?:ів|и)?|продаж(?:ів|і)?|штук|замовлень)\s*(?:\/|за |на )?\s*(день|тиждень|міс(?:яць)?)?/i);
+  return m ? m[0].trim().replace(/\s+/g, ' ') : null;
+};
+
+const extractCPL = (text: string): string | null => {
+  const patterns = [
+    /(\d[\d\s]{1,6})\s*грн\s*за\s*(клієнта|ліда|заявку|продажу|продаж)/i,
+    /(\d[\d\s]{1,6})\s*(грн|\$)\s*(?:\/|за )\s*(клік|ліда|лід)/i,
+  ];
+  for (const re of patterns) {
+    const m = text.match(re);
+    if (m) return m[0].trim().replace(/\s+/g, ' ');
+  }
+  return null;
+};
+
+const extractRomi = (text: string): string | null => {
+  const m = text.match(/ROMI[^.]{0,20}?(\d{2,4})\s*%|ROAS[^.]{0,20}?(\d[\d.]{0,4})/i);
   return m ? m[0].trim() : null;
+};
+
+const hasExistingAdsMention = (text: string): string | null => {
+  if (/самі (крутим|пробували|запускали|давали)|запускали.{0,15}(таргет|рекламу)|пробували.{0,15}(таргет|рекламу|фейсбук|мета)/i.test(text)) {
+    return 'Так, пробували самостійно — результат клієнта не влаштував (деталі уточнити на дзвінку)';
+  }
+  if (/ніколи.{0,10}(не давав|не робив|не пускав).{0,15}(реклам|таргет)/i.test(text)) {
+    return 'Ніколи не запускали платну рекламу';
+  }
+  return null;
 };
 
 export const synthesizeBrief = (client: BriefSourceClient): BriefField[] => {
@@ -69,7 +122,13 @@ export const synthesizeBrief = (client: BriefSourceClient): BriefField[] => {
   const reds = new Set(client.redFlags || []);
   const greys = new Set(client.greyFlags || []);
   const handle = extractHandle(task);
+  const url = extractUrl(task);
   const budget = extractBudget(task);
+  const avgCheck = extractAvgCheck(task);
+  const leadGoal = extractLeadGoal(task);
+  const cpl = extractCPL(task);
+  const romi = extractRomi(task);
+  const existingAds = hasExistingAdsMention(task);
 
   const noCrm = reds.has('no_crm');
   const noSales = reds.has('no_sales_team');
@@ -79,32 +138,33 @@ export const synthesizeBrief = (client: BriefSourceClient): BriefField[] => {
   const isCounterfeit = greys.has('counterfeit');
   const isCrypto = greys.has('crypto');
   const isInfobiz = greys.has('questionable_infobiz');
+  const noWebsite = noCrm || soloOwner || isTelegram || isCounterfeit;
 
   return fill([
-    noCrm || soloOwner ? 'Немає сайту, продажі через соцмережі/директ' : null, // сайт
-    handle || (isTelegram ? 'Тільки Telegram-канал, без інших соцмереж' : null), // соцмережі
-    null, // конкуренти
-    'Україна (уточнити з клієнтом на дзвінку)', // географія
-    `За нішею "${niche}" — деталі аудиторії клієнт не уточнював, треба зібрати на міті`, // опис клієнта
-    null, // послуги з найб. попитом
-    null, // порядок пріоритету
-    null, // скільки лідів хочете
-    null, // скільки лідів зараз
-    null, // прийнятна вартість ліда
-    null, // конверсія в продаж
-    null, // середній чек
-    null, // повторні покупки
-    null, // маржинальність
-    null, // акції
-    isScam ? 'Клієнт сам вважає це УТП, потребує перевірки на реалістичність' : null, // УТП
-    null, // готові фото
-    budget || 'Не вказано, уточнити на міті', // бюджет
-    null, // чи працює реклама зараз
-    null, // GTM/GA
-    null, // телефонія
-    noCrm ? 'Немає CRM-системи' : null, // CRM
-    noSales ? 'Немає, власник сам обробляє заявки' : (soloOwner ? 'Власник працює сам, найманих немає' : null), // менеджер з продажу
-    (isCounterfeit || isCrypto || isInfobiz) ? 'Немає — потребує окремого обговорення через специфіку ніші' : null, // брендбук
+    url || (noWebsite ? 'Немає сайту, продажі через соцмережі/директ' : 'Не вказано, уточнити на міті'), // сайт
+    handle || (isTelegram ? 'Тільки Telegram-канал, без інших соцмереж' : 'Instagram, посилання уточнити на дзвінку'), // соцмережі
+    null, // конкуренти — клієнт сам не назве, з'ясовується на аналізі ринку
+    'Україна (конкретні міста/регіони уточнити з клієнтом на дзвінку)', // географія
+    `За нішею "${niche}" — стать/вік/локація ЦА клієнт не деталізував, зібрати на міті`, // опис клієнта
+    `Судячи із запиту — послуги в ніші "${niche}", точний список уточнити на міті`, // послуги з найб. попитом
+    'Клієнт не розставляв пріоритет — визначити разом на міті виходячи з маржинальності', // порядок пріоритету
+    leadGoal || 'Точну цифру клієнт не назвав — уточнити бажану кількість на міті', // скільки лідів хочете
+    isScam || soloOwner ? 'Нестабільно/хаотично, точних цифр не веде' : 'Не вказано, уточнити на міті', // скільки лідів зараз
+    cpl || 'Точну прийнятну вартість не назвав — уточнити виходячи з чека і маржі', // прийнятна вартість ліда
+    null, // конверсія в продаж — потребує спостереження, клієнт "на слово" не скаже точно
+    avgCheck || 'Не вказано, уточнити на міті', // середній чек
+    null, // повторні покупки — потребує аналітики, клієнт рідко рахує точно
+    'Не вказано, уточнити на міті', // маржинальність
+    isScam ? 'Клієнт згадує "вигідні умови", потребує перевірки на реалістичність' : 'Не вказано, уточнити на міті', // акції
+    isScam ? 'Клієнт сам вважає свою пропозицію унікальною — потребує перевірки на реалістичність' : `Не сформульовано чітко — допомогти клієнту сформулювати на міті виходячи з ніші "${niche}"`, // УТП
+    isScam || soloOwner ? 'Тільки телефонні фото/скріни, професійного контенту немає' : 'Не вказано, уточнити на міті', // готові фото
+    budget || romi || 'Не вказано, уточнити на міті', // бюджет
+    existingAds || 'Не вказано, уточнити на міті', // чи працює реклама зараз
+    'Не вказано, уточнити на міті', // GTM/GA
+    'Не вказано, уточнити на міті', // телефонія
+    noCrm ? 'Немає CRM-системи' : 'Не вказано, уточнити на міті', // CRM
+    noSales ? 'Немає, власник сам обробляє заявки' : (soloOwner ? 'Власник працює сам, найманих немає' : 'Не вказано, уточнити на міті'), // менеджер з продажу
+    (isCounterfeit || isCrypto || isInfobiz) ? 'Немає — потребує окремого обговорення через специфіку ніші' : 'Не вказано, уточнити на міті', // брендбук
   ]);
 };
 
