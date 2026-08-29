@@ -33,6 +33,81 @@ export const BRIEF_QUESTIONS: string[] = [
 const fill = (answers: (string | null)[]): BriefField[] =>
   BRIEF_QUESTIONS.map((q, i) => ({ q, a: answers[i] ?? '' }));
 
+// Minimal shape needed to synthesize a brief — matches the relevant fields of
+// ClientBrief without importing it here (avoids a cross-module dependency).
+export type BriefSourceClient = {
+  name?: string;
+  niche?: string;
+  task?: string;
+  redFlags?: string[];
+  greyFlags?: string[];
+};
+
+// Every client (119 of them) needs a brief the moment "Провести міт та
+// зібрати бриф" is clicked — including scam/red-flag ones — so the marketer
+// always has something concrete to evaluate, never a "not prepared" dead
+// end. Hand-curated CLIENT_BRIEFS covers the original ~18 flagship clients;
+// everyone else gets one synthesized here from their niche, task text, and
+// red/grey flags. Synthesized briefs are intentionally uneven — several
+// fields resolve to real signal (CRM/sales team reflect the flags; contact
+// info is pulled from the task text when present) while numeric fields
+// clients wouldn't volunteer unprompted (margins, LTV, repeat-purchase rate)
+// are left as "не вказано" for the marketer to dig up on the actual call.
+const extractHandle = (text: string): string | null => {
+  const m = text.match(/@[a-zA-Z0-9_.]{3,}/);
+  return m ? m[0] : null;
+};
+
+const extractBudget = (text: string): string | null => {
+  const m = text.match(/(\d[\d\s]{1,7})\s*(грн|\$|USD|usdt|к\/міс|к)/i);
+  return m ? m[0].trim() : null;
+};
+
+export const synthesizeBrief = (client: BriefSourceClient): BriefField[] => {
+  const task = client.task || '';
+  const niche = client.niche || 'не вказана ніша';
+  const reds = new Set(client.redFlags || []);
+  const greys = new Set(client.greyFlags || []);
+  const handle = extractHandle(task);
+  const budget = extractBudget(task);
+
+  const noCrm = reds.has('no_crm');
+  const noSales = reds.has('no_sales_team');
+  const soloOwner = reds.has('solo_owner');
+  const isScam = reds.has('scam');
+  const isTelegram = greys.has('telegram_ads');
+  const isCounterfeit = greys.has('counterfeit');
+  const isCrypto = greys.has('crypto');
+  const isInfobiz = greys.has('questionable_infobiz');
+
+  return fill([
+    noCrm || soloOwner ? 'Немає сайту, продажі через соцмережі/директ' : null, // сайт
+    handle || (isTelegram ? 'Тільки Telegram-канал, без інших соцмереж' : null), // соцмережі
+    null, // конкуренти
+    'Україна (уточнити з клієнтом на дзвінку)', // географія
+    `За нішею "${niche}" — деталі аудиторії клієнт не уточнював, треба зібрати на міті`, // опис клієнта
+    null, // послуги з найб. попитом
+    null, // порядок пріоритету
+    null, // скільки лідів хочете
+    null, // скільки лідів зараз
+    null, // прийнятна вартість ліда
+    null, // конверсія в продаж
+    null, // середній чек
+    null, // повторні покупки
+    null, // маржинальність
+    null, // акції
+    isScam ? 'Клієнт сам вважає це УТП, потребує перевірки на реалістичність' : null, // УТП
+    null, // готові фото
+    budget || 'Не вказано, уточнити на міті', // бюджет
+    null, // чи працює реклама зараз
+    null, // GTM/GA
+    null, // телефонія
+    noCrm ? 'Немає CRM-системи' : null, // CRM
+    noSales ? 'Немає, власник сам обробляє заявки' : (soloOwner ? 'Власник працює сам, найманих немає' : null), // менеджер з продажу
+    (isCounterfeit || isCrypto || isInfobiz) ? 'Немає — потребує окремого обговорення через специфіку ніші' : null, // брендбук
+  ]);
+};
+
 export const CLIENT_BRIEFS: Record<string, BriefField[]> = {
   'Катя Сергієнко': fill([
     'katyastore.com.ua (в розробці, поки що тільки інста)',
@@ -504,7 +579,11 @@ export const CLIENT_BRIEFS: Record<string, BriefField[]> = {
   ]),
 };
 
-export const getBriefForClient = (name?: string): BriefField[] | null => {
-  if (!name) return null;
-  return CLIENT_BRIEFS[name] ?? null;
+export const getBriefForClient = (client?: BriefSourceClient | string): BriefField[] => {
+  if (!client) return [];
+  const source: BriefSourceClient = typeof client === 'string' ? { name: client } : client;
+  if (!source.name) return [];
+  const curated = CLIENT_BRIEFS[source.name];
+  if (curated) return curated;
+  return synthesizeBrief(source);
 };

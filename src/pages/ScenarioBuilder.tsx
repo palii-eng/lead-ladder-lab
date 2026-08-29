@@ -1134,7 +1134,7 @@ const ScenarioBuilder: React.FC = () => {
     if (!cb?.name) return;
     const existing = scenario.companyDescription || '';
     if (existing.trim().length > 0) return;
-    const brief = getBriefForClient(cb.name);
+    const brief = getBriefForClient(cb);
     const findA = (kw: string) =>
       brief?.find(f => f.q.toLowerCase().includes(kw.toLowerCase()))?.a || '';
     const audience = findA('опис клієнта');
@@ -3816,8 +3816,8 @@ const ScenarioBuilder: React.FC = () => {
           </SheetHeader>
           <div className="space-y-3 mt-4">
             {(() => {
-              const brief = getBriefForClient(scenario.clientBrief?.name);
-              if (!brief) {
+              const brief = getBriefForClient(scenario.clientBrief);
+              if (!brief || brief.length === 0) {
                 return (
                   <p className="text-sm text-muted-foreground">
                     Бриф для цього клієнта ще не підготовлений.
