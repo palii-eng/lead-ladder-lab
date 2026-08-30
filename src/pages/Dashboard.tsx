@@ -187,9 +187,6 @@ const Dashboard: React.FC = () => {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {scenarios.map((s, i) => {
               const review = reviewByName[s.name];
-              const displayTitle = s.clientBrief?.name && s.clientBrief?.niche
-                ? `${s.clientBrief.name} — ${s.clientBrief.niche}`
-                : (s.clientBrief?.niche || s.name);
               return (
                 <div
                   key={s.id}
@@ -197,7 +194,7 @@ const Dashboard: React.FC = () => {
                   style={{ animationDelay: `${i * 60}ms` }}
                   onClick={() => navigate(`/scenario/${s.id}`)}
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
                     {s.clientBrief?.photo && (
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -220,17 +217,9 @@ const Dashboard: React.FC = () => {
                       </Tooltip>
                     )}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-foreground truncate">{displayTitle}</h3>
-                      {s.description && (
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{s.description}</p>
-                      )}
+                      <h3 className="font-bold text-foreground truncate">{s.clientBrief?.name || s.name}</h3>
+                      <p className="text-sm text-muted-foreground truncate">{s.clientBrief?.niche || s.description || '—'}</p>
                     </div>
-                    <Badge
-                      variant={s.status === 'completed' ? 'default' : 'secondary'}
-                      className={s.status === 'completed' ? 'bg-success text-success-foreground' : ''}
-                    >
-                      {s.status === 'completed' ? 'Завершено' : 'Чернетка'}
-                    </Badge>
                   </div>
 
                   <div className="text-sm">
