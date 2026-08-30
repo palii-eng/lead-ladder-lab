@@ -272,7 +272,9 @@ const SALES_TYPES_TIKTOK = [
 
 
 const LEAD_DESTINATIONS = [
-  { name: 'Kommo', url: 'https://www.kommo.com/', flag: null, flagTitle: null },
+  { name: 'Kommo', url: 'https://www.kommo.com/', flag: null, flagTitle: null, ruProduct: true },
+  { name: 'amoCRM', url: 'https://www.amocrm.ru/', flag: null, flagTitle: null, ruProduct: true },
+  { name: 'Бітрікс24', url: 'https://www.bitrix24.ua/', flag: null, flagTitle: null, ruProduct: true },
   { name: 'HubSpot', url: 'https://www.hubspot.com/', flag: '🇺🇸', flagTitle: 'Розробник з США' },
   { name: 'SalesDrive', url: 'https://salesdrive.ua/', flag: '🇺🇦', flagTitle: 'Український розробник' },
   { name: 'Pipedrive', url: 'https://www.pipedrive.com/', flag: '🇪🇪', flagTitle: 'Розробник з Естонії' },
@@ -2922,21 +2924,39 @@ const ScenarioBuilder: React.FC = () => {
               <div className="grid gap-2">
                 {LEAD_DESTINATIONS.map(d => {
                   const selected = currentLeadDestinations.includes(d.name);
+                  const isRu = 'ruProduct' in d && d.ruProduct;
                   return (
                     <button key={d.name} onClick={() => toggleLeadDest(d.name)}
                       className={`p-2.5 rounded-lg border text-left text-sm transition-all flex items-center gap-2.5 ${
-                        selected
-                          ? 'border-primary bg-accent text-accent-foreground font-semibold'
-                          : 'border-border bg-card text-foreground hover:border-primary/40'
-                      }`}>
+                        isRu
+                          ? (selected ? 'border-2' : 'border')
+                          : (selected
+                              ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                              : 'border-border bg-card text-foreground hover:border-primary/40')
+                      }`}
+                      style={isRu ? {
+                        borderColor: 'hsl(28 90% 55%)',
+                        background: selected ? 'hsl(28 90% 95%)' : 'hsl(28 90% 98%)',
+                      } : undefined}
+                    >
                       <span
                         className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                          selected ? 'border-primary' : 'border-muted-foreground/40'
+                          selected ? (isRu ? '' : 'border-primary') : 'border-muted-foreground/40'
                         }`}
+                        style={selected && isRu ? { borderColor: 'hsl(28 90% 50%)' } : undefined}
                       >
-                        {selected && <span className="w-2 h-2 rounded-full bg-primary" />}
+                        {selected && <span className="w-2 h-2 rounded-full" style={{ background: isRu ? 'hsl(28 90% 50%)' : undefined }} />}
                       </span>
-                      <span className="flex-1">{d.name}</span>
+                      <span className={`flex-1 ${isRu ? 'font-medium' : ''}`} style={isRu ? { color: 'hsl(20 70% 30%)' } : undefined}>{d.name}</span>
+                      {isRu && (
+                        <span
+                          title="Продукт розробника з РФ"
+                          className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full shrink-0"
+                          style={{ background: 'hsl(28 90% 55%)', color: 'white' }}
+                        >
+                          рос. продукт
+                        </span>
+                      )}
                       {d.flag && <span title={d.flagTitle || undefined}>{d.flag}</span>}
                       {d.url && (
                         <span
