@@ -2219,10 +2219,10 @@ const ScenarioBuilder: React.FC = () => {
     if (isBranching && activeLeadType) {
       const branch = getBranch();
       const current = branch.leadDestinations;
-      updateBranch({ leadDestinations: current.includes(dest) ? current.filter(d => d !== dest) : [...current, dest] });
+      updateBranch({ leadDestinations: current.includes(dest) ? [] : [dest] });
     } else {
       const current = scenario.leadDestinations;
-      update({ leadDestinations: current.includes(dest) ? current.filter(d => d !== dest) : [...current, dest] });
+      update({ leadDestinations: current.includes(dest) ? [] : [dest] });
     }
   };
 
@@ -2907,18 +2907,29 @@ const ScenarioBuilder: React.FC = () => {
               {isBranching && activeLeadType && (
                 <Badge variant="secondary" className="text-xs">{LEAD_TYPES.find(l => l.value === activeLeadType)?.icon} {LEAD_TYPES.find(l => l.value === activeLeadType)?.label}</Badge>
               )}
+              <p className="text-xs text-muted-foreground">Оберіть одну систему</p>
               <div className="grid gap-2">
-                {LEAD_DESTINATIONS.map(d => (
-                  <button key={d.name} onClick={() => toggleLeadDest(d.name)}
-                    className={`p-2.5 rounded-lg border text-left text-sm transition-all flex items-center gap-2 ${
-                      currentLeadDestinations.includes(d.name)
-                        ? 'border-primary bg-accent text-accent-foreground font-semibold'
-                        : 'border-border bg-card text-foreground hover:border-primary/40'
-                    }`}>
-                    <span className="flex-1">{d.name}</span>
-                    {d.ua && <span title="Українська система">🇺🇦</span>}
-                  </button>
-                ))}
+                {LEAD_DESTINATIONS.map(d => {
+                  const selected = currentLeadDestinations.includes(d.name);
+                  return (
+                    <button key={d.name} onClick={() => toggleLeadDest(d.name)}
+                      className={`p-2.5 rounded-lg border text-left text-sm transition-all flex items-center gap-2.5 ${
+                        selected
+                          ? 'border-primary bg-accent text-accent-foreground font-semibold'
+                          : 'border-border bg-card text-foreground hover:border-primary/40'
+                      }`}>
+                      <span
+                        className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                          selected ? 'border-primary' : 'border-muted-foreground/40'
+                        }`}
+                      >
+                        {selected && <span className="w-2 h-2 rounded-full bg-primary" />}
+                      </span>
+                      <span className="flex-1">{d.name}</span>
+                      {d.ua && <span title="Українська система">🇺🇦</span>}
+                    </button>
+                  );
+                })}
               </div>
               <SaveButton step={5} />
             </div>
