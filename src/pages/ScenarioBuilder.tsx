@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
-import { ArrowLeft, ArrowRight, Check, ChevronRight, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward, AlertTriangle, Database, User, Send, Copy, Bitcoin, TrendingUp, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronRight, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward, AlertTriangle, Database, User, Send, Copy, Bitcoin, TrendingUp, TrendingDown, ExternalLink } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { VideoBadge } from '@/components/VideoBadge';
 import { supabase } from '@/integrations/supabase/client';
@@ -49,6 +49,7 @@ const GREY_FLAG_META: Record<string, { label: string; Icon: React.ComponentType<
   counterfeit: { label: 'Товар — репліка/копія бренду, не оригінал', Icon: Copy },
   crypto: { label: 'Крипто-тематика', Icon: Bitcoin },
   questionable_infobiz: { label: 'Сумнівний інфобізнес / нереалістичні обіцянки', Icon: TrendingUp },
+  low_margin: { label: 'Низькомаржинальна ніша — складно окупити рекламу', Icon: TrendingDown },
 };
 
 const ClientFlagsPanel: React.FC<{ redFlags?: string[]; greyFlags?: string[] }> = ({ redFlags, greyFlags }) => {
