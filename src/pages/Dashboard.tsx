@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useScenarios } from '@/context/ScenariosContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LayoutDashboard, Copy, Trash2, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, LayoutDashboard, Trash2, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -16,7 +16,7 @@ import { toast } from '@/hooks/use-toast';
 type ReviewStatus = 'pending' | 'in_review' | 'approved' | 'rejected';
 
 const Dashboard: React.FC = () => {
-  const { scenarios, loading, addScenario, deleteScenario, duplicateScenario } = useScenarios();
+  const { scenarios, loading, addScenario, deleteScenario } = useScenarios();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -250,13 +250,6 @@ const Dashboard: React.FC = () => {
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
                       Відкрити
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={(e) => { e.stopPropagation(); duplicateScenario(s.id); }}
-                    >
-                      <Copy className="w-3.5 h-3.5" />
                     </Button>
                     <Button
                       size="sm"
