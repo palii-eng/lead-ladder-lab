@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useScenarios } from '@/context/ScenariosContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LayoutDashboard, Trash2, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, LayoutDashboard, Trash2, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -201,13 +201,22 @@ const Dashboard: React.FC = () => {
                           <button
                             type="button"
                             onClick={(e) => e.stopPropagation()}
-                            className="shrink-0 w-10 h-10 rounded-full overflow-hidden ring-2 ring-accent bg-secondary cursor-help"
+                            className="relative shrink-0 w-10 h-10 rounded-full overflow-hidden ring-2 ring-accent bg-secondary cursor-help"
                           >
                             <img
                               src={s.clientBrief.photo}
                               alt={s.clientBrief.name}
                               className="w-full h-full object-cover"
                             />
+                            {s.status === 'completed' && (
+                              <span
+                                className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-card"
+                                style={{ background: 'hsl(45 90% 55%)' }}
+                                title="Проєкт завершено"
+                              >
+                                <Trophy className="w-3 h-3 text-white" />
+                              </span>
+                            )}
                           </button>
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className="max-w-xs text-xs">
