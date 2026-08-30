@@ -150,10 +150,6 @@ const TRAFFIC_STRATEGY_MATERIALS: { title: string; url: string }[] = [
   { title: 'Комунікаційна стратегія', url: 'https://youtu.be/8QQ6t-4nc1A' },
 ];
 
-const CRM_MATERIALS: { title: string; url: string }[] = [
-  { title: 'Куди направляти ліди: CRM-системи', url: 'https://www.youtube.com/watch?v=d0B14sPmr8k' },
-];
-
 const FORMAT_VIDEOS: Record<string, { title: string; url: string }[]> = {
   'Міні-курс': [
     { title: 'Міні-курс — розбір воронки', url: 'https://youtu.be/MEI0sIJ0No8' },
@@ -3529,7 +3525,6 @@ const ScenarioBuilder: React.FC = () => {
               const materials = [
                 ...REQUIRED_MATERIALS,
                 ...(scenario.niche ? TRAFFIC_STRATEGY_MATERIALS : []),
-                ...CRM_MATERIALS,
               ];
               return (
                 <button
@@ -4036,15 +4031,6 @@ const ScenarioBuilder: React.FC = () => {
                 ))}
               </div>
             )}
-            <div className="space-y-2">
-              <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">CRM та інтеграція</div>
-              {CRM_MATERIALS.map((v, i) => (
-                <div key={`crm-${i}`} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
-                  <span className="text-sm font-medium text-foreground flex-1">{v.title}</span>
-                  <VideoBadge url={v.url} title={v.title} size="md" />
-                </div>
-              ))}
-            </div>
           </div>
         </SheetContent>
       </Sheet>
