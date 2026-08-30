@@ -85,17 +85,30 @@ interface LaunchProblem {
   ctr: 'low' | 'normal';
   cpm: 'high' | 'normal';
   freq: 'high' | 'normal';
+  cplPct?: number;
+  cpmPct?: number;
 }
 
-const LAUNCH_PROBLEM_POOL: LaunchProblem[] = [
+const LAUNCH_PROBLEM_TEMPLATES: Omit<LaunchProblem, 'cplPct' | 'cpmPct'>[] = [
   { type: 'cpm_high', cpl: 'high', ctr: 'normal', cpm: 'high', freq: 'normal' },
   { type: 'ctr_low', cpl: 'high', ctr: 'low', cpm: 'normal', freq: 'normal' },
   { type: 'freq_high', cpl: 'high', ctr: 'normal', cpm: 'normal', freq: 'high' },
 ];
 
-// Week 1 is always this scripted CTR-drop scenario so every marketer sees
-// the same intro problem; weeks after that draw randomly from the pool.
-const LAUNCH_WEEK1_PROBLEM: LaunchProblem = LAUNCH_PROBLEM_POOL[1];
+const randomInRange = (min: number, max: number) => Math.floor(min + Math.random() * (max - min + 1));
+
+// Builds a fresh problem instance with newly-rolled percentages each time —
+// the same problem type never shows the exact same numbers twice.
+const buildLaunchProblem = (type: LaunchProblemType): LaunchProblem => {
+  const template = LAUNCH_PROBLEM_TEMPLATES.find(p => p.type === type)!;
+  return {
+    ...template,
+    cplPct: template.cpl === 'high' ? randomInRange(12, 40) : undefined,
+    cpmPct: template.cpm === 'high' ? randomInRange(15, 45) : undefined,
+  };
+};
+
+const LAUNCH_PROBLEM_TYPES: LaunchProblemType[] = ['cpm_high', 'ctr_low', 'freq_high'];
 
 const LAUNCH_ACTIONS: { key: LaunchActionKey; label: string }[] = [
   { key: 'continue', label: 'Продовжити без змін' },
@@ -119,9 +132,9 @@ const LAUNCH_ACTION_SUCCESS_TEXT: Record<LaunchActionKey, string> = {
 };
 
 const launchProblemLines = (p: LaunchProblem): string[] => [
-  p.cpl === 'high' ? 'Ліди дорожчі ніж очікується, приблизно на 20%' : 'Вартість ліда в нормі',
+  p.cpl === 'high' ? `Ліди дорожчі ніж очікується, приблизно на ${p.cplPct}%` : 'Вартість ліда в нормі',
   p.ctr === 'low' ? 'CTR низький' : 'CTR в нормі',
-  p.cpm === 'high' ? 'CPM почав дорожчати' : 'CPM в нормі',
+  p.cpm === 'high' ? `CPM почав дорожчати, приблизно на ${p.cpmPct}%` : 'CPM в нормі',
   p.freq === 'high' ? 'Висока частотність показів' : 'Частота показів в нормі',
 ];
 
@@ -1984,7 +1997,7 @@ const ScenarioBuilder: React.FC = () => {
 
   const startLaunch = () => {
     setLaunchWeek(1);
-    setLaunchProblem(LAUNCH_WEEK1_PROBLEM);
+    setLaunchProblem(buildLaunchProblem('ctr_low'));
     setLaunchFeedback(null);
     setLaunchPhase('launching');
     setLaunchResultOpen(true);
@@ -2000,7 +2013,7 @@ const ScenarioBuilder: React.FC = () => {
     setLaunchWeek(nextWeek);
     setLaunchFeedback(null);
     const calm = Math.random() < 0.25;
-    setLaunchProblem(calm ? null : LAUNCH_PROBLEM_POOL[Math.floor(Math.random() * LAUNCH_PROBLEM_POOL.length)]);
+    setLaunchProblem(calm ? null : buildLaunchProblem(LAUNCH_PROBLEM_TYPES[Math.floor(Math.random() * LAUNCH_PROBLEM_TYPES.length)]));
     setLaunchPhase('week');
   };
 
