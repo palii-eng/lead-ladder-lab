@@ -104,6 +104,30 @@ const Admin: React.FC = () => {
 
   useEffect(() => { if (isStaff) load(); }, [isStaff]);
 
+  // Live notification: toast + refresh the list the moment a student sends
+  // a scenario for review, so a moderator with the panel open doesn't have
+  // to manually refresh to see it appear at the top of the queue.
+  useEffect(() => {
+    if (!isStaff) return;
+    const channel = supabase
+      .channel('scenario_reviews_admin_watch')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'scenario_reviews' },
+        (payload) => {
+          const row = payload.new as { scenario_name?: string; user_name?: string | null; user_email?: string };
+          toast({
+            title: 'Нова заявка на перевірку',
+            description: `${row.user_name || row.user_email || 'Студент'} відправив(ла) «${row.scenario_name}» — потребує реакції`,
+          });
+          load();
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isStaff]);
+
   const updateStatus = async (id: string, status: 'approved' | 'rejected' | 'pending') => {
     const { error } = await supabase.from('profiles').update({ status }).eq('id', id);
     if (error) {
@@ -177,7 +201,14 @@ const Admin: React.FC = () => {
   if (authLoading) return null;
 
   const pendingReviews = reviews.filter(r => r.status === 'pending').length;
-  const visibleReviews = reviewFilterEmail ? reviews.filter(r => r.user_email === reviewFilterEmail) : reviews;
+  const STATUS_PRIORITY: Record<string, number> = { pending: 0, in_review: 1, approved: 2, rejected: 2 };
+  const sortedReviews = [...reviews].sort((a, b) => {
+    const pa = STATUS_PRIORITY[a.status] ?? 1;
+    const pb = STATUS_PRIORITY[b.status] ?? 1;
+    if (pa !== pb) return pa - pb;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+  const visibleReviews = reviewFilterEmail ? sortedReviews.filter(r => r.user_email === reviewFilterEmail) : sortedReviews;
 
   return (
     <div className="min-h-screen bg-background">
@@ -339,12 +370,18 @@ const Admin: React.FC = () => {
                           rv.status === 'approved' ? 'bg-success text-success-foreground' :
                           rv.status === 'rejected' ? 'bg-destructive text-destructive-foreground' :
                           rv.status === 'in_review' ? 'bg-primary text-primary-foreground' :
-                          'bg-warning text-warning-foreground'
+                          'bg-warning text-warning-foreground gap-1.5'
                         }
                       >
+                        {rv.status === 'pending' && (
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning-foreground opacity-75" />
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-warning-foreground" />
+                          </span>
+                        )}
                         {rv.status === 'approved' ? 'Зараховано' :
                           rv.status === 'rejected' ? 'Відхилено' :
-                          rv.status === 'in_review' ? 'На перевірці' : 'Очікує'}
+                          rv.status === 'in_review' ? 'На перевірці' : 'Потребує реакції'}
                       </Badge>
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
