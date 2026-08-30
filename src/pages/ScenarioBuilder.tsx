@@ -2462,10 +2462,21 @@ const ScenarioBuilder: React.FC = () => {
   const AdschoolVideoButton: React.FC<{ step: number }> = ({ step }) => (
     <button
       onClick={() => { setVideoDialogStep(step); setVideoDialogOpen(true); }}
-      className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary/30 hover:scale-110 transition-transform flex-shrink-0"
-      title="Відео від AdsSchool"
+      className="flex flex-col items-center gap-1 flex-shrink-0 group"
+      title="Урок від AdsSchool"
     >
-      <img src={adsSchoolLogo} alt="Ads School" className="w-full h-full object-cover" />
+      <span className="relative">
+        <span className="block w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary/30 group-hover:scale-110 transition-transform">
+          <img src={adsSchoolLogo} alt="Ads School" className="w-full h-full object-cover" />
+        </span>
+        <span
+          className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-card"
+          style={{ background: 'hsl(232 80% 60%)' }}
+        >
+          <Play className="w-2.5 h-2.5 text-white fill-white" />
+        </span>
+      </span>
+      <span className="text-[9px] font-bold uppercase tracking-wide text-primary">Урок</span>
     </button>
   );
 
