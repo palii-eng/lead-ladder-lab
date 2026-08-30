@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useScenarios } from '@/context/ScenariosContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LayoutDashboard, Copy, Trash2, ExternalLink, Zap } from 'lucide-react';
+import { Plus, LayoutDashboard, Copy, Trash2, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -9,12 +9,71 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { UserMenu } from '@/components/UserMenu';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+
+type ReviewStatus = 'pending' | 'in_review' | 'approved' | 'rejected';
 
 const Dashboard: React.FC = () => {
   const { scenarios, loading, addScenario, deleteScenario, duplicateScenario } = useScenarios();
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const scenarioToDelete = deleteId ? scenarios.find(s => s.id === deleteId) : null;
+  const [reviewByName, setReviewByName] = useState<Record<string, ReviewStatus>>({});
+  const [sendingId, setSendingId] = useState<string | null>(null);
+
+  const loadReviews = async () => {
+    if (!user?.id) return;
+    const { data, error } = await supabase
+      .from('scenario_reviews')
+      .select('scenario_name, status, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Failed to load review statuses', error);
+      return;
+    }
+    const map: Record<string, ReviewStatus> = {};
+    (data || []).forEach((r: { scenario_name: string; status: string }) => {
+      // Rows are newest-first, so the first one seen per name is the latest.
+      if (!(r.scenario_name in map)) map[r.scenario_name] = r.status as ReviewStatus;
+    });
+    setReviewByName(map);
+  };
+
+  useEffect(() => { loadReviews(); }, [user?.id]);
+
+  const sendForReview = async (s: typeof scenarios[0]) => {
+    if (!user?.id) return;
+    setSendingId(s.id);
+    try {
+      const { data: shared, error: sharedErr } = await supabase
+        .from('shared_scenarios')
+        .insert({ scenario: s as any })
+        .select('id')
+        .single();
+      if (sharedErr) throw sharedErr;
+
+      const { error: reviewErr } = await supabase.from('scenario_reviews').insert({
+        user_id: user.id,
+        user_email: user.email || profile?.email || '',
+        user_name: profile?.full_name || null,
+        scenario_name: s.name,
+        shared_id: shared.id,
+        status: 'pending',
+      });
+      if (reviewErr) throw reviewErr;
+
+      toast({ title: 'Відправлено на перевірку', description: 'Модератор перегляне сценарій і поставить оцінку.' });
+      setReviewByName(prev => ({ ...prev, [s.name]: 'pending' }));
+    } catch (e: unknown) {
+      toast({ title: 'Не вдалося відправити', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setSendingId(null);
+    }
+  };
 
   // Detect corrupt backups saved by ScenariosContext on a parse failure.
   const [corruptKeys, setCorruptKeys] = useState<string[]>(() => {
@@ -52,16 +111,6 @@ const Dashboard: React.FC = () => {
     navigate(`/scenario/${s.id}`);
   };
 
-
-  const calcRomi = (s: typeof scenarios[0]) => {
-    const d = s.decomposition.realistic;
-    if (!d.budget || !d.averageCheck || !d.conversionRate || !d.cpl) return null;
-    const leads = d.budget / (d.cpl || 1);
-    const sales = leads * (d.conversionRate / 100);
-    const revenue = sales * d.averageCheck;
-    const romi = ((revenue - d.budget) / d.budget) * 100;
-    return isFinite(romi) ? Math.round(romi) : null;
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -136,7 +185,7 @@ const Dashboard: React.FC = () => {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {scenarios.map((s, i) => {
-              const romi = calcRomi(s);
+              const review = reviewByName[s.name];
               return (
                 <div
                   key={s.id}
@@ -159,27 +208,38 @@ const Dashboard: React.FC = () => {
                     </Badge>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <span className="text-muted-foreground text-xs">Ніша</span>
-                      <p className="text-foreground font-medium truncate">{s.niche || '—'}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground text-xs">Канал</span>
-                      <p className="text-foreground font-medium truncate">{s.channel || '—'}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground text-xs">ROMI</span>
-                      <p className={`font-bold ${romi !== null && romi > 0 ? 'text-success' : romi !== null && romi < 0 ? 'text-destructive' : 'text-foreground'}`}>
-                        {romi !== null ? `${romi}%` : '—'}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground text-xs">Створено</span>
-                      <p className="text-foreground font-medium">
-                        {new Date(s.createdAt).toLocaleDateString('uk-UA')}
-                      </p>
-                    </div>
+                  <div className="text-sm">
+                    <span className="text-muted-foreground text-xs">Створено</span>
+                    <p className="text-foreground font-medium">
+                      {new Date(s.createdAt).toLocaleDateString('uk-UA')}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <span className="text-xs text-muted-foreground">Перевірка модератором</span>
+                    {review === 'approved' ? (
+                      <Badge className="bg-success text-success-foreground gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Перевірено
+                      </Badge>
+                    ) : review === 'rejected' ? (
+                      <Badge className="bg-destructive text-destructive-foreground gap-1">
+                        <XCircle className="w-3 h-3" /> Відхилено
+                      </Badge>
+                    ) : review === 'pending' || review === 'in_review' ? (
+                      <Badge variant="secondary" className="gap-1">
+                        <Clock className="w-3 h-3" /> На перевірці
+                      </Badge>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 h-7 text-xs"
+                        disabled={sendingId === s.id}
+                        onClick={(e) => { e.stopPropagation(); sendForReview(s); }}
+                      >
+                        <Send className="w-3 h-3" /> Відправити
+                      </Button>
+                    )}
                   </div>
 
                   <div className="flex gap-2 mt-auto pt-3 border-t border-border">
