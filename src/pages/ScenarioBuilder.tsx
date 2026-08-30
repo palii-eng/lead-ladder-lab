@@ -72,6 +72,34 @@ const estimateClientBudgetUsd = (task: string): number => {
   return bigBusinessSignals.test(task) ? 5000 : 2000;
 };
 
+// "Launching" the project doesn't just mark it done — it rolls a randomized
+// outcome so the marketer sees a realistic taste of what happens after ads
+// actually go live, weighted by how good their ROMI projection was.
+const LAUNCH_SUCCESS_LINES = [
+  'Кампанія стартувала рівно за планом — CPM тримається в межах прогнозу.',
+  'CTR вище очікувань, ліди йдуть стабільним потоком з першого дня.',
+  'Клієнт написав що задоволений першими заявками і хоче збільшити бюджет.',
+  'За перший тиждень отримали більше лідів, ніж прогнозував реалістичний сценарій.',
+  'Модерація пройшла швидко, кампанія почала крутитись уже за пів дня.',
+  'Вартість ліда виявилась навіть нижчою за прогноз.',
+];
+const LAUNCH_FAILURE_LINES = [
+  'Перші два дні все ок, та потім CPM почав різко дорожчати.',
+  'CTR виявився нижчим за очікування — креативи не чіпляють аудиторію.',
+  'Ліди йдуть, але дуже мляво — менше половини від прогнозу.',
+  'Клієнт написав що незадоволений темпами і хоче призупинити бюджет.',
+  'Модерація затримала запуск на кілька днів, частина бюджету вигоріла марно.',
+  'Конверсія в продаж виявилась нижчою за заявлену клієнтом.',
+];
+
+const simulateLaunchOutcome = (romi: number): { success: boolean; chance: number; lines: string[] } => {
+  const chance = romi >= 50 ? 80 : romi >= 0 ? 60 : romi >= -30 ? 35 : 15;
+  const success = Math.random() * 100 < chance;
+  const pool = success ? LAUNCH_SUCCESS_LINES : LAUNCH_FAILURE_LINES;
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return { success, chance, lines: shuffled.slice(0, 3) };
+};
+
 const STEPS = [
   { title: 'Вибір ніші', icon: '🎯' },
   { title: 'Джерело трафіку', icon: '📡' },
@@ -437,6 +465,8 @@ const ScenarioBuilder: React.FC = () => {
   const [activeLeadType, setActiveLeadType] = useState<string>('');
   const [pendingRemoveLeadType, setPendingRemoveLeadType] = useState<string | null>(null);
   const [pendingLeadSourceSwitch, setPendingLeadSourceSwitch] = useState<string | null>(null);
+  const [launchResultOpen, setLaunchResultOpen] = useState(false);
+  const [launchOutcome, setLaunchOutcome] = useState<{ success: boolean; chance: number; lines: string[] } | null>(null);
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [videoDialogStep, setVideoDialogStep] = useState(0);
   const [skillsOpen, setSkillsOpen] = useState(false);
@@ -3489,8 +3519,8 @@ const ScenarioBuilder: React.FC = () => {
                   📤 Відправити куратору
                 </Button>
                 <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
-                  onClick={() => { update({ status: 'completed' }); navigate('/'); }}>
-                  <Check className="w-4 h-4" /> Завершити
+                  onClick={() => { setLaunchOutcome(simulateLaunchOutcome(real.romi)); setLaunchResultOpen(true); }}>
+                  🚀 Запустити проект
                 </Button>
               </div>
             </div>
@@ -3759,6 +3789,20 @@ const ScenarioBuilder: React.FC = () => {
                             }
                           }}
                         />
+                        {stepIdx === 9 && isStepUnlocked(stepIdx, branchLeadType) && (
+                          <Button
+                            className="w-full mt-2 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const decompSet = isBranching && activeLeadType ? getBranch().decomposition : scenario.decomposition;
+                              const real = calcMetrics(decompSet.realistic);
+                              setLaunchOutcome(simulateLaunchOutcome(real.romi));
+                              setLaunchResultOpen(true);
+                            }}
+                          >
+                            🚀 Запустити проект
+                          </Button>
+                        )}
                       </div>
                     </div>
                   );
@@ -4961,6 +5005,39 @@ const ScenarioBuilder: React.FC = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Так, поміняти
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={launchResultOpen} onOpenChange={setLaunchResultOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              {launchOutcome?.success ? '🚀 Кампанія запущена!' : '⚠️ Кампанія запущена, але...'}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  Прогнозований шанс успіху виходячи з реалістичного ROMI: <b className="text-foreground">{launchOutcome?.chance}%</b>
+                </p>
+                <ul className="space-y-1.5 text-sm text-foreground list-none">
+                  {(launchOutcome?.lines || []).map((line, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className={launchOutcome?.success ? 'text-success' : 'text-warning'}>•</span>
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={() => { update({ status: 'completed' }); navigate('/'); }}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Check className="w-4 h-4 mr-1" /> Завершити проект
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
