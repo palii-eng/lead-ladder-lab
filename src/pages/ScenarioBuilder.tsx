@@ -276,7 +276,7 @@ const SALES_TYPES_TIKTOK = [
 
 
 const LEAD_DESTINATIONS = [
-  { name: 'Kommo', url: 'https://www.kommo.com/', flag: '🇷🇺', flagTitle: 'Розробник з Росії (amoCRM, засновано 2006 р.)' },
+  { name: 'Kommo', url: 'https://www.kommo.com/', flag: null, flagTitle: null },
   { name: 'HubSpot', url: 'https://www.hubspot.com/', flag: '🇺🇸', flagTitle: 'Розробник з США' },
   { name: 'SalesDrive', url: 'https://salesdrive.ua/', flag: '🇺🇦', flagTitle: 'Український розробник' },
   { name: 'Pipedrive', url: 'https://www.pipedrive.com/', flag: '🇪🇪', flagTitle: 'Розробник з Естонії' },
