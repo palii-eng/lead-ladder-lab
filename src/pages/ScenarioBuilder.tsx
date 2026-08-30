@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
-import { ArrowLeft, ArrowRight, Check, ChevronRight, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward, AlertTriangle, Database, User, Send, Copy, Bitcoin, TrendingUp } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronRight, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward, AlertTriangle, Database, User, Send, Copy, Bitcoin, TrendingUp, ExternalLink } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { VideoBadge } from '@/components/VideoBadge';
 import { supabase } from '@/integrations/supabase/client';
@@ -272,18 +272,18 @@ const SALES_TYPES_TIKTOK = [
 
 
 const LEAD_DESTINATIONS = [
-  { name: 'Kommo', ua: false },
-  { name: 'HubSpot', ua: false },
-  { name: 'SalesDrive', ua: true },
-  { name: 'Pipedrive', ua: false },
-  { name: 'KeyCRM', ua: true },
-  { name: 'NetHunt CRM', ua: true },
-  { name: 'KeepinCRM', ua: true },
-  { name: 'SendPulse CRM', ua: true },
-  { name: 'Trello', ua: false },
-  { name: 'Google Таблиця', ua: false },
-  { name: 'Telegram-чат з менеджером', ua: false },
-  { name: 'Інша', ua: false },
+  { name: 'Kommo', url: 'https://www.kommo.com/', flag: '🇷🇺', flagTitle: 'Розробник з Росії (amoCRM, засновано 2006 р.)' },
+  { name: 'HubSpot', url: 'https://www.hubspot.com/', flag: '🇺🇸', flagTitle: 'Розробник з США' },
+  { name: 'SalesDrive', url: 'https://salesdrive.ua/', flag: '🇺🇦', flagTitle: 'Український розробник' },
+  { name: 'Pipedrive', url: 'https://www.pipedrive.com/', flag: '🇪🇪', flagTitle: 'Розробник з Естонії' },
+  { name: 'KeyCRM', url: 'https://keycrm.app/', flag: '🇺🇦', flagTitle: 'Український розробник' },
+  { name: 'NetHunt CRM', url: 'https://nethunt.com/', flag: '🇺🇦', flagTitle: 'Український розробник' },
+  { name: 'KeepinCRM', url: 'https://keepincrm.com/', flag: '🇺🇦', flagTitle: 'Український розробник' },
+  { name: 'SendPulse CRM', url: 'https://sendpulse.com/features/crm', flag: '🇺🇦', flagTitle: 'Український розробник' },
+  { name: 'Trello', url: 'https://trello.com/', flag: '🇺🇸', flagTitle: 'Розробник з США' },
+  { name: 'Google Таблиця', url: null, flag: null, flagTitle: null },
+  { name: 'Telegram-чат з менеджером', url: null, flag: null, flagTitle: null },
+  { name: 'Інша', url: null, flag: null, flagTitle: null },
 ];
 const INTEGRATIONS = ['Пряма інтеграція', 'Webhook', 'Make', 'ApiX-Drive'];
 
@@ -2937,7 +2937,19 @@ const ScenarioBuilder: React.FC = () => {
                         {selected && <span className="w-2 h-2 rounded-full bg-primary" />}
                       </span>
                       <span className="flex-1">{d.name}</span>
-                      {d.ua && <span title="Українська система">🇺🇦</span>}
+                      {d.flag && <span title={d.flagTitle || undefined}>{d.flag}</span>}
+                      {d.url && (
+                        <span
+                          role="link"
+                          tabIndex={0}
+                          onClick={(e) => { e.stopPropagation(); window.open(d.url!, '_blank', 'noopener,noreferrer'); }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); window.open(d.url!, '_blank', 'noopener,noreferrer'); } }}
+                          title={`Відкрити сайт ${d.name}`}
+                          className="p-1 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors shrink-0"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </span>
+                      )}
                     </button>
                   );
                 })}
