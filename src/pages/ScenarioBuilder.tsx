@@ -115,7 +115,7 @@ const STEP_VIDEOS: Record<number, { title: string; url: string }[]> = {
     { title: 'Бенчмарки по нішах', url: 'https://ads-school.online/' },
   ],
   5: [
-    { title: 'Куди направляти ліди', url: 'https://ads-school.online/' },
+    { title: 'Куди направляти ліди', url: 'https://www.youtube.com/watch?v=d0B14sPmr8k' },
   ],
   6: [
     { title: 'Інтеграція CRM з рекламою', url: 'https://ads-school.online/' },
