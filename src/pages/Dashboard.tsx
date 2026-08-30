@@ -184,7 +184,7 @@ const Dashboard: React.FC = () => {
             </Button>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {scenarios.map((s, i) => {
               const review = reviewByName[s.name];
               const displayTitle = s.clientBrief?.name && s.clientBrief?.niche
