@@ -38,13 +38,13 @@ const STEPS = [
 // Red/grey flag metadata for client-brief risk hints. Red = serious structural
 // gaps or outright scam signals; grey = borderline/gray-zone niches that need
 // extra caution but aren't disqualifying on their own.
-const RED_FLAG_META: Record<string, { label: string; Icon: React.ComponentType<{ className?: string }> }> = {
+const RED_FLAG_META: Record<string, { label: string; Icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }> = {
   no_sales_team: { label: 'Немає відділу продажів', Icon: Users },
   no_crm: { label: 'Немає CRM-системи', Icon: Database },
   solo_owner: { label: 'Власник — єдина людина в бізнесі (ремісник)', Icon: User },
   scam: { label: 'Схоже на шахрайство / скам', Icon: AlertTriangle },
 };
-const GREY_FLAG_META: Record<string, { label: string; Icon: React.ComponentType<{ className?: string }> }> = {
+const GREY_FLAG_META: Record<string, { label: string; Icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }> = {
   telegram_ads: { label: 'Реклама веде в Telegram, не нативно для Meta/TikTok', Icon: Send },
   counterfeit: { label: 'Товар — репліка/копія бренду, не оригінал', Icon: Copy },
   crypto: { label: 'Крипто-тематика', Icon: Bitcoin },
@@ -165,7 +165,7 @@ const FORMAT_VIDEOS: Record<string, { title: string; url: string }[]> = {
     { title: 'Воронка через Telegram-бот', url: 'https://youtu.be/NnjSjpG3N4Y' },
   ],
 };
-const LEAD_SOURCES = [
+const LEAD_SOURCES: { value: string; label: string; LogoComponent: 'meta' | 'tiktok'; soon?: boolean }[] = [
   { value: 'meta', label: 'Meta реклама', LogoComponent: 'meta' as const },
   { value: 'tiktok', label: 'TikTok реклама', LogoComponent: 'tiktok' as const },
 ];
