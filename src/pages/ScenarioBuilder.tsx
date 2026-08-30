@@ -72,33 +72,58 @@ const estimateClientBudgetUsd = (task: string): number => {
   return bigBusinessSignals.test(task) ? 5000 : 2000;
 };
 
-// "Launching" the project doesn't just mark it done — it rolls a randomized
-// outcome so the marketer sees a realistic taste of what happens after ads
-// actually go live, weighted by how good their ROMI projection was.
-const LAUNCH_SUCCESS_LINES = [
-  'Кампанія стартувала рівно за планом — CPM тримається в межах прогнозу.',
-  'CTR вище очікувань, ліди йдуть стабільним потоком з першого дня.',
-  'Клієнт написав що задоволений першими заявками і хоче збільшити бюджет.',
-  'За перший тиждень отримали більше лідів, ніж прогнозував реалістичний сценарій.',
-  'Модерація пройшла швидко, кампанія почала крутитись уже за пів дня.',
-  'Вартість ліда виявилась навіть нижчою за прогноз.',
-];
-const LAUNCH_FAILURE_LINES = [
-  'Перші два дні все ок, та потім CPM почав різко дорожчати.',
-  'CTR виявився нижчим за очікування — креативи не чіпляють аудиторію.',
-  'Ліди йдуть, але дуже мляво — менше половини від прогнозу.',
-  'Клієнт написав що незадоволений темпами і хоче призупинити бюджет.',
-  'Модерація затримала запуск на кілька днів, частина бюджету вигоріла марно.',
-  'Конверсія в продаж виявилась нижчою за заявлену клієнтом.',
+// "Launching" the project is an interactive weekly simulation, not a single
+// dice roll: each week presents a metrics snapshot (sometimes with a
+// problem, sometimes calm), the marketer picks an action, and the outcome
+// depends on whether the action actually fixes the underlying issue.
+type LaunchProblemType = 'cpm_high' | 'ctr_low' | 'freq_high';
+type LaunchActionKey = 'continue' | 'change_creo' | 'new_audience' | 'restart_objective';
+
+interface LaunchProblem {
+  type: LaunchProblemType;
+  cpl: 'high' | 'normal';
+  ctr: 'low' | 'normal';
+  cpm: 'high' | 'normal';
+  freq: 'high' | 'normal';
+}
+
+const LAUNCH_PROBLEM_POOL: LaunchProblem[] = [
+  { type: 'cpm_high', cpl: 'high', ctr: 'normal', cpm: 'high', freq: 'normal' },
+  { type: 'ctr_low', cpl: 'high', ctr: 'low', cpm: 'normal', freq: 'normal' },
+  { type: 'freq_high', cpl: 'high', ctr: 'normal', cpm: 'normal', freq: 'high' },
 ];
 
-const simulateLaunchOutcome = (romi: number): { success: boolean; chance: number; lines: string[] } => {
-  const chance = romi >= 50 ? 80 : romi >= 0 ? 60 : romi >= -30 ? 35 : 15;
-  const success = Math.random() * 100 < chance;
-  const pool = success ? LAUNCH_SUCCESS_LINES : LAUNCH_FAILURE_LINES;
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  return { success, chance, lines: shuffled.slice(0, 3) };
+// Week 1 is always this scripted CTR-drop scenario so every marketer sees
+// the same intro problem; weeks after that draw randomly from the pool.
+const LAUNCH_WEEK1_PROBLEM: LaunchProblem = LAUNCH_PROBLEM_POOL[1];
+
+const LAUNCH_ACTIONS: { key: LaunchActionKey; label: string }[] = [
+  { key: 'continue', label: 'Продовжити без змін' },
+  { key: 'change_creo', label: 'Змінити крео' },
+  { key: 'new_audience', label: 'Створити нову аудиторію' },
+  { key: 'restart_objective', label: 'Перезапустити на нову ціль' },
+];
+
+// Which action(s) actually address each problem type.
+const LAUNCH_CORRECT_FIX: Record<LaunchProblemType, LaunchActionKey[]> = {
+  cpm_high: ['new_audience'],
+  ctr_low: ['change_creo'],
+  freq_high: ['change_creo', 'new_audience'],
 };
+
+const LAUNCH_ACTION_SUCCESS_TEXT: Record<LaunchActionKey, string> = {
+  continue: 'Ви вирішили не втручатися — на щастя, ситуація сама вирівнялась.',
+  change_creo: 'Ви оновили крео — CTR почав зростати, метрики вирівнялись.',
+  new_audience: 'Ви створили нову аудиторію — CPM пішов униз, покази стали дешевшими.',
+  restart_objective: 'Перезапуск кампанії на нову ціль допоміг — алгоритм знайшов кращу аудиторію.',
+};
+
+const launchProblemLines = (p: LaunchProblem): string[] => [
+  p.cpl === 'high' ? 'Ліди дорожчі ніж очікується, приблизно на 20%' : 'Вартість ліда в нормі',
+  p.ctr === 'low' ? 'CTR низький' : 'CTR в нормі',
+  p.cpm === 'high' ? 'CPM почав дорожчати' : 'CPM в нормі',
+  p.freq === 'high' ? 'Висока частотність показів' : 'Частота показів в нормі',
+];
 
 const STEPS = [
   { title: 'Вибір ніші', icon: '🎯' },
@@ -466,7 +491,10 @@ const ScenarioBuilder: React.FC = () => {
   const [pendingRemoveLeadType, setPendingRemoveLeadType] = useState<string | null>(null);
   const [pendingLeadSourceSwitch, setPendingLeadSourceSwitch] = useState<string | null>(null);
   const [launchResultOpen, setLaunchResultOpen] = useState(false);
-  const [launchOutcome, setLaunchOutcome] = useState<{ success: boolean; chance: number; lines: string[] } | null>(null);
+  const [launchPhase, setLaunchPhase] = useState<'launching' | 'week' | 'resolved' | 'month_success'>('launching');
+  const [launchWeek, setLaunchWeek] = useState(1);
+  const [launchProblem, setLaunchProblem] = useState<LaunchProblem | null>(null);
+  const [launchFeedback, setLaunchFeedback] = useState<string | null>(null);
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [videoDialogStep, setVideoDialogStep] = useState(0);
   const [skillsOpen, setSkillsOpen] = useState(false);
@@ -1953,6 +1981,59 @@ const ScenarioBuilder: React.FC = () => {
 
 
   const update = (u: Partial<Scenario>) => updateScenario(id!, u);
+
+  const startLaunch = () => {
+    setLaunchWeek(1);
+    setLaunchProblem(LAUNCH_WEEK1_PROBLEM);
+    setLaunchFeedback(null);
+    setLaunchPhase('launching');
+    setLaunchResultOpen(true);
+    setTimeout(() => setLaunchPhase('week'), 1800);
+  };
+
+  const advanceLaunchWeek = () => {
+    const nextWeek = launchWeek + 1;
+    if (nextWeek > 4) {
+      setLaunchPhase('month_success');
+      return;
+    }
+    setLaunchWeek(nextWeek);
+    setLaunchFeedback(null);
+    const calm = Math.random() < 0.25;
+    setLaunchProblem(calm ? null : LAUNCH_PROBLEM_POOL[Math.floor(Math.random() * LAUNCH_PROBLEM_POOL.length)]);
+    setLaunchPhase('week');
+  };
+
+  const handleLaunchAction = (actionKey: LaunchActionKey) => {
+    if (!launchProblem) {
+      advanceLaunchWeek();
+      return;
+    }
+    if (actionKey === 'continue') {
+      const improved = Math.random() < 0.3;
+      if (improved) {
+        setLaunchFeedback(LAUNCH_ACTION_SUCCESS_TEXT.continue);
+        setLaunchPhase('resolved');
+      } else {
+        setLaunchFeedback('Ви не втручались — ситуація погіршилась, потрібна реакція.');
+      }
+      return;
+    }
+    const isCorrect = LAUNCH_CORRECT_FIX[launchProblem.type].includes(actionKey);
+    const luckyFix = !isCorrect && Math.random() < 0.4;
+    if (isCorrect || luckyFix) {
+      setLaunchFeedback(isCorrect ? LAUNCH_ACTION_SUCCESS_TEXT[actionKey] : 'Дія була не зовсім очікуваною, але ситуація все ж вирівнялась.');
+      setLaunchPhase('resolved');
+    } else {
+      setLaunchFeedback('Дія не дала бажаного ефекту — проблема лишається, треба щось інше.');
+    }
+  };
+
+  const finishLaunchedProject = () => {
+    update({ status: 'completed', monthSurvived: launchPhase === 'month_success' });
+    setLaunchResultOpen(false);
+    navigate('/');
+  };
 
   // Whether any progress exists downstream of the traffic-source step (2..8)
   // that would be invalidated by switching platforms.
@@ -3519,7 +3600,7 @@ const ScenarioBuilder: React.FC = () => {
                   📤 Відправити куратору
                 </Button>
                 <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
-                  onClick={() => { setLaunchOutcome(simulateLaunchOutcome(real.romi)); setLaunchResultOpen(true); }}>
+                  onClick={startLaunch}>
                   🚀 Запустити проект
                 </Button>
               </div>
@@ -3792,13 +3873,7 @@ const ScenarioBuilder: React.FC = () => {
                         {stepIdx === 9 && isStepUnlocked(stepIdx, branchLeadType) && (
                           <Button
                             className="w-full mt-2 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const decompSet = isBranching && activeLeadType ? getBranch().decomposition : scenario.decomposition;
-                              const real = calcMetrics(decompSet.realistic);
-                              setLaunchOutcome(simulateLaunchOutcome(real.romi));
-                              setLaunchResultOpen(true);
-                            }}
+                            onClick={(e) => { e.stopPropagation(); startLaunch(); }}
                           >
                             🚀 Запустити проект
                           </Button>
@@ -5010,36 +5085,96 @@ const ScenarioBuilder: React.FC = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={launchResultOpen} onOpenChange={setLaunchResultOpen}>
+      <AlertDialog open={launchResultOpen} onOpenChange={(o) => { if (!o) setLaunchResultOpen(false); }}>
         <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              {launchOutcome?.success ? '🚀 Кампанія запущена!' : '⚠️ Кампанія запущена, але...'}
-            </AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-3">
-                <p className="text-xs text-muted-foreground">
-                  Прогнозований шанс успіху виходячи з реалістичного ROMI: <b className="text-foreground">{launchOutcome?.chance}%</b>
-                </p>
-                <ul className="space-y-1.5 text-sm text-foreground list-none">
-                  {(launchOutcome?.lines || []).map((line, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <span className={launchOutcome?.success ? 'text-success' : 'text-warning'}>•</span>
-                      <span>{line}</span>
-                    </li>
-                  ))}
-                </ul>
+          {launchPhase === 'launching' && (
+            <div className="flex flex-col items-center justify-center gap-4 py-10">
+              <div className="relative w-16 h-16">
+                <span className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+                <span className="relative flex items-center justify-center w-16 h-16 rounded-full bg-primary/10">
+                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                </span>
               </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction
-              onClick={() => { update({ status: 'completed' }); navigate('/'); }}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              <Check className="w-4 h-4 mr-1" /> Завершити проект
-            </AlertDialogAction>
-          </AlertDialogFooter>
+              <p className="text-base font-semibold text-foreground">Ви запускаєте проект...</p>
+            </div>
+          )}
+
+          {launchPhase === 'week' && (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {launchProblem ? `📊 Тиждень ${launchWeek}: перші результати` : `📊 Тиждень ${launchWeek}`}
+                </AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                  <div className="space-y-3">
+                    {launchFeedback && (
+                      <p className="text-sm font-medium text-warning">{launchFeedback}</p>
+                    )}
+                    <ul className="space-y-1.5 text-sm text-foreground list-none">
+                      {(launchProblem ? launchProblemLines(launchProblem) : ['Усе стабільно, метрики в нормі.']).map((line, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className={launchProblem ? 'text-warning' : 'text-success'}>•</span>
+                          <span>{line}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {launchProblem && <p className="text-sm font-semibold text-foreground pt-1">Ваші дії?</p>}
+                  </div>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="flex-col sm:flex-col gap-2">
+                {launchProblem ? (
+                  LAUNCH_ACTIONS.map(a => (
+                    <Button
+                      key={a.key}
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => handleLaunchAction(a.key)}
+                    >
+                      {a.label}
+                    </Button>
+                  ))
+                ) : (
+                  <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={advanceLaunchWeek}>
+                    Продовжити
+                  </Button>
+                )}
+              </AlertDialogFooter>
+            </>
+          )}
+
+          {launchPhase === 'resolved' && (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>✅ Тиждень {launchWeek} завершено</AlertDialogTitle>
+                <AlertDialogDescription>{launchFeedback}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={advanceLaunchWeek}>
+                  Продовжити
+                </Button>
+              </AlertDialogFooter>
+            </>
+          )}
+
+          {launchPhase === 'month_success' && (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>🏆 Проєкт успішно пройшов перший місяць!</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Клієнт задоволений, метрики дотримані — ви переходите на другий місяць співпраці.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction
+                  onClick={finishLaunchedProject}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  <Check className="w-4 h-4 mr-1" /> Завершити проект
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </>
+          )}
         </AlertDialogContent>
       </AlertDialog>
     </div>

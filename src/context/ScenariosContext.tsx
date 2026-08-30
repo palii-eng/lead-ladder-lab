@@ -83,6 +83,7 @@ export interface Scenario {
   retention: RetentionData;
   branchData: Record<string, BranchData>;
   aiCache?: Record<string, string>;
+  monthSurvived?: boolean;
 }
 
 const defaultDecomp: DecompositionScenario = {
@@ -264,6 +265,7 @@ const normalizeScenario = (value: unknown): Scenario => {
     retention: normalizeRetention(raw.retention),
     branchData,
     aiCache: isRecord(raw.aiCache) ? raw.aiCache as Record<string, string> : undefined,
+    monthSurvived: typeof raw.monthSurvived === 'boolean' ? raw.monthSurvived : false,
     ...(isRecord(raw.audienceSettings) ? { audienceSettings: raw.audienceSettings } : {}),
     ...(isRecord(raw.creoSettings) ? { creoSettings: raw.creoSettings } : {}),
     ...(isRecord(raw.creoBriefs) ? { creoBriefs: raw.creoBriefs } : {}),

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useScenarios } from '@/context/ScenariosContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LayoutDashboard, Trash2, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle, Trophy } from 'lucide-react';
+import { Plus, LayoutDashboard, Trash2, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle, Trophy, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -208,7 +208,15 @@ const Dashboard: React.FC = () => {
                               alt={s.clientBrief.name}
                               className="w-full h-full object-cover"
                             />
-                            {s.status === 'completed' && (
+                            {s.monthSurvived ? (
+                              <span
+                                className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-card"
+                                style={{ background: 'linear-gradient(135deg, hsl(45 90% 55%), hsl(28 90% 50%))' }}
+                                title="Проєкт витримав перший місяць"
+                              >
+                                <Award className="w-3 h-3 text-white" />
+                              </span>
+                            ) : s.status === 'completed' && (
                               <span
                                 className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-card"
                                 style={{ background: 'hsl(45 90% 55%)' }}
