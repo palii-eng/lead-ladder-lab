@@ -5,7 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { ArrowLeft, Check, X, RefreshCw, ExternalLink, Eye, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, X, RefreshCw, ExternalLink, Eye, Trash2, ShieldCheck, ShieldPlus, ShieldMinus } from 'lucide-react';
+
+type AppRole = 'admin' | 'moderator' | 'user';
 
 interface UserRow {
   id: string;
@@ -14,10 +16,13 @@ interface UserRow {
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
   scenarios_count: number;
+  reviewed_count: number;
+  role: AppRole;
 }
 
 interface ReviewRow {
   id: string;
+  user_id: string;
   user_email: string;
   user_name: string | null;
   scenario_name: string;
@@ -29,35 +34,54 @@ interface ReviewRow {
 }
 
 const Admin: React.FC = () => {
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { isAdmin, isModerator, isStaff, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<'users' | 'reviews'>('reviews');
   const [rows, setRows] = useState<UserRow[]>([]);
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [expandedReview, setExpandedReview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reviewFilterEmail, setReviewFilterEmail] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authLoading && !isAdmin) navigate('/', { replace: true });
-  }, [authLoading, isAdmin, navigate]);
+    if (!authLoading && !isStaff) navigate('/', { replace: true });
+  }, [authLoading, isStaff, navigate]);
 
   const load = async () => {
     setLoading(true);
     try {
-      const [{ data: profiles, error: pErr }, { data: workspaces, error: wErr }, { data: revs, error: rErr }] = await Promise.all([
+      const [{ data: profiles, error: pErr }, { data: workspaces, error: wErr }, { data: revs, error: rErr }, { data: roleRows, error: roErr }] = await Promise.all([
         supabase.from('profiles').select('*').order('created_at', { ascending: false }),
         supabase.from('scenario_workspaces').select('user_id, scenarios'),
         supabase.from('scenario_reviews').select('*').order('created_at', { ascending: false }),
+        supabase.from('user_roles').select('user_id, role'),
       ]);
       if (pErr) throw pErr;
       if (wErr) throw wErr;
       if (rErr) throw rErr;
+      if (roErr) throw roErr;
 
       const counts = new Map<string, number>();
       (workspaces || []).forEach((w: { user_id: string | null; scenarios: unknown }) => {
         if (!w.user_id) return;
         const arr = Array.isArray(w.scenarios) ? w.scenarios : [];
         counts.set(w.user_id, arr.length);
+      });
+
+      const reviewedCounts = new Map<string, number>();
+      (revs || []).forEach((r: { user_id: string; status: string }) => {
+        if (r.status === 'pending') return;
+        reviewedCounts.set(r.user_id, (reviewedCounts.get(r.user_id) || 0) + 1);
+      });
+
+      const roleByUser = new Map<string, AppRole>();
+      (roleRows || []).forEach((r: { user_id: string; role: AppRole }) => {
+        // A user can technically hold multiple rows; keep the highest tier.
+        const current = roleByUser.get(r.user_id);
+        if (!current || r.role === 'admin' || (r.role === 'moderator' && current !== 'admin')) {
+          roleByUser.set(r.user_id, r.role);
+        }
       });
 
       setRows((profiles || []).map((p) => ({
@@ -67,6 +91,8 @@ const Admin: React.FC = () => {
         status: p.status,
         created_at: p.created_at,
         scenarios_count: counts.get(p.id) ?? 0,
+        reviewed_count: reviewedCounts.get(p.id) ?? 0,
+        role: roleByUser.get(p.id) ?? 'user',
       })));
       setReviews((revs || []) as ReviewRow[]);
     } catch (e: unknown) {
@@ -76,7 +102,7 @@ const Admin: React.FC = () => {
     }
   };
 
-  useEffect(() => { if (isAdmin) load(); }, [isAdmin]);
+  useEffect(() => { if (isStaff) load(); }, [isStaff]);
 
   const updateStatus = async (id: string, status: 'approved' | 'rejected' | 'pending') => {
     const { error } = await supabase.from('profiles').update({ status }).eq('id', id);
@@ -108,9 +134,50 @@ const Admin: React.FC = () => {
     load();
   };
 
+  const deleteUser = async (row: UserRow) => {
+    if (!isAdmin) return;
+    if (!confirm(`Видалити учасника ${row.full_name || row.email}? Це видалить усі його сценарії та скасувати цю дію неможливо.`)) return;
+    setDeletingId(row.id);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+        body: { userId: row.id },
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: 'Учасника видалено' });
+      load();
+    } catch (e: unknown) {
+      toast({ title: 'Помилка видалення', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const toggleModerator = async (row: UserRow) => {
+    if (!isAdmin) return;
+    try {
+      if (row.role === 'moderator') {
+        const { error } = await supabase.from('user_roles').delete().eq('user_id', row.id).eq('role', 'moderator');
+        if (error) throw error;
+        toast({ title: 'Права модератора знято' });
+      } else {
+        const { error } = await supabase.from('user_roles').insert({ user_id: row.id, role: 'moderator' });
+        if (error) throw error;
+        toast({ title: 'Призначено модератором' });
+      }
+      load();
+    } catch (e: unknown) {
+      toast({ title: 'Помилка', description: (e as Error).message, variant: 'destructive' });
+    }
+  };
+
   if (authLoading) return null;
 
   const pendingReviews = reviews.filter(r => r.status === 'pending').length;
+  const visibleReviews = reviewFilterEmail ? reviews.filter(r => r.user_email === reviewFilterEmail) : reviews;
 
   return (
     <div className="min-h-screen bg-background">
@@ -121,6 +188,10 @@ const Admin: React.FC = () => {
               <ArrowLeft className="w-4 h-4 mr-1" /> Назад
             </Button>
             <h1 className="text-xl font-bold">Адмін-панель</h1>
+            <Badge variant="outline" className="gap-1">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              {isAdmin ? 'Супер-адмін' : 'Модератор'}
+            </Badge>
           </div>
           <Button variant="outline" size="sm" onClick={load} disabled={loading}>
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -151,22 +222,36 @@ const Admin: React.FC = () => {
               <table className="w-full text-sm">
                 <thead className="bg-muted/40 text-muted-foreground">
                   <tr>
-                    <th className="text-left p-3 font-medium">Користувач</th>
+                    <th className="text-left p-3 font-medium">Студент</th>
+                    <th className="text-left p-3 font-medium">Роль</th>
                     <th className="text-left p-3 font-medium">Статус</th>
                     <th className="text-left p-3 font-medium">Сценаріїв</th>
+                    <th className="text-left p-3 font-medium">Перевірено</th>
                     <th className="text-left p-3 font-medium">Зареєстровано</th>
                     <th className="text-right p-3 font-medium">Дії</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.length === 0 && !loading && (
-                    <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Немає користувачів</td></tr>
+                    <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">Немає користувачів</td></tr>
                   )}
                   {rows.map(r => (
                     <tr key={r.id} className="border-t border-border">
                       <td className="p-3">
                         <div className="font-medium text-foreground">{r.full_name || '—'}</div>
                         <div className="text-xs text-muted-foreground">{r.email}</div>
+                      </td>
+                      <td className="p-3">
+                        <Badge
+                          variant="outline"
+                          className={
+                            r.role === 'admin' ? 'border-primary text-primary' :
+                            r.role === 'moderator' ? 'border-accent-foreground text-accent-foreground' :
+                            'text-muted-foreground'
+                          }
+                        >
+                          {r.role === 'admin' ? 'Супер-адмін' : r.role === 'moderator' ? 'Модератор' : 'Студент'}
+                        </Badge>
                       </td>
                       <td className="p-3">
                         <Badge
@@ -180,17 +265,43 @@ const Admin: React.FC = () => {
                         </Badge>
                       </td>
                       <td className="p-3 font-semibold">{r.scenarios_count}</td>
+                      <td className="p-3 font-semibold">{r.reviewed_count}</td>
                       <td className="p-3 text-muted-foreground">{new Date(r.created_at).toLocaleString('uk-UA')}</td>
                       <td className="p-3 text-right">
-                        <div className="flex gap-2 justify-end">
-                          {r.status !== 'approved' && (
+                        <div className="flex gap-2 justify-end flex-wrap">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => { setReviewFilterEmail(r.email); setTab('reviews'); }}
+                          >
+                            <Eye className="w-3.5 h-3.5 mr-1" /> Сценарії
+                          </Button>
+                          {isAdmin && r.status !== 'approved' && (
                             <Button size="sm" onClick={() => updateStatus(r.id, 'approved')} className="bg-success text-success-foreground hover:bg-success/90">
                               <Check className="w-3.5 h-3.5 mr-1" /> Підтвердити
                             </Button>
                           )}
-                          {r.status !== 'rejected' && (
+                          {isAdmin && r.status !== 'rejected' && (
                             <Button size="sm" variant="outline" onClick={() => updateStatus(r.id, 'rejected')}>
                               <X className="w-3.5 h-3.5 mr-1" /> Відхилити
+                            </Button>
+                          )}
+                          {isAdmin && r.role !== 'admin' && (
+                            <Button size="sm" variant="outline" onClick={() => toggleModerator(r)}>
+                              {r.role === 'moderator'
+                                ? <><ShieldMinus className="w-3.5 h-3.5 mr-1" /> Зняти модератора</>
+                                : <><ShieldPlus className="w-3.5 h-3.5 mr-1" /> Зробити модератором</>}
+                            </Button>
+                          )}
+                          {isAdmin && r.role !== 'admin' && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive hover:text-destructive"
+                              disabled={deletingId === r.id}
+                              onClick={() => deleteUser(r)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
                             </Button>
                           )}
                         </div>
@@ -205,10 +316,19 @@ const Admin: React.FC = () => {
 
         {tab === 'reviews' && (
           <div className="space-y-3">
-            {reviews.length === 0 && !loading && (
+            {reviewFilterEmail && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">Фільтр по студенту:</span>
+                <Badge variant="outline">{reviewFilterEmail}</Badge>
+                <Button size="sm" variant="ghost" onClick={() => setReviewFilterEmail(null)}>
+                  <X className="w-3.5 h-3.5 mr-1" /> Скинути
+                </Button>
+              </div>
+            )}
+            {visibleReviews.length === 0 && !loading && (
               <div className="glass-card p-8 text-center text-muted-foreground">Немає заявок на перевірку</div>
             )}
-            {reviews.map(rv => (
+            {visibleReviews.map(rv => (
               <div key={rv.id} className="glass-card p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
@@ -222,7 +342,7 @@ const Admin: React.FC = () => {
                           'bg-warning text-warning-foreground'
                         }
                       >
-                        {rv.status === 'approved' ? 'Схвалено' :
+                        {rv.status === 'approved' ? 'Зараховано' :
                           rv.status === 'rejected' ? 'Відхилено' :
                           rv.status === 'in_review' ? 'На перевірці' : 'Очікує'}
                       </Badge>
@@ -253,7 +373,7 @@ const Admin: React.FC = () => {
                   )}
                   {rv.status !== 'approved' && (
                     <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90" onClick={() => updateReviewStatus(rv.id, 'approved')}>
-                      <Check className="w-3.5 h-3.5 mr-1" /> Схвалити
+                      <Check className="w-3.5 h-3.5 mr-1" /> Зарахувати
                     </Button>
                   )}
                   {rv.status !== 'rejected' && (
@@ -261,9 +381,11 @@ const Admin: React.FC = () => {
                       <X className="w-3.5 h-3.5 mr-1" /> Відхилити
                     </Button>
                   )}
-                  <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive ml-auto" onClick={() => deleteReview(rv.id)}>
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
+                  {isAdmin && (
+                    <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive ml-auto" onClick={() => deleteReview(rv.id)}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}

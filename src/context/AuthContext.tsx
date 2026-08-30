@@ -17,6 +17,8 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   isAdmin: boolean;
+  isModerator: boolean;
+  isStaff: boolean;
   isApproved: boolean;
   loading: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
@@ -38,6 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isModerator, setIsModerator] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadProfileAndRole = async (userId: string) => {
@@ -48,6 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ]);
       setProfile(prof as Profile | null);
       setIsAdmin(!!roles?.some(r => r.role === 'admin'));
+      setIsModerator(!!roles?.some(r => r.role === 'moderator'));
     } catch (e) {
       console.error('Failed to load profile/role', e);
     }
@@ -64,6 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setProfile(null);
         setIsAdmin(false);
+        setIsModerator(false);
       }
     });
 
@@ -105,7 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={{
-      user, session, profile, isAdmin,
+      user, session, profile, isAdmin, isModerator, isStaff: isAdmin || isModerator,
       isApproved: profile?.status === 'approved',
       loading, signUp, signIn, signOut, refreshProfile,
     }}>

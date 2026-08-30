@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { LogOut, Shield, User } from 'lucide-react';
 
 export const UserMenu: React.FC = () => {
-  const { user, profile, isAdmin, signOut } = useAuth();
+  const { user, profile, isStaff, signOut } = useAuth();
   const navigate = useNavigate();
   if (!user) return null;
   const initial = (profile?.full_name || profile?.email || 'U').charAt(0).toUpperCase();
@@ -27,7 +27,7 @@ export const UserMenu: React.FC = () => {
           {profile?.email}
         </div>
         <DropdownMenuSeparator />
-        {isAdmin && (
+        {isStaff && (
           <DropdownMenuItem onClick={() => navigate('/admin')}>
             <Shield className="w-4 h-4 mr-2" /> Адмін-панель
           </DropdownMenuItem>
