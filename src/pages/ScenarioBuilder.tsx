@@ -272,8 +272,18 @@ const SALES_TYPES_TIKTOK = [
 
 
 const LEAD_DESTINATIONS = [
-  'Kommo', 'HubSpot', 'SalesDrive', 'Pipedrive', 'KeyCRM', 'Trello',
-  'Google Таблиця', 'Telegram-чат з менеджером', 'Інша',
+  { name: 'Kommo', ua: false },
+  { name: 'HubSpot', ua: false },
+  { name: 'SalesDrive', ua: true },
+  { name: 'Pipedrive', ua: false },
+  { name: 'KeyCRM', ua: true },
+  { name: 'NetHunt CRM', ua: true },
+  { name: 'KeepinCRM', ua: true },
+  { name: 'SendPulse CRM', ua: true },
+  { name: 'Trello', ua: false },
+  { name: 'Google Таблиця', ua: false },
+  { name: 'Telegram-чат з менеджером', ua: false },
+  { name: 'Інша', ua: false },
 ];
 const INTEGRATIONS = ['Пряма інтеграція', 'Webhook', 'Make', 'ApiX-Drive'];
 
@@ -2899,13 +2909,14 @@ const ScenarioBuilder: React.FC = () => {
               )}
               <div className="grid gap-2">
                 {LEAD_DESTINATIONS.map(d => (
-                  <button key={d} onClick={() => toggleLeadDest(d)}
-                    className={`p-2.5 rounded-lg border text-left text-sm transition-all ${
-                      currentLeadDestinations.includes(d)
+                  <button key={d.name} onClick={() => toggleLeadDest(d.name)}
+                    className={`p-2.5 rounded-lg border text-left text-sm transition-all flex items-center gap-2 ${
+                      currentLeadDestinations.includes(d.name)
                         ? 'border-primary bg-accent text-accent-foreground font-semibold'
                         : 'border-border bg-card text-foreground hover:border-primary/40'
                     }`}>
-                    {d}
+                    <span className="flex-1">{d.name}</span>
+                    {d.ua && <span title="Українська система">🇺🇦</span>}
                   </button>
                 ))}
               </div>
