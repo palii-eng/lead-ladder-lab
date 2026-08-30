@@ -5123,43 +5123,44 @@ const ScenarioBuilder: React.FC = () => {
           {launchPhase === 'week' && (
             <>
               <AlertDialogHeader>
-                <div className="flex items-center gap-2.5 mb-1">
-                  {scenario.clientBrief?.photo && (
-                    <img
-                      src={scenario.clientBrief.photo}
-                      alt={scenario.clientBrief.name}
-                      className="w-9 h-9 rounded-full object-cover shrink-0"
-                    />
-                  )}
-                  <div>
-                    <AlertDialogTitle className="text-base">
-                      {scenario.clientBrief?.name || 'Клієнт'}
-                    </AlertDialogTitle>
-                    <span className="text-xs text-muted-foreground">Тиждень {launchWeek}</span>
-                  </div>
-                </div>
+                <AlertDialogTitle className="sr-only">
+                  {launchProblem ? `Тиждень ${launchWeek}: перші результати` : `Тиждень ${launchWeek}`}
+                </AlertDialogTitle>
                 <AlertDialogDescription asChild>
                   <div className="space-y-3">
-                    {launchFeedback && (
-                      <p className="text-sm font-medium text-warning">{launchFeedback}</p>
-                    )}
-
-                    {/* Client message — only what the client themself would notice/say */}
-                    <div className="bg-secondary rounded-lg p-3 text-sm text-foreground">
-                      {launchProblem ? (
-                        <>
-                          <p className="font-semibold mb-1">📊 Перші результати:</p>
-                          <p>{launchClientLine(launchProblem)}</p>
-                          <p className="mt-2">Що будемо з цим робити? 🤔</p>
-                        </>
-                      ) : (
-                        <p>Все супер, результати відповідають прогнозу! 🎉</p>
-                      )}
+                    {/* Client message (Telegram-style) — only what the client themself would notice/say */}
+                    <div className="flex items-start gap-3">
+                      <img
+                        src={resolveClientPhoto(scenario.clientBrief)}
+                        alt={scenario.clientBrief?.name || 'Клієнт'}
+                        className="w-11 h-11 rounded-full object-cover ring-2 ring-border flex-shrink-0 mt-0.5"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-sm font-bold text-foreground">{scenario.clientBrief?.name || 'Клієнт'}</span>
+                          <span className="text-[10px] text-muted-foreground">Тиждень {launchWeek}</span>
+                        </div>
+                        <div className="relative mt-1.5 rounded-2xl rounded-tl-sm bg-muted px-4 py-3">
+                          {launchProblem ? (
+                            <>
+                              <p className="text-sm font-semibold text-foreground">📊 Перші результати:</p>
+                              <p className="text-sm text-foreground mt-1">{launchClientLine(launchProblem)}</p>
+                              <p className="text-sm text-foreground font-medium mt-3">Що будемо з цим робити? 🤔</p>
+                            </>
+                          ) : (
+                            <p className="text-sm text-foreground">Все супер, результати відповідають прогнозу! 🎉</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
+
+                    {launchFeedback && (
+                      <p className="text-sm font-medium text-warning pl-14">{launchFeedback}</p>
+                    )}
 
                     {/* System/ad-account metrics — not something the client would say themselves */}
                     {launchProblem && (
-                      <div className="rounded-lg border border-border p-3">
+                      <div className="rounded-lg border border-border p-3 ml-14">
                         <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">
                           📈 Дані рекламного кабінету
                         </p>
