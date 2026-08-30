@@ -273,9 +273,6 @@ const SALES_TYPES_TIKTOK = [
 
 
 const LEAD_DESTINATIONS = [
-  { name: 'Kommo', url: 'https://www.kommo.com/', flag: null, flagTitle: null, ruProduct: true },
-  { name: 'amoCRM', url: 'https://www.amocrm.ru/', flag: null, flagTitle: null, ruProduct: true },
-  { name: 'Бітрікс24', url: 'https://www.bitrix24.ua/', flag: null, flagTitle: null, ruProduct: true },
   { name: 'HubSpot', url: 'https://www.hubspot.com/', flag: '🇺🇸', flagTitle: 'Розробник з США' },
   { name: 'SalesDrive', url: 'https://salesdrive.ua/', flag: '🇺🇦', flagTitle: 'Український розробник' },
   { name: 'Pipedrive', url: 'https://www.pipedrive.com/', flag: '🇪🇪', flagTitle: 'Розробник з Естонії' },
@@ -286,6 +283,9 @@ const LEAD_DESTINATIONS = [
   { name: 'Trello', url: 'https://trello.com/', flag: '🇺🇸', flagTitle: 'Розробник з США' },
   { name: 'Google Таблиця', url: null, flag: null, flagTitle: null },
   { name: 'Telegram-чат з менеджером', url: null, flag: null, flagTitle: null },
+  { name: 'Kommo', url: 'https://www.kommo.com/', flag: null, flagTitle: null, ruProduct: true },
+  { name: 'amoCRM', url: 'https://www.amocrm.ru/', flag: null, flagTitle: null, ruProduct: true },
+  { name: 'Бітрікс24', url: 'https://www.bitrix24.ua/', flag: null, flagTitle: null, ruProduct: true },
   { name: 'Інша', url: null, flag: null, flagTitle: null },
 ];
 const INTEGRATIONS = ['Пряма інтеграція', 'Webhook', 'Make', 'ApiX-Drive'];
