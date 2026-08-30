@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ClientBrief } from '@/context/ScenariosContext';
 import { Sparkles, Flame, X, Check, ArrowLeft, Loader2 } from 'lucide-react';
@@ -730,6 +731,7 @@ interface Props {
 const REVEAL_MS = 1600;
 
 const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
+  const navigate = useNavigate();
   const [index, setIndex] = useState(() => Math.floor(Math.random() * (LUCKY_CLIENTS.length + HARD_CLIENTS.length)));
   const [revealing, setRevealing] = useState(true);
 
@@ -795,6 +797,12 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
     >
       <div className="max-w-sm w-full">
 
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-4"
+        >
+          <ArrowLeft className="w-4 h-4" /> До дашборду
+        </button>
 
         {/* CARD STAGE */}
         <div className="relative" style={{ perspective: '1200px' }}>
