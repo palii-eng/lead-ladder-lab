@@ -118,9 +118,6 @@ const STEP_VIDEOS: Record<number, { title: string; url: string }[]> = {
   5: [
     { title: 'Куди направляти ліди', url: 'https://www.youtube.com/watch?v=d0B14sPmr8k' },
   ],
-  6: [
-    { title: 'Інтеграція CRM з рекламою', url: 'https://ads-school.online/' },
-  ],
   7: [
     { title: 'Скрипти продажів', url: 'https://ads-school.online/' },
     { title: 'Follow-up стратегії', url: 'https://ads-school.online/' },
@@ -3461,7 +3458,7 @@ const ScenarioBuilder: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <AdschoolVideoButton step={activeStep} />
+            {(STEP_VIDEOS[activeStep] || []).length > 0 && <AdschoolVideoButton step={activeStep} />}
             <button onClick={() => setActiveStep(null)} className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground transition-colors ml-1">
               <X className="w-4 h-4" />
             </button>
