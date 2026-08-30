@@ -187,6 +187,9 @@ const Dashboard: React.FC = () => {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {scenarios.map((s, i) => {
               const review = reviewByName[s.name];
+              const displayTitle = s.clientBrief?.name && s.clientBrief?.niche
+                ? `${s.clientBrief.name} — ${s.clientBrief.niche}`
+                : (s.clientBrief?.niche || s.name);
               return (
                 <div
                   key={s.id}
@@ -217,7 +220,7 @@ const Dashboard: React.FC = () => {
                       </Tooltip>
                     )}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-foreground truncate">{s.name}</h3>
+                      <h3 className="font-bold text-foreground truncate">{displayTitle}</h3>
                       {s.description && (
                         <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{s.description}</p>
                       )}

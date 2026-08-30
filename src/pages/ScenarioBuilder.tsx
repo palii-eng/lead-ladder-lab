@@ -1315,8 +1315,9 @@ const ScenarioBuilder: React.FC = () => {
         scenarioName={scenario.name}
         onAccept={(difficulty, brief) => {
           const isDefaultName = /^Сценарій #\d+$/.test(scenario.name);
+          const shortTitle = brief.name && brief.niche ? `${brief.name} — ${brief.niche}` : (brief.niche || brief.name);
           updateScenario(id!, {
-            ...(isDefaultName && brief.niche ? { name: brief.niche } : {}),
+            ...(isDefaultName && shortTitle ? { name: shortTitle } : {}),
             difficulty,
             clientBrief: brief,
           });
