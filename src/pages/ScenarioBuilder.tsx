@@ -2014,6 +2014,7 @@ const ScenarioBuilder: React.FC = () => {
       if (improved) {
         setLaunchFeedback(LAUNCH_ACTION_SUCCESS_TEXT.continue);
         setLaunchPhase('resolved');
+        setTimeout(advanceLaunchWeek, 1800);
       } else {
         setLaunchFeedback('Ви не втручались — ситуація погіршилась, потрібна реакція.');
       }
@@ -2024,6 +2025,7 @@ const ScenarioBuilder: React.FC = () => {
     if (isCorrect || luckyFix) {
       setLaunchFeedback(isCorrect ? LAUNCH_ACTION_SUCCESS_TEXT[actionKey] : 'Дія була не зовсім очікуваною, але ситуація все ж вирівнялась.');
       setLaunchPhase('resolved');
+      setTimeout(advanceLaunchWeek, 1800);
     } else {
       setLaunchFeedback('Дія не дала бажаного ефекту — проблема лишається, треба щось інше.');
     }
@@ -5149,11 +5151,10 @@ const ScenarioBuilder: React.FC = () => {
                 <AlertDialogTitle>✅ Тиждень {launchWeek} завершено</AlertDialogTitle>
                 <AlertDialogDescription>{launchFeedback}</AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter>
-                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={advanceLaunchWeek}>
-                  Продовжити
-                </Button>
-              </AlertDialogFooter>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Переходимо до наступного тижня...</span>
+              </div>
             </>
           )}
 
