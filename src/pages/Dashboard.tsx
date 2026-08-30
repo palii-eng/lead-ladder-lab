@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { UserMenu } from '@/components/UserMenu';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -193,7 +194,28 @@ const Dashboard: React.FC = () => {
                   style={{ animationDelay: `${i * 60}ms` }}
                   onClick={() => navigate(`/scenario/${s.id}`)}
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-3">
+                    {s.clientBrief?.photo && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={(e) => e.stopPropagation()}
+                            className="shrink-0 w-10 h-10 rounded-full overflow-hidden ring-2 ring-accent bg-secondary cursor-help"
+                          >
+                            <img
+                              src={s.clientBrief.photo}
+                              alt={s.clientBrief.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-xs text-xs">
+                          <p className="font-semibold mb-1">{s.clientBrief.name}</p>
+                          <p className="text-muted-foreground whitespace-pre-wrap">{s.clientBrief.task}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-foreground truncate">{s.name}</h3>
                       {s.description && (

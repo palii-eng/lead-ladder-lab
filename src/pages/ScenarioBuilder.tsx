@@ -1314,7 +1314,9 @@ const ScenarioBuilder: React.FC = () => {
       <SimulationIntro
         scenarioName={scenario.name}
         onAccept={(difficulty, brief) => {
+          const isDefaultName = /^Сценарій #\d+$/.test(scenario.name);
           updateScenario(id!, {
+            ...(isDefaultName && brief.niche ? { name: brief.niche } : {}),
             difficulty,
             clientBrief: brief,
           });
