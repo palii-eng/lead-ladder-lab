@@ -2019,7 +2019,14 @@ const ScenarioBuilder: React.FC = () => {
     setLaunchWeek(nextWeek);
     setLaunchFeedback(null);
     const calm = Math.random() < 0.25;
-    setLaunchProblem(calm ? null : buildLaunchProblem(LAUNCH_PROBLEM_TYPES[Math.floor(Math.random() * LAUNCH_PROBLEM_TYPES.length)]));
+    if (calm) {
+      setLaunchProblem(null);
+    } else {
+      const previousType = launchProblem?.type;
+      const candidates = LAUNCH_PROBLEM_TYPES.filter(t => t !== previousType);
+      const pool = candidates.length > 0 ? candidates : LAUNCH_PROBLEM_TYPES;
+      setLaunchProblem(buildLaunchProblem(pool[Math.floor(Math.random() * pool.length)]));
+    }
     setLaunchPhase('week');
   };
 
