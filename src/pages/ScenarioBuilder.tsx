@@ -5117,23 +5117,44 @@ const ScenarioBuilder: React.FC = () => {
           {launchPhase === 'week' && (
             <>
               <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {launchProblem ? `📊 Тиждень ${launchWeek}: перші результати` : `📊 Тиждень ${launchWeek}`}
+                <AlertDialogTitle className="sr-only">
+                  {launchProblem ? `Тиждень ${launchWeek}: перші результати` : `Тиждень ${launchWeek}`}
                 </AlertDialogTitle>
                 <AlertDialogDescription asChild>
                   <div className="space-y-3">
+                    {/* Повідомлення від клієнта (Telegram-стиль) */}
+                    <div className="flex items-start gap-3">
+                      <img
+                        src={resolveClientPhoto(scenario.clientBrief)}
+                        alt={scenario.clientBrief?.name || 'Клієнт'}
+                        className="w-11 h-11 rounded-full object-cover ring-2 ring-border flex-shrink-0 mt-0.5"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-sm font-bold text-foreground">{scenario.clientBrief?.name || 'Клієнт'}</span>
+                          <span className="text-[10px] text-muted-foreground">Тиждень {launchWeek}</span>
+                        </div>
+                        <div className="relative mt-1.5 rounded-2xl rounded-tl-sm bg-muted px-4 py-3">
+                          <p className="text-sm font-semibold text-foreground">
+                            {launchProblem ? '📊 Перші результати:' : '📊 Підсумки тижня:'}
+                          </p>
+                          <ul className="space-y-1.5 text-sm text-foreground list-none mt-2">
+                            {(launchProblem ? launchProblemLines(launchProblem) : ['Усе стабільно, метрики в нормі.']).map((line, i) => (
+                              <li key={i} className="flex items-start gap-2">
+                                <span className={launchProblem ? 'text-warning' : 'text-success'}>•</span>
+                                <span>{line}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          <p className="text-sm text-foreground font-medium mt-3">
+                            {launchProblem ? 'Що будемо з цим робити? 🤔' : 'Рухаємось далі? 🙂'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                     {launchFeedback && (
-                      <p className="text-sm font-medium text-warning">{launchFeedback}</p>
+                      <p className="text-sm font-medium text-warning pl-14">{launchFeedback}</p>
                     )}
-                    <ul className="space-y-1.5 text-sm text-foreground list-none">
-                      {(launchProblem ? launchProblemLines(launchProblem) : ['Усе стабільно, метрики в нормі.']).map((line, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <span className={launchProblem ? 'text-warning' : 'text-success'}>•</span>
-                          <span>{line}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    {launchProblem && <p className="text-sm font-semibold text-foreground pt-1">Ваші дії?</p>}
                   </div>
                 </AlertDialogDescription>
               </AlertDialogHeader>
