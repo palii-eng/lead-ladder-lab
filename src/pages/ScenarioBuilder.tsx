@@ -131,8 +131,14 @@ const LAUNCH_ACTION_SUCCESS_TEXT: Record<LaunchActionKey, string> = {
   restart_objective: 'Перезапуск кампанії на нову ціль допоміг — алгоритм знайшов кращу аудиторію.',
 };
 
-const launchProblemLines = (p: LaunchProblem): string[] => [
-  p.cpl === 'high' ? `Ліди дорожчі ніж очікується, приблизно на ${p.cplPct}%` : 'Вартість ліда в нормі',
+// What the client actually notices/reports (they only see their own lead
+// cost going up, not the ad account's internal metrics).
+const launchClientLine = (p: LaunchProblem): string =>
+  p.cpl === 'high' ? `Ліди дорожчі ніж очікується, приблизно на ${p.cplPct}%.` : 'Ліди йдуть за прогнозом.';
+
+// What the marketer sees in their own ad account dashboard — the technical
+// signals that actually explain why leads got pricier.
+const launchSystemMetricLines = (p: LaunchProblem): string[] => [
   p.ctr === 'low' ? 'CTR низький' : 'CTR в нормі',
   p.cpm === 'high' ? `CPM почав дорожчати, приблизно на ${p.cpmPct}%` : 'CPM в нормі',
   p.freq === 'high' ? 'Висока частотність показів' : 'Частота показів в нормі',
@@ -5117,22 +5123,57 @@ const ScenarioBuilder: React.FC = () => {
           {launchPhase === 'week' && (
             <>
               <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {launchProblem ? `📊 Тиждень ${launchWeek}: перші результати` : `📊 Тиждень ${launchWeek}`}
-                </AlertDialogTitle>
+                <div className="flex items-center gap-2.5 mb-1">
+                  {scenario.clientBrief?.photo && (
+                    <img
+                      src={scenario.clientBrief.photo}
+                      alt={scenario.clientBrief.name}
+                      className="w-9 h-9 rounded-full object-cover shrink-0"
+                    />
+                  )}
+                  <div>
+                    <AlertDialogTitle className="text-base">
+                      {scenario.clientBrief?.name || 'Клієнт'}
+                    </AlertDialogTitle>
+                    <span className="text-xs text-muted-foreground">Тиждень {launchWeek}</span>
+                  </div>
+                </div>
                 <AlertDialogDescription asChild>
                   <div className="space-y-3">
                     {launchFeedback && (
                       <p className="text-sm font-medium text-warning">{launchFeedback}</p>
                     )}
-                    <ul className="space-y-1.5 text-sm text-foreground list-none">
-                      {(launchProblem ? launchProblemLines(launchProblem) : ['Усе стабільно, метрики в нормі.']).map((line, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <span className={launchProblem ? 'text-warning' : 'text-success'}>•</span>
-                          <span>{line}</span>
-                        </li>
-                      ))}
-                    </ul>
+
+                    {/* Client message — only what the client themself would notice/say */}
+                    <div className="bg-secondary rounded-lg p-3 text-sm text-foreground">
+                      {launchProblem ? (
+                        <>
+                          <p className="font-semibold mb-1">📊 Перші результати:</p>
+                          <p>{launchClientLine(launchProblem)}</p>
+                          <p className="mt-2">Що будемо з цим робити? 🤔</p>
+                        </>
+                      ) : (
+                        <p>Все супер, результати відповідають прогнозу! 🎉</p>
+                      )}
+                    </div>
+
+                    {/* System/ad-account metrics — not something the client would say themselves */}
+                    {launchProblem && (
+                      <div className="rounded-lg border border-border p-3">
+                        <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">
+                          📈 Дані рекламного кабінету
+                        </p>
+                        <ul className="space-y-1.5 text-sm text-foreground list-none">
+                          {launchSystemMetricLines(launchProblem).map((line, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <span className="text-muted-foreground">•</span>
+                              <span>{line}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
                     {launchProblem && <p className="text-sm font-semibold text-foreground pt-1">Ваші дії?</p>}
                   </div>
                 </AlertDialogDescription>
