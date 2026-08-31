@@ -5119,7 +5119,7 @@ const ScenarioBuilder: React.FC = () => {
       </AlertDialog>
 
       <AlertDialog open={launchResultOpen} onOpenChange={(o) => { if (!o) setLaunchResultOpen(false); }}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[85vh] overflow-y-auto">
           {/* Прогрес утримання клієнта — 4 тижні */}
           <div className="flex items-center gap-1.5 mb-2">
             {[1, 2, 3, 4].map(w => {
@@ -5219,6 +5219,20 @@ const ScenarioBuilder: React.FC = () => {
                         </ul>
                       </div>
                     )}
+
+                    {/* The marketer's actual configured campaign — same live mockup as in Підготовка */}
+                    <div className="ml-14">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">
+                        🖥️ Ваш рекламний кабінет
+                      </p>
+                      <PrepWorksNode
+                        campaignKeys={
+                          scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0
+                            ? scenario.leadTypes
+                            : undefined
+                        }
+                      />
+                    </div>
 
                     {launchProblem && <p className="text-sm font-semibold text-foreground pt-1">Ваші дії?</p>}
                   </div>
