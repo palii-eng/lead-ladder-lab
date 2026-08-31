@@ -4179,12 +4179,17 @@ const ScenarioBuilder: React.FC = () => {
                           }}
                         />
                         {stepIdx === 9 && isStepUnlocked(stepIdx, branchLeadType) && (
-                          <Button
-                            className="w-full mt-2 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
-                            onClick={(e) => { e.stopPropagation(); startLaunch(); }}
-                          >
-                            🚀 Запустити проект
-                          </Button>
+                          <>
+                            <div className="flex justify-center py-1">
+                              <div className="w-px h-4 border-l-2 border-dashed border-success/50" />
+                            </div>
+                            <Button
+                              className="w-full mt-1 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-md"
+                              onClick={(e) => { e.stopPropagation(); startLaunch(); }}
+                            >
+                              🚀 Запустити проект
+                            </Button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -4347,6 +4352,30 @@ const ScenarioBuilder: React.FC = () => {
                         ))}
                       </div>
                     </div>
+                    )}
+                    {/* Converging connector — one line per branch row, meeting at the shared Результат node */}
+                    {isStepUnlocked(9) && (
+                      <svg
+                        className="flex-shrink-0 overflow-visible"
+                        width="60"
+                        height={leadTypes.length * branchRowHeight}
+                        viewBox={`0 0 60 ${leadTypes.length * branchRowHeight}`}
+                      >
+                        {leadTypes.map((_, brIdx) => {
+                          const branchY = brIdx * branchRowHeight + nodeCenterOffset;
+                          const centerY = ((leadTypes.length - 1) * branchRowHeight) / 2 + nodeCenterOffset;
+                          return (
+                            <path
+                              key={brIdx}
+                              d={`M 0,${branchY} C 30,${branchY} 30,${centerY} 60,${centerY}`}
+                              stroke="hsl(var(--success))"
+                              strokeWidth="2"
+                              strokeDasharray="6 3"
+                              fill="none"
+                            />
+                          );
+                        })}
+                      </svg>
                     )}
                     {/* Shared Результат node — one summary for the whole scenario, not per branch */}
                     {isStepUnlocked(9) && (
