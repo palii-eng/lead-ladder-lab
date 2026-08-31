@@ -4026,6 +4026,19 @@ const ScenarioBuilder: React.FC = () => {
                     ⚠️ Потрібно мінімум 1 аудиторія і 3 крео на кожну кампанію
                   </p>
                 )}
+                {scenario.status === 'completed' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full gap-2 text-muted-foreground hover:text-foreground text-xs"
+                    onClick={() => {
+                      update({ status: 'draft', monthSurvived: false });
+                      toast({ title: 'Результат скинуто', description: 'Можна запустити проект заново.' });
+                    }}
+                  >
+                    ↺ Скинути результат (для перетестування)
+                  </Button>
+                )}
               </div>
             </div>
           );
