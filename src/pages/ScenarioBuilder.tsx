@@ -5364,6 +5364,14 @@ const ScenarioBuilder: React.FC = () => {
 
       <AlertDialog open={launchResultOpen} onOpenChange={(o) => { if (!o) setLaunchResultOpen(false); }}>
         <AlertDialogContent className="max-h-[85vh] overflow-y-auto">
+          <button
+            type="button"
+            onClick={() => setLaunchResultOpen(false)}
+            className="absolute top-4 right-4 w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors z-10"
+            title="Закрити"
+          >
+            <X className="w-4 h-4" />
+          </button>
           {/* Прогрес утримання клієнта — 4 тижні */}
           <div className="flex items-center gap-1.5 mb-2">
             {[1, 2, 3, 4].map(w => {
