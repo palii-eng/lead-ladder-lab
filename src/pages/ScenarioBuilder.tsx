@@ -5379,7 +5379,7 @@ const ScenarioBuilder: React.FC = () => {
       </AlertDialog>
 
       <AlertDialog open={launchResultOpen} onOpenChange={(o) => { if (!o) setLaunchResultOpen(false); }}>
-        <AlertDialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+        <AlertDialogContent className="max-h-[95vh] overflow-y-auto sm:max-w-4xl">
           <button
             type="button"
             onClick={() => setLaunchResultOpen(false)}
