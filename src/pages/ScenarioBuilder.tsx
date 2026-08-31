@@ -2021,14 +2021,19 @@ const ScenarioBuilder: React.FC = () => {
     const calm = Math.random() < 0.25;
     if (calm) {
       setLaunchProblem(null);
-    } else {
-      const previousType = launchProblem?.type;
-      const candidates = LAUNCH_PROBLEM_TYPES.filter(t => t !== previousType);
-      const pool = candidates.length > 0 ? candidates : LAUNCH_PROBLEM_TYPES;
-      setLaunchProblem(buildLaunchProblem(pool[Math.floor(Math.random() * pool.length)]));
+      setLaunchPhase('week');
+      // Спокійний тиждень без проблем — рухаємось далі автоматично
+      setTimeout(() => advanceLaunchWeekRef.current(), 2500);
+      return;
     }
+    const previousType = launchProblem?.type;
+    const candidates = LAUNCH_PROBLEM_TYPES.filter(t => t !== previousType);
+    const pool = candidates.length > 0 ? candidates : LAUNCH_PROBLEM_TYPES;
+    setLaunchProblem(buildLaunchProblem(pool[Math.floor(Math.random() * pool.length)]));
     setLaunchPhase('week');
   };
+  const advanceLaunchWeekRef = useRef(advanceLaunchWeek);
+  advanceLaunchWeekRef.current = advanceLaunchWeek;
 
   const handleLaunchAction = (actionKey: LaunchActionKey) => {
     if (!launchProblem) {
