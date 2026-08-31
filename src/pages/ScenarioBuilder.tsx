@@ -1717,13 +1717,33 @@ const ScenarioBuilder: React.FC = () => {
       });
     });
 
-    // Push the week's problem into the weakest row so the table matches the story.
+    // Push the week's problem into a whole ad set (the audience row + every
+    // creo linked to it) instead of one isolated row — a real ad account
+    // problem shows up consistently across a targeting/creative combo, not
+    // as a single random outlier buried among otherwise-normal rows.
     if (problem && rows.length > 0) {
-      const target = rows.reduce((worst, r) => (r.ctr < worst.ctr ? r : worst), rows[0]);
-      if (problem.cpm === 'high') target.cpm = Number((target.cpm * (1 + (problem.cpmPct || 25) / 100)).toFixed(2));
-      if (problem.ctr === 'low') target.ctr = Number((target.ctr * 0.4).toFixed(2));
-      if (problem.freq === 'high') target.freq = Number((2.6 + (target.freq % 1)).toFixed(1));
-      target.bad = true;
+      const groups: Row[][] = [];
+      let current: Row[] = [];
+      rows.forEach(r => {
+        if (r.kind === 'aud') {
+          if (current.length) groups.push(current);
+          current = [r];
+        } else if (current.length) {
+          current.push(r);
+        }
+      });
+      if (current.length) groups.push(current);
+
+      if (groups.length > 0) {
+        const groupSeed = hash(`group:${week}:${problem.type}`);
+        const targetGroup = groups[groupSeed % groups.length];
+        targetGroup.forEach(r => {
+          if (problem.cpm === 'high') r.cpm = Number((r.cpm * (1 + (problem.cpmPct || 25) / 100)).toFixed(2));
+          if (problem.ctr === 'low') r.ctr = Number((r.ctr * 0.4).toFixed(2));
+          if (problem.freq === 'high') r.freq = Number((2.6 + (r.freq % 1)).toFixed(1));
+          r.bad = true;
+        });
+      }
     }
 
     if (rows.length === 0) {
