@@ -4270,7 +4270,11 @@ const ScenarioBuilder: React.FC = () => {
                   // Check if decomposition is completed for this branch to show AI hint
                   const showAiHint = stepIdx === 4 && (branchLeadType ? isStepCompletedForBranch(scenario, 4, branchLeadType) : isStepCompletedStatic(scenario, 4));
 
-                  const isLaunched = scenario.status === 'completed';
+                  // Not just 'launched' — the Результат card should only appear once the
+                  // project actually survived all 4 weeks of the simulation, not merely
+                  // whenever status happens to be 'completed' (which could be stale data
+                  // from before this weekly simulation existed).
+                  const isLaunched = scenario.monthSurvived === true;
 
                   return (
                     <div key={`${stepIdx}-${branchLeadType || 'main'}`} className="flex items-start" data-flow-node data-step-index={stepIdx}>
