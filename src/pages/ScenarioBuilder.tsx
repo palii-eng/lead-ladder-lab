@@ -5345,17 +5345,8 @@ const ScenarioBuilder: React.FC = () => {
                       <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">
                         🖥️ Ваш рекламний кабінет
                       </p>
-                      <div className="rounded-lg border border-border overflow-hidden" style={{ maxHeight: 260, overflowY: 'auto' }}>
-                        <div style={{ zoom: 0.4 }}>
-                          <PrepWorksNode
-                            campaignKeys={
-                              scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0
-                                ? scenario.leadTypes
-                                : undefined
-                            }
-                          />
-                        </div>
-                      </div>
+                      <LaunchStatsTable problem={launchProblem} week={launchWeek} />
+
                     </div>
 
                     {launchProblem && <p className="text-sm font-semibold text-foreground pt-1">Ваші дії?</p>}
