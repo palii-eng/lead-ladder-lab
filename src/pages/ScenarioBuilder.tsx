@@ -5714,33 +5714,35 @@ const ScenarioBuilder: React.FC = () => {
 
                     </div>
 
-                    {launchProblem && <p className="text-sm font-semibold text-foreground pt-1">Ваші дії?</p>}
                   </div>
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter className="flex-col sm:flex-col sm:justify-start sm:space-x-0 gap-2">
+              <AlertDialogFooter className="flex-col sm:flex-col sm:justify-start sm:space-x-0">
                 {launchProblem ? (
-                  <>
-                    {LAUNCH_ACTIONS.map(a => (
-                      <Button
-                        key={a.key}
-                        variant="outline"
-                        className="w-full justify-start"
-                        onClick={() => handleLaunchAction(a.key)}
-                      >
-                        {a.label}
-                      </Button>
-                    ))}
+                  <div className="w-full rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2.5">
+                    <p className="text-sm font-semibold text-foreground">Ваші дії?</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {LAUNCH_ACTIONS.map(a => (
+                        <Button
+                          key={a.key}
+                          variant="outline"
+                          className="w-full justify-start text-sm bg-card"
+                          onClick={() => handleLaunchAction(a.key)}
+                        >
+                          {a.label}
+                        </Button>
+                      ))}
+                    </div>
                     {getAllAdSets().length > 1 && launchProblem.targetAudienceName && (
                       <Button
                         variant="outline"
-                        className="w-full justify-start border-destructive/40 text-destructive hover:bg-destructive/5"
+                        className="w-full justify-start border-destructive/40 text-destructive hover:bg-destructive/5 bg-card"
                         onClick={() => handleLaunchAction('disable_audience')}
                       >
                         Вимкнути «{launchProblem.targetAudienceName}»
                       </Button>
                     )}
-                  </>
+                  </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground w-full py-1">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
