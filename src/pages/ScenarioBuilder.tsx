@@ -5237,9 +5237,10 @@ const ScenarioBuilder: React.FC = () => {
                     </Button>
                   ))
                 ) : (
-                  <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={advanceLaunchWeek}>
-                    Продовжити
-                  </Button>
+                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground w-full py-1">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Тиждень втримано — переходимо до наступного...</span>
+                  </div>
                 )}
               </AlertDialogFooter>
             </>
