@@ -1903,6 +1903,25 @@ const ScenarioBuilder: React.FC = () => {
       setCreoFormat(null);
       setCreoOpen(true);
     };
+    const deleteCreo = (key: string, idx: number) => {
+      const raw = (scenario as any)?.creoBriefs?.[key];
+      const list: any[] = Array.isArray(raw) ? [...raw] : [];
+      if (idx < 0 || idx >= list.length) return;
+      list.splice(idx, 1);
+      const current = (scenario as any)?.creoBriefs || {};
+      update({ creoBriefs: { ...current, [key]: list } } as any);
+      toast({ title: 'Крео видалено' });
+    };
+    const duplicateCreo = (key: string, idx: number) => {
+      const raw = (scenario as any)?.creoBriefs?.[key];
+      const list: any[] = Array.isArray(raw) ? [...raw] : [];
+      if (idx < 0 || idx >= list.length) return;
+      const copy = JSON.parse(JSON.stringify(list[idx]));
+      list.splice(idx + 1, 0, copy);
+      const current = (scenario as any)?.creoBriefs || {};
+      update({ creoBriefs: { ...current, [key]: list } } as any);
+      toast({ title: 'Крео дубльовано' });
+    };
 
     const TabBtn: React.FC<{ label: string; icon: React.ReactNode; count?: number; active?: boolean }> = ({ label, icon, count, active }) => (
       <div
@@ -2113,20 +2132,41 @@ const ScenarioBuilder: React.FC = () => {
                                   const fmt = formatMeta[cr.format] || { icon: '📝', label: 'Крео' };
                                   const title = cr.fields?.h1 || cr.fields?.script?.slice(0, 40) || fmt.label;
                                   return (
-                                    <button
+                                    <div
                                       key={globalIdx}
-                                      type="button"
-                                      onClick={() => openCreoView(c.key, globalIdx)}
-                                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md border bg-white hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md border bg-white hover:border-primary/50 transition-all"
                                       style={{ borderColor: 'hsl(var(--border))' }}
                                     >
-                                      <span className="w-6 h-6 rounded flex items-center justify-center text-[12px] shrink-0" style={{ background: 'hsl(35 80% 94%)' }}>
-                                        {fmt.icon}
-                                      </span>
-                                      <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground shrink-0">ТЗ #{globalIdx + 1}</span>
-                                      <span className="text-[11px] font-semibold text-foreground flex-1 truncate">{title}</span>
-                                      <span className="text-[9px] font-medium text-muted-foreground shrink-0">{fmt.label}</span>
-                                    </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => openCreoView(c.key, globalIdx)}
+                                        className="flex-1 flex items-center gap-2 min-w-0 text-left hover:bg-primary/5 -m-1.5 p-1.5 rounded"
+                                      >
+                                        <span className="w-6 h-6 rounded flex items-center justify-center text-[12px] shrink-0" style={{ background: 'hsl(35 80% 94%)' }}>
+                                          {fmt.icon}
+                                        </span>
+                                        <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground shrink-0">ТЗ #{globalIdx + 1}</span>
+                                        <span className="text-[11px] font-semibold text-foreground flex-1 truncate">{title}</span>
+                                        <span className="text-[9px] font-medium text-muted-foreground shrink-0">{fmt.label}</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => duplicateCreo(c.key, globalIdx)}
+                                        className="w-5 h-5 rounded flex items-center justify-center hover:bg-muted transition-colors shrink-0"
+                                        style={{ color: 'hsl(220 10% 40%)' }}
+                                        title="Дублювати крео"
+                                      >
+                                        <Copy className="w-3 h-3" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => deleteCreo(c.key, globalIdx)}
+                                        className="w-5 h-5 rounded flex items-center justify-center hover:bg-destructive/10 text-destructive transition-colors shrink-0"
+                                        title="Видалити крео"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    </div>
                                   );
                                 })}
                               </div>
@@ -2151,20 +2191,41 @@ const ScenarioBuilder: React.FC = () => {
                               const fmt = formatMeta[cr.format] || { icon: '📝', label: 'Крео' };
                               const title = cr.fields?.h1 || cr.fields?.script?.slice(0, 40) || fmt.label;
                               return (
-                                <button
+                                <div
                                   key={globalIdx}
-                                  type="button"
-                                  onClick={() => openCreoView(c.key, globalIdx)}
-                                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md border bg-white hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md border bg-white hover:border-primary/50 transition-all"
                                   style={{ borderColor: 'hsl(var(--border))' }}
                                 >
-                                  <span className="w-6 h-6 rounded flex items-center justify-center text-[12px] shrink-0" style={{ background: 'hsl(35 80% 94%)' }}>
-                                    {fmt.icon}
-                                  </span>
-                                  <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground shrink-0">#{globalIdx + 1}</span>
-                                  <span className="text-[11px] font-semibold text-foreground flex-1 truncate">{title}</span>
-                                  <span className="text-[9px] font-medium text-muted-foreground shrink-0">{fmt.label}</span>
-                                </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => openCreoView(c.key, globalIdx)}
+                                    className="flex-1 flex items-center gap-2 min-w-0 text-left hover:bg-primary/5 -m-1.5 p-1.5 rounded"
+                                  >
+                                    <span className="w-6 h-6 rounded flex items-center justify-center text-[12px] shrink-0" style={{ background: 'hsl(35 80% 94%)' }}>
+                                      {fmt.icon}
+                                    </span>
+                                    <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground shrink-0">#{globalIdx + 1}</span>
+                                    <span className="text-[11px] font-semibold text-foreground flex-1 truncate">{title}</span>
+                                    <span className="text-[9px] font-medium text-muted-foreground shrink-0">{fmt.label}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => duplicateCreo(c.key, globalIdx)}
+                                    className="w-5 h-5 rounded flex items-center justify-center hover:bg-muted transition-colors shrink-0"
+                                    style={{ color: 'hsl(220 10% 40%)' }}
+                                    title="Дублювати крео"
+                                  >
+                                    <Copy className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => deleteCreo(c.key, globalIdx)}
+                                    className="w-5 h-5 rounded flex items-center justify-center hover:bg-destructive/10 text-destructive transition-colors shrink-0"
+                                    title="Видалити крео"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
                               );
                             })}
                           </div>
