@@ -77,7 +77,7 @@ const estimateClientBudgetUsd = (task: string): number => {
 // problem, sometimes calm), the marketer picks an action, and the outcome
 // depends on whether the action actually fixes the underlying issue.
 type LaunchProblemType = 'cpm_high' | 'ctr_low' | 'freq_high';
-type LaunchActionKey = 'continue' | 'change_creo' | 'new_audience' | 'restart_objective';
+type LaunchActionKey = 'continue' | 'change_creo' | 'new_audience' | 'restart_objective' | 'disable_audience';
 
 interface LaunchProblem {
   type: LaunchProblemType;
@@ -87,6 +87,14 @@ interface LaunchProblem {
   freq: 'high' | 'normal';
   cplPct?: number;
   cpmPct?: number;
+  // Which specific ad set (campaign branch + audience) is actually causing
+  // the problem this week — so the client's message and the "disable this
+  // audience" action can both point at the real culprit instead of a vague
+  // account-wide complaint.
+  targetKey?: string;
+  targetAudienceId?: string;
+  targetAudienceName?: string;
+  targetBranchLabel?: string;
 }
 
 const LAUNCH_PROBLEM_TEMPLATES: Omit<LaunchProblem, 'cplPct' | 'cpmPct'>[] = [
@@ -110,6 +118,12 @@ const buildLaunchProblem = (type: LaunchProblemType): LaunchProblem => {
 
 const LAUNCH_PROBLEM_TYPES: LaunchProblemType[] = ['cpm_high', 'ctr_low', 'freq_high'];
 
+const launchHashSeed = (s: string): number => {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return Math.abs(h);
+};
+
 const LAUNCH_ACTIONS: { key: LaunchActionKey; label: string }[] = [
   { key: 'continue', label: 'Продовжити без змін' },
   { key: 'change_creo', label: 'Змінити крео' },
@@ -117,11 +131,12 @@ const LAUNCH_ACTIONS: { key: LaunchActionKey; label: string }[] = [
   { key: 'restart_objective', label: 'Перезапустити на нову ціль' },
 ];
 
-// Which action(s) actually address each problem type.
+// Which action(s) actually address each problem type. Disabling the exact
+// audience causing the problem is always a valid fix, regardless of type.
 const LAUNCH_CORRECT_FIX: Record<LaunchProblemType, LaunchActionKey[]> = {
-  cpm_high: ['new_audience'],
-  ctr_low: ['change_creo'],
-  freq_high: ['change_creo', 'new_audience'],
+  cpm_high: ['new_audience', 'disable_audience'],
+  ctr_low: ['change_creo', 'disable_audience'],
+  freq_high: ['change_creo', 'new_audience', 'disable_audience'],
 };
 
 const LAUNCH_ACTION_SUCCESS_TEXT: Record<LaunchActionKey, string> = {
@@ -129,12 +144,19 @@ const LAUNCH_ACTION_SUCCESS_TEXT: Record<LaunchActionKey, string> = {
   change_creo: 'Ви оновили крео — CTR почав зростати, метрики вирівнялись.',
   new_audience: 'Ви створили нову аудиторію — CPM пішов униз, покази стали дешевшими.',
   restart_objective: 'Перезапуск кампанії на нову ціль допоміг — алгоритм знайшов кращу аудиторію.',
+  disable_audience: 'Ви вимкнули проблемну аудиторію — решта кампанії одразу підтягнулась.',
 };
 
 // What the client actually notices/reports (they only see their own lead
-// cost going up, not the ad account's internal metrics).
-const launchClientLine = (p: LaunchProblem): string =>
-  p.cpl === 'high' ? `Ліди дорожчі ніж очікується, приблизно на ${p.cplPct}%.` : 'Ліди йдуть за прогнозом.';
+// cost going up, and only for the specific campaign/audience it's coming
+// from — not the ad account's internal metrics).
+const launchClientLine = (p: LaunchProblem): string => {
+  if (p.cpl !== 'high') return 'Ліди йдуть за прогнозом.';
+  const where = p.targetBranchLabel || p.targetAudienceName;
+  return where
+    ? `Ліди дорожчі ніж очікується по «${where}», приблизно на ${p.cplPct}%.`
+    : `Ліди дорожчі ніж очікується, приблизно на ${p.cplPct}%.`;
+};
 
 // What the marketer sees in their own ad account dashboard — the technical
 // signals that actually explain why leads got pricier.
@@ -1717,11 +1739,13 @@ const ScenarioBuilder: React.FC = () => {
       });
     });
 
-    // Push the week's problem into a whole ad set (the audience row + every
-    // creo linked to it) instead of one isolated row — a real ad account
-    // problem shows up consistently across a targeting/creative combo, not
-    // as a single random outlier buried among otherwise-normal rows.
-    if (problem && rows.length > 0) {
+    // Push the week's problem into the exact ad set it was attributed to
+    // (attachLaunchTarget, computed once when the problem was created) — the
+    // audience row + every creo linked to it — instead of one isolated row
+    // or a locally-recomputed guess that could disagree with the client's
+    // message.
+    if (problem && rows.length > 0 && problem.targetKey && problem.targetAudienceId) {
+      const targetRowId = `a-${problem.targetKey}-${problem.targetAudienceId}`;
       const groups: Row[][] = [];
       let current: Row[] = [];
       rows.forEach(r => {
@@ -1734,9 +1758,8 @@ const ScenarioBuilder: React.FC = () => {
       });
       if (current.length) groups.push(current);
 
-      if (groups.length > 0) {
-        const groupSeed = hash(`group:${week}:${problem.type}`);
-        const targetGroup = groups[groupSeed % groups.length];
+      const targetGroup = groups.find(g => g[0]?.id === targetRowId) || groups[0];
+      if (targetGroup) {
         targetGroup.forEach(r => {
           if (problem.cpm === 'high') r.cpm = Number((r.cpm * (1 + (problem.cpmPct || 25) / 100)).toFixed(2));
           if (problem.ctr === 'low') r.ctr = Number((r.ctr * 0.4).toFixed(2));
@@ -2224,6 +2247,43 @@ const ScenarioBuilder: React.FC = () => {
     }).map(key => (key === 'main' ? '' : (LEAD_TYPES.find(l => l.value === key)?.label || key)));
   };
 
+  // Every ad set (campaign branch + audience) across the whole scenario —
+  // the single source of truth used both to pick which one a week's problem
+  // is coming from, and to offer "disable this exact audience" as an action.
+  const getAllAdSets = (): { key: string; audienceId: string; audienceName: string; branchLabel: string }[] => {
+    const keys: string[] = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0
+      ? scenario.leadTypes!
+      : ['main'];
+    const result: { key: string; audienceId: string; audienceName: string; branchLabel: string }[] = [];
+    keys.forEach(key => {
+      const rawAud = (scenario as any)?.audienceSettings?.[key];
+      const audiences: any[] = Array.isArray(rawAud) ? rawAud : [];
+      const branchLabel = key === 'main' ? '' : (LEAD_TYPES.find(x => x.value === key)?.label || key);
+      audiences.forEach((a, idx) => {
+        result.push({ key, audienceId: a.id || String(idx), audienceName: a.name || `Набір оголошень ${result.length + 1}`, branchLabel });
+      });
+    });
+    return result;
+  };
+
+  // Deterministically (seeded by week+problem type, matching LaunchStatsTable's
+  // own row highlighting) picks which ad set the week's problem is coming
+  // from, so the client's message, the stats table, and the "disable this
+  // audience" action all agree on the same culprit.
+  const attachLaunchTarget = (problem: LaunchProblem, week: number): LaunchProblem => {
+    const adSets = getAllAdSets();
+    if (adSets.length === 0) return problem;
+    const seed = launchHashSeed(`group:${week}:${problem.type}`);
+    const target = adSets[seed % adSets.length];
+    return {
+      ...problem,
+      targetKey: target.key,
+      targetAudienceId: target.audienceId,
+      targetAudienceName: target.audienceName,
+      targetBranchLabel: target.branchLabel,
+    };
+  };
+
   const startLaunch = () => {
     const unready = getUnreadyCampaigns();
     if (unready.length > 0) {
@@ -2235,7 +2295,7 @@ const ScenarioBuilder: React.FC = () => {
       return;
     }
     setLaunchWeek(1);
-    setLaunchProblem(buildLaunchProblem('ctr_low'));
+    setLaunchProblem(attachLaunchTarget(buildLaunchProblem('ctr_low'), 1));
     setLaunchFeedback(null);
     setLaunchPhase('launching');
     setLaunchResultOpen(true);
@@ -2261,7 +2321,7 @@ const ScenarioBuilder: React.FC = () => {
     const previousType = launchProblem?.type;
     const candidates = LAUNCH_PROBLEM_TYPES.filter(t => t !== previousType);
     const pool = candidates.length > 0 ? candidates : LAUNCH_PROBLEM_TYPES;
-    setLaunchProblem(buildLaunchProblem(pool[Math.floor(Math.random() * pool.length)]));
+    setLaunchProblem(attachLaunchTarget(buildLaunchProblem(pool[Math.floor(Math.random() * pool.length)]), nextWeek));
     setLaunchPhase('week');
   };
   const advanceLaunchWeekRef = useRef(advanceLaunchWeek);
@@ -5599,16 +5659,27 @@ const ScenarioBuilder: React.FC = () => {
               </AlertDialogHeader>
               <AlertDialogFooter className="flex-col sm:flex-col sm:justify-start sm:space-x-0 gap-2">
                 {launchProblem ? (
-                  LAUNCH_ACTIONS.map(a => (
-                    <Button
-                      key={a.key}
-                      variant="outline"
-                      className="w-full justify-start"
-                      onClick={() => handleLaunchAction(a.key)}
-                    >
-                      {a.label}
-                    </Button>
-                  ))
+                  <>
+                    {LAUNCH_ACTIONS.map(a => (
+                      <Button
+                        key={a.key}
+                        variant="outline"
+                        className="w-full justify-start"
+                        onClick={() => handleLaunchAction(a.key)}
+                      >
+                        {a.label}
+                      </Button>
+                    ))}
+                    {getAllAdSets().length > 1 && launchProblem.targetAudienceName && (
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start border-destructive/40 text-destructive hover:bg-destructive/5"
+                        onClick={() => handleLaunchAction('disable_audience')}
+                      >
+                        Вимкнути «{launchProblem.targetAudienceName}»
+                      </Button>
+                    )}
+                  </>
                 ) : (
                   <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground w-full py-1">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
