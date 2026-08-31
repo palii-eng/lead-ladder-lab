@@ -5120,6 +5120,39 @@ const ScenarioBuilder: React.FC = () => {
 
       <AlertDialog open={launchResultOpen} onOpenChange={(o) => { if (!o) setLaunchResultOpen(false); }}>
         <AlertDialogContent>
+          {/* Прогрес утримання клієнта — 4 тижні */}
+          <div className="flex items-center gap-1.5 mb-2">
+            {[1, 2, 3, 4].map(w => {
+              const done = w < launchWeek || launchPhase === 'month_success';
+              const active = w === launchWeek && launchPhase !== 'month_success';
+              return (
+                <div key={w} className="flex items-center gap-1.5 flex-1 min-w-0">
+                  <div
+                    className={`flex flex-col items-center gap-0.5 flex-1 rounded-lg px-1 py-1.5 border transition-colors ${
+                      done
+                        ? 'bg-success/10 border-success/40'
+                        : active
+                        ? 'bg-primary/10 border-primary/50'
+                        : 'bg-muted/50 border-border'
+                    }`}
+                  >
+                    <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${
+                      done ? 'bg-success text-success-foreground' : active ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
+                    }`}>
+                      {done ? <Check className="w-3 h-3" strokeWidth={3} /> : w}
+                    </span>
+                    <span className={`text-[9px] font-semibold leading-none ${
+                      done ? 'text-success' : active ? 'text-primary' : 'text-muted-foreground/60'
+                    }`}>
+                      {done ? 'Втримано ✓' : `Тиждень ${w}`}
+                    </span>
+                  </div>
+                  {w < 4 && <div className={`h-px w-1.5 flex-shrink-0 ${w < launchWeek ? 'bg-success' : 'bg-border'}`} />}
+                </div>
+              );
+            })}
+          </div>
+
           {launchPhase === 'launching' && (
             <div className="flex flex-col items-center justify-center gap-4 py-10">
               <div className="relative w-16 h-16">
