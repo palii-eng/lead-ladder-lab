@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
-import { ArrowLeft, ArrowRight, Check, ChevronRight, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward, AlertTriangle, Database, User, Send, Copy, Bitcoin, TrendingUp, TrendingDown, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronRight, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward, AlertTriangle, Database, User, Send, Copy, Bitcoin, TrendingUp, TrendingDown, ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { VideoBadge } from '@/components/VideoBadge';
 import { supabase } from '@/integrations/supabase/client';
@@ -538,6 +538,8 @@ const ScenarioBuilder: React.FC = () => {
   const [audienceName, setAudienceName] = useState('');
   const [audienceDescription, setAudienceDescription] = useState('');
   const [viewAudienceIdx, setViewAudienceIdx] = useState<number | null>(null);
+  const [editingAudienceIdx, setEditingAudienceIdx] = useState<number | null>(null);
+  const [pendingDeleteAudience, setPendingDeleteAudience] = useState<{ key: string; idx: number; name: string } | null>(null);
   // Creo brief
   const [creoOpen, setCreoOpen] = useState(false);
   const [creoFormat, setCreoFormat] = useState<'static' | 'carousel' | 'video' | null>(null);
@@ -1825,6 +1827,19 @@ const ScenarioBuilder: React.FC = () => {
       setAudienceView('view');
       setAudienceOpen(true);
     };
+    const openAudienceEdit = (key: string, idx: number) => {
+      const rawSaved = (scenario as any)?.audienceSettings?.[key];
+      const list: any[] = Array.isArray(rawSaved) ? rawSaved : [];
+      const aud = list[idx];
+      if (!aud) return;
+      setActiveLeadType(key === 'main' ? '' : key);
+      setEditingAudienceIdx(idx);
+      setAudienceName(aud.name || '');
+      setAudienceDescription(aud.description || '');
+      setAudienceTipsText(aud.tips || '');
+      setAudienceView(aud.mode === 'ai' ? 'ai' : 'manual');
+      setAudienceOpen(true);
+    };
     const openCreoCreate = (key: string, audId: string | null) => {
       setActiveLeadType(key === 'main' ? '' : key);
       setPreselectedAudienceId(audId);
@@ -2016,6 +2031,23 @@ const ScenarioBuilder: React.FC = () => {
                               >
                                 Деталі
                               </button>
+                              <button
+                                type="button"
+                                onClick={() => openAudienceEdit(c.key, idx)}
+                                className="w-6 h-6 rounded flex items-center justify-center hover:bg-muted transition-colors shrink-0"
+                                style={{ color: 'hsl(220 10% 40%)' }}
+                                title="Редагувати аудиторію"
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPendingDeleteAudience({ key: c.key, idx, name: a.name || 'Без назви' })}
+                                className="w-6 h-6 rounded flex items-center justify-center hover:bg-destructive/10 text-destructive transition-colors shrink-0"
+                                title="Видалити аудиторію"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
                               <AddBtn label="Крео" onClick={() => openCreoCreate(c.key, a.id)} />
                             </div>
 
@@ -2120,6 +2152,25 @@ const ScenarioBuilder: React.FC = () => {
 
 
   const update = (u: Partial<Scenario>) => updateScenario(id!, u);
+
+  const performDeleteAudience = (key: string, idx: number) => {
+    const rawSaved = (scenario as any)?.audienceSettings?.[key];
+    const list: any[] = Array.isArray(rawSaved) ? [...rawSaved] : [];
+    const aud = list[idx];
+    if (!aud) return;
+    list.splice(idx, 1);
+    const currentAud = (scenario as any)?.audienceSettings || {};
+    const rawCreo = (scenario as any)?.creoBriefs?.[key];
+    // Cascade: drop creo that were linked to the deleted audience so nothing
+    // points at an audience that no longer exists.
+    const nextCreo = Array.isArray(rawCreo) ? rawCreo.filter((c: any) => c.audienceId !== aud.id) : rawCreo;
+    const currentCreo = (scenario as any)?.creoBriefs || {};
+    update({
+      audienceSettings: { ...currentAud, [key]: list },
+      creoBriefs: { ...currentCreo, [key]: nextCreo },
+    } as any);
+    toast({ title: 'Аудиторію видалено', description: aud.name || undefined });
+  };
 
   // Every campaign needs at least one audience and three creatives ready
   // before the marketer is allowed to actually launch the project — an
@@ -4520,6 +4571,7 @@ const ScenarioBuilder: React.FC = () => {
           setAudienceDescription('');
           setAudienceTipsText('');
           setViewAudienceIdx(null);
+          setEditingAudienceIdx(null);
         }
       }}>
         <DialogContent className="bg-card border-border max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -4782,6 +4834,7 @@ const ScenarioBuilder: React.FC = () => {
                         setAudienceDescription('');
                         setAudienceTipsText('');
                         setViewAudienceIdx(null);
+                        setEditingAudienceIdx(null);
                       }}
                     >
                       ← Назад
@@ -4798,52 +4851,70 @@ const ScenarioBuilder: React.FC = () => {
                       <Button
                         disabled={!audienceName.trim() || !audienceDescription.trim()}
                         onClick={() => {
-                          const next = [
-                            ...savedAudiences,
-                            {
-                              id: crypto.randomUUID(),
-                              name: audienceName.trim(),
-                              mode: 'manual',
-                              description: audienceDescription.trim(),
-                              tips: '',
-                              createdAt: new Date().toISOString(),
-                            },
-                          ];
+                          const isEditing = editingAudienceIdx !== null;
+                          const next = isEditing
+                            ? savedAudiences.map((a, i) => i === editingAudienceIdx ? {
+                                ...a,
+                                name: audienceName.trim(),
+                                mode: 'manual',
+                                description: audienceDescription.trim(),
+                              } : a)
+                            : [
+                                ...savedAudiences,
+                                {
+                                  id: crypto.randomUUID(),
+                                  name: audienceName.trim(),
+                                  mode: 'manual',
+                                  description: audienceDescription.trim(),
+                                  tips: '',
+                                  createdAt: new Date().toISOString(),
+                                },
+                              ];
                           saveAudiencesList(next);
-                          toast({ title: 'Збережено', description: audienceName });
+                          toast({ title: isEditing ? 'Оновлено' : 'Збережено', description: audienceName });
                           setAudienceView('list');
                           setAudienceName('');
                           setAudienceDescription('');
+                          setEditingAudienceIdx(null);
                         }}
                         className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
                       >
-                        <Check className="w-4 h-4 mr-2" /> Зберегти
+                        <Check className="w-4 h-4 mr-2" /> {editingAudienceIdx !== null ? 'Оновити' : 'Зберегти'}
                       </Button>
                     )}
                     {audienceView === 'ai' && (
                       <Button
                         disabled={!audienceName.trim() || !audienceTipsText.trim()}
                         onClick={() => {
-                          const next = [
-                            ...savedAudiences,
-                            {
-                              id: crypto.randomUUID(),
-                              name: audienceName.trim(),
-                              mode: 'ai',
-                              description: '',
-                              tips: audienceTipsText,
-                              createdAt: new Date().toISOString(),
-                            },
-                          ];
+                          const isEditing = editingAudienceIdx !== null;
+                          const next = isEditing
+                            ? savedAudiences.map((a, i) => i === editingAudienceIdx ? {
+                                ...a,
+                                name: audienceName.trim(),
+                                mode: 'ai',
+                                tips: audienceTipsText,
+                              } : a)
+                            : [
+                                ...savedAudiences,
+                                {
+                                  id: crypto.randomUUID(),
+                                  name: audienceName.trim(),
+                                  mode: 'ai',
+                                  description: '',
+                                  tips: audienceTipsText,
+                                  createdAt: new Date().toISOString(),
+                                },
+                              ];
                           saveAudiencesList(next);
-                          toast({ title: 'Збережено', description: audienceName });
+                          toast({ title: isEditing ? 'Оновлено' : 'Збережено', description: audienceName });
                           setAudienceView('list');
                           setAudienceName('');
                           setAudienceTipsText('');
+                          setEditingAudienceIdx(null);
                         }}
                         className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
                       >
-                        <Check className="w-4 h-4 mr-2" /> Зберегти
+                        <Check className="w-4 h-4 mr-2" /> {editingAudienceIdx !== null ? 'Оновити' : 'Зберегти'}
                       </Button>
                     )}
                   </div>
@@ -5243,6 +5314,29 @@ const ScenarioBuilder: React.FC = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Так, вимкнути
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!pendingDeleteAudience} onOpenChange={(o) => !o && setPendingDeleteAudience(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Видалити аудиторію?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Аудиторія «{pendingDeleteAudience?.name}» та всі крео, прив'язані до неї, будуть видалені без можливості відновлення.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Скасувати</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingDeleteAudience) performDeleteAudience(pendingDeleteAudience.key, pendingDeleteAudience.idx);
+                setPendingDeleteAudience(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Так, видалити
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
