@@ -158,14 +158,6 @@ const launchClientLine = (p: LaunchProblem): string => {
     : `Ліди дорожчі ніж очікується, приблизно на ${p.cplPct}%.`;
 };
 
-// What the marketer sees in their own ad account dashboard — the technical
-// signals that actually explain why leads got pricier.
-const launchSystemMetricLines = (p: LaunchProblem): string[] => [
-  p.ctr === 'low' ? 'CTR низький' : 'CTR в нормі',
-  p.cpm === 'high' ? `CPM почав дорожчати, приблизно на ${p.cpmPct}%` : 'CPM в нормі',
-  p.freq === 'high' ? 'Висока частотність показів' : 'Частота показів в нормі',
-];
-
 const STEPS = [
   { title: 'Вибір ніші', icon: '🎯' },
   { title: 'Джерело трафіку', icon: '📡' },
@@ -5625,23 +5617,6 @@ const ScenarioBuilder: React.FC = () => {
 
                     {launchFeedback && (
                       <p className="text-sm font-medium text-warning pl-14">{launchFeedback}</p>
-                    )}
-
-                    {/* System/ad-account metrics — not something the client would say themselves */}
-                    {launchProblem && (
-                      <div className="rounded-lg border border-border p-3 ml-14">
-                        <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">
-                          📈 Дані рекламного кабінету
-                        </p>
-                        <ul className="space-y-1.5 text-sm text-foreground list-none">
-                          {launchSystemMetricLines(launchProblem).map((line, i) => (
-                            <li key={i} className="flex items-start gap-2">
-                              <span className="text-muted-foreground">•</span>
-                              <span>{line}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
                     )}
 
                     {/* The marketer's actual configured campaign — same live mockup as in Підготовка, scaled down to fit the dialog */}
