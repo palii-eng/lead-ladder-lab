@@ -1634,6 +1634,126 @@ const ScenarioBuilder: React.FC = () => {
     return n;
   });
 
+  // ---- Ad-account stats table shown during the launch simulation ----
+  // Deterministic pseudo-metrics per audience/creo (stable between renders),
+  // skewed by the current week's problem so the numbers explain the situation.
+  const LaunchStatsTable: React.FC<{ problem: LaunchProblem | null; week: number }> = ({ problem, week }) => {
+    const hash = (s: string) => {
+      let h = 2166136261;
+      for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+      return Math.abs(h);
+    };
+    const pick = <T,>(arr: T[], seed: number) => arr[seed % arr.length];
+    const rand = (seed: number, min: number, max: number, dec = 2) => {
+      const v = min + ((seed % 1000) / 1000) * (max - min);
+      return Number(v.toFixed(dec));
+    };
+    const AGES = ['18–24', '25–34', '25–44', '30–45', '35–54'];
+    const GEOS = ['🇺🇦 Україна', '🇺🇦 Київ +40км', '🇺🇦 міста 100k+', '🇵🇱 Польща', '🇩🇪 Німеччина'];
+
+    const keys: string[] =
+      scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0
+        ? (scenario.leadTypes as string[])
+        : ['main'];
+
+    type Row = { id: string; kind: 'aud' | 'creo'; label: string; sub?: string; cpm: number; ctr: number; freq: number; age: string; geo: string; bad?: boolean };
+    const rows: Row[] = [];
+
+    keys.forEach(key => {
+      const rawAud = (scenario as any)?.audienceSettings?.[key];
+      const audiences: any[] = Array.isArray(rawAud) ? rawAud : [];
+      const rawCreo = (scenario as any)?.creoBriefs?.[key];
+      const creoList: any[] = Array.isArray(rawCreo) ? rawCreo : (rawCreo?.format ? [rawCreo] : []);
+      const branchLabel = key === 'main' ? '' : (LEAD_TYPES.find(x => x.value === key)?.label || key);
+
+      audiences.forEach((a, idx) => {
+        const seed = hash(`${key}:${a.id || idx}:${week}`);
+        const age = pick(AGES, seed);
+        const geo = pick(GEOS, seed >> 3);
+        rows.push({
+          id: `a-${key}-${a.id || idx}`,
+          kind: 'aud',
+          label: a.name || `Група #${idx + 1}`,
+          sub: branchLabel,
+          cpm: rand(seed, 3.4, 8.6),
+          ctr: rand(seed >> 5, 0.9, 2.3),
+          freq: rand(seed >> 7, 1.1, 1.9, 1),
+          age,
+          geo,
+        });
+        const linked = creoList.filter(x => x.audienceId === a.id);
+        linked.forEach((cr) => {
+          const gi = creoList.indexOf(cr);
+          const cseed = hash(`${key}:c${gi}:${week}`);
+          rows.push({
+            id: `c-${key}-${gi}`,
+            kind: 'creo',
+            label: cr.fields?.h1 || cr.fields?.script?.slice(0, 32) || `Крео #${gi + 1}`,
+            sub: cr.format === 'video' ? '🎬 Відео' : cr.format === 'carousel' ? '🎠 Карусель' : '🖼️ Статика',
+            cpm: rand(cseed, 3.2, 9.2),
+            ctr: rand(cseed >> 5, 0.8, 2.4),
+            freq: rand(cseed >> 7, 1.1, 2.0, 1),
+            age,
+            geo,
+          });
+        });
+      });
+    });
+
+    // Push the week's problem into the weakest row so the table matches the story.
+    if (problem && rows.length > 0) {
+      const target = rows.reduce((worst, r) => (r.ctr < worst.ctr ? r : worst), rows[0]);
+      if (problem.cpm === 'high') target.cpm = Number((target.cpm * (1 + (problem.cpmPct || 25) / 100)).toFixed(2));
+      if (problem.ctr === 'low') target.ctr = Number((target.ctr * 0.4).toFixed(2));
+      if (problem.freq === 'high') target.freq = Number((2.6 + (target.freq % 1)).toFixed(1));
+      target.bad = true;
+    }
+
+    if (rows.length === 0) {
+      return (
+        <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground text-center">
+          Ви ще не створили аудиторій та крео — у кабінеті немає даних.
+        </div>
+      );
+    }
+
+    return (
+      <div className="rounded-lg border border-border overflow-x-auto">
+        <table className="w-full text-[12px]">
+          <thead>
+            <tr className="bg-muted/60 text-muted-foreground">
+              <th className="text-left font-semibold px-3 py-2">Назва</th>
+              <th className="text-right font-semibold px-2 py-2">CPM</th>
+              <th className="text-right font-semibold px-2 py-2">CTR</th>
+              <th className="text-right font-semibold px-2 py-2">Частота</th>
+              <th className="text-right font-semibold px-2 py-2">Вік</th>
+              <th className="text-right font-semibold px-3 py-2">Країна</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.id} className="border-t border-border/60">
+                <td className={`px-3 py-2 ${r.kind === 'creo' ? 'pl-7' : ''}`}>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-[11px]">{r.kind === 'aud' ? '👥' : '📄'}</span>
+                    <span className={`truncate ${r.kind === 'aud' ? 'font-semibold text-foreground' : 'text-foreground/80'}`}>{r.label}</span>
+                    {r.sub && <span className="text-[10px] text-muted-foreground shrink-0">· {r.sub}</span>}
+                  </div>
+                </td>
+                <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.cpm === 'high' ? 'text-destructive font-semibold' : ''}`}>${r.cpm.toFixed(2)}</td>
+                <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.ctr === 'low' ? 'text-destructive font-semibold' : ''}`}>{r.ctr.toFixed(2)}%</td>
+                <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.freq === 'high' ? 'text-destructive font-semibold' : ''}`}>{r.freq.toFixed(1)}</td>
+                <td className="px-2 py-2 text-right text-muted-foreground">{r.age}</td>
+                <td className="px-3 py-2 text-right text-muted-foreground whitespace-nowrap">{r.geo}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+
   const PrepWorksNode: React.FC<{ branchKey?: string; campaignKeys?: string[] }> = ({ branchKey, campaignKeys }) => {
     const formatMeta: Record<string, { icon: string; label: string }> = {
       static: { icon: '🖼️', label: 'Статика' },
@@ -5255,17 +5375,8 @@ const ScenarioBuilder: React.FC = () => {
                       <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">
                         🖥️ Ваш рекламний кабінет
                       </p>
-                      <div className="rounded-lg border border-border overflow-hidden" style={{ maxHeight: 260, overflowY: 'auto' }}>
-                        <div style={{ zoom: 0.4 }}>
-                          <PrepWorksNode
-                            campaignKeys={
-                              scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0
-                                ? scenario.leadTypes
-                                : undefined
-                            }
-                          />
-                        </div>
-                      </div>
+                      <LaunchStatsTable problem={launchProblem} week={launchWeek} />
+
                     </div>
 
                     {launchProblem && <p className="text-sm font-semibold text-foreground pt-1">Ваші дії?</p>}
