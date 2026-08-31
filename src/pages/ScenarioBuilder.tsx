@@ -1685,7 +1685,7 @@ const ScenarioBuilder: React.FC = () => {
         ? (scenario.leadTypes as string[])
         : ['main'];
 
-    type Row = { id: string; kind: 'aud' | 'creo'; label: string; sub?: string; cpm: number; ctr: number; freq: number; age: string; geo: string; bad?: boolean };
+    type Row = { id: string; kind: 'aud'; label: string; sub?: string; creoCount: number; cpm: number; ctr: number; freq: number; age: string; geo: string; bad?: boolean };
     const rows: Row[] = [];
 
     let adSetCounter = 0;
@@ -1701,63 +1701,33 @@ const ScenarioBuilder: React.FC = () => {
         const seed = hash(`${key}:${a.id || idx}:${week}`);
         const age = pick(AGES, seed);
         const geo = pick(GEOS, seed >> 3);
+        const creoCount = creoList.filter(x => x.audienceId === a.id).length;
         rows.push({
           id: `a-${key}-${a.id || idx}`,
           kind: 'aud',
           label: `Набір оголошень ${adSetCounter}`,
           sub: branchLabel,
+          creoCount,
           cpm: rand(seed, 3.4, 8.6),
           ctr: rand(seed >> 5, 0.9, 2.3),
           freq: rand(seed >> 7, 1.1, 1.9, 1),
           age,
           geo,
         });
-        const linked = creoList.filter(x => x.audienceId === a.id);
-        linked.forEach((cr) => {
-          const gi = creoList.indexOf(cr);
-          const cseed = hash(`${key}:c${gi}:${week}`);
-          rows.push({
-            id: `c-${key}-${gi}`,
-            kind: 'creo',
-            label: cr.fields?.h1 || cr.fields?.script?.slice(0, 32) || `Крео #${gi + 1}`,
-            sub: cr.format === 'video' ? '🎬 Відео' : cr.format === 'carousel' ? '🎠 Карусель' : '🖼️ Статика',
-            cpm: rand(cseed, 3.2, 9.2),
-            ctr: rand(cseed >> 5, 0.8, 2.4),
-            freq: rand(cseed >> 7, 1.1, 2.0, 1),
-            age,
-            geo,
-          });
-        });
       });
     });
 
     // Push the week's problem into the exact ad set it was attributed to
-    // (attachLaunchTarget, computed once when the problem was created) — the
-    // audience row + every creo linked to it — instead of one isolated row
-    // or a locally-recomputed guess that could disagree with the client's
-    // message.
+    // (attachLaunchTarget, computed once when the problem was created), so
+    // the client's message and this table always agree on the same culprit.
     if (problem && rows.length > 0 && problem.targetKey && problem.targetAudienceId) {
       const targetRowId = `a-${problem.targetKey}-${problem.targetAudienceId}`;
-      const groups: Row[][] = [];
-      let current: Row[] = [];
-      rows.forEach(r => {
-        if (r.kind === 'aud') {
-          if (current.length) groups.push(current);
-          current = [r];
-        } else if (current.length) {
-          current.push(r);
-        }
-      });
-      if (current.length) groups.push(current);
-
-      const targetGroup = groups.find(g => g[0]?.id === targetRowId) || groups[0];
-      if (targetGroup) {
-        targetGroup.forEach(r => {
-          if (problem.cpm === 'high') r.cpm = Number((r.cpm * (1 + (problem.cpmPct || 25) / 100)).toFixed(2));
-          if (problem.ctr === 'low') r.ctr = Number((r.ctr * 0.4).toFixed(2));
-          if (problem.freq === 'high') r.freq = Number((2.6 + (r.freq % 1)).toFixed(1));
-          r.bad = true;
-        });
+      const target = rows.find(r => r.id === targetRowId) || rows[0];
+      if (target) {
+        if (problem.cpm === 'high') target.cpm = Number((target.cpm * (1 + (problem.cpmPct || 25) / 100)).toFixed(2));
+        if (problem.ctr === 'low') target.ctr = Number((target.ctr * 0.4).toFixed(2));
+        if (problem.freq === 'high') target.freq = Number((2.6 + (target.freq % 1)).toFixed(1));
+        target.bad = true;
       }
     }
 
@@ -1785,11 +1755,14 @@ const ScenarioBuilder: React.FC = () => {
           <tbody>
             {rows.map(r => (
               <tr key={r.id} className="border-t border-border/60">
-                <td className={`px-3 py-2 ${r.kind === 'creo' ? 'pl-7' : ''}`}>
+                <td className="px-3 py-2">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-[11px]">{r.kind === 'aud' ? '👥' : '📄'}</span>
-                    <span className={`truncate ${r.kind === 'aud' ? 'font-semibold text-foreground' : 'text-foreground/80'}`}>{r.label}</span>
+                    <span className="text-[11px]">👥</span>
+                    <span className="truncate font-semibold text-foreground">{r.label}</span>
                     {r.sub && <span className="text-[10px] text-muted-foreground shrink-0">· {r.sub}</span>}
+                    <span className="text-[10px] text-muted-foreground shrink-0">
+                      ({r.creoCount} {r.creoCount === 1 ? 'оголошення' : 'оголошень'})
+                    </span>
                   </div>
                 </td>
                 <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.cpm === 'high' ? 'text-destructive font-semibold' : ''}`}>${r.cpm.toFixed(2)}</td>
