@@ -2313,7 +2313,7 @@ const ScenarioBuilder: React.FC = () => {
       const audiences: any[] = Array.isArray(rawAud) ? rawAud : [];
       const branchLabel = key === 'main' ? '' : (LEAD_TYPES.find(x => x.value === key)?.label || key);
       audiences.forEach((a, idx) => {
-        result.push({ key, audienceId: a.id || String(idx), audienceName: a.name || `Набір оголошень ${result.length + 1}`, branchLabel });
+        result.push({ key, audienceId: a.id || String(idx), audienceName: `Набір оголошень ${result.length + 1}`, branchLabel });
       });
     });
     return result;
