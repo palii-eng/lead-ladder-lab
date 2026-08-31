@@ -5220,18 +5220,22 @@ const ScenarioBuilder: React.FC = () => {
                       </div>
                     )}
 
-                    {/* The marketer's actual configured campaign — same live mockup as in Підготовка */}
-                    <div className="ml-14">
+                    {/* The marketer's actual configured campaign — same live mockup as in Підготовка, scaled down to fit the dialog */}
+                    <div>
                       <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">
                         🖥️ Ваш рекламний кабінет
                       </p>
-                      <PrepWorksNode
-                        campaignKeys={
-                          scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0
-                            ? scenario.leadTypes
-                            : undefined
-                        }
-                      />
+                      <div className="rounded-lg border border-border overflow-hidden" style={{ maxHeight: 260, overflowY: 'auto' }}>
+                        <div style={{ zoom: 0.4 }}>
+                          <PrepWorksNode
+                            campaignKeys={
+                              scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0
+                                ? scenario.leadTypes
+                                : undefined
+                            }
+                          />
+                        </div>
+                      </div>
                     </div>
 
                     {launchProblem && <p className="text-sm font-semibold text-foreground pt-1">Ваші дії?</p>}
