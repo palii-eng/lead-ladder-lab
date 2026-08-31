@@ -2001,7 +2001,32 @@ const ScenarioBuilder: React.FC = () => {
 
   const update = (u: Partial<Scenario>) => updateScenario(id!, u);
 
+  // Every campaign needs at least one audience and three creatives ready
+  // before the marketer is allowed to actually launch the project — an
+  // empty ad account isn't something a real launch could happen from.
+  const getUnreadyCampaigns = (): string[] => {
+    const keys: string[] = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0
+      ? scenario.leadTypes!
+      : [activeLeadType || 'main'];
+    return keys.filter(key => {
+      const rawCreo = (scenario as any)?.creoBriefs?.[key];
+      const creoList = Array.isArray(rawCreo) ? rawCreo : (rawCreo?.format ? [rawCreo] : []);
+      const rawAud = (scenario as any)?.audienceSettings?.[key];
+      const audiences = Array.isArray(rawAud) ? rawAud : (rawAud && (rawAud.tips || rawAud.checks) ? [{ id: 'legacy' }] : []);
+      return audiences.length < 1 || creoList.length < 3;
+    }).map(key => (key === 'main' ? '' : (LEAD_TYPES.find(l => l.value === key)?.label || key)));
+  };
+
   const startLaunch = () => {
+    const unready = getUnreadyCampaigns();
+    if (unready.length > 0) {
+      toast({
+        title: 'Рекламний кабінет ще не готовий',
+        description: `Перед запуском потрібно мінімум 1 аудиторія і 3 крео на кожну кампанію${unready.some(Boolean) ? ` (бракує: ${unready.filter(Boolean).join(', ')})` : ''}.`,
+        variant: 'destructive',
+      });
+      return;
+    }
     setLaunchWeek(1);
     setLaunchProblem(buildLaunchProblem('ctr_low'));
     setLaunchFeedback(null);
@@ -3636,6 +3661,11 @@ const ScenarioBuilder: React.FC = () => {
                   onClick={startLaunch}>
                   🚀 Запустити проект
                 </Button>
+                {getUnreadyCampaigns().length > 0 && (
+                  <p className="text-xs text-warning text-center">
+                    ⚠️ Потрібно мінімум 1 аудиторія і 3 крео на кожну кампанію
+                  </p>
+                )}
               </div>
             </div>
           );
