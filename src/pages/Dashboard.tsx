@@ -190,10 +190,19 @@ const Dashboard: React.FC = () => {
               return (
                 <div
                   key={s.id}
-                  className="glass-card p-5 flex flex-col gap-4 animate-slide-up transition-shadow cursor-pointer hover:shadow-md"
+                  className="relative glass-card p-5 flex flex-col gap-4 animate-slide-up transition-shadow cursor-pointer hover:shadow-md"
                   style={{ animationDelay: `${i * 60}ms` }}
                   onClick={() => navigate(`/scenario/${s.id}`)}
                 >
+                  {(s.monthSurvived || s.status === 'completed') && (
+                    <span
+                      className="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center ring-2 ring-card shadow-sm z-10"
+                      style={{ background: 'hsl(142 71% 45%)' }}
+                      title={s.monthSurvived ? 'Проєкт витримав перший місяць' : 'Проєкт завершено'}
+                    >
+                      {s.monthSurvived ? <Award className="w-3.5 h-3.5 text-white" /> : <Trophy className="w-3.5 h-3.5 text-white" />}
+                    </span>
+                  )}
                   <div className="flex items-center gap-3">
                     {s.clientBrief?.photo && (
                       <Tooltip>
@@ -210,23 +219,6 @@ const Dashboard: React.FC = () => {
                                 className="w-full h-full object-cover"
                               />
                             </button>
-                            {s.monthSurvived ? (
-                              <span
-                                className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-card"
-                                style={{ background: 'linear-gradient(135deg, hsl(45 90% 55%), hsl(28 90% 50%))' }}
-                                title="Проєкт витримав перший місяць"
-                              >
-                                <Award className="w-3 h-3 text-white" />
-                              </span>
-                            ) : s.status === 'completed' && (
-                              <span
-                                className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-card"
-                                style={{ background: 'hsl(45 90% 55%)' }}
-                                title="Проєкт завершено"
-                              >
-                                <Trophy className="w-3 h-3 text-white" />
-                              </span>
-                            )}
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className="max-w-xs text-xs">
