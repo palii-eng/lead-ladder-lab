@@ -1230,7 +1230,7 @@ const ScenarioBuilder: React.FC = () => {
     return set;
   });
 
-  const [skippedSteps, setSkippedSteps] = useState<Set<string>>(new Set());
+  const [skippedSteps, setSkippedSteps] = useState<Set<string>>(() => new Set(scenario?.skippedSteps || []));
 
 
   // Drag-scroll state
@@ -2469,6 +2469,7 @@ const ScenarioBuilder: React.FC = () => {
       return next;
     });
     setSkippedSteps(new Set());
+    update({ skippedSteps: [] });
     setActiveLeadType('');
     setPendingLeadSourceSwitch(null);
   };
@@ -2953,6 +2954,7 @@ const ScenarioBuilder: React.FC = () => {
     setSkippedSteps(prev => {
       const next = new Set(prev);
       if (opts?.skipped) next.add(key); else next.delete(key);
+      update({ skippedSteps: Array.from(next) });
       return next;
     });
     // Just close the panel after saving; don't auto-advance

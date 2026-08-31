@@ -84,6 +84,7 @@ export interface Scenario {
   branchData: Record<string, BranchData>;
   aiCache?: Record<string, string>;
   monthSurvived?: boolean;
+  skippedSteps?: string[];
 }
 
 const defaultDecomp: DecompositionScenario = {
@@ -266,6 +267,7 @@ const normalizeScenario = (value: unknown): Scenario => {
     branchData,
     aiCache: isRecord(raw.aiCache) ? raw.aiCache as Record<string, string> : undefined,
     monthSurvived: typeof raw.monthSurvived === 'boolean' ? raw.monthSurvived : false,
+    skippedSteps: Array.isArray(raw.skippedSteps) ? raw.skippedSteps.filter((x): x is string => typeof x === 'string') : [],
     ...(isRecord(raw.audienceSettings) ? { audienceSettings: raw.audienceSettings } : {}),
     ...(isRecord(raw.creoSettings) ? { creoSettings: raw.creoSettings } : {}),
     ...(isRecord(raw.creoBriefs) ? { creoBriefs: raw.creoBriefs } : {}),
