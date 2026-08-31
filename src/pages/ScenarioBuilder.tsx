@@ -1733,33 +1733,34 @@ const ScenarioBuilder: React.FC = () => {
     }
 
     return (
-      <div className="rounded-lg border border-border overflow-x-auto">
-        <table className="w-full text-[12px]">
+      <div className="rounded-lg border border-border">
+        <table className="w-full text-[11px] table-fixed">
+          <colgroup>
+            <col />
+            <col style={{ width: 52 }} />
+            <col style={{ width: 52 }} />
+            <col style={{ width: 46 }} />
+          </colgroup>
           <thead>
             <tr className="bg-muted/60 text-muted-foreground">
-              <th className="text-left font-semibold px-3 py-2">Назва</th>
-              <th className="text-right font-semibold px-2 py-2">CPM</th>
-              <th className="text-right font-semibold px-2 py-2">CTR</th>
-              <th className="text-right font-semibold px-2 py-2">Частота</th>
-              <th className="text-right font-semibold px-2 py-2">Вік</th>
-              <th className="text-right font-semibold px-3 py-2">Країна</th>
+              <th className="text-left font-semibold px-2 py-1.5">Назва</th>
+              <th className="text-right font-semibold px-1 py-1.5">CPM</th>
+              <th className="text-right font-semibold px-1 py-1.5">CTR</th>
+              <th className="text-right font-semibold px-2 py-1.5">Част.</th>
             </tr>
           </thead>
           <tbody>
             {rows.map(r => (
               <tr key={r.id} className="border-t border-border/60">
-                <td className={`px-3 py-2 ${r.kind === 'creo' ? 'pl-7' : ''}`}>
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-[11px]">{r.kind === 'aud' ? '👥' : '📄'}</span>
+                <td className={`px-2 py-1.5 ${r.kind === 'creo' ? 'pl-5' : ''}`}>
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="text-[10px] shrink-0">{r.kind === 'aud' ? '👥' : '📄'}</span>
                     <span className={`truncate ${r.kind === 'aud' ? 'font-semibold text-foreground' : 'text-foreground/80'}`}>{r.label}</span>
-                    {r.sub && <span className="text-[10px] text-muted-foreground shrink-0">· {r.sub}</span>}
                   </div>
                 </td>
-                <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.cpm === 'high' ? 'text-destructive font-semibold' : ''}`}>${r.cpm.toFixed(2)}</td>
-                <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.ctr === 'low' ? 'text-destructive font-semibold' : ''}`}>{r.ctr.toFixed(2)}%</td>
-                <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.freq === 'high' ? 'text-destructive font-semibold' : ''}`}>{r.freq.toFixed(1)}</td>
-                <td className="px-2 py-2 text-right text-muted-foreground">{r.age}</td>
-                <td className="px-3 py-2 text-right text-muted-foreground whitespace-nowrap">{r.geo}</td>
+                <td className={`px-1 py-1.5 text-right tabular-nums ${r.bad && problem?.cpm === 'high' ? 'text-destructive font-semibold' : ''}`}>${r.cpm.toFixed(1)}</td>
+                <td className={`px-1 py-1.5 text-right tabular-nums ${r.bad && problem?.ctr === 'low' ? 'text-destructive font-semibold' : ''}`}>{r.ctr.toFixed(1)}%</td>
+                <td className={`px-2 py-1.5 text-right tabular-nums ${r.bad && problem?.freq === 'high' ? 'text-destructive font-semibold' : ''}`}>{r.freq.toFixed(1)}</td>
               </tr>
             ))}
           </tbody>
