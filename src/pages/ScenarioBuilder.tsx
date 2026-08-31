@@ -2758,9 +2758,11 @@ const ScenarioBuilder: React.FC = () => {
     }
   }
 
-  // For shared steps (0-2) use global key, for branch steps (3+) branch-aware when branching
+  // For shared steps (0-2) use global key, for branch steps (3+) branch-aware when branching.
+  // Step 9 (Результат) is always global too — it's a single scenario-wide
+  // summary, not something that exists per traffic-source branch.
   const isStepCompleted = (i: number, branchLeadType?: string): boolean => {
-    if (i < 3 || !isBranching) {
+    if (i < 3 || i === 9 || !isBranching) {
       const key = String(i);
       return (isStepCompletedStatic(scenario, i) || skippedSteps.has(key)) && savedSteps.has(key);
     }
@@ -2778,8 +2780,14 @@ const ScenarioBuilder: React.FC = () => {
     if (i === 0) return hasCompletedClientGate;
     if (i <= 2) return isStepCompleted(i - 1);
     if (i === 3) return isStepCompleted(2);
-    // Висновок (Результат) розблоковується одразу після Продажів — Retention опціональний
-    if (i === 9) return isStepCompleted(7, branchLeadType);
+    // Висновок (Результат) розблоковується одразу після Продажів — Retention опціональний.
+    // Це спільний підсумковий крок, тож у режимі розгалуження він чекає на
+    // завершення Продажів у КОЖНІЙ гілці, а не лише в одній.
+    if (i === 9) {
+      return isBranching
+        ? (scenario.leadTypes || []).every(lt => isStepCompleted(7, lt))
+        : isStepCompleted(7);
+    }
     return isStepCompleted(i - 1, branchLeadType);
   };
 
@@ -3715,10 +3723,38 @@ const ScenarioBuilder: React.FC = () => {
         }
 
         case 9: {
+          // Результат is a single scenario-wide summary — in branching
+          // scenarios it must aggregate every branch's decomposition, not
+          // just whichever one activeLeadType happened to be left on.
+          const sumMetrics = (sets: DecompositionScenario[]) => {
+            let leads = 0, sales = 0, revenue = 0, budget = 0, totalProfit = 0;
+            sets.forEach(d => {
+              const m = calcMetrics(d);
+              leads += m.leads;
+              sales += m.sales;
+              revenue += m.revenue;
+              budget += d.budget;
+              totalProfit += m.totalProfit;
+            });
+            return {
+              leads: Math.round(leads),
+              sales: Math.round(sales * 10) / 10,
+              netIncome: Math.round(totalProfit - budget),
+              romi: budget > 0 ? Math.round(((revenue - budget) / budget) * 100) : 0,
+            };
+          };
+          const branchDecompSets: DecompositionSet[] = isBranching && scenario.leadTypes && scenario.leadTypes.length > 0
+            ? scenario.leadTypes.map(lt => scenario.branchData?.[lt]?.decomposition).filter((d): d is DecompositionSet => !!d)
+            : [scenario.decomposition];
+          const totalBudget = branchDecompSets.reduce((sum, d) => sum + d.realistic.budget, 0);
+          const bad = sumMetrics(branchDecompSets.map(d => d.bad));
+          const real = sumMetrics(branchDecompSets.map(d => d.realistic));
+          const pos = sumMetrics(branchDecompSets.map(d => d.positive));
+          // Kept for the panel launch button below, which still needs a
+          // single representative decomposition to seed its ROMI-based
+          // launch chance off of — the aggregated `real` above covers the
+          // summary display itself.
           const decompSet = isBranching && activeLeadType ? getBranch().decomposition : scenario.decomposition;
-          const real = calcMetrics(decompSet.realistic);
-          const bad = calcMetrics(decompSet.bad);
-          const pos = calcMetrics(decompSet.positive);
           const channelLabel = CAMPAIGN_GOALS.find(c => c.value === scenario.channel)?.label || scenario.channel || '—';
           const sourceLabel = LEAD_SOURCES.find(s => s.value === scenario.leadSource)?.label || scenario.leadSource || '—';
           return (
@@ -3742,8 +3778,8 @@ const ScenarioBuilder: React.FC = () => {
                     <p className="font-semibold text-foreground">{channelLabel}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Бюджет:</span>
-                    <p className="font-semibold text-foreground">{decompSet.realistic.budget.toLocaleString()} $</p>
+                    <span className="text-muted-foreground">Бюджет{isBranching && branchDecompSets.length > 1 ? ' (сумарно)' : ''}:</span>
+                    <p className="font-semibold text-foreground">{totalBudget.toLocaleString()} $</p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Ліди йдуть у:</span>
@@ -3762,7 +3798,9 @@ const ScenarioBuilder: React.FC = () => {
 
               {/* Expected results */}
               <div>
-                <h4 className="font-bold text-foreground text-sm mb-2">📊 Очікувані результати</h4>
+                <h4 className="font-bold text-foreground text-sm mb-2">
+                  📊 Очікувані результати{isBranching && branchDecompSets.length > 1 ? ' (по всіх кампаніях)' : ''}
+                </h4>
                 <div className="space-y-2">
                   {[
                     { label: 'Поганий', m: bad, border: 'border-destructive/40' },
@@ -4045,7 +4083,7 @@ const ScenarioBuilder: React.FC = () => {
               {(() => {
                 const leadTypes = scenario.leadTypes || [];
                 const shouldBranch = scenario.channel === 'leads' && leadTypes.length > 1 && savedSteps.has('2');
-                const BRANCH_STEPS = STEPS.slice(4); // branch-specific steps 4-8
+                const BRANCH_STEPS = STEPS.slice(4, 9); // branch-specific steps 4-8; Результат (9) is shared
 
                 const getSubtitleForStep = (i: number, branchLeadType?: string) => {
                   switch (i) {
@@ -4289,6 +4327,15 @@ const ScenarioBuilder: React.FC = () => {
                         ))}
                       </div>
                     </div>
+                    )}
+                    {/* Shared Результат node — one summary for the whole scenario, not per branch */}
+                    {isStepUnlocked(9) && (
+                      <div
+                        className="flex items-start gap-0 flex-shrink-0"
+                        style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}
+                      >
+                        {renderNode(9, undefined, true)}
+                      </div>
                     )}
                     </>}
                   </div>
