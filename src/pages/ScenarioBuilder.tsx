@@ -5224,7 +5224,7 @@ const ScenarioBuilder: React.FC = () => {
                   </div>
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter className="flex-col sm:flex-col gap-2">
+              <AlertDialogFooter className="flex-col sm:flex-col sm:justify-start sm:space-x-0 gap-2">
                 {launchProblem ? (
                   LAUNCH_ACTIONS.map(a => (
                     <Button
