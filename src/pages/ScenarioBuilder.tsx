@@ -4270,6 +4270,8 @@ const ScenarioBuilder: React.FC = () => {
                   // Check if decomposition is completed for this branch to show AI hint
                   const showAiHint = stepIdx === 4 && (branchLeadType ? isStepCompletedForBranch(scenario, 4, branchLeadType) : isStepCompletedStatic(scenario, 4));
 
+                  const isLaunched = scenario.status === 'completed';
+
                   return (
                     <div key={`${stepIdx}-${branchLeadType || 'main'}`} className="flex items-start" data-flow-node data-step-index={stepIdx}>
                       <div className="relative">
@@ -4281,31 +4283,35 @@ const ScenarioBuilder: React.FC = () => {
                             >
                               🚀 Запустити проект
                             </Button>
-                            <div className="flex justify-center py-1">
-                              <div className="w-px h-4 border-l-2 border-dashed border-success/50" />
-                            </div>
+                            {isLaunched && (
+                              <div className="flex justify-center py-1">
+                                <div className="w-px h-4 border-l-2 border-dashed border-success/50" />
+                              </div>
+                            )}
                           </>
                         )}
-                        <FlowNode
-                          icon={s.icon}
-                          title={branchLeadType && (stepIdx === 3 || stepIdx === 4)
-                            ? `${s.title}\n${LEAD_TYPES.find(l => l.value === branchLeadType)?.icon || ''} ${LEAD_TYPES.find(l => l.value === branchLeadType)?.label || ''}`
-                            : s.title}
-                          index={stepIdx}
-                          isActive={activeStep === stepIdx && (!shouldBranch || stepIdx < 3 || activeLeadType === branchLeadType)}
-                           isCompleted={isStepCompleted(stepIdx, branchLeadType)}
-                           isSkipped={skippedSteps.has(branchLeadType ? `${stepIdx}:${branchLeadType}` : String(stepIdx))}
+                        {(stepIdx !== 9 || isLaunched) && (
+                          <FlowNode
+                            icon={s.icon}
+                            title={branchLeadType && (stepIdx === 3 || stepIdx === 4)
+                              ? `${s.title}\n${LEAD_TYPES.find(l => l.value === branchLeadType)?.icon || ''} ${LEAD_TYPES.find(l => l.value === branchLeadType)?.label || ''}`
+                              : s.title}
+                            index={stepIdx}
+                            isActive={activeStep === stepIdx && (!shouldBranch || stepIdx < 3 || activeLeadType === branchLeadType)}
+                             isCompleted={isStepCompleted(stepIdx, branchLeadType)}
+                             isSkipped={skippedSteps.has(branchLeadType ? `${stepIdx}:${branchLeadType}` : String(stepIdx))}
 
-                          isLast={isLastInRow}
-                          isLocked={!isStepUnlocked(stepIdx, branchLeadType)}
-                          subtitle={subtitle}
-                          onClick={() => {
-                            if (!wasDragged.current && isStepUnlocked(stepIdx, branchLeadType)) {
-                              if (branchLeadType) setActiveLeadType(branchLeadType);
-                              setActiveStep(activeStep === stepIdx && activeLeadType === branchLeadType ? null : stepIdx);
-                            }
-                          }}
-                        />
+                            isLast={isLastInRow}
+                            isLocked={!isStepUnlocked(stepIdx, branchLeadType)}
+                            subtitle={subtitle}
+                            onClick={() => {
+                              if (!wasDragged.current && isStepUnlocked(stepIdx, branchLeadType)) {
+                                if (branchLeadType) setActiveLeadType(branchLeadType);
+                                setActiveStep(activeStep === stepIdx && activeLeadType === branchLeadType ? null : stepIdx);
+                              }
+                            }}
+                          />
+                        )}
                       </div>
                     </div>
                   );
