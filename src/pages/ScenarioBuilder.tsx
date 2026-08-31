@@ -5732,21 +5732,13 @@ const ScenarioBuilder: React.FC = () => {
                       </Button>
                     ))}
                     {getAllAdSets().length > 1 && launchProblem.targetAudienceName && (
-                      <>
-                        <div className="flex items-center gap-2 py-0.5">
-                          <div className="flex-1 h-px bg-border" />
-                          <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">або</span>
-                          <div className="flex-1 h-px bg-border" />
-                        </div>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start gap-2 border-destructive bg-destructive/10 text-destructive font-semibold hover:bg-destructive/20"
-                          onClick={() => handleLaunchAction('disable_audience')}
-                        >
-                          <Trash2 className="w-4 h-4 shrink-0" />
-                          Вимкнути «{launchProblem.targetAudienceName}»
-                        </Button>
-                      </>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start border-destructive/40 text-destructive hover:bg-destructive/5"
+                        onClick={() => handleLaunchAction('disable_audience')}
+                      >
+                        Вимкнути «{launchProblem.targetAudienceName}»
+                      </Button>
                     )}
                   </>
                 ) : (
