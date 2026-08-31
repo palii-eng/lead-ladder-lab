@@ -1674,6 +1674,7 @@ const ScenarioBuilder: React.FC = () => {
     type Row = { id: string; kind: 'aud' | 'creo'; label: string; sub?: string; cpm: number; ctr: number; freq: number; age: string; geo: string; bad?: boolean };
     const rows: Row[] = [];
 
+    let adSetCounter = 0;
     keys.forEach(key => {
       const rawAud = (scenario as any)?.audienceSettings?.[key];
       const audiences: any[] = Array.isArray(rawAud) ? rawAud : [];
@@ -1682,13 +1683,14 @@ const ScenarioBuilder: React.FC = () => {
       const branchLabel = key === 'main' ? '' : (LEAD_TYPES.find(x => x.value === key)?.label || key);
 
       audiences.forEach((a, idx) => {
+        adSetCounter += 1;
         const seed = hash(`${key}:${a.id || idx}:${week}`);
         const age = pick(AGES, seed);
         const geo = pick(GEOS, seed >> 3);
         rows.push({
           id: `a-${key}-${a.id || idx}`,
           kind: 'aud',
-          label: a.name || `Група #${idx + 1}`,
+          label: `Набір оголошень ${adSetCounter}`,
           sub: branchLabel,
           cpm: rand(seed, 3.4, 8.6),
           ctr: rand(seed >> 5, 0.9, 2.3),
