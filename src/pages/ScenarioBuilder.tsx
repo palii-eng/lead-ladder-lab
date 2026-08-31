@@ -549,6 +549,7 @@ const ScenarioBuilder: React.FC = () => {
   const [viewCreoIdx, setViewCreoIdx] = useState<number | null>(null);
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
+  const [collapsedAdSets, setCollapsedAdSets] = useState<Set<string>>(new Set());
   const [fillBenchLoading, setFillBenchLoading] = useState(false);
   // Cache for AI-generated content: key → text. Persisted on the scenario so
   // recommendations survive reload and aren't regenerated every time.
@@ -1630,11 +1631,23 @@ const ScenarioBuilder: React.FC = () => {
     </div>
   );
 
-  const toggleAdSet = (id: string) => setExpandedAdSets(prev => {
-    const n = new Set(prev);
-    if (n.has(id)) n.delete(id); else n.add(id);
-    return n;
-  });
+  const toggleAdSet = (id: string, hasCreo: boolean) => {
+    if (hasCreo) {
+      // Groups with creo are open by default — toggling manages the
+      // "manually collapsed" override instead of an "opened" one.
+      setCollapsedAdSets(prev => {
+        const n = new Set(prev);
+        if (n.has(id)) n.delete(id); else n.add(id);
+        return n;
+      });
+    } else {
+      setExpandedAdSets(prev => {
+        const n = new Set(prev);
+        if (n.has(id)) n.delete(id); else n.add(id);
+        return n;
+      });
+    }
+  };
 
   // ---- Ad-account stats table shown during the launch simulation ----
   // Deterministic pseudo-metrics per audience/creo (stable between renders),
@@ -1987,8 +2000,9 @@ const ScenarioBuilder: React.FC = () => {
                     <div className="pl-4 space-y-1.5 border-l-2 border-dashed" style={{ borderColor: 'hsl(214 89% 52% / 0.25)' }}>
                       {c.audiences.map((a, idx) => {
                         const setId = `${c.key}::${a.id || idx}`;
-                        const isOpen = expandedAdSets.has(setId);
                         const linkedCreo = c.creoList.filter(x => x.audienceId === a.id);
+                        const hasCreo = linkedCreo.length > 0;
+                        const isOpen = hasCreo ? !collapsedAdSets.has(setId) : expandedAdSets.has(setId);
                         return (
                           <div key={a.id || idx} className="space-y-1">
                             <div
@@ -1997,7 +2011,7 @@ const ScenarioBuilder: React.FC = () => {
                             >
                               <button
                                 type="button"
-                                onClick={() => toggleAdSet(setId)}
+                                onClick={() => toggleAdSet(setId, hasCreo)}
                                 className="flex-1 flex items-center gap-2 min-w-0 text-left"
                                 title="Показати оголошення / ТЗ"
                               >
