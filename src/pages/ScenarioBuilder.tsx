@@ -524,10 +524,14 @@ const ScenarioBuilder: React.FC = () => {
   const [pendingRemoveLeadType, setPendingRemoveLeadType] = useState<string | null>(null);
   const [pendingLeadSourceSwitch, setPendingLeadSourceSwitch] = useState<string | null>(null);
   const [launchResultOpen, setLaunchResultOpen] = useState(false);
-  const [launchPhase, setLaunchPhase] = useState<'launching' | 'week' | 'resolved' | 'month_success'>('launching');
+  const [launchPhase, setLaunchPhase] = useState<'launching' | 'week' | 'resolved' | 'month_success' | 'month_failure'>('launching');
   const [launchWeek, setLaunchWeek] = useState(1);
   const [launchProblem, setLaunchProblem] = useState<LaunchProblem | null>(null);
   const [launchFeedback, setLaunchFeedback] = useState<string | null>(null);
+  const [launchWeekSolved, setLaunchWeekSolved] = useState<boolean>(false);
+  // One entry per week (index 0 = week 1) — null until that week's action is
+  // resolved, then true/false for whether the problem was actually fixed.
+  const [launchWeekResults, setLaunchWeekResults] = useState<(boolean | null)[]>([null, null, null, null]);
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [videoDialogStep, setVideoDialogStep] = useState(0);
   const [skillsOpen, setSkillsOpen] = useState(false);
@@ -2321,6 +2325,7 @@ const ScenarioBuilder: React.FC = () => {
       return;
     }
     setLaunchWeek(1);
+    setLaunchWeekResults([null, null, null, null]);
     setLaunchProblem(attachLaunchTarget(buildLaunchProblem('ctr_low'), 1));
     setLaunchFeedback(null);
     setLaunchPhase('launching');
@@ -2328,56 +2333,55 @@ const ScenarioBuilder: React.FC = () => {
     setTimeout(() => setLaunchPhase('week'), 1800);
   };
 
-  const advanceLaunchWeek = () => {
-    const nextWeek = launchWeek + 1;
-    if (nextWeek > 4) {
-      setLaunchPhase('month_success');
-      return;
+  // Each week presents exactly one problem and gets exactly one action
+  // attempt — no retry loop. Whether it counts as solved:
+  //  - the action that actually addresses this problem type → always solved
+  //  - "Продовжити без змін" → 20% chance it resolves on its own
+  //  - anything else → not solved
+  // After all 4 weeks, solving 2 or more counts as a successful launch.
+  const resolveWeekAction = (actionKey: LaunchActionKey) => {
+    if (!launchProblem) return;
+    const weekJustFinished = launchWeek;
+    const problemAtResolution = launchProblem;
+
+    let solved: boolean;
+    if (actionKey === 'continue') {
+      solved = Math.random() < 0.2;
+    } else {
+      solved = LAUNCH_CORRECT_FIX[problemAtResolution.type].includes(actionKey);
     }
-    setLaunchWeek(nextWeek);
-    setLaunchFeedback(null);
-    const calm = Math.random() < 0.25;
-    if (calm) {
-      setLaunchProblem(null);
+
+    const nextResults = [...launchWeekResults];
+    nextResults[weekJustFinished - 1] = solved;
+    setLaunchWeekResults(nextResults);
+    setLaunchWeekSolved(solved);
+    setLaunchFeedback(
+      solved
+        ? LAUNCH_ACTION_SUCCESS_TEXT[actionKey]
+        : (actionKey === 'continue'
+            ? 'Ви не втручались — ситуація так і лишилась проблемною.'
+            : 'Дія не дала бажаного ефекту цього тижня — проблема лишилась невирішеною.')
+    );
+    setLaunchPhase('resolved');
+
+    setTimeout(() => {
+      const nextWeekNum = weekJustFinished + 1;
+      if (nextWeekNum > 4) {
+        const solvedCount = nextResults.filter(Boolean).length;
+        setLaunchPhase(solvedCount >= 2 ? 'month_success' : 'month_failure');
+        return;
+      }
+      setLaunchWeek(nextWeekNum);
+      setLaunchFeedback(null);
+      const candidates = LAUNCH_PROBLEM_TYPES.filter(t => t !== problemAtResolution.type);
+      const pool = candidates.length > 0 ? candidates : LAUNCH_PROBLEM_TYPES;
+      setLaunchProblem(attachLaunchTarget(buildLaunchProblem(pool[Math.floor(Math.random() * pool.length)]), nextWeekNum));
       setLaunchPhase('week');
-      // Спокійний тиждень без проблем — рухаємось далі автоматично
-      setTimeout(() => advanceLaunchWeekRef.current(), 2500);
-      return;
-    }
-    const previousType = launchProblem?.type;
-    const candidates = LAUNCH_PROBLEM_TYPES.filter(t => t !== previousType);
-    const pool = candidates.length > 0 ? candidates : LAUNCH_PROBLEM_TYPES;
-    setLaunchProblem(attachLaunchTarget(buildLaunchProblem(pool[Math.floor(Math.random() * pool.length)]), nextWeek));
-    setLaunchPhase('week');
+    }, 1800);
   };
-  const advanceLaunchWeekRef = useRef(advanceLaunchWeek);
-  advanceLaunchWeekRef.current = advanceLaunchWeek;
 
   const handleLaunchAction = (actionKey: LaunchActionKey) => {
-    if (!launchProblem) {
-      advanceLaunchWeek();
-      return;
-    }
-    if (actionKey === 'continue') {
-      const improved = Math.random() < 0.3;
-      if (improved) {
-        setLaunchFeedback(LAUNCH_ACTION_SUCCESS_TEXT.continue);
-        setLaunchPhase('resolved');
-        setTimeout(advanceLaunchWeek, 1800);
-      } else {
-        setLaunchFeedback('Ви не втручались — ситуація погіршилась, потрібна реакція.');
-      }
-      return;
-    }
-    const isCorrect = LAUNCH_CORRECT_FIX[launchProblem.type].includes(actionKey);
-    const luckyFix = !isCorrect && Math.random() < 0.4;
-    if (isCorrect || luckyFix) {
-      setLaunchFeedback(isCorrect ? LAUNCH_ACTION_SUCCESS_TEXT[actionKey] : 'Дія була не зовсім очікуваною, але ситуація все ж вирівнялась.');
-      setLaunchPhase('resolved');
-      setTimeout(advanceLaunchWeek, 1800);
-    } else {
-      setLaunchFeedback('Дія не дала бажаного ефекту — проблема лишається, треба щось інше.');
-    }
+    resolveWeekAction(actionKey);
   };
 
   const finishLaunchedProject = () => {
@@ -5598,35 +5602,44 @@ const ScenarioBuilder: React.FC = () => {
           {/* Прогрес утримання клієнта — 4 тижні */}
           <div className="flex items-center gap-1.5 mb-2">
             {[1, 2, 3, 4].map(w => {
-              const done = w < launchWeek || launchPhase === 'month_success';
-              const active = w === launchWeek && launchPhase !== 'month_success';
+              const result = launchWeekResults[w - 1]; // true=solved, false=not solved, null=not reached yet
+              const done = result !== null;
+              const active = w === launchWeek && (launchPhase === 'week' || launchPhase === 'resolved');
+              const solved = result === true;
               return (
                 <div key={w} className="flex items-center gap-1.5 flex-1 min-w-0">
                   <div
                     className={`flex flex-col items-center gap-0.5 flex-1 rounded-lg px-1 py-1.5 border transition-colors ${
                       done
-                        ? 'bg-success/10 border-success/40'
+                        ? (solved ? 'bg-success/10 border-success/40' : 'bg-destructive/10 border-destructive/40')
                         : active
                         ? 'bg-primary/10 border-primary/50'
                         : 'bg-muted/50 border-border'
                     }`}
                   >
                     <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${
-                      done ? 'bg-success text-success-foreground' : active ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
+                      done
+                        ? (solved ? 'bg-success text-success-foreground' : 'bg-destructive text-destructive-foreground')
+                        : active ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
                     }`}>
-                      {done ? <Check className="w-3 h-3" strokeWidth={3} /> : w}
+                      {done ? (solved ? <Check className="w-3 h-3" strokeWidth={3} /> : <X className="w-3 h-3" strokeWidth={3} />) : w}
                     </span>
                     <span className={`text-[9px] font-semibold leading-none ${
-                      done ? 'text-success' : active ? 'text-primary' : 'text-muted-foreground/60'
+                      done ? (solved ? 'text-success' : 'text-destructive') : active ? 'text-primary' : 'text-muted-foreground/60'
                     }`}>
-                      {done ? 'Втримано ✓' : `Тиждень ${w}`}
+                      {done ? (solved ? 'Вирішено ✓' : 'Не вирішено') : `Тиждень ${w}`}
                     </span>
                   </div>
-                  {w < 4 && <div className={`h-px w-1.5 flex-shrink-0 ${w < launchWeek ? 'bg-success' : 'bg-border'}`} />}
+                  {w < 4 && <div className={`h-px w-1.5 flex-shrink-0 ${launchWeekResults[w - 1] !== null ? (launchWeekResults[w - 1] ? 'bg-success' : 'bg-destructive') : 'bg-border'}`} />}
                 </div>
               );
             })}
           </div>
+          {(launchPhase === 'month_success' || launchPhase === 'month_failure') && (
+            <p className="text-[11px] text-muted-foreground text-center mb-2">
+              Вирішено {launchWeekResults.filter(Boolean).length} з 4 проблем
+            </p>
+          )}
 
           {launchPhase === 'launching' && (
             <div className="flex flex-col items-center justify-center gap-4 py-10">
@@ -5729,8 +5742,10 @@ const ScenarioBuilder: React.FC = () => {
           {launchPhase === 'resolved' && (
             <>
               <AlertDialogHeader>
-                <AlertDialogTitle>✅ Тиждень {launchWeek} завершено</AlertDialogTitle>
-                <AlertDialogDescription>{launchFeedback}</AlertDialogDescription>
+                <AlertDialogTitle>
+                  {launchWeekSolved ? `✅ Тиждень ${launchWeek}: проблему вирішено` : `❌ Тиждень ${launchWeek}: проблему не вирішено`}
+                </AlertDialogTitle>
+                <AlertDialogDescription className={launchWeekSolved ? '' : 'text-destructive'}>{launchFeedback}</AlertDialogDescription>
               </AlertDialogHeader>
               <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -5744,13 +5759,32 @@ const ScenarioBuilder: React.FC = () => {
               <AlertDialogHeader>
                 <AlertDialogTitle>🏆 Проєкт успішно пройшов перший місяць!</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Клієнт задоволений, метрики дотримані — ви переходите на другий місяць співпраці.
+                  Вирішено {launchWeekResults.filter(Boolean).length} з 4 проблем — клієнт задоволений, метрики дотримані, ви переходите на другий місяць співпраці.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogAction
                   onClick={finishLaunchedProject}
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  <Check className="w-4 h-4 mr-1" /> Завершити проект
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </>
+          )}
+
+          {launchPhase === 'month_failure' && (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>⚠️ Проєкт не втримав перший місяць</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Вирішено лише {launchWeekResults.filter(Boolean).length} з 4 проблем — цього недостатньо. Клієнт незадоволений результатами і хоче переглянути співпрацю.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction
+                  onClick={finishLaunchedProject}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
                   <Check className="w-4 h-4 mr-1" /> Завершити проект
                 </AlertDialogAction>
