@@ -4273,6 +4273,19 @@ const ScenarioBuilder: React.FC = () => {
                   return (
                     <div key={`${stepIdx}-${branchLeadType || 'main'}`} className="flex items-start" data-flow-node data-step-index={stepIdx}>
                       <div className="relative">
+                        {stepIdx === 9 && isStepUnlocked(stepIdx, branchLeadType) && (
+                          <>
+                            <Button
+                              className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-md"
+                              onClick={(e) => { e.stopPropagation(); startLaunch(); }}
+                            >
+                              🚀 Запустити проект
+                            </Button>
+                            <div className="flex justify-center py-1">
+                              <div className="w-px h-4 border-l-2 border-dashed border-success/50" />
+                            </div>
+                          </>
+                        )}
                         <FlowNode
                           icon={s.icon}
                           title={branchLeadType && (stepIdx === 3 || stepIdx === 4)
@@ -4293,19 +4306,6 @@ const ScenarioBuilder: React.FC = () => {
                             }
                           }}
                         />
-                        {stepIdx === 9 && isStepUnlocked(stepIdx, branchLeadType) && (
-                          <>
-                            <div className="flex justify-center py-1">
-                              <div className="w-px h-4 border-l-2 border-dashed border-success/50" />
-                            </div>
-                            <Button
-                              className="w-full mt-1 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-md"
-                              onClick={(e) => { e.stopPropagation(); startLaunch(); }}
-                            >
-                              🚀 Запустити проект
-                            </Button>
-                          </>
-                        )}
                       </div>
                     </div>
                   );
