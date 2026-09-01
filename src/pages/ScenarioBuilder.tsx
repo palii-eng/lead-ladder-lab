@@ -4271,21 +4271,33 @@ const ScenarioBuilder: React.FC = () => {
                   return (
                     <div key={`${stepIdx}-${branchLeadType || 'main'}`} className="flex items-start" data-flow-node data-step-index={stepIdx}>
                       <div className="relative">
-                        {stepIdx === 9 && isStepUnlocked(stepIdx, branchLeadType) && (
-                          <>
-                            <Button
-                              className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-md"
-                              onClick={(e) => { e.stopPropagation(); startLaunch(); }}
-                            >
-                              🚀 Запустити проект
-                            </Button>
-                            {isLaunched && (
-                              <div className="flex justify-center py-1">
-                                <div className="w-px h-4 border-l-2 border-dashed border-success/50" />
-                              </div>
-                            )}
-                          </>
-                        )}
+                        {stepIdx === 9 && (() => {
+                          const ready = isStepUnlocked(stepIdx, branchLeadType);
+                          const missing = isBranching
+                            ? (leadTypes || []).filter(lt => !isStepCompleted(7, lt)).map(lt => LEAD_TYPES.find(l => l.value === lt)?.label || lt)
+                            : [];
+                          return (
+                            <>
+                              <Button
+                                disabled={!ready}
+                                className={`w-full gap-2 font-bold ${ready ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-md' : 'bg-muted text-muted-foreground cursor-not-allowed shadow-none hover:bg-muted'}`}
+                                onClick={(e) => { e.stopPropagation(); if (ready) startLaunch(); }}
+                              >
+                                🚀 Запустити проект
+                              </Button>
+                              {!ready && missing.length > 0 && (
+                                <p className="text-[10px] text-muted-foreground text-center mt-1.5 px-1 leading-tight max-w-[220px]">
+                                  Завершіть {missing.length > 1 ? 'ланцюжки' : 'ланцюжок'} «{missing.join('», «')}», щоб запустити проект
+                                </p>
+                              )}
+                              {isLaunched && (
+                                <div className="flex justify-center py-1">
+                                  <div className="w-px h-4 border-l-2 border-dashed border-success/50" />
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
                         {(stepIdx !== 9 || isLaunched) && (
                           <FlowNode
                             icon={s.icon}
@@ -4470,8 +4482,10 @@ const ScenarioBuilder: React.FC = () => {
                       </div>
                     </div>
                     )}
-                    {/* Converging connector — one line per branch row, meeting at the shared Результат node */}
-                    {isStepUnlocked(9) && (
+                    {/* Converging connector — one line per branch row, meeting at the shared Результат node.
+                        Shown as soon as ANY branch reached Продажі, not only once every branch is ready —
+                        so the marketer always sees the launch step waiting, with a hint on what's still missing. */}
+                    {leadTypes.some(lt => isStepCompleted(7, lt)) && (
                       <svg
                         className="flex-shrink-0 overflow-visible"
                         width="60"
@@ -4495,7 +4509,7 @@ const ScenarioBuilder: React.FC = () => {
                       </svg>
                     )}
                     {/* Shared Результат node — one summary for the whole scenario, not per branch */}
-                    {isStepUnlocked(9) && (
+                    {leadTypes.some(lt => isStepCompleted(7, lt)) && (
                       <div
                         className="flex items-start gap-0 flex-shrink-0"
                         style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}
