@@ -3017,12 +3017,21 @@ const ScenarioBuilder: React.FC = () => {
     </button>
   );
 
-  const SaveButton: React.FC<{ step: number; sticky?: boolean; disabled?: boolean; label?: string }> = ({ step, disabled, label }) => (
-    <div className="sticky bottom-0 bg-card pt-3 pb-2 -mx-4 px-4 border-t border-border mt-4 z-10">
+  const SaveButton: React.FC<{ step: number; sticky?: boolean; disabled?: boolean; label?: string; showSkip?: boolean }> = ({ step, disabled, label, showSkip }) => (
+    <div className="sticky bottom-0 bg-card pt-3 pb-2 -mx-4 px-4 border-t border-border mt-4 z-10 flex gap-2">
+      {showSkip && (
+        <Button
+          variant="outline"
+          onClick={() => handleSaveStep(step, { skipped: true })}
+          className="flex-1 gap-2"
+        >
+          <SkipForward className="w-4 h-4" /> Пропустити
+        </Button>
+      )}
       <Button
         onClick={() => handleSaveStep(step)}
         disabled={disabled !== undefined ? disabled : !canSaveStep(step, activeLeadType)}
-        className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+        className={`gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold ${showSkip ? 'flex-1' : 'w-full'}`}
       >
         <Save className="w-4 h-4" /> {label || 'Зберегти та продовжити'}
       </Button>
@@ -3674,6 +3683,7 @@ const ScenarioBuilder: React.FC = () => {
               <SaveButton
                 step={7}
                 sticky
+                showSkip
                 label={salesItems.length > 0 ? 'Відправити рекомендації клієнту' : 'Зберегти та продовжити'}
                 disabled={
                   !hasSalesChannel ||
