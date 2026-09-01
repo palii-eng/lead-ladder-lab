@@ -2156,6 +2156,12 @@ const ScenarioBuilder: React.FC = () => {
                         <AddBtn subtle label="Створити групу оголошень" onClick={() => openAudienceDialog(c.key, 'choose')} />
                       </div>
 
+                      {(c.audiences.length < 2 || c.audiences.some(a => c.creoList.filter(x => x.audienceId === a.id).length < 3)) && (
+                        <p className="text-[10px] text-warning px-1 pt-0.5">
+                          ⚠️ Для запуску потрібно мінімум 2 групи оголошень, і по 3 крео в кожній
+                        </p>
+                      )}
+
                       {/* Orphan creo for this campaign */}
                       {(() => {
                         const orphans = c.creoList.filter(x => !x.audienceId || !c.audiences.some(a => a.id === x.audienceId));
