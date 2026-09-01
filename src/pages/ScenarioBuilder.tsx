@@ -2261,9 +2261,10 @@ const ScenarioBuilder: React.FC = () => {
     toast({ title: 'Аудиторію видалено', description: aud.name || undefined });
   };
 
-  // Every campaign needs at least one audience and three creatives ready
-  // before the marketer is allowed to actually launch the project — an
-  // empty ad account isn't something a real launch could happen from.
+  // Every campaign needs at least TWO audiences, each with at least THREE
+  // creatives of its own, before the marketer is allowed to actually launch
+  // the project — a single thin audience or one shared pool of creo isn't
+  // something a real launch could happen from.
   const getUnreadyCampaigns = (): string[] => {
     const keys: string[] = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0
       ? scenario.leadTypes!
@@ -2273,7 +2274,8 @@ const ScenarioBuilder: React.FC = () => {
       const creoList = Array.isArray(rawCreo) ? rawCreo : (rawCreo?.format ? [rawCreo] : []);
       const rawAud = (scenario as any)?.audienceSettings?.[key];
       const audiences = Array.isArray(rawAud) ? rawAud : (rawAud && (rawAud.tips || rawAud.checks) ? [{ id: 'legacy' }] : []);
-      return audiences.length < 1 || creoList.length < 3;
+      if (audiences.length < 2) return true;
+      return audiences.some((a: any) => creoList.filter((c: any) => c.audienceId === a.id).length < 3);
     }).map(key => (key === 'main' ? '' : (LEAD_TYPES.find(l => l.value === key)?.label || key)));
   };
 
@@ -2319,7 +2321,7 @@ const ScenarioBuilder: React.FC = () => {
     if (unready.length > 0) {
       toast({
         title: 'Рекламний кабінет ще не готовий',
-        description: `Перед запуском потрібно мінімум 1 аудиторія і 3 крео на кожну кампанію${unready.some(Boolean) ? ` (бракує: ${unready.filter(Boolean).join(', ')})` : ''}.`,
+        description: `Перед запуском потрібно мінімум 2 аудиторії в кожній кампанії, і по 3 крео в кожній аудиторії${unready.some(Boolean) ? ` (бракує: ${unready.filter(Boolean).join(', ')})` : ''}.`,
         variant: 'destructive',
       });
       return;
@@ -4000,7 +4002,7 @@ const ScenarioBuilder: React.FC = () => {
                 </Button>
                 {getUnreadyCampaigns().length > 0 && (
                   <p className="text-xs text-warning text-center">
-                    ⚠️ Потрібно мінімум 1 аудиторія і 3 крео на кожну кампанію
+                    ⚠️ Потрібно мінімум 2 аудиторії в кампанії, і по 3 крео в кожній
                   </p>
                 )}
                 {scenario.status === 'completed' && (
