@@ -594,6 +594,8 @@ const ScenarioBuilder: React.FC = () => {
         body: JSON.stringify({
           prompt: creoFields.imageDesc,
           vertical: isTikTokSource,
+          headline: creoFields.h1 || '',
+          subtitle: creoFields.subtitle || '',
         }),
       });
       if (!resp.ok) {

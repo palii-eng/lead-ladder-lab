@@ -12,7 +12,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { prompt, vertical } = await req.json();
+    const { prompt, vertical, headline, subtitle } = await req.json();
     if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
       return new Response(JSON.stringify({ error: "Опис зображення порожній" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -26,7 +26,11 @@ serve(async (req) => {
     // otherwise — both are natively supported gpt-image-2 sizes.
     const size = vertical ? "1024x1536" : "1024x1024";
 
-    const fullPrompt = `Рекламне крео-зображення для соцмереж (Meta/TikTok). ${prompt}. Без будь-якого тексту, логотипів чи водяних знаків на зображенні — тільки візуал. Фотореалістичний, привабливий, комерційна якість.`;
+    const textBlock = headline
+      ? `\n\nНа банері ОБОВ'ЯЗКОВО має бути читабельний текст (це рекламний банер, а не проста фотографія):\n- Головний заголовок, дослівно: "${headline}"${subtitle ? `\n- Підзаголовок під ним, дослівно: "${subtitle}"` : ""}\nТекст українською мовою, без помилок і спотворень літер, великий, контрастний до фону, у гарній сучасній рекламній типографіці (жирний sans-serif), розміщений у чіткому текстовому блоці (наприклад, зверху, знизу або збоку з підкладкою/градієнтом для контрасту) — не поверх важливих деталей фото.`
+      : "";
+
+    const fullPrompt = `Рекламний банер для соцмереж (Meta/TikTok), у стилі сучасної digital-реклами. ${prompt}${textBlock}\n\nКомерційна якість, фотореалістичний фон, привабливий дизайн, як у справжньому рекламному оголошенні — не абстрактне мистецтво.`;
 
     const response = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
