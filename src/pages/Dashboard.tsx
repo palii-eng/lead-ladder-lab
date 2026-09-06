@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { UserMenu } from '@/components/UserMenu';
 import { GamificationSidebar } from '@/components/GamificationSidebar';
+import { TesterOnboarding } from '@/components/TesterOnboarding';
+import { getTesterStatusToday } from '@/lib/testerLimits';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -113,13 +115,18 @@ const Dashboard: React.FC = () => {
   };
 
   const handleCreate = () => {
-    if (isTester && scenarios.length >= 3) {
-      toast({
-        title: 'Ліміт сценаріїв вичерпано',
-        description: 'Тестовий акаунт дозволяє створити максимум 3 сценарії.',
-        variant: 'destructive',
-      });
-      return;
+    if (isTester && profile?.created_at) {
+      const status = getTesterStatusToday(profile.created_at, scenarios);
+      if (!status.canCreate) {
+        toast({
+          title: 'Ліміт на сьогодні вичерпано',
+          description: status.day <= 1
+            ? `Сьогодні (день 1) можна взяти ${status.take} проекти. Повертайтесь завтра за новими!`
+            : `Сьогодні можна взяти ${status.take} проект. Повертайтесь завтра за новим!`,
+          variant: 'destructive',
+        });
+        return;
+      }
     }
     const defaultName = `Сценарій #${scenarios.length + 1}`;
     const s = addScenario(defaultName, '');
@@ -159,29 +166,28 @@ const Dashboard: React.FC = () => {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            {isTester && (() => {
-              const used = Math.min(scenarios.length, 3);
-              const colors = [
-                { bg: 'hsl(142 71% 94%)', text: 'hsl(142 71% 30%)', border: 'hsl(142 71% 75%)' }, // 0/3 — green
-                { bg: 'hsl(48 96% 92%)', text: 'hsl(35 90% 30%)', border: 'hsl(48 96% 70%)' },     // 1/3 — yellow
-                { bg: 'hsl(28 90% 92%)', text: 'hsl(28 90% 35%)', border: 'hsl(28 90% 70%)' },     // 2/3 — orange
-                { bg: 'hsl(0 75% 94%)', text: 'hsl(0 65% 40%)', border: 'hsl(0 75% 75%)' },        // 3/3 — red
-              ][used];
+            {isTester && profile?.created_at && (() => {
+              const status = getTesterStatusToday(profile.created_at, scenarios);
+              const colors = status.remaining === status.take
+                ? { bg: 'hsl(142 71% 94%)', text: 'hsl(142 71% 30%)', border: 'hsl(142 71% 75%)' }  // full quota left — green
+                : status.remaining > 0
+                ? { bg: 'hsl(48 96% 92%)', text: 'hsl(35 90% 30%)', border: 'hsl(48 96% 70%)' }      // partially used — yellow
+                : { bg: 'hsl(0 75% 94%)', text: 'hsl(0 65% 40%)', border: 'hsl(0 75% 75%)' };        // none left — red
               return (
                 <span
                   className="text-xs font-bold px-3 py-1.5 rounded-full border"
                   style={{ background: colors.bg, color: colors.text, borderColor: colors.border }}
-                  title="Баланс тестових сценаріїв"
+                  title={`День ${status.day} — ліміт на сьогодні`}
                 >
-                  {used} з 3 сценаріїв
+                  {status.takenToday}/{status.take} на сьогодні
                 </span>
               );
             })()}
             <Button
               onClick={handleCreate}
-              disabled={isTester && scenarios.length >= 3}
+              disabled={isTester && !!profile?.created_at && !getTesterStatusToday(profile.created_at, scenarios).canCreate}
               className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-              title={isTester && scenarios.length >= 3 ? 'Тестовий акаунт: максимум 3 сценарії' : undefined}
+              title={isTester && profile?.created_at && !getTesterStatusToday(profile.created_at, scenarios).canCreate ? 'Ліміт на сьогодні вичерпано — повертайтесь завтра' : undefined}
             >
               <Plus className="w-4 h-4" />
               Створити сценарій
@@ -355,6 +361,7 @@ const Dashboard: React.FC = () => {
       </AlertDialog>
 
       <GamificationSidebar collapsed={gamificationCollapsed} onToggle={() => setGamificationCollapsed(v => !v)} />
+      <TesterOnboarding />
     </div>
   );
 };
