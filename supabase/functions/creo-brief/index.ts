@@ -62,7 +62,7 @@ ${decompCtx}
       method: "POST",
       headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gpt-5.1-mini",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -84,7 +84,7 @@ ${decompCtx}
       }
       const t = await response.text();
       console.error("OpenAI API error:", response.status, t);
-      return new Response(JSON.stringify({ error: "AI помилка" }), {
+      return new Response(JSON.stringify({ error: `AI помилка (${response.status}): ${t.slice(0, 300)}` }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

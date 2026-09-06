@@ -51,7 +51,7 @@ ${leadTypesText ? `Типи лідгену: ${leadTypesText}` : ""}
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-5.1-mini",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
