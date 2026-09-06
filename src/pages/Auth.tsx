@@ -104,11 +104,6 @@ const Auth: React.FC = () => {
         </div>
 
         <div className="glass-card p-6">
-          {isTesterLink && (
-            <div className="mb-4 p-3 rounded-lg border border-primary/30 bg-primary/5 text-xs text-foreground">
-              🧪 Реєстрація за тестовим посиланням — акаунт одразу отримає доступ як <b>Тестер</b> (без очікування підтвердження).
-            </div>
-          )}
           <Tabs value={tab} onValueChange={(v) => setTab(v as 'signin' | 'signup')}>
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="signin">Вхід</TabsTrigger>
