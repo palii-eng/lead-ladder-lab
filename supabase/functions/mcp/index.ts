@@ -3,12 +3,67 @@
 // supabase function: mcp
 // Bundled from src/lib/mcp/index.ts by @lovable.dev/mcp-js.
 // src/lib/mcp/index.ts
-import { defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
 
 // src/lib/mcp/tools/get-shared-scenario.ts
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.0";
-import { createClient } from "npm:@supabase/supabase-js@^2.110.0";
 import { z } from "npm:zod@^3.25.76";
+
+// src/lib/mcp/supabase.ts
+import { createClient } from "npm:@supabase/supabase-js@^2.110.0";
+function runtimeEnv(name) {
+  const runtime = globalThis;
+  return runtime.Deno?.env?.get?.(name) ?? runtime.process?.env?.[name];
+}
+function configuredEnv(names) {
+  for (const name of names) {
+    const value = runtimeEnv(name)?.trim();
+    if (value) return value;
+  }
+  return void 0;
+}
+function supabaseProjectUrl() {
+  const url = configuredEnv(["SUPABASE_URL", "VITE_SUPABASE_URL"]);
+  if (!url) throw new Error("SUPABASE_URL (or VITE_SUPABASE_URL) is required");
+  return url;
+}
+function supabasePublishableKey() {
+  const direct = configuredEnv([
+    "SUPABASE_PUBLISHABLE_KEY",
+    "VITE_SUPABASE_PUBLISHABLE_KEY"
+  ]);
+  if (direct) return direct;
+  const keyset = runtimeEnv("SUPABASE_PUBLISHABLE_KEYS");
+  if (keyset) {
+    try {
+      const parsed = JSON.parse(keyset);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const keys = parsed;
+        const key = [keys.default, ...Object.values(keys)].find((v) => typeof v === "string" && v.trim().startsWith("sb_publishable_"))?.trim();
+        if (key) return key;
+      }
+    } catch {
+    }
+  }
+  const legacy = configuredEnv(["SUPABASE_ANON_KEY", "VITE_SUPABASE_ANON_KEY"]);
+  if (legacy) return legacy;
+  throw new Error("SUPABASE_PUBLISHABLE_KEY, SUPABASE_PUBLISHABLE_KEYS, or SUPABASE_ANON_KEY is required");
+}
+function supabaseAnon() {
+  return createClient(supabaseProjectUrl(), supabasePublishableKey(), {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+function supabaseForUser(ctx) {
+  const token = ctx.getToken();
+  if (!token) throw new Error("supabaseForUser requires a verified OAuth token");
+  return createClient(supabaseProjectUrl(), supabasePublishableKey(), {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+
+// src/lib/mcp/tools/get-shared-scenario.ts
 var get_shared_scenario_default = defineTool({
   name: "get_shared_scenario",
   title: "Get shared scenario",
@@ -18,14 +73,7 @@ var get_shared_scenario_default = defineTool({
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ share_id }) => {
-    const url = process.env.SUPABASE_URL;
-    const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
-    if (!url || !key) {
-      return { content: [{ type: "text", text: "Supabase env not configured" }], isError: true };
-    }
-    const supabase = createClient(url, key, {
-      auth: { persistSession: false, autoRefreshToken: false }
-    });
+    const supabase = supabaseAnon();
     const { data, error } = await supabase.from("shared_scenarios").select("id, active_lead_type, ai_conclusion, created_at, scenario").eq("id", share_id).maybeSingle();
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     if (!data) return { content: [{ type: "text", text: "Shared scenario not found" }], isError: true };
@@ -38,7 +86,6 @@ var get_shared_scenario_default = defineTool({
 
 // src/lib/mcp/tools/list-recent-shared-scenarios.ts
 import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.20.0";
-import { createClient as createClient2 } from "npm:@supabase/supabase-js@^2.110.0";
 import { z as z2 } from "npm:zod@^3.25.76";
 var list_recent_shared_scenarios_default = defineTool2({
   name: "list_recent_shared_scenarios",
@@ -49,14 +96,7 @@ var list_recent_shared_scenarios_default = defineTool2({
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ limit }) => {
-    const url = process.env.SUPABASE_URL;
-    const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
-    if (!url || !key) {
-      return { content: [{ type: "text", text: "Supabase env not configured" }], isError: true };
-    }
-    const supabase = createClient2(url, key, {
-      auth: { persistSession: false, autoRefreshToken: false }
-    });
+    const supabase = supabaseAnon();
     const { data, error } = await supabase.from("shared_scenarios").select("id, active_lead_type, created_at").order("created_at", { ascending: false }).limit(limit ?? 10);
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     return {
@@ -66,13 +106,235 @@ var list_recent_shared_scenarios_default = defineTool2({
   }
 });
 
+// src/lib/mcp/tools/list-users.ts
+import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z3 } from "npm:zod@^3.25.76";
+
+// src/lib/mcp/auth.ts
+async function requireAdmin(ctx) {
+  if (!ctx.isAuthenticated()) {
+    throw new Error("Not authenticated");
+  }
+  const supabase = supabaseForUser(ctx);
+  const { data: isAdmin, error } = await supabase.rpc("has_role", {
+    _user_id: ctx.getUserId(),
+    _role: "admin"
+  });
+  if (error) throw new Error(error.message);
+  if (!isAdmin) throw new Error("Admin access required");
+}
+async function requireStaff(ctx) {
+  if (!ctx.isAuthenticated()) {
+    throw new Error("Not authenticated");
+  }
+  const supabase = supabaseForUser(ctx);
+  const [{ data: isAdmin }, { data: isModerator }] = await Promise.all([
+    supabase.rpc("has_role", { _user_id: ctx.getUserId(), _role: "admin" }),
+    supabase.rpc("has_role", { _user_id: ctx.getUserId(), _role: "moderator" })
+  ]);
+  if (!isAdmin && !isModerator) throw new Error("Admin or moderator access required");
+}
+
+// src/lib/mcp/tools/list-users.ts
+var list_users_default = defineTool3({
+  name: "list_users",
+  title: "List users",
+  description: "List all SmartFunnel users with their approval status, role, email, name, and scenario counts. Admin only.",
+  inputSchema: {
+    status: z3.enum(["pending", "approved", "rejected"]).optional().describe("Filter users by approval status.")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ status }, ctx) => {
+    await requireAdmin(ctx);
+    const supabase = supabaseForUser(ctx);
+    const [{ data: profiles, error: pErr }, { data: roleRows, error: rErr }, { data: workspaces, error: wErr }] = await Promise.all([
+      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+      supabase.from("user_roles").select("user_id, role"),
+      supabase.from("scenario_workspaces").select("user_id, scenarios")
+    ]);
+    if (pErr) return { content: [{ type: "text", text: pErr.message }], isError: true };
+    if (rErr) return { content: [{ type: "text", text: rErr.message }], isError: true };
+    if (wErr) return { content: [{ type: "text", text: wErr.message }], isError: true };
+    const counts = /* @__PURE__ */ new Map();
+    (workspaces || []).forEach((w) => {
+      if (!w.user_id) return;
+      const arr = Array.isArray(w.scenarios) ? w.scenarios : [];
+      counts.set(w.user_id, arr.length);
+    });
+    const rolePriority = { admin: 2, moderator: 1, user: 0, tester: -1 };
+    const roleByUser = /* @__PURE__ */ new Map();
+    (roleRows || []).forEach((r) => {
+      const current = roleByUser.get(r.user_id);
+      if (!current || rolePriority[r.role] > rolePriority[current]) {
+        roleByUser.set(r.user_id, r.role);
+      }
+    });
+    let rows = (profiles || []).map((p) => ({
+      id: p.id,
+      email: p.email,
+      full_name: p.full_name,
+      status: p.status,
+      role: roleByUser.get(p.id) ?? "user",
+      scenarios_count: counts.get(p.id) ?? 0,
+      created_at: p.created_at
+    }));
+    if (status) {
+      rows = rows.filter((r) => r.status === status);
+    }
+    return {
+      content: [{ type: "text", text: JSON.stringify(rows, null, 2) }],
+      structuredContent: { users: rows }
+    };
+  }
+});
+
+// src/lib/mcp/tools/update-user-status.ts
+import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z4 } from "npm:zod@^3.25.76";
+var update_user_status_default = defineTool4({
+  name: "update_user_status",
+  title: "Update user status",
+  description: "Approve, reject, or set to pending a user's account status. Admin only.",
+  inputSchema: {
+    user_id: z4.string().uuid().describe("UUID of the user whose status to update."),
+    status: z4.enum(["pending", "approved", "rejected"]).describe("New approval status.")
+  },
+  annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: false },
+  handler: async ({ user_id, status }, ctx) => {
+    await requireAdmin(ctx);
+    const supabase = supabaseForUser(ctx);
+    const { error } = await supabase.from("profiles").update({ status }).eq("id", user_id);
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return {
+      content: [{ type: "text", text: `User ${user_id} status updated to ${status}.` }],
+      structuredContent: { user_id, status }
+    };
+  }
+});
+
+// src/lib/mcp/tools/list-scenario-reviews.ts
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z5 } from "npm:zod@^3.25.76";
+var list_scenario_reviews_default = defineTool5({
+  name: "list_scenario_reviews",
+  title: "List scenario reviews",
+  description: "List all scenario review requests submitted by students. Admins and moderators can use this.",
+  inputSchema: {
+    status: z5.enum(["pending", "in_review", "approved", "rejected"]).optional().describe("Filter reviews by status."),
+    limit: z5.number().int().min(1).max(100).optional().describe("Maximum number of reviews to return.")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ status, limit }, ctx) => {
+    await requireStaff(ctx);
+    const supabase = supabaseForUser(ctx);
+    let query = supabase.from("scenario_reviews").select("*").order("created_at", { ascending: false }).limit(limit ?? 50);
+    if (status) query = query.eq("status", status);
+    const { data, error } = await query;
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return {
+      content: [{ type: "text", text: JSON.stringify(data ?? [], null, 2) }],
+      structuredContent: { reviews: data ?? [] }
+    };
+  }
+});
+
+// src/lib/mcp/tools/update-review-status.ts
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z6 } from "npm:zod@^3.25.76";
+var update_review_status_default = defineTool6({
+  name: "update_review_status",
+  title: "Update review status",
+  description: "Change the status of a scenario review request (pending, in_review, approved, rejected). Admins and moderators can use this.",
+  inputSchema: {
+    review_id: z6.string().uuid().describe("UUID of the review request."),
+    status: z6.enum(["pending", "in_review", "approved", "rejected"]).describe("New review status."),
+    admin_note: z6.string().optional().describe("Optional note from the reviewer.")
+  },
+  annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: false },
+  handler: async ({ review_id, status, admin_note }, ctx) => {
+    await requireStaff(ctx);
+    const supabase = supabaseForUser(ctx);
+    const update = { status };
+    if (admin_note !== void 0) update.admin_note = admin_note;
+    const { data, error } = await supabase.from("scenario_reviews").update(update).eq("id", review_id).select();
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return {
+      content: [{ type: "text", text: `Review ${review_id} updated to ${status}.` }],
+      structuredContent: { review: data?.[0] }
+    };
+  }
+});
+
+// src/lib/mcp/tools/delete-review.ts
+import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z7 } from "npm:zod@^3.25.76";
+var delete_review_default = defineTool7({
+  name: "delete_review",
+  title: "Delete review",
+  description: "Permanently delete a scenario review request. Admins and moderators can use this.",
+  inputSchema: {
+    review_id: z7.string().uuid().describe("UUID of the review request to delete.")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
+  handler: async ({ review_id }, ctx) => {
+    await requireStaff(ctx);
+    const supabase = supabaseForUser(ctx);
+    const { error } = await supabase.from("scenario_reviews").delete().eq("id", review_id);
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return {
+      content: [{ type: "text", text: `Review ${review_id} deleted.` }],
+      structuredContent: { review_id }
+    };
+  }
+});
+
+// src/lib/mcp/tools/toggle-moderator.ts
+import { defineTool as defineTool8 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z8 } from "npm:zod@^3.25.76";
+var toggle_moderator_default = defineTool8({
+  name: "toggle_moderator",
+  title: "Toggle moderator role",
+  description: "Grant or revoke moderator role for a user. Admin only.",
+  inputSchema: {
+    user_id: z8.string().uuid().describe("UUID of the user."),
+    grant: z8.boolean().describe("True to grant moderator role, false to revoke it.")
+  },
+  annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: false },
+  handler: async ({ user_id, grant }, ctx) => {
+    await requireAdmin(ctx);
+    const supabase = supabaseForUser(ctx);
+    if (grant) {
+      const { error: error2 } = await supabase.from("user_roles").insert({ user_id, role: "moderator" });
+      if (error2) return { content: [{ type: "text", text: error2.message }], isError: true };
+      return { content: [{ type: "text", text: `Moderator role granted to ${user_id}.` }], structuredContent: { user_id, grant: true } };
+    }
+    const { error } = await supabase.from("user_roles").delete().eq("user_id", user_id).eq("role", "moderator");
+    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    return { content: [{ type: "text", text: `Moderator role revoked from ${user_id}.` }], structuredContent: { user_id, grant: false } };
+  }
+});
+
 // src/lib/mcp/index.ts
+var projectRef = "dmvfdxrpqkwolhspxjsh";
 var mcp_default = defineMcp({
   name: "smartfunnel-mcp",
   title: "SmartFunnel AI MCP",
-  version: "0.1.0",
-  instructions: "Tools for SmartFunnel AI (Ads School). Use `list_recent_shared_scenarios` to browse publicly shared funnels and `get_shared_scenario` to fetch the full JSON of a specific shared scenario by its share ID.",
-  tools: [list_recent_shared_scenarios_default, get_shared_scenario_default]
+  version: "0.2.0",
+  instructions: "Tools for SmartFunnel AI (Ads School). Public tools: browse and fetch publicly shared scenarios. Admin tools: list and manage users, approve/reject accounts, assign moderator roles. Staff tools: list and update scenario review requests.",
+  auth: auth.oauth.issuer({
+    issuer: `https://${projectRef}.supabase.co/auth/v1`,
+    acceptedAudiences: "authenticated"
+  }),
+  tools: [
+    list_recent_shared_scenarios_default,
+    get_shared_scenario_default,
+    list_users_default,
+    update_user_status_default,
+    list_scenario_reviews_default,
+    update_review_status_default,
+    delete_review_default,
+    toggle_moderator_default
+  ]
 });
 
 // lovable-mcp-supabase-entry.ts
