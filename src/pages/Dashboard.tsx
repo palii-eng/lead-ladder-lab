@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useScenarios } from '@/context/ScenariosContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LayoutDashboard, Trash2, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle, Trophy, Award, Lock } from 'lucide-react';
+import { Plus, LayoutDashboard, UserX, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle, Trophy, Award, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -322,8 +322,9 @@ const Dashboard: React.FC = () => {
                       variant="secondary"
                       className="hover:bg-destructive hover:text-destructive-foreground"
                       onClick={(e) => { e.stopPropagation(); setDeleteId(s.id); }}
+                      title="Відмовитись від клієнта"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <UserX className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </div>
@@ -336,9 +337,9 @@ const Dashboard: React.FC = () => {
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Видалити сценарій?</AlertDialogTitle>
+            <AlertDialogTitle>Відмовитись від клієнта?</AlertDialogTitle>
             <AlertDialogDescription>
-              Ви впевнені, що хочете видалити сценарій{scenarioToDelete ? ` «${scenarioToDelete.name}»` : ''}? Цю дію не можна скасувати.
+              Ви впевнені, що хочете відмовитись від клієнта{scenarioToDelete ? ` «${scenarioToDelete.name}»` : ''}? Сценарій буде видалено без можливості відновлення.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -347,7 +348,7 @@ const Dashboard: React.FC = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => { if (deleteId) deleteScenario(deleteId); setDeleteId(null); }}
             >
-              Видалити
+              Так, відмовитись
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
