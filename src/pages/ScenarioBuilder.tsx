@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useScenarios, Scenario, DecompositionScenario, DecompositionSet, createDefaultDecompSet, createDefaultBranchData, BranchData, ClientBrief } from '@/context/ScenariosContext';
+import { getGamificationProgress } from '@/components/GamificationSidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -476,7 +477,7 @@ const calcMetrics = (d: DecompositionScenario) => {
 const ScenarioBuilder: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getScenario, updateScenario, loading: scenariosLoading } = useScenarios();
+  const { scenarios, getScenario, updateScenario, loading: scenariosLoading } = useScenarios();
   const scenario = getScenario(id!);
 
   // Which set of campaign goals / sub-goals to show depends on the chosen ad
@@ -2397,7 +2398,18 @@ const ScenarioBuilder: React.FC = () => {
   };
 
   const finishLaunchedProject = () => {
-    update({ status: 'completed', monthSurvived: launchPhase === 'month_success' });
+    const isSuccess = launchPhase === 'month_success';
+    if (isSuccess) {
+      const alreadyCompleted = scenarios.filter(s => s.monthSurvived).length;
+      const before = getGamificationProgress(alreadyCompleted);
+      const after = getGamificationProgress(alreadyCompleted + 1);
+      const earned = after.earnings - before.earnings;
+      toast({
+        title: '🎉 Проєкт зараховано!',
+        description: `+1 проєкт${earned > 0 ? `, +$${earned.toLocaleString()} на баланс` : ''} (усього: $${after.earnings.toLocaleString()})`,
+      });
+    }
+    update({ status: 'completed', monthSurvived: isSuccess });
     setLaunchResultOpen(false);
     navigate('/');
   };
