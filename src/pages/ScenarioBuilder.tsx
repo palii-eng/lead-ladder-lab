@@ -480,6 +480,17 @@ const ScenarioBuilder: React.FC = () => {
   const { scenarios, getScenario, updateScenario, loading: scenariosLoading } = useScenarios();
   const scenario = getScenario(id!);
 
+  // Marketer's current gamification level — drives payment terms shown in
+  // the client-actions column (levels 1-2: pay at month end, level 3: 50%
+  // upfront, levels 4-5: 100% upfront).
+  const completedProjectsCount = scenarios.filter(s => s.monthSurvived).length;
+  const { currentLevel: marketerLevel } = getGamificationProgress(completedProjectsCount);
+  const paymentTermsLabel = !marketerLevel || marketerLevel.level <= 2
+    ? 'На вашому рівні — оплата в кінці місяця'
+    : marketerLevel.level === 3
+    ? 'На вашому рівні — 50% предоплата'
+    : 'На вашому рівні — 100% оплати одразу';
+
   // Which set of campaign goals / sub-goals to show depends on the chosen ad
   // platform — TikTok's objective taxonomy differs from Meta's (see the
   // _META / _TIKTOK constant definitions above). Shadowing the original
@@ -1597,13 +1608,15 @@ const ScenarioBuilder: React.FC = () => {
 
   const CLIENT_ACTIONS: { key: string; label: string; doneIcon: React.ComponentType<{ className?: string }> }[] = [
     { key: 'brief', label: 'Провести міт та зібрати бриф', doneIcon: FileText },
-    { key: 'payment', label: 'Взяти оплату', doneIcon: DollarSign },
   ];
 
   const handleClientAction = (key: string, label: string) => {
     setClientActions(prev => {
       const next = new Set(prev);
       next.add(key);
+      // Payment terms are now shown automatically (not a separate manual
+      // step), so completing the brief also satisfies the payment gate.
+      if (key === 'brief') next.add('payment');
       return next;
     });
     if (key === 'brief') {
@@ -1647,6 +1660,9 @@ const ScenarioBuilder: React.FC = () => {
           </button>
         );
       })}
+      <span className="px-3 py-2 rounded-full bg-muted border border-border text-muted-foreground text-xs font-semibold flex items-center gap-1.5 text-center">
+        <DollarSign className="w-3.5 h-3.5 shrink-0" /> {paymentTermsLabel}
+      </span>
     </div>
   );
 
