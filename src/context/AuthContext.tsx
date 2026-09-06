@@ -19,7 +19,6 @@ interface AuthContextType {
   isAdmin: boolean;
   isModerator: boolean;
   isStaff: boolean;
-  isTester: boolean;
   isApproved: boolean;
   loading: boolean;
   signUp: (email: string, password: string, fullName: string, signupSource?: string) => Promise<{ error: Error | null }>;
@@ -42,7 +41,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isModerator, setIsModerator] = useState(false);
-  const [isTester, setIsTester] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadProfileAndRole = async (userId: string) => {
@@ -54,7 +52,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(prof as Profile | null);
       setIsAdmin(!!roles?.some(r => r.role === 'admin'));
       setIsModerator(!!roles?.some(r => r.role === 'moderator'));
-      setIsTester(!!roles?.some(r => r.role === 'tester'));
     } catch (e) {
       console.error('Failed to load profile/role', e);
     }
@@ -72,7 +69,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfile(null);
         setIsAdmin(false);
         setIsModerator(false);
-        setIsTester(false);
       }
     });
 
@@ -114,7 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={{
-      user, session, profile, isAdmin, isModerator, isStaff: isAdmin || isModerator, isTester,
+      user, session, profile, isAdmin, isModerator, isStaff: isAdmin || isModerator,
       isApproved: profile?.status === 'approved',
       loading, signUp, signIn, signOut, refreshProfile,
     }}>

@@ -55,7 +55,7 @@ interface GamificationSidebarProps {
 }
 
 export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collapsed, onToggle }) => {
-  const { profile, isTester } = useAuth();
+  const { profile } = useAuth();
   const { scenarios } = useScenarios();
   const completedCount = scenarios.filter(s => s.monthSurvived).length;
   const { currentLevel, nextLevel, earnings, progressToNext } = getGamificationProgress(completedCount);
@@ -129,15 +129,6 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
           )}
         </div>
 
-        {isTester && (
-          <div className="py-3 border-b border-border">
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
-              <p className="text-xs text-foreground leading-snug">
-                🎁 Досягнення <b>Рівня 1</b> дасть вам знижку <b>50%</b> на будь-який курс Ads School!
-              </p>
-            </div>
-          </div>
-        )}
 
         <div className="py-4 space-y-2 pb-8">
           <div className="flex items-center gap-2 mb-2">
@@ -163,9 +154,6 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground">Рівень {lvl.level} · {lvl.name}</p>
-                  {isTester && lvl.level >= 2 && (
-                    <p className="text-[11px] font-semibold text-warning mt-0.5">🔒 Тільки для студентів AdsSchool</p>
-                  )}
                   {!reached && (
                     <p className="text-[11px] text-muted-foreground mt-0.5">Щоб розблокувати цей рівень, виконайте умови:</p>
                   )}

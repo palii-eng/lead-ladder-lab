@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useScenarios } from '@/context/ScenariosContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LayoutDashboard, UserX, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle, Trophy, Award, Lock } from 'lucide-react';
+import { Plus, LayoutDashboard, UserX, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle, Trophy, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -10,8 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { UserMenu } from '@/components/UserMenu';
 import { GamificationSidebar } from '@/components/GamificationSidebar';
-import { getTesterStatusToday } from '@/lib/testerLimits';
-import { LeadOslavTour, markLeadOslavTourSeen } from '@/components/LeadOslavTour';
+import { markLeadOslavTourSeen } from '@/components/LeadOslavTour';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +21,7 @@ type ReviewStatus = 'pending' | 'in_review' | 'approved' | 'rejected';
 const Dashboard: React.FC = () => {
   const { scenarios, loading, addScenario, deleteScenario } = useScenarios();
   const navigate = useNavigate();
-  const { user, profile, isTester } = useAuth();
+  const { user, profile } = useAuth();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [gamificationCollapsed, setGamificationCollapsed] = useState(false);
   const createBtnRef = useRef<HTMLButtonElement>(null);
@@ -53,10 +52,6 @@ const Dashboard: React.FC = () => {
 
   const sendForReview = async (s: typeof scenarios[0]) => {
     if (!user?.id) return;
-    if (isTester) {
-      toast({ title: 'Перевірка недоступна', description: 'Перевірка доступна тільки для студентів AdsSchool', variant: 'destructive' });
-      return;
-    }
     setSendingId(s.id);
     try {
       const { data: shared, error: sharedErr } = await supabase
@@ -117,19 +112,6 @@ const Dashboard: React.FC = () => {
 
   const handleCreate = () => {
     markLeadOslavTourSeen(user?.id);
-    if (isTester && profile?.created_at) {
-      const status = getTesterStatusToday(profile.created_at, scenarios);
-      if (!status.canCreate) {
-        toast({
-          title: 'Ліміт на сьогодні вичерпано',
-          description: status.day <= 1
-            ? `Сьогодні (день 1) можна взяти ${status.take} проекти. Повертайтесь завтра за новими!`
-            : `Сьогодні можна взяти ${status.take} проект. Повертайтесь завтра за новим!`,
-          variant: 'destructive',
-        });
-        return;
-      }
-    }
     const defaultName = `Сценарій #${scenarios.length + 1}`;
     const s = addScenario(defaultName, '');
     navigate(`/scenario/${s.id}`);
@@ -168,32 +150,13 @@ const Dashboard: React.FC = () => {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            {isTester && profile?.created_at && (() => {
-              const status = getTesterStatusToday(profile.created_at, scenarios);
-              const colors = status.remaining === status.take
-                ? { bg: 'hsl(142 71% 94%)', text: 'hsl(142 71% 30%)', border: 'hsl(142 71% 75%)' }  // full quota left — green
-                : status.remaining > 0
-                ? { bg: 'hsl(48 96% 92%)', text: 'hsl(35 90% 30%)', border: 'hsl(48 96% 70%)' }      // partially used — yellow
-                : { bg: 'hsl(0 75% 94%)', text: 'hsl(0 65% 40%)', border: 'hsl(0 75% 75%)' };        // none left — red
-              return (
-                <span
-                  className="text-xs font-bold px-3 py-1.5 rounded-full border"
-                  style={{ background: colors.bg, color: colors.text, borderColor: colors.border }}
-                  title={`День ${status.day} — ліміт на сьогодні`}
-                >
-                  {status.takenToday}/{status.take} на сьогодні
-                </span>
-              );
-            })()}
             <Button
               ref={createBtnRef}
               onClick={handleCreate}
-              disabled={isTester && !!profile?.created_at && !getTesterStatusToday(profile.created_at, scenarios).canCreate}
-              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-              title={isTester && profile?.created_at && !getTesterStatusToday(profile.created_at, scenarios).canCreate ? 'Ліміт на сьогодні вичерпано — повертайтесь завтра' : undefined}
+              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
             >
               <Plus className="w-4 h-4" />
-              {isTester ? 'Знайти новий проєкт' : 'Створити сценарій'}
+              Створити сценарій
             </Button>
             <UserMenu />
           </div>
@@ -307,12 +270,11 @@ const Dashboard: React.FC = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        className={`gap-1.5 h-7 text-xs ${isTester ? 'opacity-60' : ''}`}
+                        className="gap-1.5 h-7 text-xs"
                         disabled={sendingId === s.id}
                         onClick={(e) => { e.stopPropagation(); sendForReview(s); }}
-                        title={isTester ? 'Перевірка доступна тільки для студентів AdsSchool' : undefined}
                       >
-                        {isTester ? <Lock className="w-3 h-3" /> : <Send className="w-3 h-3" />} Відправити
+                        <Send className="w-3 h-3" /> Відправити
                       </Button>
                     )}
                   </div>
@@ -364,7 +326,6 @@ const Dashboard: React.FC = () => {
       </AlertDialog>
 
       <GamificationSidebar collapsed={gamificationCollapsed} onToggle={() => setGamificationCollapsed(v => !v)} />
-      {isTester && <LeadOslavTour createBtnRef={createBtnRef} />}
     </div>
   );
 };

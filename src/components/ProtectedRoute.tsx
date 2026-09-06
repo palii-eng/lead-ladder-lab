@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 
 export const ProtectedRoute: React.FC<{ children: React.ReactNode; requireApproved?: boolean }> = ({ children, requireApproved = true }) => {
-  const { user, profile, isTester, loading, signOut } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
 
   if (loading) {
     return (
@@ -16,9 +16,7 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode; requireApprov
 
   if (!user) return <Navigate to="/auth" replace />;
 
-  // Testers are always auto-approved at signup — never show the pending
-  // screen for them even if profile.status hasn't caught up yet.
-  if (requireApproved && profile?.status !== 'approved' && !isTester) {
+  if (requireApproved && profile?.status !== 'approved') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-6">
         <div className="glass-card p-8 max-w-md text-center">

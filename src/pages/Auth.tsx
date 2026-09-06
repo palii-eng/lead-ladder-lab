@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,9 +43,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({ id, value, onChange, minL
 const Auth: React.FC = () => {
   const { user, loading, signIn, signUp } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const isTesterLink = searchParams.get('ref') === 'tester';
-  const [tab, setTab] = useState<'signin' | 'signup'>(isTesterLink ? 'signup' : 'signin');
+  const [tab, setTab] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -74,16 +72,10 @@ const Auth: React.FC = () => {
       return;
     }
     setSubmitting(true);
-    const { error } = await signUp(email, password, fullName, isTesterLink ? 'tester_link' : undefined);
+    const { error } = await signUp(email, password, fullName);
     setSubmitting(false);
     if (error) {
       toast({ title: 'Помилка реєстрації', description: error.message, variant: 'destructive' });
-    } else if (isTesterLink) {
-      toast({
-        title: 'Тестовий акаунт створено',
-        description: 'Вхід уже доступний — можна одразу пробувати симулятор.',
-      });
-      setTab('signin');
     } else {
       toast({
         title: 'Заявку відправлено',
@@ -146,9 +138,7 @@ const Auth: React.FC = () => {
                   {submitting ? 'Відправка…' : 'Зареєструватися'}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">
-                  {isTesterLink
-                    ? 'Тестовий акаунт активується одразу після реєстрації.'
-                    : 'Після реєстрації потрібен апрув адміністратора.'}
+                  Після реєстрації потрібен апрув адміністратора.
                 </p>
               </form>
             </TabsContent>
