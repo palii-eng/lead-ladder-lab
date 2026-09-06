@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { Zap, Eye, EyeOff } from 'lucide-react';
+
+function getSafeNextUrl(searchParams: URLSearchParams): string | null {
+  const next = searchParams.get('next');
+  if (!next) return null;
+  // Accept only same-origin relative paths to avoid open redirects.
+  if (next.startsWith('/') && !next.startsWith('//')) return next;
+  return null;
+}
 
 interface PasswordInputProps {
   id: string;
