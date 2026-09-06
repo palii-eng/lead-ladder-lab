@@ -11,6 +11,7 @@ import ScenarioBuilder from "./pages/ScenarioBuilder";
 import SharedScenario from "./pages/SharedScenario";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import OAuthConsent from "./pages/OAuthConsent";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
