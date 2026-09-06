@@ -1,8 +1,7 @@
 import React from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useAuth } from '@/context/AuthContext';
 import { useScenarios } from '@/context/ScenariosContext';
-import { Trophy, TrendingUp, Lock, Check } from 'lucide-react';
+import { Trophy, TrendingUp, Lock, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Five levels — each defined by how many projects have to be launched AND
 // successfully sustained (scenario.monthSurvived === true), paired with a
@@ -27,11 +26,12 @@ export const getGamificationProgress = (completedCount: number) => {
   const nextLevel = levels[currentLevelIdx + 1] || null;
 
   // Interpolate earnings between the last-reached milestone and the next
-  // one (or extrapolate past the last level using its own rate).
+  // one (or extrapolate past the last level using its own rate). Before
+  // reaching level 1 at all, earnings stay flat at $0 — no partial credit
+  // for a level not yet actually reached.
   let earnings: number;
   if (!currentLevel) {
-    const first = levels[0];
-    earnings = Math.round((completedCount / first.projects) * first.earnings);
+    earnings = 0;
   } else if (!nextLevel) {
     const prev = levels[levels.length - 2];
     const rate = prev ? (currentLevel.earnings - prev.earnings) / (currentLevel.projects - prev.projects) : 0;
@@ -50,24 +50,54 @@ export const getGamificationProgress = (completedCount: number) => {
 };
 
 interface GamificationSidebarProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  collapsed: boolean;
+  onToggle: () => void;
 }
 
-export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ open, onOpenChange }) => {
+export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collapsed, onToggle }) => {
   const { profile } = useAuth();
   const { scenarios } = useScenarios();
   const completedCount = scenarios.filter(s => s.monthSurvived).length;
   const { currentLevel, nextLevel, earnings, progressToNext } = getGamificationProgress(completedCount);
   const initial = (profile?.full_name || profile?.email || 'U').charAt(0).toUpperCase();
 
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-[340px] sm:w-[380px] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Ваш прогрес</SheetTitle>
-        </SheetHeader>
+  if (collapsed) {
+    return (
+      <aside className="fixed left-0 top-0 h-screen w-14 border-r border-border bg-card flex flex-col items-center py-4 gap-3 z-30">
+        <button
+          type="button"
+          onClick={onToggle}
+          className="w-8 h-8 rounded-md flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground"
+          title="Розгорнути прогрес"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+        <div className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
+          {initial}
+        </div>
+        <div className="flex flex-col items-center gap-1 mt-1" title={currentLevel ? `Рівень ${currentLevel.level}` : 'Ще без рівня'}>
+          <Trophy className="w-4 h-4 text-warning" />
+          <span className="text-[10px] font-bold text-foreground">{currentLevel?.level ?? '—'}</span>
+        </div>
+      </aside>
+    );
+  }
 
+  return (
+    <aside className="fixed left-0 top-0 h-screen w-[300px] border-r border-border bg-card overflow-y-auto z-30">
+      <div className="flex items-center justify-between px-4 pt-4">
+        <h2 className="font-bold text-foreground">Ваш прогрес</h2>
+        <button
+          type="button"
+          onClick={onToggle}
+          className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground"
+          title="Згорнути"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="px-4">
         <div className="flex flex-col items-center gap-3 py-6 border-b border-border">
           <div className="w-20 h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-3xl font-bold">
             {initial}
@@ -99,7 +129,7 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ open, 
           )}
         </div>
 
-        <div className="py-4 space-y-2">
+        <div className="py-4 space-y-2 pb-8">
           <div className="flex items-center gap-2 mb-2">
             <Trophy className="w-4 h-4 text-warning" />
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Рівні</span>
@@ -129,7 +159,7 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ open, 
             );
           })}
         </div>
-      </SheetContent>
-    </Sheet>
+      </div>
+    </aside>
   );
 };
