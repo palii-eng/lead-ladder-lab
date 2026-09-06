@@ -346,7 +346,7 @@ const Admin: React.FC = () => {
                           )}
                           {isAdmin && r.role !== 'admin' && r.role !== 'moderator' && (
                             <Button size="sm" variant="outline" onClick={() => toggleTester(r)}>
-                              {r.role === 'tester' ? 'Зняти тестера' : 'Зробити тестером'}
+                              {r.role === 'tester' ? 'Перевести в студенти' : 'Зробити тестером'}
                             </Button>
                           )}
                           {isAdmin && r.role !== 'admin' && (

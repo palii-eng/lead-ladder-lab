@@ -22,7 +22,7 @@ interface AuthContextType {
   isTester: boolean;
   isApproved: boolean;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, signupSource?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -89,12 +89,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp: AuthContextType['signUp'] = async (email, password, fullName) => {
+  const signUp: AuthContextType['signUp'] = async (email, password, fullName, signupSource) => {
     const redirectUrl = `${window.location.origin}/`;
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: redirectUrl, data: { full_name: fullName } },
+      options: { emailRedirectTo: redirectUrl, data: { full_name: fullName, ...(signupSource ? { signup_source: signupSource } : {}) } },
     });
     return { error };
   };
