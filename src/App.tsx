@@ -26,6 +26,7 @@ const App = () => (
             <Sonner />
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/share/:shareId" element={<SharedScenario />} />
               <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/scenario/:id" element={<ProtectedRoute><ScenarioBuilder /></ProtectedRoute>} />
