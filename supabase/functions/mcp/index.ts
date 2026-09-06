@@ -315,7 +315,7 @@ var toggle_moderator_default = defineTool8({
 });
 
 // src/lib/mcp/index.ts
-var projectRef = "dmvfdxrpqkwolhspxjsh";
+var projectRef = "filzvqaqibkrywzthxmj";
 var mcp_default = defineMcp({
   name: "smartfunnel-mcp",
   title: "SmartFunnel AI MCP",
