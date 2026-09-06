@@ -615,7 +615,7 @@ const ScenarioBuilder: React.FC = () => {
   const [aiRecommendation, setAiRecommendation] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const { toast } = useToast();
-  const { user, profile, isTester } = useAuth();
+  const { user, profile } = useAuth();
   const fetchAiRecommendation = useCallback(async () => {
     if (!scenario) return;
     setAiLoading(true);
@@ -1145,10 +1145,6 @@ const ScenarioBuilder: React.FC = () => {
 
   const sendToCurator = useCallback(async () => {
     if (!scenario) return;
-    if (isTester) {
-      toast({ title: 'Перевірка недоступна', description: 'Перевірка доступна тільки для студентів AdsSchool', variant: 'destructive' });
-      return;
-    }
     const decompSet = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && activeLeadType
       ? (scenario.branchData?.[activeLeadType]?.decomposition || scenario.decomposition)
       : scenario.decomposition;
@@ -4023,11 +4019,10 @@ const ScenarioBuilder: React.FC = () => {
               <div className="sticky bottom-0 bg-card pt-3 pb-2 -mx-4 px-4 border-t border-border mt-4 z-10 space-y-2">
                 <Button
                   variant="outline"
-                  className={`w-full gap-2 font-bold ${isTester ? 'border-muted-foreground/30 text-muted-foreground' : 'border-primary text-primary hover:bg-primary/5'}`}
+                  className="w-full gap-2 font-bold border-primary text-primary hover:bg-primary/5"
                   onClick={sendToCurator}
-                  title={isTester ? 'Перевірка доступна тільки для студентів AdsSchool' : undefined}
                 >
-                  {isTester ? <Lock className="w-4 h-4" /> : '📤'} Відправити куратору
+                  📤 Відправити куратору
                 </Button>
                 <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
                   onClick={startLaunch}>
