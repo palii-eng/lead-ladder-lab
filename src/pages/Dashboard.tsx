@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useScenarios } from '@/context/ScenariosContext';
 import { useNavigate } from 'react-router-dom';
 import { Plus, LayoutDashboard, UserX, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle, Trophy, Award, Lock } from 'lucide-react';
@@ -10,8 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { UserMenu } from '@/components/UserMenu';
 import { GamificationSidebar } from '@/components/GamificationSidebar';
-import { TesterOnboarding } from '@/components/TesterOnboarding';
 import { getTesterStatusToday } from '@/lib/testerLimits';
+import { LeadOslavTour, markLeadOslavTourSeen } from '@/components/LeadOslavTour';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +25,7 @@ const Dashboard: React.FC = () => {
   const { user, profile, isTester } = useAuth();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [gamificationCollapsed, setGamificationCollapsed] = useState(false);
+  const createBtnRef = useRef<HTMLButtonElement>(null);
   const scenarioToDelete = deleteId ? scenarios.find(s => s.id === deleteId) : null;
   const [reviewByName, setReviewByName] = useState<Record<string, ReviewStatus>>({});
   const [sendingId, setSendingId] = useState<string | null>(null);
@@ -115,6 +116,7 @@ const Dashboard: React.FC = () => {
   };
 
   const handleCreate = () => {
+    markLeadOslavTourSeen(user?.id);
     if (isTester && profile?.created_at) {
       const status = getTesterStatusToday(profile.created_at, scenarios);
       if (!status.canCreate) {
@@ -184,13 +186,14 @@ const Dashboard: React.FC = () => {
               );
             })()}
             <Button
+              ref={createBtnRef}
               onClick={handleCreate}
               disabled={isTester && !!profile?.created_at && !getTesterStatusToday(profile.created_at, scenarios).canCreate}
               className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               title={isTester && profile?.created_at && !getTesterStatusToday(profile.created_at, scenarios).canCreate ? 'Ліміт на сьогодні вичерпано — повертайтесь завтра' : undefined}
             >
               <Plus className="w-4 h-4" />
-              Створити сценарій
+              {isTester ? 'Знайти новий проєкт' : 'Створити сценарій'}
             </Button>
             <UserMenu />
           </div>
@@ -361,7 +364,7 @@ const Dashboard: React.FC = () => {
       </AlertDialog>
 
       <GamificationSidebar collapsed={gamificationCollapsed} onToggle={() => setGamificationCollapsed(v => !v)} />
-      <TesterOnboarding />
+      {isTester && <LeadOslavTour createBtnRef={createBtnRef} />}
     </div>
   );
 };
