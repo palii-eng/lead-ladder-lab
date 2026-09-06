@@ -13,8 +13,8 @@ export const GAMIFICATION_LEVELS = [
   { level: 1, name: 'Джуніор', projects: 3, earnings: 1000 },
   { level: 2, name: 'Молодший спеціаліст', projects: 13, earnings: 5000 },
   { level: 3, name: 'Спеціаліст', projects: 30, earnings: 15000 },
-  { level: 4, name: 'Старший спеціаліст', projects: 60, earnings: 35000 },
-  { level: 5, name: 'Експерт', projects: 100, earnings: 75000 },
+  { level: 4, name: 'Мідл спеціаліст', projects: 60, earnings: 35000 },
+  { level: 5, name: 'Спеціаліст мідл+', projects: 100, earnings: 75000 },
 ];
 
 export const getGamificationProgress = (completedCount: number) => {
