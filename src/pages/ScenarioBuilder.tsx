@@ -2209,10 +2209,20 @@ const ScenarioBuilder: React.FC = () => {
                       })}
 
                       <div className="pt-0.5">
-                        <AddBtn subtle label="Створити групу оголошень" onClick={() => openAudienceDialog(c.key, 'choose')} />
+                        {scenario.channel ? (
+                          <AddBtn subtle label="Створити групу оголошень" onClick={() => openAudienceDialog(c.key, 'choose')} />
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setActiveStep(2)}
+                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-warning/50 bg-warning/5 text-warning text-[11px] font-semibold hover:bg-warning/10 transition-all"
+                          >
+                            ⚠️ Спочатку оберіть ціль кампанії
+                          </button>
+                        )}
                       </div>
 
-                      {(c.audiences.length < 2 || c.audiences.some(a => c.creoList.filter(x => x.audienceId === a.id).length < 3)) && (
+                      {scenario.channel && (c.audiences.length < 2 || c.audiences.some(a => c.creoList.filter(x => x.audienceId === a.id).length < 3)) && (
                         <p className="text-[10px] text-warning px-1 pt-0.5">
                           ⚠️ Для запуску потрібно мінімум 2 групи оголошень, і по 3 крео в кожній
                         </p>
