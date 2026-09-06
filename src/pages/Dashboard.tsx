@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useScenarios } from '@/context/ScenariosContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LayoutDashboard, UserX, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle, Trophy, Award, Lock } from 'lucide-react';
+import { Plus, LayoutDashboard, UserX, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle, Trophy, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -10,8 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { UserMenu } from '@/components/UserMenu';
 import { GamificationSidebar } from '@/components/GamificationSidebar';
-import { getTesterStatusToday } from '@/lib/testerLimits';
-import { LeadOslavTour, markLeadOslavTourSeen } from '@/components/LeadOslavTour';
+import { markLeadOslavTourSeen } from '@/components/LeadOslavTour';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
