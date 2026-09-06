@@ -55,7 +55,7 @@ interface GamificationSidebarProps {
 }
 
 export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collapsed, onToggle }) => {
-  const { profile } = useAuth();
+  const { profile, isTester } = useAuth();
   const { scenarios } = useScenarios();
   const completedCount = scenarios.filter(s => s.monthSurvived).length;
   const { currentLevel, nextLevel, earnings, progressToNext } = getGamificationProgress(completedCount);
@@ -128,6 +128,16 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
             </div>
           )}
         </div>
+
+        {isTester && (
+          <div className="py-3 border-b border-border">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+              <p className="text-xs text-foreground leading-snug">
+                🎁 Досягнення <b>Рівня 1</b> дасть вам знижку <b>50%</b> на будь-який курс Ads School!
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="py-4 space-y-2 pb-8">
           <div className="flex items-center gap-2 mb-2">
