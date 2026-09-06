@@ -62,7 +62,7 @@ ${decompCtx}
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-3.7-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -92,7 +92,22 @@ ${decompCtx}
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "{}";
     let parsed: any = {};
-    try { parsed = JSON.parse(content); } catch { parsed = {}; }
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      // The model sometimes wraps JSON in a markdown code fence despite
+      // response_format: json_object — strip ```json / ``` fences and retry
+      // before giving up.
+      const stripped = content.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
+      try { parsed = JSON.parse(stripped); } catch { parsed = null; }
+    }
+
+    if (!parsed || typeof parsed !== "object" || Object.keys(parsed).length === 0) {
+      console.error("AI returned unparseable/empty content:", content);
+      return new Response(JSON.stringify({ error: "AI повернув порожню відповідь, спробуйте ще раз" }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     return new Response(JSON.stringify({ fields: parsed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -5529,8 +5529,13 @@ const ScenarioBuilder: React.FC = () => {
                         toast({ title: 'AI помилка', description: err.error || 'Не вдалося згенерувати', variant: 'destructive' });
                       } else {
                         const data = await resp.json();
-                        setCreoFields(prev => ({ ...prev, ...(data.fields || {}) }));
-                        toast({ title: 'Заповнено AI', description: 'Перевірте та відредагуйте за потреби' });
+                        const fields = data.fields || {};
+                        if (Object.keys(fields).length === 0) {
+                          toast({ title: 'AI помилка', description: 'AI повернув порожню відповідь, спробуйте ще раз', variant: 'destructive' });
+                        } else {
+                          setCreoFields(prev => ({ ...prev, ...fields }));
+                          toast({ title: 'Заповнено AI', description: 'Перевірте та відредагуйте за потреби' });
+                        }
                       }
                     } catch (e: any) {
                       toast({ title: 'Помилка', description: e.message || 'Збій', variant: 'destructive' });
