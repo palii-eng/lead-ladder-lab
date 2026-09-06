@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { UserMenu } from '@/components/UserMenu';
+import { GamificationSidebar, getGamificationProgress } from '@/components/GamificationSidebar';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,6 +22,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, isTester } = useAuth();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [gamificationOpen, setGamificationOpen] = useState(false);
   const scenarioToDelete = deleteId ? scenarios.find(s => s.id === deleteId) : null;
   const [reviewByName, setReviewByName] = useState<Record<string, ReviewStatus>>({});
   const [sendingId, setSendingId] = useState<string | null>(null);
@@ -180,6 +182,21 @@ const Dashboard: React.FC = () => {
             >
               <Plus className="w-4 h-4" />
               Створити сценарій
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setGamificationOpen(true)}
+              className="gap-2"
+              title="Ваш прогрес та заробіток"
+            >
+              <Trophy className="w-4 h-4 text-warning" />
+              <span className="hidden sm:inline">
+                {(() => {
+                  const completedCount = scenarios.filter(s => s.monthSurvived).length;
+                  const { currentLevel } = getGamificationProgress(completedCount);
+                  return currentLevel ? `Рівень ${currentLevel.level}` : 'Прогрес';
+                })()}
+              </span>
             </Button>
             <UserMenu />
           </div>
@@ -347,6 +364,8 @@ const Dashboard: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <GamificationSidebar open={gamificationOpen} onOpenChange={setGamificationOpen} />
     </div>
   );
 };
