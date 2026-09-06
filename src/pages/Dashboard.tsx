@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useScenarios } from '@/context/ScenariosContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LayoutDashboard, UserX, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle, Trophy, Award } from 'lucide-react';
+import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Trophy, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -125,30 +125,7 @@ const Dashboard: React.FC = () => {
     >
       {/* Header */}
       <header className="border-b border-border sticky top-0 z-50 bg-card">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-primary">
-              <Zap className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <h1 className="text-xl font-extrabold text-foreground tracking-tight">
-              SmartFunnel AI
-            </h1>
-          </div>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span>
-              ⚡ Заряджено в{' '}
-              <a href="https://ads-school.online/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
-                Ads School
-              </a>
-            </span>
-            <span className="text-border">|</span>
-            <span>
-              🛠 Створено в{' '}
-              <a href="https://ai.ads-wind.com/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
-                ADS WindAI Lab
-              </a>
-            </span>
-          </div>
+        <div className="container mx-auto px-6 py-4 flex items-center justify-end">
           <div className="flex items-center gap-2">
             <Button
               ref={createBtnRef}
@@ -252,7 +229,7 @@ const Dashboard: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between gap-2 pt-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                     <span className="text-xs text-muted-foreground">Перевірка модератором</span>
                     {review === 'approved' ? (
                       <Badge className="bg-success text-success-foreground gap-1">

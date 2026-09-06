@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { LogOut, Shield, User, Globe, Instagram, Youtube } from 'lucide-react';
+import { LogOut, Shield, User, Globe, Instagram, Youtube, Zap, Wrench } from 'lucide-react';
 
 export const UserMenu: React.FC = () => {
   const { user, profile, isStaff, signOut } = useAuth();
@@ -32,6 +32,13 @@ export const UserMenu: React.FC = () => {
             <Shield className="w-4 h-4 mr-2" /> Адмін-панель
           </DropdownMenuItem>
         )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => window.open('https://ads-school.online/', '_blank', 'noopener,noreferrer')}>
+          <Zap className="w-4 h-4 mr-2" /> Заряджено в Ads School
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => window.open('https://ai.ads-wind.com/', '_blank', 'noopener,noreferrer')}>
+          <Wrench className="w-4 h-4 mr-2" /> Створено в ADS WindAI Lab
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => window.open('https://ads-school.online/', '_blank', 'noopener,noreferrer')}>
           <Globe className="w-4 h-4 mr-2" /> Сайт Ads School

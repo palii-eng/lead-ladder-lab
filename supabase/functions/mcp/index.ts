@@ -3,10 +3,10 @@
 // supabase function: mcp
 // Bundled from src/lib/mcp/index.ts by @lovable.dev/mcp-js.
 // src/lib/mcp/index.ts
-import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.20.1";
 
 // src/lib/mcp/tools/get-shared-scenario.ts
-import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.1";
 import { z } from "npm:zod@^3.25.76";
 
 // src/lib/mcp/supabase.ts
@@ -85,7 +85,7 @@ var get_shared_scenario_default = defineTool({
 });
 
 // src/lib/mcp/tools/list-recent-shared-scenarios.ts
-import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.20.1";
 import { z as z2 } from "npm:zod@^3.25.76";
 var list_recent_shared_scenarios_default = defineTool2({
   name: "list_recent_shared_scenarios",
@@ -107,7 +107,7 @@ var list_recent_shared_scenarios_default = defineTool2({
 });
 
 // src/lib/mcp/tools/list-users.ts
-import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.20.1";
 import { z as z3 } from "npm:zod@^3.25.76";
 
 // src/lib/mcp/auth.ts
@@ -189,7 +189,7 @@ var list_users_default = defineTool3({
 });
 
 // src/lib/mcp/tools/update-user-status.ts
-import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.20.1";
 import { z as z4 } from "npm:zod@^3.25.76";
 var update_user_status_default = defineTool4({
   name: "update_user_status",
@@ -213,7 +213,7 @@ var update_user_status_default = defineTool4({
 });
 
 // src/lib/mcp/tools/list-scenario-reviews.ts
-import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.20.1";
 import { z as z5 } from "npm:zod@^3.25.76";
 var list_scenario_reviews_default = defineTool5({
   name: "list_scenario_reviews",
@@ -239,7 +239,7 @@ var list_scenario_reviews_default = defineTool5({
 });
 
 // src/lib/mcp/tools/update-review-status.ts
-import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.20.1";
 import { z as z6 } from "npm:zod@^3.25.76";
 var update_review_status_default = defineTool6({
   name: "update_review_status",
@@ -266,7 +266,7 @@ var update_review_status_default = defineTool6({
 });
 
 // src/lib/mcp/tools/delete-review.ts
-import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.20.1";
 import { z as z7 } from "npm:zod@^3.25.76";
 var delete_review_default = defineTool7({
   name: "delete_review",
@@ -289,7 +289,7 @@ var delete_review_default = defineTool7({
 });
 
 // src/lib/mcp/tools/toggle-moderator.ts
-import { defineTool as defineTool8 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool8 } from "npm:@lovable.dev/mcp-js@0.20.1";
 import { z as z8 } from "npm:zod@^3.25.76";
 var toggle_moderator_default = defineTool8({
   name: "toggle_moderator",
@@ -338,5 +338,5 @@ var mcp_default = defineMcp({
 });
 
 // lovable-mcp-supabase-entry.ts
-import { createSupabaseHandler } from "npm:@lovable.dev/mcp-js@0.20.0/stacks/supabase";
+import { createSupabaseHandler } from "npm:@lovable.dev/mcp-js@0.20.1/stacks/supabase";
 Deno.serve(createSupabaseHandler(mcp_default, { functionName: "mcp" }));
