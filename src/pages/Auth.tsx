@@ -51,6 +51,8 @@ const PasswordInput: React.FC<PasswordInputProps> = ({ id, value, onChange, minL
 const Auth: React.FC = () => {
   const { user, loading, signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const next = getSafeNextUrl(searchParams);
   const [tab, setTab] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -58,8 +60,8 @@ const Auth: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate('/', { replace: true });
-  }, [user, loading, navigate]);
+    if (!loading && user) navigate(next ?? '/', { replace: true });
+  }, [user, loading, navigate, next]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
