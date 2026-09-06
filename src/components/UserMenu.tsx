@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { LogOut, Shield, User } from 'lucide-react';
+import { LogOut, Shield, User, Globe, Instagram, Youtube } from 'lucide-react';
 
 export const UserMenu: React.FC = () => {
   const { user, profile, isStaff, signOut } = useAuth();
@@ -32,6 +32,17 @@ export const UserMenu: React.FC = () => {
             <Shield className="w-4 h-4 mr-2" /> Адмін-панель
           </DropdownMenuItem>
         )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => window.open('https://ads-school.online/', '_blank', 'noopener,noreferrer')}>
+          <Globe className="w-4 h-4 mr-2" /> Сайт Ads School
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => window.open('https://www.instagram.com/adschool.ua/', '_blank', 'noopener,noreferrer')}>
+          <Instagram className="w-4 h-4 mr-2" /> Instagram
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => window.open('https://www.youtube.com/@ADSSchool', '_blank', 'noopener,noreferrer')}>
+          <Youtube className="w-4 h-4 mr-2" /> YouTube
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
           <LogOut className="w-4 h-4 mr-2" /> Вийти
         </DropdownMenuItem>
