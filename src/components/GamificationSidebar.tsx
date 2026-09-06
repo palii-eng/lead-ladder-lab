@@ -153,7 +153,19 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground">Рівень {lvl.level} · {lvl.name}</p>
-                  <p className="text-[11px] text-muted-foreground">{lvl.projects} проєктів · ${lvl.earnings.toLocaleString()}</p>
+                  {!reached && (
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Щоб розблокувати цей рівень, виконайте умови:</p>
+                  )}
+                  <ul className="text-[11px] text-muted-foreground mt-1 space-y-0.5 list-none">
+                    <li className="flex items-center gap-1.5">
+                      <span className={reached ? 'text-success' : 'text-muted-foreground/60'}>•</span>
+                      {lvl.projects} успішно запущених проєктів
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <span className={reached ? 'text-success' : 'text-muted-foreground/60'}>•</span>
+                      ${lvl.earnings.toLocaleString()} заробітку
+                    </li>
+                  </ul>
                 </div>
               </div>
             );
