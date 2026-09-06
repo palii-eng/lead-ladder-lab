@@ -867,7 +867,7 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
                 <p className="text-muted-foreground text-xs truncate">{current.role || current.niche}</p>
               </div>
               {current.source && (
-                <span className="shrink-0 px-2 py-1 rounded-full bg-secondary text-foreground text-[9px] font-semibold uppercase tracking-wide">
+                <span className="shrink max-w-[42%] truncate px-2 py-1 rounded-full bg-secondary text-foreground text-[9px] font-semibold uppercase tracking-wide">
                   {current.source}
                 </span>
               )}
