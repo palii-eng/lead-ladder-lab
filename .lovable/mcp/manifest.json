@@ -3,12 +3,16 @@
   "sdk_version": "0.20.0",
   "path": "/functions/v1/mcp",
   "auth": {
-    "type": "none"
+    "type": "oauth",
+    "issuer": "https://dmvfdxrpqkwolhspxjsh.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
   },
   "mcp": {
     "server": {
       "name": "smartfunnel-mcp",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "title": "SmartFunnel AI MCP"
     },
     "tools": [
@@ -56,6 +60,202 @@
           },
           "required": [
             "share_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_users",
+        "title": "List users",
+        "description": "List all SmartFunnel users with their approval status, role, email, name, and scenario counts. Admin only.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "approved",
+                "rejected"
+              ],
+              "description": "Filter users by approval status."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "update_user_status",
+        "title": "Update user status",
+        "description": "Approve, reject, or set to pending a user's account status. Admin only.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "user_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUID of the user whose status to update."
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "approved",
+                "rejected"
+              ],
+              "description": "New approval status."
+            }
+          },
+          "required": [
+            "user_id",
+            "status"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_scenario_reviews",
+        "title": "List scenario reviews",
+        "description": "List all scenario review requests submitted by students. Admins and moderators can use this.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "in_review",
+                "approved",
+                "rejected"
+              ],
+              "description": "Filter reviews by status."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "description": "Maximum number of reviews to return."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "update_review_status",
+        "title": "Update review status",
+        "description": "Change the status of a scenario review request (pending, in_review, approved, rejected). Admins and moderators can use this.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "review_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUID of the review request."
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "in_review",
+                "approved",
+                "rejected"
+              ],
+              "description": "New review status."
+            },
+            "admin_note": {
+              "type": "string",
+              "description": "Optional note from the reviewer."
+            }
+          },
+          "required": [
+            "review_id",
+            "status"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "delete_review",
+        "title": "Delete review",
+        "description": "Permanently delete a scenario review request. Admins and moderators can use this.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "review_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUID of the review request to delete."
+            }
+          },
+          "required": [
+            "review_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "toggle_moderator",
+        "title": "Toggle moderator role",
+        "description": "Grant or revoke moderator role for a user. Admin only.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "user_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUID of the user."
+            },
+            "grant": {
+              "type": "boolean",
+              "description": "True to grant moderator role, false to revoke it."
+            }
+          },
+          "required": [
+            "user_id",
+            "grant"
           ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"

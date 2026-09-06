@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { Zap, Eye, EyeOff } from 'lucide-react';
+
+function getSafeNextUrl(searchParams: URLSearchParams): string | null {
+  const next = searchParams.get('next');
+  if (!next) return null;
+  // Accept only same-origin relative paths to avoid open redirects.
+  if (next.startsWith('/') && !next.startsWith('//')) return next;
+  return null;
+}
 
 interface PasswordInputProps {
   id: string;
@@ -43,6 +51,8 @@ const PasswordInput: React.FC<PasswordInputProps> = ({ id, value, onChange, minL
 const Auth: React.FC = () => {
   const { user, loading, signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const next = getSafeNextUrl(searchParams);
   const [tab, setTab] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,8 +60,8 @@ const Auth: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate('/', { replace: true });
-  }, [user, loading, navigate]);
+    if (!loading && user) navigate(next ?? '/', { replace: true });
+  }, [user, loading, navigate, next]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();

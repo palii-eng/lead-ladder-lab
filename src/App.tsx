@@ -11,6 +11,7 @@ import ScenarioBuilder from "./pages/ScenarioBuilder";
 import SharedScenario from "./pages/SharedScenario";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import OAuthConsent from "./pages/OAuthConsent";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
             <Sonner />
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/share/:shareId" element={<SharedScenario />} />
               <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/scenario/:id" element={<ProtectedRoute><ScenarioBuilder /></ProtectedRoute>} />
