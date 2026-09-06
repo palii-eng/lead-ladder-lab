@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
-import { ArrowLeft, ArrowRight, Check, ChevronRight, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward, AlertTriangle, Database, User, Send, Copy, Bitcoin, TrendingUp, TrendingDown, ExternalLink, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronRight, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Stethoscope, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward, AlertTriangle, Database, User, Send, Copy, Bitcoin, TrendingUp, TrendingDown, ExternalLink, Pencil, Trash2, Lock } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { VideoBadge } from '@/components/VideoBadge';
 import { supabase } from '@/integrations/supabase/client';
@@ -614,7 +614,7 @@ const ScenarioBuilder: React.FC = () => {
   const [aiRecommendation, setAiRecommendation] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const { toast } = useToast();
-  const { user, profile } = useAuth();
+  const { user, profile, isTester } = useAuth();
   const fetchAiRecommendation = useCallback(async () => {
     if (!scenario) return;
     setAiLoading(true);
@@ -1144,6 +1144,10 @@ const ScenarioBuilder: React.FC = () => {
 
   const sendToCurator = useCallback(async () => {
     if (!scenario) return;
+    if (isTester) {
+      toast({ title: 'Перевірка недоступна', description: 'Перевірка доступна тільки для студентів AdsSchool', variant: 'destructive' });
+      return;
+    }
     const decompSet = scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 1 && activeLeadType
       ? (scenario.branchData?.[activeLeadType]?.decomposition || scenario.decomposition)
       : scenario.decomposition;
@@ -4007,10 +4011,11 @@ const ScenarioBuilder: React.FC = () => {
               <div className="sticky bottom-0 bg-card pt-3 pb-2 -mx-4 px-4 border-t border-border mt-4 z-10 space-y-2">
                 <Button
                   variant="outline"
-                  className="w-full gap-2 border-primary text-primary hover:bg-primary/5 font-bold"
+                  className={`w-full gap-2 font-bold ${isTester ? 'border-muted-foreground/30 text-muted-foreground' : 'border-primary text-primary hover:bg-primary/5'}`}
                   onClick={sendToCurator}
+                  title={isTester ? 'Перевірка доступна тільки для студентів AdsSchool' : undefined}
                 >
-                  📤 Відправити куратору
+                  {isTester ? <Lock className="w-4 h-4" /> : '📤'} Відправити куратору
                 </Button>
                 <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
                   onClick={startLaunch}>

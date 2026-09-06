@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { ArrowLeft, Check, X, RefreshCw, ExternalLink, Eye, Trash2, ShieldCheck, ShieldPlus, ShieldMinus } from 'lucide-react';
 
-type AppRole = 'admin' | 'moderator' | 'user';
+type AppRole = 'admin' | 'moderator' | 'user' | 'tester';
 
 interface UserRow {
   id: string;
@@ -75,11 +75,12 @@ const Admin: React.FC = () => {
         reviewedCounts.set(r.user_id, (reviewedCounts.get(r.user_id) || 0) + 1);
       });
 
+      const rolePriority: Record<AppRole, number> = { admin: 3, moderator: 2, tester: 1, user: 0 };
       const roleByUser = new Map<string, AppRole>();
       (roleRows || []).forEach((r: { user_id: string; role: AppRole }) => {
         // A user can technically hold multiple rows; keep the highest tier.
         const current = roleByUser.get(r.user_id);
-        if (!current || r.role === 'admin' || (r.role === 'moderator' && current !== 'admin')) {
+        if (!current || rolePriority[r.role] > rolePriority[current]) {
           roleByUser.set(r.user_id, r.role);
         }
       });
@@ -198,6 +199,24 @@ const Admin: React.FC = () => {
     }
   };
 
+  const toggleTester = async (row: UserRow) => {
+    if (!isAdmin) return;
+    try {
+      if (row.role === 'tester') {
+        const { error } = await supabase.from('user_roles').delete().eq('user_id', row.id).eq('role', 'tester');
+        if (error) throw error;
+        toast({ title: 'Статус тестера знято' });
+      } else {
+        const { error } = await supabase.from('user_roles').insert({ user_id: row.id, role: 'tester' });
+        if (error) throw error;
+        toast({ title: 'Призначено тестером' });
+      }
+      load();
+    } catch (e: unknown) {
+      toast({ title: 'Помилка', description: (e as Error).message, variant: 'destructive' });
+    }
+  };
+
   if (authLoading) return null;
 
   const pendingReviews = reviews.filter(r => r.status === 'pending').length;
@@ -278,10 +297,11 @@ const Admin: React.FC = () => {
                           className={
                             r.role === 'admin' ? 'border-primary text-primary' :
                             r.role === 'moderator' ? 'border-accent-foreground text-accent-foreground' :
+                            r.role === 'tester' ? 'border-warning text-warning' :
                             'text-muted-foreground'
                           }
                         >
-                          {r.role === 'admin' ? 'Супер-адмін' : r.role === 'moderator' ? 'Модератор' : 'Студент'}
+                          {r.role === 'admin' ? 'Супер-адмін' : r.role === 'moderator' ? 'Модератор' : r.role === 'tester' ? 'Тестер' : 'Студент'}
                         </Badge>
                       </td>
                       <td className="p-3">
@@ -317,11 +337,16 @@ const Admin: React.FC = () => {
                               <X className="w-3.5 h-3.5 mr-1" /> Відхилити
                             </Button>
                           )}
-                          {isAdmin && r.role !== 'admin' && (
+                          {isAdmin && r.role !== 'admin' && r.role !== 'tester' && (
                             <Button size="sm" variant="outline" onClick={() => toggleModerator(r)}>
                               {r.role === 'moderator'
                                 ? <><ShieldMinus className="w-3.5 h-3.5 mr-1" /> Зняти модератора</>
                                 : <><ShieldPlus className="w-3.5 h-3.5 mr-1" /> Зробити модератором</>}
+                            </Button>
+                          )}
+                          {isAdmin && r.role !== 'admin' && r.role !== 'moderator' && (
+                            <Button size="sm" variant="outline" onClick={() => toggleTester(r)}>
+                              {r.role === 'tester' ? 'Зняти тестера' : 'Зробити тестером'}
                             </Button>
                           )}
                           {isAdmin && r.role !== 'admin' && (

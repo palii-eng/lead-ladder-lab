@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useScenarios } from '@/context/ScenariosContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LayoutDashboard, Trash2, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle, Trophy, Award } from 'lucide-react';
+import { Plus, LayoutDashboard, Trash2, ExternalLink, Zap, Send, Clock, CheckCircle2, XCircle, Trophy, Award, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -19,7 +19,7 @@ type ReviewStatus = 'pending' | 'in_review' | 'approved' | 'rejected';
 const Dashboard: React.FC = () => {
   const { scenarios, loading, addScenario, deleteScenario } = useScenarios();
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, isTester } = useAuth();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const scenarioToDelete = deleteId ? scenarios.find(s => s.id === deleteId) : null;
   const [reviewByName, setReviewByName] = useState<Record<string, ReviewStatus>>({});
@@ -48,6 +48,10 @@ const Dashboard: React.FC = () => {
 
   const sendForReview = async (s: typeof scenarios[0]) => {
     if (!user?.id) return;
+    if (isTester) {
+      toast({ title: 'Перевірка недоступна', description: 'Перевірка доступна тільки для студентів AdsSchool', variant: 'destructive' });
+      return;
+    }
     setSendingId(s.id);
     try {
       const { data: shared, error: sharedErr } = await supabase
@@ -107,6 +111,14 @@ const Dashboard: React.FC = () => {
   };
 
   const handleCreate = () => {
+    if (isTester && scenarios.length >= 3) {
+      toast({
+        title: 'Ліміт сценаріїв вичерпано',
+        description: 'Тестовий акаунт дозволяє створити максимум 3 сценарії.',
+        variant: 'destructive',
+      });
+      return;
+    }
     const defaultName = `Сценарій #${scenarios.length + 1}`;
     const s = addScenario(defaultName, '');
     navigate(`/scenario/${s.id}`);
@@ -142,7 +154,30 @@ const Dashboard: React.FC = () => {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={handleCreate} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
+            {isTester && (() => {
+              const used = Math.min(scenarios.length, 3);
+              const colors = [
+                { bg: 'hsl(142 71% 94%)', text: 'hsl(142 71% 30%)', border: 'hsl(142 71% 75%)' }, // 0/3 — green
+                { bg: 'hsl(48 96% 92%)', text: 'hsl(35 90% 30%)', border: 'hsl(48 96% 70%)' },     // 1/3 — yellow
+                { bg: 'hsl(28 90% 92%)', text: 'hsl(28 90% 35%)', border: 'hsl(28 90% 70%)' },     // 2/3 — orange
+                { bg: 'hsl(0 75% 94%)', text: 'hsl(0 65% 40%)', border: 'hsl(0 75% 75%)' },        // 3/3 — red
+              ][used];
+              return (
+                <span
+                  className="text-xs font-bold px-3 py-1.5 rounded-full border"
+                  style={{ background: colors.bg, color: colors.text, borderColor: colors.border }}
+                  title="Баланс тестових сценаріїв"
+                >
+                  {used} з 3 сценаріїв
+                </span>
+              );
+            })()}
+            <Button
+              onClick={handleCreate}
+              disabled={isTester && scenarios.length >= 3}
+              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              title={isTester && scenarios.length >= 3 ? 'Тестовий акаунт: максимум 3 сценарії' : undefined}
+            >
               <Plus className="w-4 h-4" />
               Створити сценарій
             </Button>
@@ -258,11 +293,12 @@ const Dashboard: React.FC = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="gap-1.5 h-7 text-xs"
+                        className={`gap-1.5 h-7 text-xs ${isTester ? 'opacity-60' : ''}`}
                         disabled={sendingId === s.id}
                         onClick={(e) => { e.stopPropagation(); sendForReview(s); }}
+                        title={isTester ? 'Перевірка доступна тільки для студентів AdsSchool' : undefined}
                       >
-                        <Send className="w-3 h-3" /> Відправити
+                        {isTester ? <Lock className="w-3 h-3" /> : <Send className="w-3 h-3" />} Відправити
                       </Button>
                     )}
                   </div>
