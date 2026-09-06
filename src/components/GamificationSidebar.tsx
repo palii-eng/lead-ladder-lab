@@ -163,6 +163,9 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground">Рівень {lvl.level} · {lvl.name}</p>
+                  {isTester && lvl.level >= 2 && (
+                    <p className="text-[11px] font-semibold text-warning mt-0.5">🔒 Тільки для студентів AdsSchool</p>
+                  )}
                   {!reached && (
                     <p className="text-[11px] text-muted-foreground mt-0.5">Щоб розблокувати цей рівень, виконайте умови:</p>
                   )}
