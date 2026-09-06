@@ -2212,13 +2212,16 @@ const ScenarioBuilder: React.FC = () => {
                         {scenario.channel ? (
                           <AddBtn subtle label="Створити групу оголошень" onClick={() => openAudienceDialog(c.key, 'choose')} />
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => setActiveStep(2)}
-                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-dashed border-warning/50 bg-warning/5 text-warning text-[11px] font-semibold hover:bg-warning/10 transition-all"
-                          >
-                            ⚠️ Спочатку оберіть ціль кампанії
-                          </button>
+                          <div className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-dashed border-warning/50 bg-warning/5">
+                            <span className="text-[11px] font-semibold text-warning">⚠️ Спочатку оберіть ціль кампанії</span>
+                            <button
+                              type="button"
+                              onClick={() => setActiveStep(2)}
+                              className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-[11px] font-semibold hover:bg-primary/90 transition-all"
+                            >
+                              <Plus className="w-3 h-3" /> Додати ціль
+                            </button>
+                          </div>
                         )}
                       </div>
 
