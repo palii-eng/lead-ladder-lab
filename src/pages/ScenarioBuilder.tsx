@@ -1517,6 +1517,7 @@ const ScenarioBuilder: React.FC = () => {
           const isDefaultName = /^Сценарій #\d+$/.test(scenario.name);
           const shortTitle = brief.name && brief.niche ? `${brief.name} — ${brief.niche}` : (brief.niche || brief.name);
           const clientBudget = estimateClientBudgetUsd(brief.task);
+          const projectPrice = Math.floor(Math.random() * (500 - 300 + 1)) + 300;
           const seededDecomp = createDefaultDecompSet();
           seededDecomp.bad.budget = clientBudget;
           seededDecomp.realistic.budget = clientBudget;
@@ -1526,11 +1527,12 @@ const ScenarioBuilder: React.FC = () => {
             difficulty,
             clientBrief: brief,
             decomposition: seededDecomp,
+            projectPrice,
           });
           setActiveStep(null);
           toast({
             title: 'Ads School',
-            description: `Вітаю з новим проектом — ${brief.name}!`,
+            description: `Вітаю з новим проектом — ${brief.name}! Оплата за проєкт: $${projectPrice}.`,
           });
         }}
       />
@@ -1584,6 +1586,11 @@ const ScenarioBuilder: React.FC = () => {
             {b.source && (
               <span className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground truncate">
                 · {b.source}
+              </span>
+            )}
+            {typeof scenario.projectPrice === 'number' && (
+              <span className="ml-auto shrink-0 text-[10px] font-bold text-success bg-success/10 px-1.5 py-0.5 rounded-full">
+                ${scenario.projectPrice}
               </span>
             )}
           </div>
@@ -2477,13 +2484,13 @@ const ScenarioBuilder: React.FC = () => {
   const finishLaunchedProject = () => {
     const isSuccess = launchPhase === 'month_success';
     if (isSuccess) {
-      const alreadyCompleted = scenarios.filter(s => s.monthSurvived).length;
-      const before = getGamificationProgress(alreadyCompleted);
-      const after = getGamificationProgress(alreadyCompleted + 1);
-      const earned = after.earnings - before.earnings;
+      const earned = scenario.projectPrice || 0;
+      const totalAfter = scenarios
+        .filter(s => s.monthSurvived || s.id === scenario.id)
+        .reduce((sum, s) => sum + (s.id === scenario.id ? earned : (s.projectPrice || 0)), 0);
       toast({
         title: '🎉 Проєкт зараховано!',
-        description: `+1 проєкт${earned > 0 ? `, +$${earned.toLocaleString()} на баланс` : ''} (усього: $${after.earnings.toLocaleString()})`,
+        description: `+1 проєкт${earned > 0 ? `, +$${earned.toLocaleString()} на баланс` : ''} (усього: $${totalAfter.toLocaleString()})`,
       });
     }
     update({ status: 'completed', monthSurvived: isSuccess });
@@ -4688,6 +4695,12 @@ const ScenarioBuilder: React.FC = () => {
             <span className="inline-block mt-3 self-start px-2.5 py-1 rounded-full bg-secondary text-foreground text-[10px] font-semibold uppercase tracking-wide">
               {scenario.clientBrief.source}
             </span>
+          )}
+          {typeof scenario.projectPrice === 'number' && (
+            <div className="mt-3 rounded-lg border border-success/30 bg-success/5 px-3 py-2 flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Оплата за проєкт</span>
+              <span className="text-sm font-bold text-success">${scenario.projectPrice}</span>
+            </div>
           )}
           <div
             className="rounded-2xl p-4 mt-3"

@@ -58,7 +58,15 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
   const { profile } = useAuth();
   const { scenarios } = useScenarios();
   const completedCount = scenarios.filter(s => s.monthSurvived).length;
-  const { currentLevel, nextLevel, earnings, progressToNext } = getGamificationProgress(completedCount);
+  const { currentLevel, nextLevel, progressToNext } = getGamificationProgress(completedCount);
+  // Real earnings — sum of each successfully sustained project's actual
+  // agreed price ($300-500, set when the marketer took it on), not the
+  // interpolated milestone figure. Legacy projects without a stored price
+  // (created before this field existed) fall back to $400 so they still
+  // count toward the total.
+  const earnings = scenarios
+    .filter(s => s.monthSurvived)
+    .reduce((sum, s) => sum + (typeof s.projectPrice === 'number' ? s.projectPrice : 400), 0);
   const initial = (profile?.full_name || profile?.email || 'U').charAt(0).toUpperCase();
 
   if (collapsed) {
