@@ -5329,8 +5329,19 @@ const ScenarioBuilder: React.FC = () => {
                   {f.logic && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Логіка карток</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.logic}</div></div>)}
                   {f.script && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Сценарій</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.script}</div></div>)}
                   {f.timing && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Таймінг</div><div className="text-sm text-foreground">{f.timing} сек</div></div>)}
-                  <div className="pt-2">
+                  <div className="pt-2 flex items-center gap-2">
                     <Button variant="outline" onClick={() => setViewCreoIdx(null)}>← До списку</Button>
+                    <Button
+                      variant="outline"
+                      className="border-primary/40 text-primary hover:bg-primary/10 font-semibold"
+                      onClick={() => {
+                        setCreoFormat(item.format);
+                        setCreoVideoFormat(item.videoFormat || '');
+                        setCreoFields(f);
+                      }}
+                    >
+                      <Pencil className="w-4 h-4 mr-2" /> Редагувати
+                    </Button>
                   </div>
                 </div>
               );
@@ -5647,21 +5658,26 @@ const ScenarioBuilder: React.FC = () => {
                     const existingList: any[] = Array.isArray(rawExisting)
                       ? rawExisting
                       : (rawExisting?.format ? [rawExisting] : []);
-                    const next = [
-                      ...existingList,
-                      {
-                        format: creoFormat,
-                        videoFormat: creoFormat === 'video' ? creoVideoFormat : undefined,
-                        fields: creoFields,
-                        audienceId: preselectedAudienceId || null,
-                        savedAt: new Date().toISOString(),
-                      },
-                    ];
+                    const isEditingExisting = viewCreoIdx !== null && viewCreoIdx >= 0 && viewCreoIdx < existingList.length;
+                    const updatedItem = {
+                      format: creoFormat,
+                      videoFormat: creoFormat === 'video' ? creoVideoFormat : undefined,
+                      fields: creoFields,
+                      audienceId: isEditingExisting ? existingList[viewCreoIdx].audienceId : (preselectedAudienceId || null),
+                      savedAt: new Date().toISOString(),
+                    };
+                    const next = isEditingExisting
+                      ? existingList.map((it, i) => (i === viewCreoIdx ? updatedItem : it))
+                      : [...existingList, updatedItem];
                     update({ creoBriefs: { ...current, [key]: next } } as any);
-                    toast({ title: 'Адсет збережено', description: `Збережено адсет №${next.length}` });
+                    toast({
+                      title: isEditingExisting ? 'Адсет оновлено' : 'Адсет збережено',
+                      description: isEditingExisting ? `Оновлено адсет №${viewCreoIdx! + 1}` : `Збережено адсет №${next.length}`,
+                    });
                     setCreoFormat(null);
                     setCreoFields({});
                     setCreoVideoFormat('');
+                    if (!isEditingExisting) setViewCreoIdx(null);
                   }}
                   className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
                 >
