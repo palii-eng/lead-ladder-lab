@@ -668,7 +668,7 @@ const ScenarioBuilder: React.FC = () => {
   const [aiRecommendation, setAiRecommendation] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const { toast } = useToast();
-  const { user, profile } = useAuth();
+  const { user, profile, isTester } = useAuth();
   const fetchAiRecommendation = useCallback(async () => {
     if (!scenario) return;
     setAiLoading(true);
@@ -4251,7 +4251,7 @@ const ScenarioBuilder: React.FC = () => {
               </button>
             )}
 
-            {clientActions.has('brief') && clientActions.has('payment') && (() => {
+            {!isTester && clientActions.has('brief') && clientActions.has('payment') && (() => {
               const materials = [
                 ...REQUIRED_MATERIALS,
                 ...(scenario.niche ? TRAFFIC_STRATEGY_MATERIALS : []),
