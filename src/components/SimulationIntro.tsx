@@ -732,6 +732,40 @@ const photoKeyFor = (gender: Gender, seed: number) => {
   return list[Math.abs(seed) % list.length];
 };
 
+// Shared with Dashboard.tsx's "Опрацювання вхідних лідів" feed — picks `n`
+// random leads from the same client pool used by the full-screen intro,
+// so a card tapped there resolves to a real, fully-formed brief instead of
+// a placeholder.
+export type AvailableLead = ClientBrief & { role?: string; photoKey: string; _difficulty: 'lucky' | 'suffer' };
+
+export const pickAvailableLeads = (n: number): AvailableLead[] => {
+  const seedBase = Math.floor(Math.random() * 1000);
+  const tagged = [
+    ...LUCKY_CLIENTS.map(c => ({ c, d: 'lucky' as const })),
+    ...HARD_CLIENTS.map(c => ({ c, d: 'suffer' as const })),
+  ];
+  const shuffled = tagged
+    .map((x, i) => ({ ...x, k: Math.random() + i }))
+    .sort((a, z) => a.k - z.k)
+    .slice(0, n)
+    .map((x, i) => {
+      const key = photoKeyFor(x.c.gender, seedBase + i * 7);
+      return {
+        name: x.c.name,
+        niche: x.c.niche,
+        source: x.c.source,
+        task: x.c.tasks[Math.floor(Math.random() * x.c.tasks.length)],
+        photo: CLIENT_PHOTOS[key],
+        photoKey: key,
+        role: x.c.role,
+        redFlags: x.c.redFlags,
+        greyFlags: x.c.greyFlags,
+        _difficulty: x.d,
+      };
+    });
+  return shuffled;
+};
+
 interface Props {
   scenarioName: string;
   onAccept: (difficulty: 'lucky' | 'suffer', brief: ClientBrief) => void;

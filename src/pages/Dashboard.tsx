@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useScenarios } from '@/context/ScenariosContext';
+import { useScenarios, ClientBrief, createDefaultDecompSet } from '@/context/ScenariosContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Trophy, Award } from 'lucide-react';
+import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Trophy, Award, RefreshCw, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { UserMenu } from '@/components/UserMenu';
 import { GamificationSidebar } from '@/components/GamificationSidebar';
 import { LeadOslavTour, markLeadOslavTourSeen } from '@/components/LeadOslavTour';
+import { pickAvailableLeads, AvailableLead } from '@/components/SimulationIntro';
+import { estimateClientBudgetUsd } from '@/lib/budgetEstimate';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,8 +20,10 @@ import { toast } from '@/hooks/use-toast';
 
 type ReviewStatus = 'pending' | 'in_review' | 'approved' | 'rejected';
 
+const LEADS_FEED_SIZE = 4;
+
 const Dashboard: React.FC = () => {
-  const { scenarios, loading, addScenario, deleteScenario } = useScenarios();
+  const { scenarios, loading, addScenario, updateScenario, deleteScenario } = useScenarios();
   const navigate = useNavigate();
   const { user, profile, isTester } = useAuth();
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -28,6 +32,8 @@ const Dashboard: React.FC = () => {
   const scenarioToDelete = deleteId ? scenarios.find(s => s.id === deleteId) : null;
   const [reviewByName, setReviewByName] = useState<Record<string, ReviewStatus>>({});
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [availableLeads, setAvailableLeads] = useState<AvailableLead[]>(() => pickAvailableLeads(LEADS_FEED_SIZE));
+  const [takingLeadKey, setTakingLeadKey] = useState<string | null>(null);
 
   const loadReviews = async () => {
     if (!user?.id) return;
@@ -117,6 +123,45 @@ const Dashboard: React.FC = () => {
     navigate(`/scenario/${s.id}`);
   };
 
+  // "Опрацювання вхідних лідів" — taking a lead card straight from the
+  // dashboard skips the full-screen reveal/accept flow (SimulationIntro):
+  // the scenario is created with the brief already attached, seeded with
+  // the same decomposition-budget + project-price logic ScenarioBuilder's
+  // own onAccept uses, so the two entry points stay consistent.
+  const handleTakeLead = (lead: AvailableLead, leadKey: string) => {
+    setTakingLeadKey(leadKey);
+    markLeadOslavTourSeen(user?.id);
+    const defaultName = lead.name && lead.niche ? `${lead.name} — ${lead.niche}` : `Сценарій #${scenarios.length + 1}`;
+    const s = addScenario(defaultName, '');
+    const brief: ClientBrief & { role?: string } = {
+      name: lead.name,
+      photo: lead.photo,
+      photoKey: lead.photoKey,
+      task: lead.task,
+      niche: lead.niche,
+      source: lead.source,
+      redFlags: lead.redFlags,
+      greyFlags: lead.greyFlags,
+      role: lead.role,
+    };
+    const clientBudget = estimateClientBudgetUsd(lead.task);
+    const seededDecomp = createDefaultDecompSet();
+    seededDecomp.bad.budget = clientBudget;
+    seededDecomp.realistic.budget = clientBudget;
+    seededDecomp.positive.budget = clientBudget;
+    const projectPrice = Math.floor(Math.random() * (500 - 300 + 1)) + 300;
+    updateScenario(s.id, {
+      difficulty: lead._difficulty,
+      clientBrief: brief as ClientBrief,
+      decomposition: seededDecomp,
+      projectPrice,
+    });
+    toast({ title: 'Ads School', description: `Вітаю з новим проектом — ${lead.name}! Оплата за проєкт: $${projectPrice}.` });
+    navigate(`/scenario/${s.id}`);
+  };
+
+  const refreshLeads = () => setAvailableLeads(pickAvailableLeads(LEADS_FEED_SIZE));
+
 
   return (
     <div
@@ -126,17 +171,7 @@ const Dashboard: React.FC = () => {
       {/* Header */}
       <header className="border-b border-border sticky top-0 z-50 bg-card">
         <div className="container mx-auto px-6 py-4 flex items-center justify-end">
-          <div className="flex items-center gap-5">
-            <Button
-              ref={createBtnRef}
-              onClick={handleCreate}
-              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
-            >
-              <Plus className="w-4 h-4" />
-              Створити сценарій
-            </Button>
-            <UserMenu />
-          </div>
+          <UserMenu />
         </div>
       </header>
 
@@ -151,6 +186,51 @@ const Dashboard: React.FC = () => {
             <Button onClick={handleRecover} className="bg-primary text-primary-foreground">Відновити</Button>
           </div>
         )}
+
+        {/* Опрацювання вхідних лідів — always the first block on the dashboard. */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Inbox className="w-4 h-4 text-primary" />
+              <h2 className="text-sm font-bold text-foreground uppercase tracking-wide">Опрацювання вхідних лідів</h2>
+            </div>
+            <button
+              ref={createBtnRef}
+              type="button"
+              onClick={refreshLeads}
+              className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
+              title="Показати інших лідів"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> Оновити
+            </button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {availableLeads.map((lead, i) => {
+              const leadKey = `${lead.name}-${i}`;
+              const isTaking = takingLeadKey === leadKey;
+              return (
+                <div key={leadKey} className="glass-card p-3.5 flex flex-col gap-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <img src={lead.photo} alt={lead.name} className="w-9 h-9 rounded-full object-cover shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-foreground truncate">{lead.name}</div>
+                      <div className="text-[11px] text-muted-foreground truncate">{lead.niche || lead.role}</div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{lead.task}</p>
+                  <Button
+                    size="sm"
+                    disabled={!!takingLeadKey}
+                    onClick={() => handleTakeLead(lead, leadKey)}
+                    className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-xs h-8"
+                  >
+                    {isTaking ? 'Беремо в роботу…' : (<><Plus className="w-3.5 h-3.5" /> Взяти в роботу</>)}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-32 animate-fade-in">
