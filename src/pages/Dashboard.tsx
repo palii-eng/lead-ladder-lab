@@ -126,7 +126,7 @@ const Dashboard: React.FC = () => {
       {/* Header */}
       <header className="border-b border-border sticky top-0 z-50 bg-card">
         <div className="container mx-auto px-6 py-4 flex items-center justify-end">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-5">
             <Button
               ref={createBtnRef}
               onClick={handleCreate}
