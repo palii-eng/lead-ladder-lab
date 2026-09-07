@@ -2297,7 +2297,7 @@ const ScenarioBuilder: React.FC = () => {
                 }}
               >
                 <Plus className="w-4 h-4" />
-                <span className="text-[12px] font-bold">Додати ціль</span>
+                <span className="text-[12px] font-bold">Додати кампанію</span>
               </button>
             </div>
 
