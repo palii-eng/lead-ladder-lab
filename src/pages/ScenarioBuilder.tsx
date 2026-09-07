@@ -3002,6 +3002,31 @@ const ScenarioBuilder: React.FC = () => {
     return isStepCompleted(i - 1, branchLeadType);
   };
 
+  // Декомпозиція (крок 4) додатково вимагає, щоб у кожній кампанії Ads
+  // Manager вже було мінімум 2 групи оголошень і по 3 крео в кожній —
+  // без цього рекламний акаунт не готовий до запуску, тож рахувати
+  // декомпозицію ще зарано.
+  const getAdsManagerCampaignKeys = (branchLeadType?: string): string[] => {
+    if (scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0) {
+      return scenario.leadTypes!;
+    }
+    return [branchLeadType || activeLeadType || 'main'];
+  };
+
+  const isAdsManagerMinMet = (branchLeadType?: string): boolean => {
+    const keys = getAdsManagerCampaignKeys(branchLeadType);
+    return keys.every(key => {
+      const raw = (scenario as any)?.creoBriefs?.[key];
+      const creoList: any[] = Array.isArray(raw) ? raw : (raw?.format ? [raw] : []);
+      const rawAud = (scenario as any)?.audienceSettings?.[key];
+      const audiences: any[] = Array.isArray(rawAud)
+        ? rawAud
+        : (rawAud && (rawAud.tips || rawAud.checks) ? [{ id: 'legacy', name: 'Гіпотеза 1', mode: 'ai' }] : []);
+      if (audiences.length < 2) return false;
+      return audiences.every((a: any) => creoList.filter((x: any) => x.audienceId === a.id).length >= 3);
+    });
+  };
+
   const canSaveStep = (i: number, branchLeadType?: string): boolean => {
     if (i === 3 && scenario.niche === 'Інфобізнес') {
       if (isBranching) {
@@ -4407,10 +4432,17 @@ const ScenarioBuilder: React.FC = () => {
                             isLocked={!isStepUnlocked(stepIdx, branchLeadType)}
                             subtitle={subtitle}
                             onClick={() => {
-                              if (!wasDragged.current && isStepUnlocked(stepIdx, branchLeadType)) {
-                                if (branchLeadType) setActiveLeadType(branchLeadType);
-                                setActiveStep(activeStep === stepIdx && activeLeadType === branchLeadType ? null : stepIdx);
+                              if (wasDragged.current || !isStepUnlocked(stepIdx, branchLeadType)) return;
+                              if (stepIdx === 4 && !isStepCompleted(4, branchLeadType) && !isAdsManagerMinMet(branchLeadType)) {
+                                toast({
+                                  title: 'Виконайте мінімальну умову',
+                                  description: 'Створіть мінімум 2 групи оголошень і по 3 крео в кожній групі, у кожній кампанії',
+                                  variant: 'destructive',
+                                });
+                                return;
                               }
+                              if (branchLeadType) setActiveLeadType(branchLeadType);
+                              setActiveStep(activeStep === stepIdx && activeLeadType === branchLeadType ? null : stepIdx);
                             }}
                           />
                         )}
