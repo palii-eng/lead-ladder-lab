@@ -2290,11 +2290,14 @@ const ScenarioBuilder: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveStep(2)}
-                className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border border-dashed transition-all hover:bg-primary/5"
-                style={{ borderColor: 'hsl(var(--primary) / 0.4)', color: 'hsl(var(--primary))' }}
+                className="w-full flex items-center justify-center gap-1.5 px-3 py-3 rounded-lg text-primary-foreground transition-all hover:brightness-110 hover:scale-[1.01] active:scale-[0.99]"
+                style={{
+                  background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.85) 100%)',
+                  boxShadow: '0 4px 16px -4px hsl(var(--primary) / 0.5), 0 0 0 1px hsl(var(--primary) / 0.3), inset 0 1px 0 hsl(0 0% 100% / 0.25)',
+                }}
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-semibold">Додати ціль</span>
+                <Plus className="w-4 h-4" />
+                <span className="text-[12px] font-bold">Додати ціль</span>
               </button>
             </div>
 
