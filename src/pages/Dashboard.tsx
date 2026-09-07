@@ -188,11 +188,19 @@ const Dashboard: React.FC = () => {
         )}
 
         {/* Опрацювання вхідних лідів — always the first block on the dashboard. */}
-        <div className="mb-8">
+        <div
+          className="mb-8 p-4 rounded-2xl border-2"
+          style={{
+            borderColor: 'hsl(var(--primary) / 0.3)',
+            background: 'linear-gradient(180deg, hsl(var(--primary) / 0.06) 0%, hsl(var(--primary) / 0.02) 100%)',
+          }}
+        >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Inbox className="w-4 h-4 text-primary" />
-              <h2 className="text-sm font-bold text-foreground uppercase tracking-wide">Опрацювання вхідних лідів</h2>
+              <span className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
+                <Inbox className="w-3.5 h-3.5 text-primary-foreground" />
+              </span>
+              <h2 className="text-sm font-bold text-primary uppercase tracking-wide">Опрацювання вхідних лідів</h2>
             </div>
             <button
               ref={createBtnRef}
@@ -209,7 +217,11 @@ const Dashboard: React.FC = () => {
               const leadKey = `${lead.name}-${i}`;
               const isTaking = takingLeadKey === leadKey;
               return (
-                <div key={leadKey} className="glass-card p-3.5 flex flex-col gap-2.5">
+                <div
+                  key={leadKey}
+                  className="glass-card p-3.5 flex flex-col gap-2.5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+                  style={{ boxShadow: '0 0 0 1px hsl(var(--primary) / 0.12)' }}
+                >
                   <div className="flex items-center gap-2.5">
                     <img src={lead.photo} alt={lead.name} className="w-9 h-9 rounded-full object-cover shrink-0" />
                     <div className="min-w-0">
