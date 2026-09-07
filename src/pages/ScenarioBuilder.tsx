@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useScenarios, Scenario, DecompositionScenario, DecompositionSet, createDefaultDecompSet, createDefaultBranchData, BranchData, ClientBrief } from '@/context/ScenariosContext';
 import { getGamificationProgress } from '@/components/GamificationSidebar';
+import { LeadOslavAvatar } from '@/components/LeadOslav';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -3504,8 +3505,8 @@ const ScenarioBuilder: React.FC = () => {
                   {isTikTokSource ? 'TIKTOK AD CALCULATOR' : 'META AD CALCULATOR'}
                 </h3>
                 <Button variant="secondary" size="sm" onClick={fillBenchmarks} disabled={fillBenchLoading} className="gap-1 text-xs">
-                  {fillBenchLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                  {fillBenchLoading ? 'Аналіз ринку…' : 'Авто (AI)'}
+                  {fillBenchLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <LeadOslavAvatar size={16} />}
+                  {fillBenchLoading ? 'LeadОслав аналізує ринок…' : 'Попросити LeadОслава'}
                 </Button>
               </div>
               <div className="flex gap-1">
@@ -3796,7 +3797,7 @@ const ScenarioBuilder: React.FC = () => {
                           disabled={!hasSalesChannel}
                           onClick={() => fetchSalesRecommendation(s.type, `${s.icon} ${s.title}`)}
                         >
-                          <Sparkles className="w-3 h-3" /> {hasCached ? 'Переглянути' : 'AI-поради'}
+                          <LeadOslavAvatar size={16} /> {hasCached ? 'Переглянути' : 'Попросити LeadОслава'}
                         </Button>
                       </div>
                     );
@@ -3843,8 +3844,8 @@ const ScenarioBuilder: React.FC = () => {
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="mt-2 h-8 text-xs gap-1.5"
                       disabled={!currentRetention.emailCount}>
-                      <Sparkles className="w-3.5 h-3.5 text-primary" />
-                      Стратегія
+                      <LeadOslavAvatar size={16} />
+                      Попросити LeadОслава
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent side="right" align="start" className="w-[420px] max-h-[70vh] overflow-y-auto p-4 bg-card border-border">
@@ -4869,8 +4870,8 @@ const ScenarioBuilder: React.FC = () => {
         <DialogContent className="bg-card border-border max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-foreground font-bold flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-sm">💡</div>
-              AI рекомендації по кампаніях
+              <LeadOslavAvatar size={32} />
+              LeadОслав рекомендує
               {aiTipsBranchType && (
                 <Badge variant="secondary" className="text-xs ml-2">
                   {LEAD_TYPES.find(l => l.value === aiTipsBranchType)?.icon} {LEAD_TYPES.find(l => l.value === aiTipsBranchType)?.label}
@@ -5098,9 +5099,11 @@ const ScenarioBuilder: React.FC = () => {
                           }}
                           className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
                         >
-                          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">✨</div>
+                          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center overflow-hidden">
+                            <LeadOslavAvatar size={48} />
+                          </div>
                           <div>
-                            <div className="font-semibold text-foreground">Попросити AI-поради</div>
+                            <div className="font-semibold text-foreground">Попросити LeadОслава</div>
                             <div className="text-xs text-muted-foreground">Згенерую на основі брифу та попередніх аудиторій</div>
                           </div>
                         </button>
@@ -5148,11 +5151,11 @@ const ScenarioBuilder: React.FC = () => {
                         className="w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-semibold shadow-md"
                       >
                         {audienceTipsLoading ? (
-                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Генерую...</>
+                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> LeadОслав генерує...</>
                         ) : audienceTipsText ? (
-                          <><Sparkles className="w-4 h-4 mr-2" /> Перегенерувати</>
+                          <><LeadOslavAvatar size={18} /> <span className="ml-2">Перегенерувати</span></>
                         ) : (
-                          <><Sparkles className="w-4 h-4 mr-2" /> Згенерувати поради</>
+                          <><LeadOslavAvatar size={18} /> <span className="ml-2">Попросити LeadОслава заповнити</span></>
                         )}
                       </Button>
                       {audienceTipsText && (
@@ -5679,9 +5682,9 @@ const ScenarioBuilder: React.FC = () => {
                   className="border-amber-400/50 text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/30 font-semibold"
                 >
                   {creoAiLoading ? (
-                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Генерую...</>
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> LeadОслав заповнює...</>
                   ) : (
-                    <><Sparkles className="w-4 h-4 mr-2" /> Заповнити за допомогою AI</>
+                    <><LeadOslavAvatar size={18} /> <span className="ml-2">Попросити LeadОслава заповнити</span></>
                   )}
                 </Button>
               )}
