@@ -265,7 +265,12 @@ const Dashboard: React.FC = () => {
             </Button>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <LayoutDashboard className="w-4 h-4 text-muted-foreground" />
+              <h2 className="text-sm font-bold text-foreground uppercase tracking-wide">Ваші проекти</h2>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {scenarios.map((s, i) => {
               const review = reviewByName[s.name];
               return (
@@ -370,6 +375,7 @@ const Dashboard: React.FC = () => {
                 </div>
               );
             })}
+            </div>
           </div>
         )}
       </main>
