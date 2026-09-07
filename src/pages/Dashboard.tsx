@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { UserMenu } from '@/components/UserMenu';
 import { GamificationSidebar } from '@/components/GamificationSidebar';
-import { markLeadOslavTourSeen } from '@/components/LeadOslavTour';
+import { LeadOslavTour, markLeadOslavTourSeen } from '@/components/LeadOslavTour';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,7 +21,7 @@ type ReviewStatus = 'pending' | 'in_review' | 'approved' | 'rejected';
 const Dashboard: React.FC = () => {
   const { scenarios, loading, addScenario, deleteScenario } = useScenarios();
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, isTester } = useAuth();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [gamificationCollapsed, setGamificationCollapsed] = useState(false);
   const createBtnRef = useRef<HTMLButtonElement>(null);
@@ -303,6 +303,7 @@ const Dashboard: React.FC = () => {
       </AlertDialog>
 
       <GamificationSidebar collapsed={gamificationCollapsed} onToggle={() => setGamificationCollapsed(v => !v)} />
+      {isTester && <LeadOslavTour createBtnRef={createBtnRef} />}
     </div>
   );
 };
