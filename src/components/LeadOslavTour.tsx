@@ -45,7 +45,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
           <div className="flex gap-3 items-start">
             <LeadOslavAvatar />
             <div>
-              <p className="font-bold text-foreground mb-1">LeadОслав</p>
+              <p className="font-bold text-foreground mb-1">AI LeadОслав</p>
               <p className="text-sm text-foreground leading-relaxed">
                 Дякую за реєстрацію! З цього моменту починається ваш шлях байєра. З боку зліва у вас є панель, де відображається ваш баланс коштів та активних проєктів.
               </p>
@@ -95,7 +95,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
           <div className="flex gap-2.5 items-start bg-card border border-primary rounded-xl shadow-lg p-3 max-w-[320px]">
             <LeadOslavAvatar size={36} />
             <div>
-              <p className="font-bold text-xs text-foreground mb-1">LeadОслав</p>
+              <p className="font-bold text-xs text-foreground mb-1">AI LeadОслав</p>
               <p className="text-xs text-foreground leading-snug">
                 Давайте для початку знайдемо ваш новий проєкт та спробуємо втримати його якомога довше. Натисніть «Знайти новий проєкт»!
               </p>
