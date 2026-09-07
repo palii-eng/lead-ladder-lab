@@ -1290,6 +1290,31 @@ const ScenarioBuilder: React.FC = () => {
 
   const [skippedSteps, setSkippedSteps] = useState<Set<string>>(() => new Set(scenario?.skippedSteps || []));
 
+  // scenario завантажується асинхронно з бази, тож на момент першого рендеру
+  // (і виклику useState-ініціалізатора вище) його ще могло не бути —
+  // без цього ефекту вже пропущені кроки (напр. Retention) при вході в
+  // сценарій виглядали б знову "не заповненими", хоча насправді збережені.
+  useEffect(() => {
+    if (scenario?.skippedSteps) {
+      setSkippedSteps(prev => {
+        const incoming = new Set(scenario.skippedSteps);
+        if (prev.size === incoming.size && Array.from(prev).every(k => incoming.has(k))) return prev;
+        return incoming;
+      });
+      // Пропущений крок вважається "завершеним" лише якщо його ключ є і в
+      // skippedSteps, і в savedSteps одночасно (isStepCompleted вимагає
+      // обох) — інакше картка виглядає як звичайний "Очікує" замість
+      // помаранчевого "Пропущено".
+      setSavedSteps(prev => {
+        const missing = scenario.skippedSteps!.filter(key => !prev.has(key));
+        if (missing.length === 0) return prev;
+        const next = new Set(prev);
+        missing.forEach(key => next.add(key));
+        return next;
+      });
+    }
+  }, [scenario?.id, scenario?.skippedSteps]);
+
 
   // Drag-scroll state
   const [isDragging, setIsDragging] = useState(false);
