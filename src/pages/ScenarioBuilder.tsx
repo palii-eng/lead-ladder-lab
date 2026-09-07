@@ -4163,21 +4163,7 @@ const ScenarioBuilder: React.FC = () => {
             <Zap className="w-5 h-5 text-primary" />
             <h1 className="font-bold text-foreground truncate">{scenario.name}</h1>
           </div>
-          <div className="flex-1 flex items-center justify-center gap-4 text-xs text-muted-foreground">
-            <span>
-              ⚡ Заряджено в{' '}
-              <a href="https://ads-school.online/" target="_blank" rel="noopener noreferrer" className="font-bold text-primary hover:underline">
-                Ads School
-              </a>
-            </span>
-            <span className="text-border">|</span>
-            <span>
-              🛠 Створено в{' '}
-              <a href="https://ai.ads-wind.com/" target="_blank" rel="noopener noreferrer" className="font-bold text-primary hover:underline">
-                ADS WindAI Lab
-              </a>
-            </span>
-          </div>
+          <div className="flex-1" />
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="text-xs">
               {scenario.status === 'completed' ? '✅ Завершено' : '📝 Чернетка'}
