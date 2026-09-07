@@ -577,46 +577,6 @@ const ScenarioBuilder: React.FC = () => {
   const [creoFields, setCreoFields] = useState<Record<string, string>>({});
   const [creoVideoFormat, setCreoVideoFormat] = useState<string>('');
   const [creoAiLoading, setCreoAiLoading] = useState(false);
-  const [creoImageLoading, setCreoImageLoading] = useState(false);
-
-  const generateCreoImage = async () => {
-    if (!creoFields.imageDesc || !creoFields.imageDesc.trim()) {
-      toast({ title: 'Спочатку опишіть зображення', variant: 'destructive' });
-      return;
-    }
-    setCreoImageLoading(true);
-    try {
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/creo-image`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({
-          prompt: creoFields.imageDesc,
-          vertical: isTikTokSource,
-          headline: creoFields.h1 || '',
-          subtitle: creoFields.subtitle || '',
-        }),
-      });
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ error: 'Помилка' }));
-        toast({ title: 'Помилка генерації', description: err.error || 'Не вдалося згенерувати зображення', variant: 'destructive' });
-      } else {
-        const data = await resp.json();
-        if (!data.image) {
-          toast({ title: 'Помилка генерації', description: 'Зображення не отримано', variant: 'destructive' });
-        } else {
-          setCreoFields(prev => ({ ...prev, generatedImage: data.image }));
-          toast({ title: 'Зображення згенеровано' });
-        }
-      }
-    } catch (e: any) {
-      toast({ title: 'Помилка', description: e.message || 'Збій', variant: 'destructive' });
-    } finally {
-      setCreoImageLoading(false);
-    }
-  };
 
   const [viewCreoIdx, setViewCreoIdx] = useState<number | null>(null);
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
@@ -5366,7 +5326,6 @@ const ScenarioBuilder: React.FC = () => {
                   {f.subtitle && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Підзаголовок</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.subtitle}</div></div>)}
                   {f.cards && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Кількість карток</div><div className="text-sm text-foreground">{f.cards}</div></div>)}
                   {f.imageDesc && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Опис зображення</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.imageDesc}</div></div>)}
-                  {f.generatedImage && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Згенероване зображення</div><img src={f.generatedImage} alt="Згенероване превʼю" className="rounded-lg border border-border max-w-full max-h-64 object-contain" /></div>)}
                   {f.logic && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Логіка карток</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.logic}</div></div>)}
                   {f.script && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Сценарій</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.script}</div></div>)}
                   {f.timing && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Таймінг</div><div className="text-sm text-foreground">{f.timing} сек</div></div>)}
@@ -5399,9 +5358,7 @@ const ScenarioBuilder: React.FC = () => {
                           return (
                             <div key={idx} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
                               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-xl shrink-0 overflow-hidden">
-                                {item.fields?.generatedImage ? (
-                                  <img src={item.fields.generatedImage} alt="" className="w-full h-full object-cover" />
-                                ) : info.icon}
+                                {info.icon}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="text-xs font-semibold text-primary">Адсет №{idx + 1} · {info.label}{item.format === 'video' && item.videoFormat ? ` (${item.videoFormat})` : ''}</div>
@@ -5494,33 +5451,10 @@ const ScenarioBuilder: React.FC = () => {
                   </label>
                   <Textarea
                     value={creoFields.imageDesc || ''}
-                    onChange={(e) => setCreoFields(prev => ({ ...prev, imageDesc: e.target.value, generatedImage: '' }))}
+                    onChange={(e) => setCreoFields(prev => ({ ...prev, imageDesc: e.target.value }))}
                     placeholder="Що зображено, стиль, колірна гамма, обʼєкти..."
                     rows={3}
                   />
-                  <div className="mt-2 flex items-center gap-3">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={creoImageLoading || !creoFields.imageDesc?.trim()}
-                      onClick={generateCreoImage}
-                      className="border-primary/40 text-primary hover:bg-primary/10 font-semibold"
-                    >
-                      {creoImageLoading ? (
-                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Генерую зображення...</>
-                      ) : (
-                        <><Sparkles className="w-4 h-4 mr-2" /> Згенерувати зображення (GPT Image)</>
-                      )}
-                    </Button>
-                    {creoFields.generatedImage && (
-                      <img
-                        src={creoFields.generatedImage}
-                        alt="Згенероване превʼю"
-                        className={`rounded-lg border border-border object-cover ${isTikTokSource ? 'w-14 h-24' : 'w-24 h-24'}`}
-                      />
-                    )}
-                  </div>
                 </div>
               </div>
             )}
@@ -5561,33 +5495,10 @@ const ScenarioBuilder: React.FC = () => {
                   </label>
                   <Textarea
                     value={creoFields.imageDesc || ''}
-                    onChange={(e) => setCreoFields(prev => ({ ...prev, imageDesc: e.target.value, generatedImage: '' }))}
+                    onChange={(e) => setCreoFields(prev => ({ ...prev, imageDesc: e.target.value }))}
                     placeholder="Стиль, колір, обʼєкти..."
                     rows={3}
                   />
-                  <div className="mt-2 flex items-center gap-3">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={creoImageLoading || !creoFields.imageDesc?.trim()}
-                      onClick={generateCreoImage}
-                      className="border-primary/40 text-primary hover:bg-primary/10 font-semibold"
-                    >
-                      {creoImageLoading ? (
-                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Генерую зображення...</>
-                      ) : (
-                        <><Sparkles className="w-4 h-4 mr-2" /> Згенерувати зображення (GPT Image)</>
-                      )}
-                    </Button>
-                    {creoFields.generatedImage && (
-                      <img
-                        src={creoFields.generatedImage}
-                        alt="Згенероване превʼю"
-                        className={`rounded-lg border border-border object-cover ${isTikTokSource ? 'w-14 h-24' : 'w-24 h-24'}`}
-                      />
-                    )}
-                  </div>
                 </div>
                 {isTikTokSource && (
                   <div>
