@@ -34,6 +34,7 @@ const Dashboard: React.FC = () => {
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [availableLeads, setAvailableLeads] = useState<AvailableLead[]>(() => pickAvailableLeads(LEADS_FEED_SIZE));
   const [takingLeadKey, setTakingLeadKey] = useState<string | null>(null);
+  const [activeLeadIdx, setActiveLeadIdx] = useState(0);
 
   const loadReviews = async () => {
     if (!user?.id) return;
@@ -160,7 +161,10 @@ const Dashboard: React.FC = () => {
     navigate(`/scenario/${s.id}`);
   };
 
-  const refreshLeads = () => setAvailableLeads(pickAvailableLeads(LEADS_FEED_SIZE));
+  const refreshLeads = () => {
+    setAvailableLeads(pickAvailableLeads(LEADS_FEED_SIZE));
+    setActiveLeadIdx(0);
+  };
 
 
   return (
@@ -201,6 +205,9 @@ const Dashboard: React.FC = () => {
                 <Inbox className="w-3.5 h-3.5 text-primary-foreground" />
               </span>
               <h2 className="text-sm font-bold text-primary uppercase tracking-wide">Опрацювання вхідних лідів</h2>
+              <span className="text-[11px] font-semibold text-muted-foreground bg-primary/10 px-1.5 py-0.5 rounded-full">
+                {availableLeads.length}
+              </span>
             </div>
             <button
               ref={createBtnRef}
@@ -212,35 +219,80 @@ const Dashboard: React.FC = () => {
               <RefreshCw className="w-3.5 h-3.5" /> Оновити
             </button>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {availableLeads.map((lead, i) => {
-              const leadKey = `${lead.name}-${i}`;
+
+          <div className="relative max-w-md" style={{ paddingBottom: 12 }}>
+            {/* Peeking cards behind — convey there's a stack, not just one lead */}
+            {availableLeads.length > 2 && (
+              <div
+                className="absolute inset-x-4 rounded-2xl bg-card border border-border"
+                style={{ top: 12, bottom: -4, opacity: 0.5 }}
+              />
+            )}
+            {availableLeads.length > 1 && (
+              <div
+                className="absolute inset-x-2 rounded-2xl bg-card border border-border"
+                style={{ top: 6, bottom: 0, opacity: 0.75 }}
+              />
+            )}
+
+            {(() => {
+              const lead = availableLeads[activeLeadIdx];
+              if (!lead) return null;
+              const leadKey = `${lead.name}-${activeLeadIdx}`;
               const isTaking = takingLeadKey === leadKey;
               return (
-                <div
-                  key={leadKey}
-                  className="glass-card p-3.5 flex flex-col gap-2.5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-                  style={{ boxShadow: '0 0 0 1px hsl(var(--primary) / 0.12)' }}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <img src={lead.photo} alt={lead.name} className="w-9 h-9 rounded-full object-cover shrink-0" />
+                <div className="relative glass-card p-4 flex flex-col gap-3 shadow-md" style={{ boxShadow: '0 4px 20px -6px hsl(var(--primary) / 0.25), 0 0 0 1px hsl(var(--primary) / 0.15)' }}>
+                  <div className="flex items-center gap-3">
+                    <img src={lead.photo} alt={lead.name} className="w-11 h-11 rounded-full object-cover shrink-0" />
                     <div className="min-w-0">
                       <div className="text-sm font-semibold text-foreground truncate">{lead.name}</div>
                       <div className="text-[11px] text-muted-foreground truncate">{lead.niche || lead.role}</div>
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2">{lead.task}</p>
-                  <Button
-                    size="sm"
-                    disabled={!!takingLeadKey}
-                    onClick={() => handleTakeLead(lead, leadKey)}
-                    className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-xs h-8"
-                  >
-                    {isTaking ? 'Беремо в роботу…' : (<><Plus className="w-3.5 h-3.5" /> Взяти в роботу</>)}
-                  </Button>
+                  <p className="text-xs text-muted-foreground whitespace-pre-wrap">{lead.task}</p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      disabled={!!takingLeadKey}
+                      onClick={() => handleTakeLead(lead, leadKey)}
+                      className="flex-1 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-xs h-8"
+                    >
+                      {isTaking ? 'Беремо в роботу…' : (<><Plus className="w-3.5 h-3.5" /> Взяти в роботу</>)}
+                    </Button>
+                    {availableLeads.length > 1 && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={!!takingLeadKey}
+                        onClick={() => setActiveLeadIdx(v => (v + 1) % availableLeads.length)}
+                        className="h-8 text-xs font-semibold"
+                        title="Наступний лід"
+                      >
+                        Наступний →
+                      </Button>
+                    )}
+                  </div>
+                  {availableLeads.length > 1 && (
+                    <div className="flex items-center justify-center gap-1.5 -mb-1">
+                      {availableLeads.map((_, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setActiveLeadIdx(i)}
+                          className="rounded-full transition-all"
+                          style={{
+                            width: i === activeLeadIdx ? 16 : 6,
+                            height: 6,
+                            background: i === activeLeadIdx ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.25)',
+                          }}
+                          title={`Лід ${i + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
-            })}
+            })()}
           </div>
         </div>
 
