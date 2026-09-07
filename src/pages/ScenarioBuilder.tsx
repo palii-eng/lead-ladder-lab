@@ -2029,9 +2029,6 @@ const ScenarioBuilder: React.FC = () => {
               <TabBtn label="Кампанії" icon={<Filter className="w-3.5 h-3.5" />} count={campaigns.length} active />
               <TabBtn label="Групи оголошень" icon={<Users className="w-3.5 h-3.5" />} count={totalAudiences} active />
               <TabBtn label="Оголошення" icon={<Megaphone className="w-3.5 h-3.5" />} count={totalCreo} active />
-              <div className="ml-auto py-1.5">
-                <AddBtn label="Додати ціль" onClick={() => setActiveStep(2)} />
-              </div>
             </div>
 
             {/* Tree — one section per campaign */}
@@ -2289,6 +2286,16 @@ const ScenarioBuilder: React.FC = () => {
                   </div>
                 );
               })}
+
+              <button
+                type="button"
+                onClick={() => setActiveStep(2)}
+                className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border border-dashed transition-all hover:bg-primary/5"
+                style={{ borderColor: 'hsl(var(--primary) / 0.4)', color: 'hsl(var(--primary))' }}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span className="text-[11px] font-semibold">Додати ціль</span>
+              </button>
             </div>
 
             {/* Footer summary */}
