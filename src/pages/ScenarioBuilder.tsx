@@ -5,6 +5,7 @@ import { useScenarios, Scenario, DecompositionScenario, DecompositionSet, create
 import { getGamificationProgress } from '@/components/GamificationSidebar';
 import { LeadOslavAvatar } from '@/components/LeadOslav';
 import { estimateClientBudgetUsd } from '@/lib/budgetEstimate';
+import { BriefMeetTip } from '@/components/BriefMeetTip';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -534,6 +535,7 @@ const ScenarioBuilder: React.FC = () => {
   const [creoAiLoading, setCreoAiLoading] = useState(false);
 
   const [viewCreoIdx, setViewCreoIdx] = useState<number | null>(null);
+  const meetBtnRef = useRef<HTMLButtonElement>(null);
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
   const [collapsedAdSets, setCollapsedAdSets] = useState<Set<string>>(new Set());
@@ -1639,6 +1641,7 @@ const ScenarioBuilder: React.FC = () => {
         ) : (
           <button
             key={key}
+            ref={key === 'brief' ? meetBtnRef : undefined}
             type="button"
             onClick={onClick}
             className="px-3 py-2 rounded-full bg-card border-2 border-primary text-primary text-xs font-semibold flex items-center gap-1.5 hover:bg-primary hover:text-primary-foreground transition-all shadow-sm hover:shadow-md"
@@ -1652,6 +1655,7 @@ const ScenarioBuilder: React.FC = () => {
       <span className="px-3 py-2 rounded-full bg-muted border border-border text-muted-foreground text-xs font-semibold flex items-center gap-1.5 text-center">
         <DollarSign className="w-3.5 h-3.5 shrink-0" /> {paymentTermsLabel}
       </span>
+      <BriefMeetTip userId={user?.id} targetRef={meetBtnRef} active={!clientActions.has('brief')} />
     </div>
   );
 
