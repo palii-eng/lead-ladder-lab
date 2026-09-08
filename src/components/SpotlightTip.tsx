@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { LeadOslavAvatar } from '@/components/LeadOslav';
+import { TOTAL_ONBOARD_HINTS } from '@/lib/onboardingHints';
 
 interface SpotlightTipProps {
   show: boolean;
@@ -19,9 +20,11 @@ interface SpotlightTipProps {
   /** Якщо задано — в бульбашці зʼявляється кнопка підтвердження кроку. */
   confirmLabel?: string;
   onConfirm?: () => void;
+  /** Наскрізний номер кроку в онбордингу — показує "Підказка N з 15". */
+  hintNumber?: number;
 }
 
-export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector, lines, radius = 999, confirmLabel, onConfirm }) => {
+export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector, lines, radius = 999, confirmLabel, onConfirm, hintNumber }) => {
   const [rect, setRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
@@ -90,7 +93,14 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
         <div className="flex gap-2.5 items-start bg-card border border-primary rounded-xl shadow-lg p-3 max-w-[340px]">
           <LeadOslavAvatar size={36} />
           <div>
-            <p className="font-bold text-xs text-foreground mb-1">AI LeadОслав</p>
+            <div className="flex items-center gap-1.5 mb-1">
+              <p className="font-bold text-xs text-foreground">AI LeadОслав</p>
+              {hintNumber && (
+                <span className="text-[9px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                  Підказка {hintNumber} з {TOTAL_ONBOARD_HINTS}
+                </span>
+              )}
+            </div>
             {lines.map((line, i) => (
               <p key={i} className={`text-xs text-foreground leading-snug ${i > 0 ? 'mt-1.5' : ''}`}>{line}</p>
             ))}

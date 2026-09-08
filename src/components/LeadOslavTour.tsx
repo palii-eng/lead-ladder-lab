@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { LeadOslavAvatar } from '@/components/LeadOslav';
 import { SpotlightTip } from '@/components/SpotlightTip';
+import { TOTAL_ONBOARD_HINTS } from '@/lib/onboardingHints';
 
 const SEEN_KEY_PREFIX = 'leadoslav_tour_seen_';
 
@@ -47,7 +48,12 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
           <div className="flex gap-3 items-start">
             <LeadOslavAvatar size={72} />
             <div>
-              <p className="font-bold text-foreground mb-1">AI LeadОслав</p>
+              <div className="flex items-center gap-1.5 mb-1">
+                <p className="font-bold text-foreground">AI LeadОслав</p>
+                <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                  Підказка 1 з {TOTAL_ONBOARD_HINTS}
+                </span>
+              </div>
               <p className="text-sm text-foreground leading-relaxed">
                 Привіт! Ти зараз знаходишся в просторі для навчання студентів ADS School.
               </p>
@@ -82,6 +88,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
         ]}
         confirmLabel="Зрозумів"
         onConfirm={() => setStep(3)}
+        hintNumber={2}
       />
     );
   }
@@ -98,6 +105,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
         ]}
         confirmLabel="Зрозумів"
         onConfirm={() => setStep(4)}
+        hintNumber={3}
       />
     );
   }
@@ -109,7 +117,12 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
           <div className="flex gap-3 items-start">
             <LeadOslavAvatar />
             <div>
-              <p className="font-bold text-foreground mb-1">AI LeadОслав</p>
+              <div className="flex items-center gap-1.5 mb-1">
+                <p className="font-bold text-foreground">AI LeadОслав</p>
+                <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                  Підказка 4 з {TOTAL_ONBOARD_HINTS}
+                </span>
+              </div>
               <p className="text-sm text-foreground leading-relaxed">
                 Дякую за реєстрацію! З цього моменту починається ваш шлях байєра. З боку зліва у вас є панель, де відображається ваш баланс коштів та активних проєктів.
               </p>
@@ -159,7 +172,12 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
           <div className="flex gap-2.5 items-start bg-card border border-primary rounded-xl shadow-lg p-3 max-w-[320px]">
             <LeadOslavAvatar size={36} />
             <div>
-              <p className="font-bold text-xs text-foreground mb-1">AI LeadОслав</p>
+              <div className="flex items-center gap-1.5 mb-1">
+                <p className="font-bold text-xs text-foreground">AI LeadОслав</p>
+                <span className="text-[9px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                  Підказка 5 з {TOTAL_ONBOARD_HINTS}
+                </span>
+              </div>
               <p className="text-xs text-foreground leading-snug">
                 Давайте для початку знайдемо ваш новий проєкт та спробуємо втримати його якомога довше. Натисніть «Знайти новий проєкт»!
               </p>
