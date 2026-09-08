@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useScenarios } from '@/context/ScenariosContext';
-import { Trophy, TrendingUp, Lock, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trophy, TrendingUp, Lock, Check, ChevronLeft, ChevronRight, Unlock } from 'lucide-react';
 
 // Five levels — each defined by how many projects have to be launched AND
 // successfully sustained (scenario.monthSurvived === true), paired with a
@@ -55,7 +55,7 @@ interface GamificationSidebarProps {
 }
 
 export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collapsed, onToggle }) => {
-  const { profile } = useAuth();
+  const { profile, isTester } = useAuth();
   const { scenarios } = useScenarios();
   const completedCount = scenarios.filter(s => s.monthSurvived).length;
   const { currentLevel, nextLevel, progressToNext } = getGamificationProgress(completedCount);
@@ -146,24 +146,33 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
           {GAMIFICATION_LEVELS.map(lvl => {
             const reached = completedCount >= lvl.projects;
             const isCurrent = currentLevel?.level === lvl.level;
+            // Тестери бачать перший рівень як просто "доступний" (не
+            // заблокований і не "досягнутий") — решта рівнів лишаються
+            // заблокованими з підказкою, що це доступно тільки студентам
+            // AdSchool.
+            const isAvailableForTester = isTester && lvl.level === 1 && !reached;
+            const isLockedForTester = isTester && lvl.level > 1 && !reached;
             return (
               <div
                 key={lvl.level}
+                title={isLockedForTester ? 'Доступно тільки для студентів AdSchool' : undefined}
                 className={`flex items-center gap-3 p-3 rounded-lg border ${
-                  isCurrent ? 'border-primary bg-primary/5' : reached ? 'border-success/40 bg-success/5' : 'border-border bg-secondary/30'
+                  isCurrent ? 'border-primary bg-primary/5' : reached ? 'border-success/40 bg-success/5' : isAvailableForTester ? 'border-primary/40 bg-primary/5' : 'border-border bg-secondary/30'
                 }`}
               >
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                    reached ? 'bg-success text-success-foreground' : 'bg-muted text-muted-foreground'
+                    reached ? 'bg-success text-success-foreground' : isAvailableForTester ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                   }`}
                 >
-                  {reached ? <Check className="w-4 h-4" /> : <Lock className="w-3.5 h-3.5" />}
+                  {reached ? <Check className="w-4 h-4" /> : isAvailableForTester ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground">Рівень {lvl.level} · {lvl.name}</p>
                   {!reached && (
-                    <p className="text-[11px] text-muted-foreground mt-0.5">Щоб розблокувати цей рівень, виконайте умови:</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {isAvailableForTester ? 'Доступно — виконайте умови:' : 'Щоб розблокувати цей рівень, виконайте умови:'}
+                    </p>
                   )}
                   <ul className="text-[11px] text-muted-foreground mt-1 space-y-0.5 list-none">
                     <li className="flex items-center gap-1.5">
