@@ -9,7 +9,7 @@ import { Trophy, TrendingUp, Lock, Check, ChevronLeft, ChevronRight, Unlock } fr
 // thresholds are interpolated so the number climbs smoothly project by
 // project instead of jumping only at milestones.
 export const GAMIFICATION_LEVELS = [
-  { level: 1, name: 'Джуніор', projects: 3, earnings: 1000 },
+  { level: 1, name: 'Джуніор', projects: 3, earnings: 2000 },
   { level: 2, name: 'Молодший спеціаліст', projects: 13, earnings: 5000 },
   { level: 3, name: 'Спеціаліст', projects: 30, earnings: 15000 },
   { level: 4, name: 'Мідл спеціаліст', projects: 60, earnings: 35000 },
