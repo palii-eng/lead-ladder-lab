@@ -43,23 +43,24 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
       <Dialog open onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <div className="flex gap-3 items-start">
-            <LeadOslavAvatar />
+            <LeadOslavAvatar size={72} />
             <div>
               <p className="font-bold text-foreground mb-1">AI LeadОслав</p>
               <p className="text-sm text-foreground leading-relaxed">
                 Привіт! Ти зараз знаходишся в просторі для навчання студентів ADS School.
-                {' '}За кнопкою вгорі справа ти завжди можеш переглянути відео-туторіал по цьому сервісу —
-                {' '}рекомендую подивитись його зараз, щоб зрозуміти що до чого.
               </p>
               <p className="text-sm text-foreground leading-relaxed mt-2">
                 Я буду допомагати тобі на всіх етапах: створювати ТЗ для дизайнерів, робити гіпотези по аудиторіях
                 {' '}і таке інше — щоб процес навчання був простим.
               </p>
+              <p className="text-sm text-foreground leading-relaxed mt-2">
+                Давай пройдемось по інтерфейсу.
+              </p>
             </div>
           </div>
           <DialogFooter>
             <Button onClick={() => setStep(2)} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-              Зрозумів
+              Давай пройдемось
             </Button>
           </DialogFooter>
         </DialogContent>
