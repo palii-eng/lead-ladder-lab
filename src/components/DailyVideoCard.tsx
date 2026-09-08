@@ -11,6 +11,8 @@ interface DailyVideoCardProps {
   label: string;
   videos: DailyVideo[];
   registeredAt?: string; // profile.created_at
+  /** data-tour атрибут на корені картки — для спотлайту в онбордингу. */
+  tourTag?: string;
 }
 
 // Скільки повних днів минуло з моменту реєстрації (день реєстрації = 1).
@@ -23,7 +25,7 @@ const daysSinceRegistration = (registeredAt?: string): number => {
   return Math.max(1, diffDays + 1);
 };
 
-export const DailyVideoCard: React.FC<DailyVideoCardProps> = ({ label, videos, registeredAt }) => {
+export const DailyVideoCard: React.FC<DailyVideoCardProps> = ({ label, videos, registeredAt, tourTag }) => {
   const [playing, setPlaying] = useState(false);
   if (videos.length === 0) return null;
   const today = daysSinceRegistration(registeredAt);
@@ -32,7 +34,7 @@ export const DailyVideoCard: React.FC<DailyVideoCardProps> = ({ label, videos, r
   const video = videos.find(v => v.day === today) || videos[Math.min(today, videos.length) - 1] || videos[videos.length - 1];
 
   return (
-    <div className="glass-card p-3.5 flex flex-col gap-2">
+    <div className="glass-card p-3.5 flex flex-col gap-2" data-tour={tourTag}>
       <span className="text-[11px] font-bold text-primary uppercase tracking-wide">{label}</span>
       <div className="rounded-xl overflow-hidden bg-black aspect-video relative">
         {playing ? (

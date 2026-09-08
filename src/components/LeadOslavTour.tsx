@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { LeadOslavAvatar } from '@/components/LeadOslav';
+import { SpotlightTip } from '@/components/SpotlightTip';
 
 const SEEN_KEY_PREFIX = 'leadoslav_tour_seen_';
 
@@ -12,8 +13,9 @@ interface LeadOslavTourProps {
 
 export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) => {
   const { user } = useAuth();
-  // 0 = not running, 1 = welcome + tutorial video mention, 2 = balance panel, 3 = spotlight on the create button
-  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
+  // 0 = not running, 1 = welcome, 2 = leads-card spotlight, 3 = daily-videos
+  // spotlight, 4 = balance panel, 5 = spotlight on the create button
+  const [step, setStep] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
@@ -25,7 +27,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
   }, [user]);
 
   useEffect(() => {
-    if (step !== 3) return;
+    if (step !== 5) return;
     const update = () => setRect(createBtnRef.current?.getBoundingClientRect() ?? null);
     update();
     window.addEventListener('resize', update);
@@ -50,17 +52,17 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
                 Привіт! Ти зараз знаходишся в просторі для навчання студентів ADS School.
               </p>
               <p className="text-sm text-foreground leading-relaxed mt-2">
-                Я буду допомагати тобі на всіх етапах: створювати ТЗ для дизайнерів, робити гіпотези по аудиторіях
-                {' '}і таке інше — щоб процес навчання був простим.
+                Мене звати LeadОслав — я твій особистий помічник, співробітник так би мовити.
               </p>
               <p className="text-sm text-foreground leading-relaxed mt-2">
-                Давай пройдемось по інтерфейсу.
+                Я буду допомагати тобі на всіх етапах: створювати ТЗ для дизайнерів, робити гіпотези по аудиторіях
+                {' '}і таке інше — щоб процес навчання був простим, а вся рутина буде на мені.
               </p>
             </div>
           </div>
           <DialogFooter>
             <Button onClick={() => setStep(2)} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-              Давай пройдемось
+              Зрозумів
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -69,6 +71,38 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
   }
 
   if (step === 2) {
+    return (
+      <SpotlightTip
+        show
+        targetSelector='[data-tour="leads-card"]'
+        radius={16}
+        lines={[
+          'Тут кожен день ви будете отримувати 4 ліди для роботи.',
+          'Можете обрати будь-який з проєктів і один з них взяти в роботу для побудови воронки. Це дозволить вам тренувати загальне бачення картини маркетингу та вирішення потенційних проблем, які будуть у реальних проєктах.',
+        ]}
+        confirmLabel="Зрозумів"
+        onConfirm={() => setStep(3)}
+      />
+    );
+  }
+
+  if (step === 3) {
+    return (
+      <SpotlightTip
+        show
+        targetSelector='[data-tour="daily-videos"]'
+        radius={16}
+        lines={[
+          'Тут кожен день будуть нові відео.',
+          'Одне — навчальний матеріал наших курсів на різні теми. Друге — актуальні на сьогодні теми, як правило пов\u2019язані з рекламним кабінетом або останніми оновленнями в ФБ.',
+        ]}
+        confirmLabel="Зрозумів"
+        onConfirm={() => setStep(4)}
+      />
+    );
+  }
+
+  if (step === 4) {
     return (
       <Dialog open onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
@@ -82,7 +116,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => setStep(3)} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button onClick={() => setStep(5)} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
               Зрозумів
             </Button>
           </DialogFooter>
@@ -91,7 +125,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
     );
   }
 
-  if (step === 3 && rect) {
+  if (step === 5 && rect) {
     return (
       <>
         {/* Spotlight ring around the target button + dims the rest of the page */}

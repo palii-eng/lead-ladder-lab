@@ -265,7 +265,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="relative">
+            <div className="relative" data-tour="leads-card">
               {(() => {
                 const lead = availableLeads[activeLeadIdx];
                 if (!lead) return null;
@@ -333,8 +333,8 @@ const Dashboard: React.FC = () => {
                 );
               })()}
             </div>
-            <DailyVideoCard label="Закриті відео, тільки для абітурієнтів" videos={TARGETING_VIDEOS} registeredAt={profile?.created_at} />
-            <DailyVideoCard label="Залишайся в тренді" videos={TREND_VIDEOS} registeredAt={profile?.created_at} />
+            <DailyVideoCard label="Закриті відео, тільки для абітурієнтів" videos={TARGETING_VIDEOS} registeredAt={profile?.created_at} tourTag="daily-videos" />
+            <DailyVideoCard label="Залишайся в тренді" videos={TREND_VIDEOS} registeredAt={profile?.created_at} tourTag="daily-videos" />
           </div>
         </div>
 

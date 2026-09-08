@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Button } from '@/components/ui/button';
 import { LeadOslavAvatar } from '@/components/LeadOslav';
 
 interface SpotlightTipProps {
@@ -15,16 +16,28 @@ interface SpotlightTipProps {
   lines: string[];
   /** Заокруглення підсвітки: велике число для круглих/пігулкових кнопок, менше для прямокутних. */
   radius?: number;
+  /** Якщо задано — в бульбашці зʼявляється кнопка підтвердження кроку. */
+  confirmLabel?: string;
+  onConfirm?: () => void;
 }
 
-export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector, lines, radius = 999 }) => {
+export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector, lines, radius = 999, confirmLabel, onConfirm }) => {
   const [rect, setRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
     if (!show) return;
     const update = () => {
-      const el = document.querySelector(targetSelector);
-      setRect(el ? el.getBoundingClientRect() : null);
+      const els = document.querySelectorAll(targetSelector);
+      if (els.length === 0) { setRect(null); return; }
+      let top = Infinity, left = Infinity, right = -Infinity, bottom = -Infinity;
+      els.forEach(el => {
+        const r = el.getBoundingClientRect();
+        top = Math.min(top, r.top);
+        left = Math.min(left, r.left);
+        right = Math.max(right, r.right);
+        bottom = Math.max(bottom, r.bottom);
+      });
+      setRect(new DOMRect(left, top, right - left, bottom - top));
     };
     update();
     window.addEventListener('resize', update);
@@ -81,6 +94,11 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
             {lines.map((line, i) => (
               <p key={i} className={`text-xs text-foreground leading-snug ${i > 0 ? 'mt-1.5' : ''}`}>{line}</p>
             ))}
+            {confirmLabel && onConfirm && (
+              <Button size="sm" onClick={onConfirm} className="mt-2.5 w-full bg-primary text-primary-foreground hover:bg-primary/90 text-xs h-7">
+                {confirmLabel}
+              </Button>
+            )}
           </div>
         </div>
       </div>
