@@ -536,8 +536,6 @@ const ScenarioBuilder: React.FC = () => {
   const [creoAiLoading, setCreoAiLoading] = useState(false);
 
   const [viewCreoIdx, setViewCreoIdx] = useState<number | null>(null);
-  const meetBtnRef = useRef<HTMLButtonElement>(null);
-  const goalBtnRef = useRef<HTMLButtonElement>(null);
 
   // Ланцюжок підказок AI LeadОслав для першого сценарію: спочатку зібрати
   // бриф, потім обрати ціль кампанії. Крок зберігається в localStorage —
@@ -1667,7 +1665,7 @@ const ScenarioBuilder: React.FC = () => {
         ) : (
           <button
             key={key}
-            ref={key === 'brief' ? meetBtnRef : undefined}
+            data-tour={key === 'brief' ? 'meet-brief-btn' : undefined}
             type="button"
             onClick={onClick}
             className="px-3 py-2 rounded-full bg-card border-2 border-primary text-primary text-xs font-semibold flex items-center gap-1.5 hover:bg-primary hover:text-primary-foreground transition-all shadow-sm hover:shadow-md"
@@ -1683,7 +1681,7 @@ const ScenarioBuilder: React.FC = () => {
       </span>
       <SpotlightTip
         show={onboardStep === 1}
-        targetRef={meetBtnRef}
+        targetSelector='[data-tour="meet-brief-btn"]'
         lines={[
           'Вітаю! У тебе є перший теплий лід, який готовий працювати з тобою. Спробуй побудувати всю воронку роботи.',
           'Спочатку проведи міт з клієнтом — натисни на цю кнопку.',
@@ -2274,7 +2272,7 @@ const ScenarioBuilder: React.FC = () => {
               })}
 
               <button
-                ref={goalBtnRef}
+                data-tour="add-campaign-btn"
                 type="button"
                 onClick={() => setActiveStep(2)}
                 className="w-full flex items-center justify-center gap-1.5 px-3 py-3 rounded-lg text-primary-foreground transition-all hover:brightness-110 hover:scale-[1.01] active:scale-[0.99]"
@@ -2288,7 +2286,7 @@ const ScenarioBuilder: React.FC = () => {
               </button>
               <SpotlightTip
                 show={onboardStep === 2}
-                targetRef={goalBtnRef}
+                targetSelector='[data-tour="add-campaign-btn"]'
                 radius={12}
                 lines={[
                   'Бриф зібрано — тепер обери ціль кампанії. Від неї залежить, як саме буде запущена реклама.',

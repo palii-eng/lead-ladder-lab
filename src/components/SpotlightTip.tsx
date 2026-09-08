@@ -4,28 +4,44 @@ import { LeadOslavAvatar } from '@/components/LeadOslav';
 
 interface SpotlightTipProps {
   show: boolean;
-  targetRef: React.RefObject<HTMLElement>;
+  /**
+   * CSS-селектор цілі, а не React ref — навмисно. Кнопки, які підсвічуються
+   * тут, можуть монтуватись у кількох гілках лейауту одночасно (розгалужений/
+   * нерозгалужений сценарій), і спільний ref тоді "перескакує" на останній
+   * змонтований екземпляр. querySelector завжди бере перший реальний елемент
+   * у DOM-порядку — стабільно і без цієї плутанини.
+   */
+  targetSelector: string;
   lines: string[];
   /** Заокруглення підсвітки: велике число для круглих/пігулкових кнопок, менше для прямокутних. */
   radius?: number;
 }
 
-export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetRef, lines, radius = 999 }) => {
+export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector, lines, radius = 999 }) => {
   const [rect, setRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
     if (!show) return;
-    const update = () => setRect(targetRef.current?.getBoundingClientRect() ?? null);
+    const update = () => {
+      const el = document.querySelector(targetSelector);
+      setRect(el ? el.getBoundingClientRect() : null);
+    };
     update();
     window.addEventListener('resize', update);
     window.addEventListener('scroll', update, true);
     const raf = requestAnimationFrame(update);
+    // DOM-структура канвасу може ще "осідати" (нові вузли зʼявляються з
+    // затримкою) — кілька повторних спроб перші секунди після показу.
+    const interval = setInterval(update, 300);
+    const stopRetry = setTimeout(() => clearInterval(interval), 3000);
     return () => {
       window.removeEventListener('resize', update);
       window.removeEventListener('scroll', update, true);
       cancelAnimationFrame(raf);
+      clearInterval(interval);
+      clearTimeout(stopRetry);
     };
-  }, [show, targetRef]);
+  }, [show, targetSelector]);
 
   if (!show || !rect) return null;
 
