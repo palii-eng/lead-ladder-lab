@@ -231,85 +231,70 @@ const Dashboard: React.FC = () => {
             </button>
           </div>
 
-          <div className="relative max-w-md" style={{ paddingBottom: 12 }}>
-            {/* Peeking cards behind — convey there's a stack, not just one lead */}
-            {availableLeads.length > 2 && (
-              <div
-                className="absolute inset-x-4 rounded-2xl bg-card border border-border"
-                style={{ top: 12, bottom: -4, opacity: 0.5 }}
-              />
-            )}
-            {availableLeads.length > 1 && (
-              <div
-                className="absolute inset-x-2 rounded-2xl bg-card border border-border"
-                style={{ top: 6, bottom: 0, opacity: 0.75 }}
-              />
-            )}
-
-            {(() => {
-              const lead = availableLeads[activeLeadIdx];
-              if (!lead) return null;
-              const leadKey = `${lead.name}-${activeLeadIdx}`;
-              const isTaking = takingLeadKey === leadKey;
-              return (
-                <div className="relative glass-card p-4 flex flex-col gap-3 shadow-md" style={{ boxShadow: '0 4px 20px -6px hsl(var(--primary) / 0.25), 0 0 0 1px hsl(var(--primary) / 0.15)' }}>
-                  <div className="flex items-center gap-3">
-                    <img src={lead.photo} alt={lead.name} className="w-11 h-11 rounded-full object-cover shrink-0" />
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold text-foreground truncate">{lead.name}</div>
-                      <div className="text-[11px] text-muted-foreground truncate">{lead.niche || lead.role}</div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="relative">
+              {(() => {
+                const lead = availableLeads[activeLeadIdx];
+                if (!lead) return null;
+                const leadKey = `${lead.name}-${activeLeadIdx}`;
+                const isTaking = takingLeadKey === leadKey;
+                return (
+                  <div className="relative glass-card p-4 flex flex-col gap-3 shadow-md h-full" style={{ boxShadow: '0 4px 20px -6px hsl(var(--primary) / 0.25), 0 0 0 1px hsl(var(--primary) / 0.15)' }}>
+                    <div className="flex items-center gap-3">
+                      <img src={lead.photo} alt={lead.name} className="w-11 h-11 rounded-full object-cover shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-foreground truncate">{lead.name}</div>
+                        <div className="text-[11px] text-muted-foreground truncate">{lead.niche || lead.role}</div>
+                      </div>
                     </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground whitespace-pre-wrap">{lead.task}</p>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      disabled={!!takingLeadKey}
-                      onClick={() => handleTakeLead(lead, leadKey)}
-                      className="flex-1 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-xs h-8"
-                    >
-                      {isTaking ? 'Беремо в роботу…' : (<><Plus className="w-3.5 h-3.5" /> Взяти в роботу</>)}
-                    </Button>
-                    {availableLeads.length > 1 && (
+                    <p className="text-xs text-muted-foreground whitespace-pre-wrap">{lead.task}</p>
+                    <div className="flex items-center gap-2 mt-auto">
                       <Button
                         size="sm"
-                        variant="outline"
                         disabled={!!takingLeadKey}
-                        onClick={() => setActiveLeadIdx(v => (v + 1) % availableLeads.length)}
-                        className="h-8 text-xs font-semibold"
-                        title="Наступний лід"
+                        onClick={() => handleTakeLead(lead, leadKey)}
+                        className="flex-1 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-xs h-8"
                       >
-                        Наступний →
+                        {isTaking ? 'Беремо в роботу…' : (<><Plus className="w-3.5 h-3.5" /> Взяти в роботу</>)}
                       </Button>
+                      {availableLeads.length > 1 && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={!!takingLeadKey}
+                          onClick={() => setActiveLeadIdx(v => (v + 1) % availableLeads.length)}
+                          className="h-8 text-xs font-semibold"
+                          title="Наступний лід"
+                        >
+                          Наступний →
+                        </Button>
+                      )}
+                    </div>
+                    {availableLeads.length > 1 && (
+                      <div className="flex items-center justify-center gap-1.5 -mb-1">
+                        {availableLeads.map((_, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => setActiveLeadIdx(i)}
+                            className="rounded-full transition-all"
+                            style={{
+                              width: i === activeLeadIdx ? 16 : 6,
+                              height: 6,
+                              background: i === activeLeadIdx ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.25)',
+                            }}
+                            title={`Лід ${i + 1}`}
+                          />
+                        ))}
+                      </div>
                     )}
                   </div>
-                  {availableLeads.length > 1 && (
-                    <div className="flex items-center justify-center gap-1.5 -mb-1">
-                      {availableLeads.map((_, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => setActiveLeadIdx(i)}
-                          className="rounded-full transition-all"
-                          style={{
-                            width: i === activeLeadIdx ? 16 : 6,
-                            height: 6,
-                            background: i === activeLeadIdx ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.25)',
-                          }}
-                          title={`Лід ${i + 1}`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+                );
+              })()}
+            </div>
+            <DailyVideoCard label="Закриті відео, тільки для абітурієнтів" videos={TARGETING_VIDEOS} registeredAt={profile?.created_at} />
+            <DailyVideoCard label="Залишайся в тренді" videos={TREND_VIDEOS} registeredAt={profile?.created_at} />
           </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 mb-8">
-          <DailyVideoCard label="Закриті відео, тільки для абітурієнтів" videos={TARGETING_VIDEOS} registeredAt={profile?.created_at} />
-          <DailyVideoCard label="Залишайся в тренді" videos={TREND_VIDEOS} registeredAt={profile?.created_at} />
         </div>
 
         {loading ? (
