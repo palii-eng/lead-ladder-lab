@@ -5,7 +5,7 @@ import { useScenarios, Scenario, DecompositionScenario, DecompositionSet, create
 import { getGamificationProgress } from '@/components/GamificationSidebar';
 import { LeadOslavAvatar } from '@/components/LeadOslav';
 import { estimateClientBudgetUsd } from '@/lib/budgetEstimate';
-import { BriefMeetTip } from '@/components/BriefMeetTip';
+import { SpotlightTip } from '@/components/SpotlightTip';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -436,6 +436,7 @@ const ScenarioBuilder: React.FC = () => {
   const navigate = useNavigate();
   const { scenarios, getScenario, updateScenario, loading: scenariosLoading } = useScenarios();
   const scenario = getScenario(id!);
+  const { user, profile, isTester } = useAuth();
 
   // Marketer's current gamification level — drives payment terms shown in
   // the client-actions column (levels 1-2: pay at month end, level 3: 50%
@@ -536,6 +537,32 @@ const ScenarioBuilder: React.FC = () => {
 
   const [viewCreoIdx, setViewCreoIdx] = useState<number | null>(null);
   const meetBtnRef = useRef<HTMLButtonElement>(null);
+  const goalBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Ланцюжок підказок AI LeadОслав для першого сценарію: спочатку зібрати
+  // бриф, потім обрати ціль кампанії. Крок зберігається в localStorage —
+  // 0 = неактивний/завершений, 1 = "зібрати бриф", 2 = "обрати ціль".
+  const ONBOARD_KEY_PREFIX = 'leadoslav_funnel_onboard_step_';
+  const [onboardStep, setOnboardStep] = useState(0);
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      const raw = localStorage.getItem(`${ONBOARD_KEY_PREFIX}${user.id}`);
+      if (raw === null) setOnboardStep(1);
+      else if (raw !== 'done') setOnboardStep(Number(raw) || 0);
+    } catch { /* localStorage unavailable — skip onboarding chain */ }
+  }, [user?.id]);
+  const advanceOnboard = (next: number | 'done') => {
+    setOnboardStep(next === 'done' ? 0 : next);
+    if (!user?.id) return;
+    try { localStorage.setItem(`${ONBOARD_KEY_PREFIX}${user.id}`, String(next)); } catch { /* ignore */ }
+  };
+  useEffect(() => {
+    if (onboardStep === 1 && clientActions.has('brief')) advanceOnboard(2);
+  }, [onboardStep, clientActions]);
+  useEffect(() => {
+    if (onboardStep === 2 && scenario?.channel) advanceOnboard('done');
+  }, [onboardStep, scenario?.channel]);
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
   const [collapsedAdSets, setCollapsedAdSets] = useState<Set<string>>(new Set());
@@ -585,7 +612,6 @@ const ScenarioBuilder: React.FC = () => {
   const [aiRecommendation, setAiRecommendation] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const { toast } = useToast();
-  const { user, profile, isTester } = useAuth();
   const fetchAiRecommendation = useCallback(async () => {
     if (!scenario) return;
     setAiLoading(true);
@@ -1655,7 +1681,14 @@ const ScenarioBuilder: React.FC = () => {
       <span className="px-3 py-2 rounded-full bg-muted border border-border text-muted-foreground text-xs font-semibold flex items-center gap-1.5 text-center">
         <DollarSign className="w-3.5 h-3.5 shrink-0" /> {paymentTermsLabel}
       </span>
-      <BriefMeetTip userId={user?.id} targetRef={meetBtnRef} active={!clientActions.has('brief')} />
+      <SpotlightTip
+        show={onboardStep === 1}
+        targetRef={meetBtnRef}
+        lines={[
+          'Вітаю! У тебе є перший теплий лід, який готовий працювати з тобою. Спробуй побудувати всю воронку роботи.',
+          'Спочатку проведи міт з клієнтом — натисни на цю кнопку.',
+        ]}
+      />
     </div>
   );
 
@@ -2240,6 +2273,7 @@ const ScenarioBuilder: React.FC = () => {
               })}
 
               <button
+                ref={goalBtnRef}
                 type="button"
                 onClick={() => setActiveStep(2)}
                 className="w-full flex items-center justify-center gap-1.5 px-3 py-3 rounded-lg text-primary-foreground transition-all hover:brightness-110 hover:scale-[1.01] active:scale-[0.99]"
@@ -2251,6 +2285,15 @@ const ScenarioBuilder: React.FC = () => {
                 <Plus className="w-4 h-4" />
                 <span className="text-[12px] font-bold">Додати кампанію</span>
               </button>
+              <SpotlightTip
+                show={onboardStep === 2}
+                targetRef={goalBtnRef}
+                radius={12}
+                lines={[
+                  'Бриф зібрано — тепер обери ціль кампанії. Від неї залежить, як саме буде запущена реклама.',
+                  'Натисни «Додати кампанію».',
+                ]}
+              />
             </div>
 
             {/* Footer summary */}
