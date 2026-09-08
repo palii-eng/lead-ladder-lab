@@ -224,6 +224,7 @@ const Dashboard: React.FC = () => {
                 {availableLeads.length}
               </span>
             </div>
+            <span className="text-xs font-semibold text-muted-foreground">Кожен день — нові уроки</span>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
