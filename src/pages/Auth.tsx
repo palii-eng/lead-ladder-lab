@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { Zap, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 function getSafeNextUrl(searchParams: URLSearchParams): string | null {
   const next = searchParams.get('next');
@@ -53,7 +53,8 @@ const Auth: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const next = getSafeNextUrl(searchParams);
-  const [tab, setTab] = useState<'signin' | 'signup'>('signin');
+  const isTesterLink = searchParams.get('ref') === 'tester';
+  const [tab, setTab] = useState<'signin' | 'signup'>(isTesterLink ? 'signup' : 'signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -82,30 +83,50 @@ const Auth: React.FC = () => {
       return;
     }
     setSubmitting(true);
-    const { error } = await signUp(email, password, fullName);
+    const { error } = await signUp(email, password, fullName, isTesterLink ? 'tester_link' : undefined);
     setSubmitting(false);
     if (error) {
       toast({ title: 'Помилка реєстрації', description: error.message, variant: 'destructive' });
     } else {
-      toast({
-        title: 'Заявку відправлено',
-        description: 'Ваш акаунт очікує підтвердження адміністратора.',
-      });
+      toast(
+        isTesterLink
+          ? { title: 'Ласкаво просимо!', description: 'Акаунт створено, ви одразу можете заходити.' }
+          : { title: 'Заявку відправлено', description: 'Ваш акаунт очікує підтвердження адміністратора.' }
+      );
       setTab('signin');
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+    <div
+      className="min-h-screen flex items-center justify-center p-6"
+      style={{ background: 'linear-gradient(160deg, #1414e0 0%, #1a1aff 55%, #2323ff 100%)' }}
+    >
       <div className="w-full max-w-md">
-        <div className="flex items-center gap-3 justify-center mb-8">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-primary">
-            <Zap className="w-6 h-6 text-primary-foreground" />
+        <div className="flex flex-col items-center gap-3 mb-8 text-center">
+          <div className="flex items-center gap-2">
+            <span
+              className="px-2.5 py-1 rounded-md text-lg font-black tracking-tight text-white"
+              style={{ background: '#1414e0', border: '2px solid white' }}
+            >
+              ADS
+            </span>
+            <span
+              className="px-1.5 py-0.5 rounded text-xs font-extrabold uppercase tracking-wide -ml-1 -mt-4"
+              style={{ background: '#c8f169', color: '#1414e0' }}
+            >
+              School
+            </span>
           </div>
-          <h1 className="text-2xl font-extrabold text-foreground">SmartFunnel AI</h1>
+          <h1 className="text-xl sm:text-2xl font-black uppercase text-white leading-tight">
+            Кабінет студента
+          </h1>
+          <p className="text-sm text-white/70 max-w-xs">
+            Школа маркетингових інновацій — тренуйся на реальних кейсах перед запуском справжніх кампаній
+          </p>
         </div>
 
-        <div className="glass-card p-6">
+        <div className="glass-card p-6 bg-white shadow-2xl" style={{ borderRadius: 20 }}>
           <Tabs value={tab} onValueChange={(v) => setTab(v as 'signin' | 'signup')}>
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="signin">Вхід</TabsTrigger>
@@ -147,9 +168,11 @@ const Auth: React.FC = () => {
                 <Button type="submit" className="w-full" disabled={submitting}>
                   {submitting ? 'Відправка…' : 'Зареєструватися'}
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  Після реєстрації потрібен апрув адміністратора.
-                </p>
+                {!isTesterLink && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    Після реєстрації потрібен апрув адміністратора.
+                  </p>
+                )}
               </form>
             </TabsContent>
           </Tabs>
