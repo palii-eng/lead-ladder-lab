@@ -12,6 +12,7 @@ import { UserMenu } from '@/components/UserMenu';
 import { GamificationSidebar } from '@/components/GamificationSidebar';
 import { LeadOslavTour, markLeadOslavTourSeen } from '@/components/LeadOslavTour';
 import { pickAvailableLeads, AvailableLead } from '@/components/SimulationIntro';
+import { DailyVideoCard, DailyVideo } from '@/components/DailyVideoCard';
 import { estimateClientBudgetUsd } from '@/lib/budgetEstimate';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useAuth } from '@/context/AuthContext';
@@ -21,6 +22,16 @@ import { toast } from '@/hooks/use-toast';
 type ReviewStatus = 'pending' | 'in_review' | 'approved' | 'rejected';
 
 const LEADS_FEED_SIZE = 4;
+
+// "Відео дня" — щоденний контент, новий кожен день з моменту реєстрації.
+// Поки заповнений лише перший день; коли зʼявляться відео на наступні дні —
+// просто додати нові записи з відповідним day.
+const TARGETING_VIDEOS: DailyVideo[] = [
+  { day: 1, youtubeId: 'jPYI67MSFjE', caption: 'Етапи роботи над проектом по таргету' },
+];
+const TREND_VIDEOS: DailyVideo[] = [
+  { day: 1, youtubeId: 'IT8hrMJmeeM', caption: 'Вайбкодимо сайти безлімітно' },
+];
 
 const Dashboard: React.FC = () => {
   const { scenarios, loading, addScenario, updateScenario, deleteScenario } = useScenarios();
@@ -294,6 +305,11 @@ const Dashboard: React.FC = () => {
               );
             })()}
           </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 mb-8">
+          <DailyVideoCard label="Закриті відео, тільки для абітурієнтів" videos={TARGETING_VIDEOS} registeredAt={profile?.created_at} />
+          <DailyVideoCard label="Залишайся в тренді" videos={TREND_VIDEOS} registeredAt={profile?.created_at} />
         </div>
 
         {loading ? (
