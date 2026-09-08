@@ -306,22 +306,7 @@ const Dashboard: React.FC = () => {
             <div className="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin mb-4" />
             <p className="text-muted-foreground">Завантаження сценаріїв…</p>
           </div>
-        ) : scenarios.length === 0 ? (
-
-          <div className="flex flex-col items-center justify-center py-32 animate-fade-in">
-            <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 bg-accent">
-              <LayoutDashboard className="w-10 h-10 text-accent-foreground" />
-            </div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">Немає сценаріїв</h2>
-            <p className="text-muted-foreground mb-8 text-center max-w-md">
-              Створіть свій перший маркетинговий сценарій та побудуйте повну воронку продажів
-            </p>
-            <Button onClick={handleCreate} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold">
-              <Plus className="w-4 h-4" />
-              Створити перший сценарій
-            </Button>
-          </div>
-        ) : (
+        ) : scenarios.length === 0 ? null : (
           <div>
             <div className="flex items-center gap-2 mb-3">
               <LayoutDashboard className="w-4 h-4 text-muted-foreground" />
