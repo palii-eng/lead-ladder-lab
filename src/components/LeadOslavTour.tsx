@@ -15,8 +15,8 @@ interface LeadOslavTourProps {
 export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) => {
   const { user } = useAuth();
   // 0 = not running, 1 = welcome, 2 = leads-card spotlight, 3 = daily-videos
-  // spotlight, 4 = balance panel, 5 = spotlight on the create button
-  const [step, setStep] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
+  // spotlight, 4 = spotlight on the create button
+  const [step, setStep] = useState<0 | 1 | 2 | 3 | 4>(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
   }, [user]);
 
   useEffect(() => {
-    if (step !== 5) return;
+    if (step !== 4) return;
     const update = () => setRect(createBtnRef.current?.getBoundingClientRect() ?? null);
     update();
     window.addEventListener('resize', update);
@@ -112,34 +112,6 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
 
   if (step === 4) {
     return (
-      <Dialog open onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
-          <div className="flex gap-3 items-start">
-            <LeadOslavAvatar />
-            <div>
-              <div className="flex items-center gap-1.5 mb-1">
-                <p className="font-bold text-foreground">AI LeadОслав</p>
-                <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
-                  Підказка 4 з {TOTAL_ONBOARD_HINTS}
-                </span>
-              </div>
-              <p className="text-sm text-foreground leading-relaxed">
-                Дякую за реєстрацію! З цього моменту починається ваш шлях байєра. З боку зліва у вас є панель, де відображається ваш баланс коштів та активних проєктів.
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setStep(5)} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-              Зрозумів
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  if (step === 5 && rect) {
-    return (
       <>
         {/* Spotlight ring around the target button + dims the rest of the page */}
         <div
@@ -175,7 +147,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
               <div className="flex items-center gap-1.5 mb-1">
                 <p className="font-bold text-xs text-foreground">AI LeadОслав</p>
                 <span className="text-[9px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
-                  Підказка 5 з {TOTAL_ONBOARD_HINTS}
+                  Підказка 4 з {TOTAL_ONBOARD_HINTS}
                 </span>
               </div>
               <p className="text-xs text-foreground leading-snug">
