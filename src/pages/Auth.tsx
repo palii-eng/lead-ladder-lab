@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { Eye, EyeOff } from 'lucide-react';
+import adschoolLogo from '@/assets/adschool-logo.png';
 
 function getSafeNextUrl(searchParams: URLSearchParams): string | null {
   const next = searchParams.get('next');
@@ -104,20 +105,7 @@ const Auth: React.FC = () => {
     >
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center gap-3 mb-8 text-center">
-          <div className="flex items-center gap-2">
-            <span
-              className="px-2.5 py-1 rounded-md text-lg font-black tracking-tight text-white"
-              style={{ background: '#1414e0', border: '2px solid white' }}
-            >
-              ADS
-            </span>
-            <span
-              className="px-1.5 py-0.5 rounded text-xs font-extrabold uppercase tracking-wide -ml-1 -mt-4"
-              style={{ background: '#c8f169', color: '#1414e0' }}
-            >
-              School
-            </span>
-          </div>
+          <img src={adschoolLogo} alt="ADS School" className="h-20 w-auto" />
           <h1 className="text-xl sm:text-2xl font-black uppercase text-white leading-tight">
             Кабінет студента
           </h1>
