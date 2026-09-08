@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { LeadOslavAvatar } from '@/components/LeadOslav';
 
 interface SpotlightTipProps {
@@ -28,7 +29,7 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetRef, lin
 
   if (!show || !rect) return null;
 
-  return (
+  return createPortal(
     <>
       <div
         className="fixed z-40 pointer-events-none transition-all"
@@ -67,6 +68,7 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetRef, lin
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 };
