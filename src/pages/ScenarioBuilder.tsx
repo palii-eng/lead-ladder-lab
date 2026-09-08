@@ -537,9 +537,10 @@ const ScenarioBuilder: React.FC = () => {
 
   const [viewCreoIdx, setViewCreoIdx] = useState<number | null>(null);
 
-  // Ланцюжок підказок AI LeadОслав для першого сценарію: спочатку зібрати
-  // бриф, потім обрати ціль кампанії. Крок зберігається в localStorage —
-  // 0 = неактивний/завершений, 1 = "зібрати бриф", 2 = "обрати ціль".
+  // Ланцюжок підказок AI LeadОслав для першого сценарію: 1 = "зібрати
+  // бриф", 2 = "ось твій бриф, шаблон для реальних проєктів" (поки
+  // відкритий SheetContent із заповненим брифом), 3 = "обрати ціль
+  // кампанії". Крок зберігається в localStorage — 0 = неактивний/завершений.
   const ONBOARD_KEY_PREFIX = 'leadoslav_funnel_onboard_step_';
   const [onboardStep, setOnboardStep] = useState(0);
   useEffect(() => {
@@ -559,7 +560,12 @@ const ScenarioBuilder: React.FC = () => {
     if (onboardStep === 1 && clientActions.has('brief')) advanceOnboard(2);
   }, [onboardStep, clientActions]);
   useEffect(() => {
-    if (onboardStep === 2 && scenario?.channel) advanceOnboard('done');
+    // Крок 2 показується поки відкрита панель заповненого брифу — щойно
+    // користувач її закриває (прочитав), переходимо до вибору цілі.
+    if (onboardStep === 2 && !filledBriefOpen) advanceOnboard(3);
+  }, [onboardStep, filledBriefOpen]);
+  useEffect(() => {
+    if (onboardStep === 3 && scenario?.channel) advanceOnboard('done');
   }, [onboardStep, scenario?.channel]);
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
@@ -2285,7 +2291,7 @@ const ScenarioBuilder: React.FC = () => {
                 <span className="text-[12px] font-bold">Додати кампанію</span>
               </button>
               <SpotlightTip
-                show={onboardStep === 2}
+                show={onboardStep === 3}
                 targetSelector='[data-tour="add-campaign-btn"]'
                 radius={12}
                 lines={[
@@ -4732,6 +4738,15 @@ const ScenarioBuilder: React.FC = () => {
               <Download className="w-3.5 h-3.5" />
               Шаблон брифа
             </a>
+            <SpotlightTip
+              show={onboardStep === 2 && filledBriefOpen}
+              targetSelector='a[title="Завантажити пустий шаблон брифа"]'
+              radius={12}
+              lines={[
+                'Супер! За підсумками міту в тебе тепер є бриф клієнта. У будь-який момент можеш повернутись до нього.',
+                'Також для своїх реальних проєктів можеш завантажити тут порожній шаблон із самими питаннями — це бриф, який використовують різні агенції на ринку.',
+              ]}
+            />
           </SheetHeader>
           <div className="space-y-3 mt-4">
             {(() => {
