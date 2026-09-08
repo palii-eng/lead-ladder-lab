@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useScenarios, ClientBrief, createDefaultDecompSet } from '@/context/ScenariosContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Trophy, Award, RefreshCw, Inbox, GraduationCap } from 'lucide-react';
+import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Trophy, Award, Inbox, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -224,15 +224,6 @@ const Dashboard: React.FC = () => {
                 {availableLeads.length}
               </span>
             </div>
-            <button
-              ref={createBtnRef}
-              type="button"
-              onClick={refreshLeads}
-              className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
-              title="Показати інших лідів"
-            >
-              <RefreshCw className="w-3.5 h-3.5" /> Оновити
-            </button>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
@@ -261,6 +252,7 @@ const Dashboard: React.FC = () => {
                     <p className="text-xs text-muted-foreground whitespace-pre-wrap">{lead.task}</p>
                     <div className="flex items-center gap-2 mt-auto">
                       <Button
+                        ref={createBtnRef}
                         size="sm"
                         disabled={!!takingLeadKey}
                         onClick={() => handleTakeLead(lead, leadKey)}
