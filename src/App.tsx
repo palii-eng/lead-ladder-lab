@@ -12,6 +12,7 @@ import SharedScenario from "./pages/SharedScenario";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import OAuthConsent from "./pages/OAuthConsent";
+import EmailConfirmed from "./pages/EmailConfirmed";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Sonner />
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/confirmed" element={<EmailConfirmed />} />
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="/share/:shareId" element={<SharedScenario />} />
               <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
