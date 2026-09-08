@@ -243,7 +243,14 @@ const Dashboard: React.FC = () => {
                 const leadKey = `${lead.name}-${activeLeadIdx}`;
                 const isTaking = takingLeadKey === leadKey;
                 return (
-                  <div className="relative glass-card p-4 flex flex-col gap-3 shadow-md h-full" style={{ boxShadow: '0 4px 20px -6px hsl(var(--primary) / 0.25), 0 0 0 1px hsl(var(--primary) / 0.15)' }}>
+                  <div
+                    className="relative rounded-2xl p-4 flex flex-col gap-3 shadow-md h-full border"
+                    style={{
+                      background: 'linear-gradient(160deg, hsl(var(--primary) / 0.09) 0%, hsl(var(--card)) 55%)',
+                      borderColor: 'hsl(var(--primary) / 0.25)',
+                      boxShadow: '0 4px 20px -6px hsl(var(--primary) / 0.25)',
+                    }}
+                  >
                     <div className="flex items-center gap-3">
                       <img src={lead.photo} alt={lead.name} className="w-11 h-11 rounded-full object-cover shrink-0" />
                       <div className="min-w-0">
