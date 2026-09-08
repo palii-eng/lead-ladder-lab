@@ -85,17 +85,31 @@ const Auth: React.FC = () => {
     }
     setSubmitting(true);
     const { error } = await signUp(email, password, fullName, isTesterLink ? 'tester_link' : undefined);
-    setSubmitting(false);
     if (error) {
+      setSubmitting(false);
       toast({ title: 'Помилка реєстрації', description: error.message, variant: 'destructive' });
-    } else {
-      toast(
-        isTesterLink
-          ? { title: 'Ласкаво просимо!', description: 'Акаунт створено, ви одразу можете заходити.' }
-          : { title: 'Заявку відправлено', description: 'Ваш акаунт очікує підтвердження адміністратора.' }
-      );
-      setTab('signin');
+      return;
     }
+    // Одразу авторизуємо тим самим email/паролем — без цього signUp сам по
+    // собі не завжди відкриває сесію (залежить від налаштувань підтвердження
+    // email), і людину нізвідки б повертало на форму входу.
+    const { error: signInError } = await signIn(email, password);
+    setSubmitting(false);
+    if (signInError) {
+      // Найімовірніша причина — потрібне підтвердження email за посиланням.
+      toast({
+        title: 'Реєстрація успішна',
+        description: 'Перевірте пошту, щоб підтвердити email, а потім увійдіть.',
+      });
+      setTab('signin');
+      return;
+    }
+    toast(
+      isTesterLink
+        ? { title: 'Ласкаво просимо!', description: 'Акаунт створено, ви одразу в системі.' }
+        : { title: 'Ласкаво просимо!', description: 'Акаунт створено. Доступ до сценаріїв відкриється після підтвердження адміністратора.' }
+    );
+    navigate(next ?? '/', { replace: true });
   };
 
   return (
