@@ -246,9 +246,9 @@ const Dashboard: React.FC = () => {
                   <div
                     className="relative rounded-2xl p-4 flex flex-col gap-3 shadow-md h-full border"
                     style={{
-                      background: 'linear-gradient(160deg, hsl(var(--primary) / 0.09) 0%, hsl(var(--card)) 55%)',
-                      borderColor: 'hsl(var(--primary) / 0.25)',
-                      boxShadow: '0 4px 20px -6px hsl(var(--primary) / 0.25)',
+                      background: 'linear-gradient(160deg, hsl(var(--warning) / 0.10) 0%, hsl(var(--card)) 55%)',
+                      borderColor: 'hsl(var(--warning) / 0.35)',
+                      boxShadow: '0 4px 20px -6px hsl(var(--warning) / 0.25)',
                     }}
                   >
                     <div className="flex items-center gap-3">
