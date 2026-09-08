@@ -12,8 +12,8 @@ interface LeadOslavTourProps {
 
 export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) => {
   const { user } = useAuth();
-  // 0 = not running, 1 = welcome modal, 2 = spotlight on the create button
-  const [step, setStep] = useState<0 | 1 | 2>(0);
+  // 0 = not running, 1 = welcome + tutorial video mention, 2 = balance panel, 3 = spotlight on the create button
+  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
   }, [user]);
 
   useEffect(() => {
-    if (step !== 2) return;
+    if (step !== 3) return;
     const update = () => setRect(createBtnRef.current?.getBoundingClientRect() ?? null);
     update();
     window.addEventListener('resize', update);
@@ -47,7 +47,13 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
             <div>
               <p className="font-bold text-foreground mb-1">AI LeadОслав</p>
               <p className="text-sm text-foreground leading-relaxed">
-                Дякую за реєстрацію! З цього моменту починається ваш шлях байєра. З боку зліва у вас є панель, де відображається ваш баланс коштів та активних проєктів.
+                Привіт! Ти зараз знаходишся в просторі для навчання студентів ADS School.
+                {' '}За кнопкою вгорі справа ти завжди можеш переглянути відео-туторіал по цьому сервісу —
+                {' '}рекомендую подивитись його зараз, щоб зрозуміти що до чого.
+              </p>
+              <p className="text-sm text-foreground leading-relaxed mt-2">
+                Я буду допомагати тобі на всіх етапах: створювати ТЗ для дизайнерів, робити гіпотези по аудиторіях
+                {' '}і таке інше — щоб процес навчання був простим.
               </p>
             </div>
           </div>
@@ -61,7 +67,30 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
     );
   }
 
-  if (step === 2 && rect) {
+  if (step === 2) {
+    return (
+      <Dialog open onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <div className="flex gap-3 items-start">
+            <LeadOslavAvatar />
+            <div>
+              <p className="font-bold text-foreground mb-1">AI LeadОслав</p>
+              <p className="text-sm text-foreground leading-relaxed">
+                Дякую за реєстрацію! З цього моменту починається ваш шлях байєра. З боку зліва у вас є панель, де відображається ваш баланс коштів та активних проєктів.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setStep(3)} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+              Зрозумів
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (step === 3 && rect) {
     return (
       <>
         {/* Spotlight ring around the target button + dims the rest of the page */}
