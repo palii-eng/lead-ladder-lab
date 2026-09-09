@@ -565,11 +565,16 @@ const ScenarioBuilder: React.FC = () => {
   }, [onboardStep, clientActions]);
   useEffect(() => {
     // Крок 2 показується поки відкрита панель заповненого брифу — щойно
-    // користувач її закриває (прочитав), переходимо до вибору цілі.
+    // користувач її закриває (прочитав), переходимо до вибору ніші.
     if (onboardStep === 2 && !filledBriefOpen) advanceOnboard(3);
   }, [onboardStep, filledBriefOpen]);
   useEffect(() => {
-    if (onboardStep === 3 && scenario?.channel) advanceOnboard('done');
+    // Крок 3 — підсвітка картки "Вибір ніші" (КРОК 01). Щойно її пройдено,
+    // переходимо до вибору цілі кампанії.
+    if (onboardStep === 3 && isStepCompleted(0)) advanceOnboard(4);
+  }, [onboardStep, scenario]);
+  useEffect(() => {
+    if (onboardStep === 4 && scenario?.channel) advanceOnboard('done');
   }, [onboardStep, scenario?.channel]);
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
@@ -2296,16 +2301,27 @@ const ScenarioBuilder: React.FC = () => {
                 <span className="text-[12px] font-bold">Додати кампанію</span>
               </button>
               <SpotlightTip
-                show={onboardStep === 3}
+                show={onboardStep === 4}
                 targetSelector='[data-tour="add-campaign-btn"]'
                 radius={12}
                 lines={[
-                  'Бриф зібрано — тепер обери ціль кампанії. Від неї залежить, як саме буде запущена реклама.',
+                  'Ніша обрана — тепер обери ціль кампанії. Від неї залежить, як саме буде запущена реклама.',
                   'Натисни «Додати кампанію».',
                 ]}
-                hintNumber={7}
+                hintNumber={8}
               />
             </div>
+
+            <SpotlightTip
+              show={onboardStep === 3}
+              targetSelector='[data-step-index="0"]'
+              radius={16}
+              lines={[
+                'Для ефективної роботи з кожним проєктом треба чітко розуміти, яку воронку будемо будувати для конкретного клієнта. Від цього залежить, які інструменти потрібно підібрати. Для інсташопу, інфобізнесу, e-commerce та інших напрямів воронки можуть відрізнятися.',
+                'У цьому випадку стоматологічна клініка надає послуги кінцевому споживачу, тому це B2C-проєкт. Оберіть відповідний тип бізнесу.',
+              ]}
+              hintNumber={7}
+            />
 
             {/* Footer summary */}
             <div className="flex items-center justify-between px-4 py-2 border-t border-border/60 text-[10px] text-muted-foreground" style={{ background: 'hsl(220 20% 98%)' }}>
