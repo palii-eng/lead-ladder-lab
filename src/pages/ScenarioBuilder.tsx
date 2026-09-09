@@ -578,8 +578,13 @@ const ScenarioBuilder: React.FC = () => {
     if (onboardStep === 4 && scenario?.leadSource) advanceOnboard(5);
   }, [onboardStep, scenario?.leadSource]);
   useEffect(() => {
-    if (onboardStep === 5 && scenario?.channel) advanceOnboard('done');
+    if (onboardStep === 5 && scenario?.channel === 'leads') advanceOnboard(6);
+    // Якщо обрали не "Ліди" — крок про Лендінг нерелевантний, завершуємо тут.
+    else if (onboardStep === 5 && scenario?.channel) advanceOnboard('done');
   }, [onboardStep, scenario?.channel]);
+  useEffect(() => {
+    if (onboardStep === 6 && (scenario?.leadTypes || []).includes('landing')) advanceOnboard('done');
+  }, [onboardStep, scenario?.leadTypes]);
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
   const [collapsedAdSets, setCollapsedAdSets] = useState<Set<string>>(new Set());
@@ -2309,12 +2314,23 @@ const ScenarioBuilder: React.FC = () => {
                 targetSelector='[data-tour="add-campaign-btn"]'
                 radius={12}
                 lines={[
-                  'Рекламний кабінет обрано — тепер обери ціль кампанії. Від неї залежить, як саме буде запущена реклама.',
-                  'Натисни «Додати кампанію».',
+                  'Тепер оберіть ціль кампанії. Від неї залежить, як саме буде запущена реклама та який результат ви отримаєте.',
+                  'Для стоматологічної клініки потрібні ліди.',
+                  'Давайте побудуємо першу гіпотезу: клієнт хоче отримувати заявки для свого відділу продажів. Запустимо рекламу з ціллю «Ліди».',
                 ]}
                 hintNumber={9}
               />
             </div>
+
+            <SpotlightTip
+              show={onboardStep === 6}
+              targetSelector='[data-tour="landing-option-btn"]'
+              radius={12}
+              lines={[
+                'Оскільки у клієнта є сайт, спрямуємо трафік на нього з оптимізацією на отримання заявок. Натисніть «Лендінг».',
+              ]}
+              hintNumber={10}
+            />
 
             <SpotlightTip
               show={onboardStep === 3}
@@ -3403,7 +3419,7 @@ const ScenarioBuilder: React.FC = () => {
                     <div className="grid gap-2">
                       <p className="text-[11px] text-muted-foreground">Можна обрати декілька типів лідгену:</p>
                       {LEAD_TYPES.map(lt => (
-                        <button key={lt.value} onClick={() => toggleLeadType(lt.value)}
+                        <button key={lt.value} data-tour={lt.value === 'landing' ? 'landing-option-btn' : undefined} onClick={() => toggleLeadType(lt.value)}
                           className={`p-3 rounded-lg border text-left text-sm transition-all flex items-center gap-3 ${
                             (scenario.leadTypes || []).includes(lt.value)
                               ? 'border-primary bg-accent text-accent-foreground font-semibold'
