@@ -174,7 +174,7 @@ const Dashboard: React.FC = () => {
       decomposition: seededDecomp,
       projectPrice,
     });
-    toast({ title: 'Ads School', description: `Вітаю з новим проектом — ${lead.name}! Оплата за проєкт: $${projectPrice}.` });
+    toast({ title: 'Ads School', description: `Вітаю з новим проєктом — ${lead.name}!` });
     navigate(`/scenario/${s.id}`);
   };
 

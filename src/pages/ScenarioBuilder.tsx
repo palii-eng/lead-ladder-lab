@@ -1504,7 +1504,7 @@ const ScenarioBuilder: React.FC = () => {
           setActiveStep(null);
           toast({
             title: 'Ads School',
-            description: `Вітаю з новим проектом — ${brief.name}! Оплата за проєкт: $${projectPrice}.`,
+            description: `Вітаю з новим проєктом — ${brief.name}!`,
           });
         }}
       />
