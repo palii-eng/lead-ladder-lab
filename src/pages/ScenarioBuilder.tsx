@@ -607,8 +607,16 @@ const ScenarioBuilder: React.FC = () => {
     if (onboardStep === 9 && activeStep === 4) advanceOnboard(10);
   }, [onboardStep, activeStep]);
   useEffect(() => {
-    if (onboardStep === 10 && isStepCompleted(4)) advanceOnboard('done');
+    if (onboardStep === 10 && isStepCompleted(4)) advanceOnboard(11);
   }, [onboardStep, scenario]);
+  useEffect(() => {
+    // Крок 11 — підсвітка картки "Куди йдуть ліди" (КРОК 06). Щойно
+    // відкрита панель — переходимо до вибору KeepinCRM всередині неї.
+    if (onboardStep === 11 && activeStep === 5) advanceOnboard(12);
+  }, [onboardStep, activeStep]);
+  useEffect(() => {
+    if (onboardStep === 12 && (scenario?.leadDestinations || []).includes('KeepinCRM')) advanceOnboard('done');
+  }, [onboardStep, scenario?.leadDestinations]);
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
   const [collapsedAdSets, setCollapsedAdSets] = useState<Set<string>>(new Set());
@@ -2456,6 +2464,27 @@ const ScenarioBuilder: React.FC = () => {
             />
 
             <SpotlightTip
+              show={onboardStep === 11}
+              targetSelector='[data-step-index="5"]'
+              radius={16}
+              lines={[
+                'Далі нам треба не просто розуміти, як створити рекламну кампанію, але й налаштувати подальший рух лідів для бізнесу.',
+                'Клієнт писав у брифі, що в нього KeepinCRM. Давайте зважимо на це — оберіть відповідну CRM-систему.',
+              ]}
+              hintNumber={15}
+            />
+
+            <SpotlightTip
+              show={onboardStep === 12}
+              targetSelector='[data-tour="keepincrm-btn"]'
+              radius={10}
+              lines={[
+                'Оберіть KeepinCRM.',
+              ]}
+              hintNumber={16}
+            />
+
+            <SpotlightTip
               show={onboardStep === 3}
               targetSelector='[data-step-index="0"]'
               radius={16}
@@ -3770,7 +3799,7 @@ const ScenarioBuilder: React.FC = () => {
                   const selected = currentLeadDestinations.includes(d.name);
                   const isRu = 'ruProduct' in d && d.ruProduct;
                   return (
-                    <button key={d.name} onClick={() => toggleLeadDest(d.name)}
+                    <button key={d.name} data-tour={d.name === 'KeepinCRM' ? 'keepincrm-btn' : undefined} onClick={() => toggleLeadDest(d.name)}
                       className={`p-2.5 rounded-lg border text-left text-sm transition-all flex items-center gap-2.5 ${
                         isRu
                           ? (selected ? 'border-2' : 'border')
