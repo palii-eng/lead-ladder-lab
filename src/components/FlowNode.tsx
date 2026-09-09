@@ -28,6 +28,8 @@ interface FlowNodeProps {
   isLocked: boolean;
   subtitle?: string;
   onClick: () => void;
+  /** Якщо задано — на картці зʼявляється окрема кнопка "Пропустити" (крім locked/completed станів). */
+  onSkip?: () => void;
 }
 
 
@@ -56,6 +58,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({
   isLocked,
   subtitle,
   onClick,
+  onSkip,
 }) => {
   const Icon = ICONS[index] || Sparkles;
   const isRetentionStep = index === 8;
@@ -153,7 +156,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({
 
   return (
     <div className="flex items-start flex-shrink-0">
-      <div className="flex flex-col" style={{ width: '240px' }}>
+      <div className="flex flex-col relative" style={{ width: '240px' }}>
         {/* Step badge above */}
         <div className="flex items-center gap-2 mb-2 px-1 h-4">
           <span className={`font-mono text-[10px] tracking-widest uppercase ${
@@ -195,7 +198,6 @@ const FlowNode: React.FC<FlowNodeProps> = ({
           >
             <Icon className={`w-5 h-5 ${badgeIconColor}`} strokeWidth={2} />
           </span>
-
           {/* Title */}
           <h3
             className={`text-[15px] font-bold leading-tight pr-8 ${
@@ -249,6 +251,18 @@ const FlowNode: React.FC<FlowNodeProps> = ({
             </span>
           </div>
         </button>
+
+        {onSkip && (state === 'idle' || state === 'active') && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onSkip(); }}
+            className="absolute top-11 right-1 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 shadow-sm transition-colors"
+            title="Пропустити цей крок"
+          >
+            <SkipForward className="w-3 h-3" strokeWidth={2.5} />
+            Пропустити
+          </button>
+        )}
       </div>
 
       {/* ---- Connector ---- */}

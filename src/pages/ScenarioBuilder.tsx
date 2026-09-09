@@ -4678,6 +4678,20 @@ const ScenarioBuilder: React.FC = () => {
                               if (branchLeadType) setActiveLeadType(branchLeadType);
                               setActiveStep(activeStep === stepIdx && activeLeadType === branchLeadType ? null : stepIdx);
                             }}
+                            onSkip={stepIdx === 7 ? () => {
+                              const key = (stepIdx < 3 || !isBranching) ? String(stepIdx) : `${stepIdx}:${branchLeadType || activeLeadType}`;
+                              setSavedSteps(prev => {
+                                const next = new Set(prev);
+                                next.add(key);
+                                return next;
+                              });
+                              setSkippedSteps(prev => {
+                                const next = new Set(prev);
+                                next.add(key);
+                                update({ skippedSteps: Array.from(next) });
+                                return next;
+                              });
+                            } : undefined}
                           />
                         )}
                       </div>
