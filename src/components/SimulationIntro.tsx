@@ -7,7 +7,7 @@ import { CLIENT_PHOTOS, resolveClientPhoto } from '@/data/clientPhotos';
 
 type Gender = 'male' | 'female';
 type RedFlag = 'no_sales_team' | 'no_crm' | 'solo_owner' | 'scam';
-type GreyFlag = 'telegram_ads' | 'counterfeit' | 'crypto' | 'questionable_infobiz' | 'low_margin';
+type GreyFlag = 'telegram_ads' | 'counterfeit' | 'crypto' | 'questionable_infobiz' | 'low_margin' | 'geo_limited' | 'narrow_audience';
 type ClientTemplate = Omit<ClientBrief, 'photo' | 'task'> & {
   gender: Gender;
   role: string;
@@ -162,6 +162,7 @@ const LUCKY_CLIENTS: ClientTemplate[] = [
     ] },
   { name: 'Ірина Стельмах', gender: 'female', role: 'Візажист', niche: 'Весільний макіяж та зачіски',
     source: 'Weddywood',
+    greyFlags: ['low_margin', 'geo_limited', 'narrow_audience'],
     tasks: [
       'Вітаю! Візажист-стиліст, спеціалізуюсь на весільних образах, 6 років досвіду, є сертифікати від міжнародних брендів. Знайшла вас через профіль на Weddywood. Сезон весіль наближається, хочу забронювати щільний графік на травень-вересень заздалегідь. Бюджет 8-10к/міс. Є детальне портфоліо, відгуки наречених. ЦА — заручені жінки 22-35 років. Коли можемо обговорити співпрацю?',
     ] },
@@ -746,7 +747,7 @@ const CURATED_DAY1_NAMES = ['Андрій Коваленко', 'Катя Сер�
 // Day 2 — ще один куратований набір, теж прості ніші без B2B/SaaS чи
 // делікатних тем (психологія тощо), щоб і другий день лишався легким для
 // новачка.
-const CURATED_DAY2_NAMES = ['Олег Прокопенко', 'Христина Бойко', 'Денис Литвин', 'Артур Мельниченко'];
+const CURATED_DAY2_NAMES = ['Олег Прокопенко', 'Христина Бойко', 'Денис Литвин', 'Ірина Стельмах'];
 
 export const pickAvailableLeads = (n: number, day: number = 3): AvailableLead[] => {
   const seedBase = Math.floor(Math.random() * 1000);
