@@ -2283,9 +2283,9 @@ const ScenarioBuilder: React.FC = () => {
                         )}
                       </div>
 
-                      {scenario.channel && (c.audiences.length < 2 || c.audiences.some(a => c.creoList.filter(x => x.audienceId === a.id).length < 3)) && (
+                      {scenario.channel && (c.audiences.length < 1 || c.audiences.some(a => c.creoList.filter(x => x.audienceId === a.id).length < 2)) && (
                         <p className="text-[10px] text-warning px-1 pt-0.5">
-                          ⚠️ Для запуску потрібно мінімум 2 групи оголошень, і по 3 крео в кожній
+                          ⚠️ Для запуску потрібно мінімум 1 групу оголошень, і 2 крео в ній
                         </p>
                       )}
 
@@ -2465,8 +2465,8 @@ const ScenarioBuilder: React.FC = () => {
       const creoList = Array.isArray(rawCreo) ? rawCreo : (rawCreo?.format ? [rawCreo] : []);
       const rawAud = (scenario as any)?.audienceSettings?.[key];
       const audiences = Array.isArray(rawAud) ? rawAud : (rawAud && (rawAud.tips || rawAud.checks) ? [{ id: 'legacy' }] : []);
-      if (audiences.length < 2) return true;
-      return audiences.some((a: any) => creoList.filter((c: any) => c.audienceId === a.id).length < 3);
+      if (audiences.length < 1) return true;
+      return audiences.some((a: any) => creoList.filter((c: any) => c.audienceId === a.id).length < 2);
     }).map(key => (key === 'main' ? '' : (LEAD_TYPES.find(l => l.value === key)?.label || key)));
   };
 
@@ -2512,7 +2512,7 @@ const ScenarioBuilder: React.FC = () => {
     if (unready.length > 0) {
       toast({
         title: 'Рекламний кабінет ще не готовий',
-        description: `Перед запуском потрібно мінімум 2 аудиторії в кожній кампанії, і по 3 крео в кожній аудиторії${unready.some(Boolean) ? ` (бракує: ${unready.filter(Boolean).join(', ')})` : ''}.`,
+        description: `Перед запуском потрібно мінімум 1 аудиторію в кожній кампанії, і 2 крео в ній${unready.some(Boolean) ? ` (бракує: ${unready.filter(Boolean).join(', ')})` : ''}.`,
         variant: 'destructive',
       });
       return;
@@ -3107,7 +3107,7 @@ const ScenarioBuilder: React.FC = () => {
   };
 
   // Декомпозиція (крок 4) додатково вимагає, щоб у кожній кампанії Ads
-  // Manager вже було мінімум 2 групи оголошень і по 3 крео в кожній —
+  // Manager вже було мінімум 1 група оголошень і 2 крео в ній —
   // без цього рекламний акаунт не готовий до запуску, тож рахувати
   // декомпозицію ще зарано.
   const getAdsManagerCampaignKeys = (branchLeadType?: string): string[] => {
@@ -3126,8 +3126,8 @@ const ScenarioBuilder: React.FC = () => {
       const audiences: any[] = Array.isArray(rawAud)
         ? rawAud
         : (rawAud && (rawAud.tips || rawAud.checks) ? [{ id: 'legacy', name: 'Гіпотеза 1', mode: 'ai' }] : []);
-      if (audiences.length < 2) return false;
-      return audiences.every((a: any) => creoList.filter((x: any) => x.audienceId === a.id).length >= 3);
+      if (audiences.length < 1) return false;
+      return audiences.every((a: any) => creoList.filter((x: any) => x.audienceId === a.id).length >= 2);
     });
   };
 
@@ -4239,7 +4239,7 @@ const ScenarioBuilder: React.FC = () => {
                 </Button>
                 {getUnreadyCampaigns().length > 0 && (
                   <p className="text-xs text-warning text-center">
-                    ⚠️ Потрібно мінімум 2 аудиторії в кампанії, і по 3 крео в кожній
+                    ⚠️ Потрібно мінімум 1 аудиторія в кампанії, і 2 крео в ній
                   </p>
                 )}
                 {scenario.status === 'completed' && (
@@ -4540,7 +4540,7 @@ const ScenarioBuilder: React.FC = () => {
                               if (stepIdx === 4 && !isStepCompleted(4, branchLeadType) && !isAdsManagerMinMet(branchLeadType)) {
                                 toast({
                                   title: 'Виконайте мінімальну умову',
-                                  description: 'Створіть мінімум 2 групи оголошень і по 3 крео в кожній групі, у кожній кампанії',
+                                  description: 'Створіть мінімум 1 групу оголошень і 2 крео в ній, у кожній кампанії',
                                   variant: 'destructive',
                                 });
                                 return;
