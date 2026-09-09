@@ -599,8 +599,16 @@ const ScenarioBuilder: React.FC = () => {
     const key = activeLeadType || 'main';
     const rawCreo = (scenario as any)?.creoBriefs?.[key];
     const creoList = Array.isArray(rawCreo) ? rawCreo : (rawCreo?.format ? [rawCreo] : []);
-    if (creoList.length >= 2) advanceOnboard('done');
+    if (creoList.length >= 2) advanceOnboard(9);
   }, [onboardStep, scenario, activeLeadType]);
+  useEffect(() => {
+    // Крок 9 — підсвітка картки "Декомпозиція" (КРОК 05). Щойно відкрита
+    // панель — переходимо до кнопки AI-заповнення всередині неї.
+    if (onboardStep === 9 && activeStep === 4) advanceOnboard(10);
+  }, [onboardStep, activeStep]);
+  useEffect(() => {
+    if (onboardStep === 10 && isStepCompleted(4)) advanceOnboard('done');
+  }, [onboardStep, scenario]);
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
   const [collapsedAdSets, setCollapsedAdSets] = useState<Set<string>>(new Set());
@@ -2423,6 +2431,31 @@ const ScenarioBuilder: React.FC = () => {
             />
 
             <SpotlightTip
+              show={onboardStep === 9}
+              targetSelector='[data-step-index="4"]'
+              radius={16}
+              lines={[
+                'Супер, у нас вже є загальне розуміння, як це буде працювати.',
+                'Тепер давайте порахуємо цифри. Бізнес любить цифри.',
+                'Нам треба чітко розуміти, яка ціна ліда для нас є допустимою, а за якої ціни треба все вимикати.',
+                'Натисніть на блок «Декомпозиція».',
+              ]}
+              hintNumber={13}
+            />
+
+            <SpotlightTip
+              show={onboardStep === 10}
+              targetSelector='[data-tour="decomp-ai-fill-btn"]'
+              radius={999}
+              lines={[
+                'Зараз ти можеш попросити мене це зробити, але в майбутньому треба приділити особливу увагу цьому блоку.',
+                'Я відправлю відео на цю тему.',
+                'А поки натисни на кнопку «Попросити AI LeadОслава».',
+              ]}
+              hintNumber={14}
+            />
+
+            <SpotlightTip
               show={onboardStep === 3}
               targetSelector='[data-step-index="0"]'
               radius={16}
@@ -3647,7 +3680,7 @@ const ScenarioBuilder: React.FC = () => {
                 <h3 className="text-base font-bold text-foreground">
                   {isTikTokSource ? 'TIKTOK AD CALCULATOR' : 'META AD CALCULATOR'}
                 </h3>
-                <Button variant="secondary" size="sm" onClick={fillBenchmarks} disabled={fillBenchLoading} className="gap-1 text-xs">
+                <Button variant="secondary" size="sm" data-tour="decomp-ai-fill-btn" onClick={fillBenchmarks} disabled={fillBenchLoading} className="gap-1 text-xs">
                   {fillBenchLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <LeadOslavAvatar size={16} />}
                   {fillBenchLoading ? 'AI LeadОслав аналізує ринок…' : 'Попросити AI LeadОслава'}
                 </Button>
