@@ -12,6 +12,7 @@ import { UserMenu } from '@/components/UserMenu';
 import { GamificationSidebar } from '@/components/GamificationSidebar';
 import { LeadOslavTour, markLeadOslavTourSeen } from '@/components/LeadOslavTour';
 import { pickAvailableLeads, AvailableLead } from '@/components/SimulationIntro';
+import { daysSinceRegistration } from '@/lib/daysSinceRegistration';
 import { DailyVideoCard, DailyVideo } from '@/components/DailyVideoCard';
 import { estimateClientBudgetUsd } from '@/lib/budgetEstimate';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -48,7 +49,7 @@ const Dashboard: React.FC = () => {
   const scenarioToDelete = deleteId ? scenarios.find(s => s.id === deleteId) : null;
   const [reviewByName, setReviewByName] = useState<Record<string, ReviewStatus>>({});
   const [sendingId, setSendingId] = useState<string | null>(null);
-  const [availableLeads, setAvailableLeads] = useState<AvailableLead[]>(() => pickAvailableLeads(LEADS_FEED_SIZE));
+  const [availableLeads, setAvailableLeads] = useState<AvailableLead[]>(() => pickAvailableLeads(LEADS_FEED_SIZE, daysSinceRegistration(profile?.created_at)));
   const [takingLeadKey, setTakingLeadKey] = useState<string | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [activeLeadIdx, setActiveLeadIdx] = useState(0);
@@ -179,7 +180,7 @@ const Dashboard: React.FC = () => {
   };
 
   const refreshLeads = () => {
-    setAvailableLeads(pickAvailableLeads(LEADS_FEED_SIZE));
+    setAvailableLeads(pickAvailableLeads(LEADS_FEED_SIZE, daysSinceRegistration(profile?.created_at)));
     setActiveLeadIdx(0);
   };
 

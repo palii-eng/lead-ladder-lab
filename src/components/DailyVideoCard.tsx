@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Play } from 'lucide-react';
+import { daysSinceRegistration } from '@/lib/daysSinceRegistration';
 
 export interface DailyVideo {
   day: number; // 1 = перший день після реєстрації
@@ -15,15 +16,6 @@ interface DailyVideoCardProps {
   tourTag?: string;
 }
 
-// Скільки повних днів минуло з моменту реєстрації (день реєстрації = 1).
-const daysSinceRegistration = (registeredAt?: string): number => {
-  if (!registeredAt) return 1;
-  const start = new Date(registeredAt);
-  const now = new Date();
-  const diffMs = now.getTime() - start.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  return Math.max(1, diffDays + 1);
-};
 
 export const DailyVideoCard: React.FC<DailyVideoCardProps> = ({ label, videos, registeredAt, tourTag }) => {
   const [playing, setPlaying] = useState(false);

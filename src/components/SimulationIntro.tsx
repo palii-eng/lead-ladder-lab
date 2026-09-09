@@ -738,15 +738,31 @@ const photoKeyFor = (gender: Gender, seed: number) => {
 // a placeholder.
 export type AvailableLead = ClientBrief & { role?: string; photoKey: string; _difficulty: 'lucky' | 'suffer' };
 
-export const pickAvailableLeads = (n: number): AvailableLead[] => {
+// Day-1 leads are hand-picked instead of random: broadly understandable
+// niches (retail, local service, online course, hobby class) so a brand
+// new user isn't confused by an obscure business on their very first look
+// at the feed. From day 2 onward it's the usual random pull from the pool.
+const CURATED_DAY1_NAMES = ['Катя Сергієнко', 'Андрій Коваленко', 'Юлія Бондар', 'Олена Костенко'];
+
+export const pickAvailableLeads = (n: number, day: number = 2): AvailableLead[] => {
   const seedBase = Math.floor(Math.random() * 1000);
-  const tagged = [
-    ...LUCKY_CLIENTS.map(c => ({ c, d: 'lucky' as const })),
-    ...HARD_CLIENTS.map(c => ({ c, d: 'suffer' as const })),
-  ];
-  const shuffled = tagged
+  let tagged: { c: ClientTemplate; d: 'lucky' | 'suffer' }[];
+
+  if (day === 1) {
+    tagged = CURATED_DAY1_NAMES
+      .map(name => LUCKY_CLIENTS.find(c => c.name === name))
+      .filter((c): c is ClientTemplate => !!c)
+      .map(c => ({ c, d: 'lucky' as const }));
+  } else {
+    tagged = [
+      ...LUCKY_CLIENTS.map(c => ({ c, d: 'lucky' as const })),
+      ...HARD_CLIENTS.map(c => ({ c, d: 'suffer' as const })),
+    ];
+  }
+
+  const shuffled = (day === 1 ? tagged : tagged
     .map((x, i) => ({ ...x, k: Math.random() + i }))
-    .sort((a, z) => a.k - z.k)
+    .sort((a, z) => a.k - z.k))
     .slice(0, n)
     .map((x, i) => {
       const key = photoKeyFor(x.c.gender, seedBase + i * 7);
