@@ -748,12 +748,16 @@ const CURATED_DAY1_NAMES = ['Андрій Коваленко', 'Катя Сер�
 // новачка. Пул із 6 — на екрані завжди 4, випадково обрані з цього пулу
 // (порядок тут не критичний, на відміну від дня 1).
 const CURATED_DAY2_NAMES = ['Олег Прокопенко', 'Христина Бойко', 'Денис Литвин', 'Ірина Стельмах', 'Максим Оверко', 'Вікторія Ясинська'];
+// Day 3 — перший обережний крок у складність: одна ніша з легкими red
+// flags (Анна Коваль — соло-власниця без відділу продажів), решта досі
+// прості й нейтральні.
+const CURATED_DAY3_NAMES = ['Анна Коваль', 'Соломія Гуменюк', 'Аліна Захарчук', 'Владислав Пилипенко'];
 
-export const pickAvailableLeads = (n: number, day: number = 3): AvailableLead[] => {
+export const pickAvailableLeads = (n: number, day: number = 4): AvailableLead[] => {
   const seedBase = Math.floor(Math.random() * 1000);
   let tagged: { c: ClientTemplate; d: 'lucky' | 'suffer' }[];
 
-  const curatedNames = day === 1 ? CURATED_DAY1_NAMES : day === 2 ? CURATED_DAY2_NAMES : null;
+  const curatedNames = day === 1 ? CURATED_DAY1_NAMES : day === 2 ? CURATED_DAY2_NAMES : day === 3 ? CURATED_DAY3_NAMES : null;
   const isFixedOrder = day === 1; // тільки день 1 має закріплений порядок (стоматологія перша)
   if (curatedNames) {
     tagged = curatedNames
