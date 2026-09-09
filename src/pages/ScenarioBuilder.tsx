@@ -146,6 +146,7 @@ const GREY_FLAG_META: Record<string, { label: string; Icon: React.ComponentType<
   low_margin: { label: 'Низькомаржинальна ніша — складно окупити рекламу', Icon: TrendingDown },
   geo_limited: { label: 'Обмежене гео — вузька локальна аудиторія', Icon: MapPin },
   narrow_audience: { label: 'Можливі проблеми з пошуком аудиторії — вузька ЦА', Icon: Target },
+  offline_business: { label: 'Офлайн-бізнес — ризиковано через обмеження гео/аудиторії', Icon: MapPin },
 };
 
 const ClientFlagsPanel: React.FC<{ redFlags?: string[]; greyFlags?: string[] }> = ({ redFlags, greyFlags }) => {
