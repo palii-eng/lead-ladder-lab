@@ -4678,7 +4678,7 @@ const ScenarioBuilder: React.FC = () => {
                               if (branchLeadType) setActiveLeadType(branchLeadType);
                               setActiveStep(activeStep === stepIdx && activeLeadType === branchLeadType ? null : stepIdx);
                             }}
-                            onSkip={stepIdx === 7 ? () => {
+                            onSkip={(stepIdx === 7 || stepIdx === 8) ? () => {
                               const key = (stepIdx < 3 || !isBranching) ? String(stepIdx) : `${stepIdx}:${branchLeadType || activeLeadType}`;
                               setSavedSteps(prev => {
                                 const next = new Set(prev);
