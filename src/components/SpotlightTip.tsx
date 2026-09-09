@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { LeadOslavAvatar } from '@/components/LeadOslav';
@@ -26,6 +26,8 @@ interface SpotlightTipProps {
 
 export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector, lines, radius = 999, confirmLabel, onConfirm, hintNumber }) => {
   const [rect, setRect] = useState<DOMRect | null>(null);
+  const bubbleRef = useRef<HTMLDivElement>(null);
+  const [bubblePos, setBubblePos] = useState<{ top: number; left: number } | null>(null);
 
   useEffect(() => {
     if (!show) return;
@@ -58,6 +60,40 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
       clearTimeout(stopRetry);
     };
   }, [show, targetSelector]);
+
+  // Наївна початкова позиція — під ціллю. useLayoutEffect нижче міряє
+  // реальний розмір бульбашки й підправляє її, якщо вона вилазить за межі
+  // екрана (знизу — піднімає вище або ставить збоку від цілі; по боках —
+  // притискає в межі viewport).
+  useLayoutEffect(() => {
+    if (!rect) { setBubblePos(null); return; }
+    const margin = 12;
+    const el = bubbleRef.current;
+    const bw = el?.offsetWidth || 340;
+    const bh = el?.offsetHeight || 120;
+
+    let top = rect.bottom + 14;
+    let left = Math.max(margin, rect.left);
+
+    const overflowsBottom = top + bh > window.innerHeight - margin;
+    if (overflowsBottom) {
+      // Пробуємо збоку від цілі (справа, або зліва якщо справа не влазить),
+      // вертикально вирівняну по центру цілі й притиснуту в межі екрана.
+      const spaceRight = window.innerWidth - rect.right;
+      const spaceLeft = rect.left;
+      if (spaceRight >= bw + 20 || spaceRight >= spaceLeft) {
+        left = Math.min(rect.right + 14, window.innerWidth - bw - margin);
+      } else {
+        left = Math.max(margin, rect.left - bw - 14);
+      }
+      top = Math.min(Math.max(margin, rect.top), window.innerHeight - bh - margin);
+    }
+
+    left = Math.min(Math.max(margin, left), window.innerWidth - bw - margin);
+    top = Math.min(Math.max(margin, top), window.innerHeight - bh - margin);
+
+    setBubblePos(prev => (prev && prev.top === top && prev.left === left ? prev : { top, left }));
+  }, [rect, lines]);
 
   if (!show || !rect) return null;
 
@@ -93,8 +129,13 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
         }}
       />
       <div
+        ref={bubbleRef}
         className="fixed z-50"
-        style={{ top: rect.bottom + 14, left: Math.max(12, rect.left) }}
+        style={{
+          top: (bubblePos || { top: rect.bottom + 14, left: Math.max(12, rect.left) }).top,
+          left: (bubblePos || { top: rect.bottom + 14, left: Math.max(12, rect.left) }).left,
+          visibility: bubblePos ? 'visible' : 'hidden',
+        }}
       >
         <div className="flex gap-2.5 items-start bg-card border border-primary rounded-xl shadow-lg p-3 max-w-[340px]">
           <LeadOslavAvatar size={36} />
