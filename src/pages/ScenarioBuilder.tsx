@@ -615,8 +615,12 @@ const ScenarioBuilder: React.FC = () => {
     if (onboardStep === 11 && activeStep === 5) advanceOnboard(12);
   }, [onboardStep, activeStep]);
   useEffect(() => {
-    if (onboardStep === 12 && (scenario?.leadDestinations || []).includes('KeepinCRM')) advanceOnboard('done');
+    if (onboardStep === 12 && (scenario?.leadDestinations || []).includes('KeepinCRM')) advanceOnboard(13);
   }, [onboardStep, scenario?.leadDestinations]);
+  useEffect(() => {
+    // Крок 13 — підсвітка картки "Інтеграція" (КРОК 07).
+    if (onboardStep === 13 && activeStep === 6) advanceOnboard('done');
+  }, [onboardStep, activeStep]);
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
   const [collapsedAdSets, setCollapsedAdSets] = useState<Set<string>>(new Set());
@@ -2482,6 +2486,17 @@ const ScenarioBuilder: React.FC = () => {
                 'Оберіть KeepinCRM.',
               ]}
               hintNumber={16}
+            />
+
+            <SpotlightTip
+              show={onboardStep === 13}
+              targetSelector='[data-step-index="6"]'
+              radius={16}
+              lines={[
+                'Дані з сайту не потраплять магічним чином у CRM-систему. Для цього треба працювати з інтеграціями.',
+                'На курсах ADSchool ми ще про це поговоримо. Натисніть на цей блок!',
+              ]}
+              hintNumber={17}
             />
 
             <SpotlightTip
