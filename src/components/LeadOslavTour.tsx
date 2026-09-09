@@ -111,7 +111,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
     );
   }
 
-  if (step === 4) {
+  if (step === 4 && rect) {
     return (
       <>
         {/* Spotlight ring around the target button + dims the rest of the page */}
