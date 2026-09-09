@@ -63,27 +63,33 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
 
   return createPortal(
     <>
+      <style>{`
+        @keyframes spotlight-blink {
+          0%, 100% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.5), 0 0 0 4px hsl(var(--primary)), 0 0 24px 6px hsl(var(--primary) / 0.9); }
+          50% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.5), 0 0 0 4px hsl(var(--primary)), 0 0 4px 2px hsl(var(--primary) / 0.3); }
+        }
+      `}</style>
       <div
-        className="fixed z-40 pointer-events-none transition-all"
+        className="fixed z-40 pointer-events-none"
         style={{
-          top: rect.top - 5,
-          left: rect.left - 5,
-          width: rect.width + 10,
-          height: rect.height + 10,
+          top: rect.top - 6,
+          left: rect.left - 6,
+          width: rect.width + 12,
+          height: rect.height + 12,
           borderRadius: radius,
-          boxShadow: '0 0 0 9999px rgba(0,0,0,0.45), 0 0 0 3px hsl(var(--primary))',
+          animation: 'spotlight-blink 1.1s ease-in-out infinite',
         }}
       />
       <div
         className="fixed z-40 pointer-events-none animate-ping"
         style={{
-          top: rect.top - 5,
-          left: rect.left - 5,
-          width: rect.width + 10,
-          height: rect.height + 10,
+          top: rect.top - 6,
+          left: rect.left - 6,
+          width: rect.width + 12,
+          height: rect.height + 12,
           borderRadius: radius,
-          boxShadow: '0 0 0 2px hsl(var(--primary))',
-          opacity: 0.6,
+          boxShadow: '0 0 0 3px hsl(var(--primary))',
+          opacity: 0.7,
         }}
       />
       <div
