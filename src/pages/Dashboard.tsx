@@ -13,6 +13,7 @@ import { GamificationSidebar } from '@/components/GamificationSidebar';
 import { LeadOslavTour, markLeadOslavTourSeen } from '@/components/LeadOslavTour';
 import { pickAvailableLeads, AvailableLead } from '@/components/SimulationIntro';
 import { daysSinceRegistration } from '@/lib/daysSinceRegistration';
+import { truncateForPreview } from '@/lib/truncateForPreview';
 import { DailyVideoCard, DailyVideo } from '@/components/DailyVideoCard';
 import { estimateClientBudgetUsd } from '@/lib/budgetEstimate';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -288,7 +289,7 @@ const Dashboard: React.FC = () => {
                         <div className="text-[11px] text-muted-foreground truncate">{lead.niche || lead.role}</div>
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground line-clamp-6">{lead.task}</p>
+                    <p className="text-xs text-muted-foreground">{truncateForPreview(lead.task, 260)}</p>
                     <div className="flex items-center gap-2 mt-auto">
                       <Button
                         ref={createBtnRef}
