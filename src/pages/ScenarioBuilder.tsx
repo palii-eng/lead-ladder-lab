@@ -630,8 +630,13 @@ const ScenarioBuilder: React.FC = () => {
   }, [onboardStep, scenario]);
   useEffect(() => {
     // Крок 16 — підсвітка "Пропустити" на картці "Retention" (крок 8).
-    if (onboardStep === 16 && isStepCompleted(8)) advanceOnboard('done');
+    if (onboardStep === 16 && isStepCompleted(8)) advanceOnboard(17);
   }, [onboardStep, scenario]);
+  useEffect(() => {
+    // Крок 17 — підсвітка "Запустити проєкт". Завершується, щойно натиснуто
+    // (відкривається модалка запуску).
+    if (onboardStep === 17 && launchResultOpen) advanceOnboard('done');
+  }, [onboardStep, launchResultOpen]);
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
   const [collapsedAdSets, setCollapsedAdSets] = useState<Set<string>>(new Set());
@@ -2539,6 +2544,17 @@ const ScenarioBuilder: React.FC = () => {
                 'Аналогічна історія, наразі пропускаємо, повернемось згодом.',
               ]}
               hintNumber={20}
+            />
+
+            <SpotlightTip
+              show={onboardStep === 17}
+              targetSelector='[data-tour="launch-project-btn"]'
+              radius={12}
+              lines={[
+                'Ну що ж, рекламна гіпотеза готова, передача лідів у CRM теж, цифри по декомпозиції ми порахували. Час запускати проєкт!',
+                'Тисни «Запустити».',
+              ]}
+              hintNumber={21}
             />
 
             <SpotlightTip
@@ -4662,6 +4678,7 @@ const ScenarioBuilder: React.FC = () => {
                             <>
                               <Button
                                 disabled={!ready}
+                                data-tour="launch-project-btn"
                                 className={`w-full gap-2 font-bold ${ready ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-md' : 'bg-muted text-muted-foreground cursor-not-allowed shadow-none hover:bg-muted'}`}
                                 onClick={(e) => { e.stopPropagation(); if (ready) startLaunch(); }}
                               >
