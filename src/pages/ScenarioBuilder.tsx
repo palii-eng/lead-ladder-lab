@@ -570,11 +570,15 @@ const ScenarioBuilder: React.FC = () => {
   }, [onboardStep, filledBriefOpen]);
   useEffect(() => {
     // Крок 3 — підсвітка картки "Вибір ніші" (КРОК 01). Щойно її пройдено,
-    // переходимо до вибору цілі кампанії.
+    // переходимо до вибору рекламного кабінету.
     if (onboardStep === 3 && isStepCompleted(0)) advanceOnboard(4);
   }, [onboardStep, scenario]);
   useEffect(() => {
-    if (onboardStep === 4 && scenario?.channel) advanceOnboard('done');
+    // Крок 4 — підсвітка картки "Джерело трафіку" (КРОК 02, Meta/TikTok Ads).
+    if (onboardStep === 4 && scenario?.leadSource) advanceOnboard(5);
+  }, [onboardStep, scenario?.leadSource]);
+  useEffect(() => {
+    if (onboardStep === 5 && scenario?.channel) advanceOnboard('done');
   }, [onboardStep, scenario?.channel]);
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
@@ -2301,14 +2305,14 @@ const ScenarioBuilder: React.FC = () => {
                 <span className="text-[12px] font-bold">Додати кампанію</span>
               </button>
               <SpotlightTip
-                show={onboardStep === 4}
+                show={onboardStep === 5}
                 targetSelector='[data-tour="add-campaign-btn"]'
                 radius={12}
                 lines={[
-                  'Ніша обрана — тепер обери ціль кампанії. Від неї залежить, як саме буде запущена реклама.',
+                  'Рекламний кабінет обрано — тепер обери ціль кампанії. Від неї залежить, як саме буде запущена реклама.',
                   'Натисни «Додати кампанію».',
                 ]}
-                hintNumber={8}
+                hintNumber={9}
               />
             </div>
 
@@ -2321,6 +2325,18 @@ const ScenarioBuilder: React.FC = () => {
                 'У цьому випадку стоматологічна клініка надає послуги кінцевому споживачу, тому це B2C-проєкт. Оберіть відповідний тип бізнесу.',
               ]}
               hintNumber={7}
+            />
+
+            <SpotlightTip
+              show={onboardStep === 4}
+              targetSelector='[data-step-index="1"]'
+              radius={16}
+              lines={[
+                'Тепер потрібно обрати рекламний кабінет — Meta Ads чи TikTok Ads.',
+                'Рекомендуємо почати з Meta Ads: простіше стартувати новачку, ширші можливості таргетингу, і підходить під переважну більшість ніш.',
+                'Натисни на цю картку і обери Meta Ads.',
+              ]}
+              hintNumber={8}
             />
 
             {/* Footer summary */}
