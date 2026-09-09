@@ -741,15 +741,20 @@ export type AvailableLead = ClientBrief & { role?: string; photoKey: string; _di
 // Day-1 leads are hand-picked instead of random: broadly understandable
 // niches (retail, local service, online course, hobby class) so a brand
 // new user isn't confused by an obscure business on their very first look
-// at the feed. From day 2 onward it's the usual random pull from the pool.
-const CURATED_DAY1_NAMES = ['Катя Сергієнко', 'Андрій Коваленко', 'Юлія Бондар', 'Олена Костенко'];
+// at the feed. From day 3 onward it's the usual random pull from the pool.
+const CURATED_DAY1_NAMES = ['Андрій Коваленко', 'Катя Сергієнко', 'Юлія Бондар', 'Олена Костенко'];
+// Day 2 — ще один куратований набір, теж прості ніші без B2B/SaaS чи
+// делікатних тем (психологія тощо), щоб і другий день лишався легким для
+// новачка.
+const CURATED_DAY2_NAMES = ['Олег Прокопенко', 'Христина Бойко', 'Денис Литвин', 'Артур Мельниченко'];
 
-export const pickAvailableLeads = (n: number, day: number = 2): AvailableLead[] => {
+export const pickAvailableLeads = (n: number, day: number = 3): AvailableLead[] => {
   const seedBase = Math.floor(Math.random() * 1000);
   let tagged: { c: ClientTemplate; d: 'lucky' | 'suffer' }[];
 
-  if (day === 1) {
-    tagged = CURATED_DAY1_NAMES
+  const curatedNames = day === 1 ? CURATED_DAY1_NAMES : day === 2 ? CURATED_DAY2_NAMES : null;
+  if (curatedNames) {
+    tagged = curatedNames
       .map(name => LUCKY_CLIENTS.find(c => c.name === name))
       .filter((c): c is ClientTemplate => !!c)
       .map(c => ({ c, d: 'lucky' as const }));
@@ -760,7 +765,7 @@ export const pickAvailableLeads = (n: number, day: number = 2): AvailableLead[] 
     ];
   }
 
-  const shuffled = (day === 1 ? tagged : tagged
+  const shuffled = (curatedNames ? tagged : tagged
     .map((x, i) => ({ ...x, k: Math.random() + i }))
     .sort((a, z) => a.k - z.k))
     .slice(0, n)
