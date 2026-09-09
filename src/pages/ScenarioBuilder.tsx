@@ -3210,17 +3210,17 @@ const ScenarioBuilder: React.FC = () => {
             return (
               <div className="space-y-5">
                 <h3 className="text-base font-bold text-foreground">Оберіть нішу або тип бізнесу</h3>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-1.5">
                   {NICHE_CARDS.map(({ label, Icon }) => {
                     const active = selected === label;
                     return (
                       <button
                         key={label}
                         onClick={() => update({ niche: label })}
-                        className={`h-28 flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${active ? 'border-primary bg-primary/5' : 'border-border bg-secondary hover:border-primary/40'}`}
+                        className={`h-[72px] flex flex-col items-center justify-center gap-1 p-2 rounded-lg border-2 transition-all ${active ? 'border-primary bg-primary/5' : 'border-border bg-secondary hover:border-primary/40'}`}
                       >
-                        <Icon className={`w-6 h-6 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
-                        <span className={`text-xs font-semibold text-center ${active ? 'text-primary' : 'text-foreground'}`}>{label}</span>
+                        <Icon className={`w-4 h-4 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <span className={`text-[10px] leading-tight font-semibold text-center ${active ? 'text-primary' : 'text-foreground'}`}>{label}</span>
                       </button>
                     );
                   })}
