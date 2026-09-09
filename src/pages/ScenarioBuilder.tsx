@@ -579,12 +579,28 @@ const ScenarioBuilder: React.FC = () => {
   }, [onboardStep, scenario?.leadSource]);
   useEffect(() => {
     if (onboardStep === 5 && scenario?.channel === 'leads') advanceOnboard(6);
-    // Якщо обрали не "Ліди" — крок про Лендінг нерелевантний, завершуємо тут.
-    else if (onboardStep === 5 && scenario?.channel) advanceOnboard('done');
+    // Якщо обрали не "Ліди" — крок про Лендінг нерелевантний, одразу до групи оголошень.
+    else if (onboardStep === 5 && scenario?.channel) advanceOnboard(7);
   }, [onboardStep, scenario?.channel]);
   useEffect(() => {
-    if (onboardStep === 6 && (scenario?.leadTypes || []).includes('landing')) advanceOnboard('done');
+    if (onboardStep === 6 && (scenario?.leadTypes || []).includes('landing')) advanceOnboard(7);
   }, [onboardStep, scenario?.leadTypes]);
+  useEffect(() => {
+    // Крок 7 — підсвітка "Створити групу оголошень" (перша гіпотеза).
+    if (onboardStep !== 7) return;
+    const key = activeLeadType || 'main';
+    const rawAud = (scenario as any)?.audienceSettings?.[key];
+    const audiences = Array.isArray(rawAud) ? rawAud : (rawAud && (rawAud.tips || rawAud.checks) ? [{ id: 'legacy' }] : []);
+    if (audiences.length >= 1) advanceOnboard(8);
+  }, [onboardStep, scenario, activeLeadType]);
+  useEffect(() => {
+    // Крок 8 — підсвітка "+ Крео", мінімум 2 крео в групі.
+    if (onboardStep !== 8) return;
+    const key = activeLeadType || 'main';
+    const rawCreo = (scenario as any)?.creoBriefs?.[key];
+    const creoList = Array.isArray(rawCreo) ? rawCreo : (rawCreo?.format ? [rawCreo] : []);
+    if (creoList.length >= 2) advanceOnboard('done');
+  }, [onboardStep, scenario, activeLeadType]);
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
   const [collapsedAdSets, setCollapsedAdSets] = useState<Set<string>>(new Set());
@@ -2029,9 +2045,10 @@ const ScenarioBuilder: React.FC = () => {
       </div>
     );
 
-    const AddBtn: React.FC<{ label: string; onClick: () => void; subtle?: boolean }> = ({ label, onClick, subtle }) => (
+    const AddBtn: React.FC<{ label: string; onClick: () => void; subtle?: boolean; tourTag?: string }> = ({ label, onClick, subtle, tourTag }) => (
       <button
         type="button"
+        data-tour={tourTag}
         onClick={onClick}
         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all"
         style={
@@ -2209,7 +2226,7 @@ const ScenarioBuilder: React.FC = () => {
                               >
                                 <Trash2 className="w-3 h-3" />
                               </button>
-                              <AddBtn label="Крео" onClick={() => openCreoCreate(c.key, a.id)} />
+                              <AddBtn label="Крео" tourTag="create-creo-btn" onClick={() => openCreoCreate(c.key, a.id)} />
                             </div>
 
                             {isOpen && (
@@ -2268,7 +2285,7 @@ const ScenarioBuilder: React.FC = () => {
 
                       <div className="pt-0.5">
                         {scenario.channel ? (
-                          <AddBtn subtle label="Створити групу оголошень" onClick={() => openAudienceDialog(c.key, 'choose')} />
+                          <AddBtn subtle label="Створити групу оголошень" tourTag="create-audience-btn" onClick={() => openAudienceDialog(c.key, 'choose')} />
                         ) : (
                           <div className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-dashed border-warning/50 bg-warning/5">
                             <span className="text-[11px] font-semibold text-warning">⚠️ Спочатку оберіть ціль кампанії</span>
@@ -2380,6 +2397,29 @@ const ScenarioBuilder: React.FC = () => {
                 'Оскільки у клієнта є сайт, спрямуємо трафік на нього з оптимізацією на отримання заявок. Натисніть «Лендінг».',
               ]}
               hintNumber={10}
+            />
+
+            <SpotlightTip
+              show={onboardStep === 7}
+              targetSelector='[data-tour="create-audience-btn"]'
+              radius={12}
+              lines={[
+                'Тепер створимо першу групу оголошень — це і є гіпотеза: кому і з яким меседжем показуємо рекламу.',
+                'Натисни «Створити групу оголошень».',
+              ]}
+              hintNumber={11}
+            />
+
+            <SpotlightTip
+              show={onboardStep === 8}
+              targetSelector='[data-tour="create-creo-btn"]'
+              radius={999}
+              lines={[
+                'Далі потрібно додати мінімум 2 крео (варіанти оголошення) в цю групу.',
+                'Щоб пришвидшити процес — попроси мене написати ТЗ, я сам зроблю всю чорнову роботу: заголовок, підзаголовок, опис зображення. Тобі залишиться тільки перевірити й підправити.',
+                'Натисни «+ Крео».',
+              ]}
+              hintNumber={12}
             />
 
             <SpotlightTip
