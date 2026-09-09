@@ -622,8 +622,16 @@ const ScenarioBuilder: React.FC = () => {
     if (onboardStep === 13 && activeStep === 6) advanceOnboard(14);
   }, [onboardStep, activeStep]);
   useEffect(() => {
-    if (onboardStep === 14 && scenario?.integrationMethod === 'ApiX-Drive') advanceOnboard('done');
+    if (onboardStep === 14 && scenario?.integrationMethod === 'ApiX-Drive') advanceOnboard(15);
   }, [onboardStep, scenario?.integrationMethod]);
+  useEffect(() => {
+    // Крок 15 — підсвітка "Пропустити" на картці "Продажі" (крок 7).
+    if (onboardStep === 15 && isStepCompleted(7)) advanceOnboard(16);
+  }, [onboardStep, scenario]);
+  useEffect(() => {
+    // Крок 16 — підсвітка "Пропустити" на картці "Retention" (крок 8).
+    if (onboardStep === 16 && isStepCompleted(8)) advanceOnboard('done');
+  }, [onboardStep, scenario]);
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
   const [collapsedAdSets, setCollapsedAdSets] = useState<Set<string>>(new Set());
@@ -2510,6 +2518,27 @@ const ScenarioBuilder: React.FC = () => {
                 'А тепер обери інтеграцію через конектор Apix-Drive. Це дозволить передати дані напряму з сайту в потрібну нам CRM-систему.',
               ]}
               hintNumber={18}
+            />
+
+            <SpotlightTip
+              show={onboardStep === 15}
+              targetSelector='[data-step-index="7"] [title="Пропустити цей крок"]'
+              radius={999}
+              lines={[
+                'Далі в нас залишаються два модулі, які в навчанні ми можемо пропустити, адже на курсі будемо більш детально про це говорити.',
+                'Зараз натисніть «Пропустити».',
+              ]}
+              hintNumber={19}
+            />
+
+            <SpotlightTip
+              show={onboardStep === 16}
+              targetSelector='[data-step-index="8"] [title="Пропустити цей крок"]'
+              radius={999}
+              lines={[
+                'Аналогічна історія, наразі пропускаємо, повернемось згодом.',
+              ]}
+              hintNumber={20}
             />
 
             <SpotlightTip
