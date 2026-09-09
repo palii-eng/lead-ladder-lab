@@ -619,8 +619,11 @@ const ScenarioBuilder: React.FC = () => {
   }, [onboardStep, scenario?.leadDestinations]);
   useEffect(() => {
     // Крок 13 — підсвітка картки "Інтеграція" (КРОК 07).
-    if (onboardStep === 13 && activeStep === 6) advanceOnboard('done');
+    if (onboardStep === 13 && activeStep === 6) advanceOnboard(14);
   }, [onboardStep, activeStep]);
+  useEffect(() => {
+    if (onboardStep === 14 && scenario?.integrationMethod === 'ApiX-Drive') advanceOnboard('done');
+  }, [onboardStep, scenario?.integrationMethod]);
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
   const [collapsedAdSets, setCollapsedAdSets] = useState<Set<string>>(new Set());
@@ -2500,6 +2503,16 @@ const ScenarioBuilder: React.FC = () => {
             />
 
             <SpotlightTip
+              show={onboardStep === 14}
+              targetSelector='[data-tour="apix-drive-btn"]'
+              radius={12}
+              lines={[
+                'А тепер обери інтеграцію через конектор Apix-Drive. Це дозволить передати дані напряму з сайту в потрібну нам CRM-систему.',
+              ]}
+              hintNumber={18}
+            />
+
+            <SpotlightTip
               show={onboardStep === 3}
               targetSelector='[data-step-index="0"]'
               radius={16}
@@ -3875,7 +3888,7 @@ const ScenarioBuilder: React.FC = () => {
               )}
               <div className="grid gap-2">
                 {INTEGRATIONS.map(i => (
-                  <button key={i} onClick={() => {
+                  <button key={i} data-tour={i === 'ApiX-Drive' ? 'apix-drive-btn' : undefined} onClick={() => {
                     if (isBranching && activeLeadType) {
                       updateBranch({ integrationMethod: i });
                     } else {
