@@ -1716,6 +1716,47 @@ const ScenarioBuilder: React.FC = () => {
     </div>
   );
 
+  // Видалення цілі кампанії (разом з групами оголошень і крео, які до неї
+  // прив'язані) — повертає цю "гілку" в порожній стан "Спочатку оберіть
+  // ціль кампанії".
+  const handleDeleteCampaign = (key: string) => {
+    const isMulti = scenario?.channel === 'leads' && (scenario?.leadTypes?.length || 0) > 1;
+    if (!window.confirm(isMulti
+      ? 'Видалити цю ціль кампанії? Усі групи оголошень і крео в ній також будуть видалені.'
+      : 'Видалити ціль кампанії? Усі групи оголошень і крео також будуть видалені, і доведеться почати з вибору цілі заново.')) return;
+
+    const updates: any = {};
+    if (isMulti) {
+      updates.leadTypes = (scenario!.leadTypes || []).filter(lt => lt !== key);
+    } else {
+      updates.channel = '';
+      updates.awarenessType = '';
+      updates.trafficType = '';
+      updates.engagementType = '';
+      updates.salesType = '';
+      updates.leadTypes = [];
+    }
+    const nextCreoBriefs = { ...((scenario as any)?.creoBriefs || {}) };
+    delete nextCreoBriefs[key];
+    const nextAudienceSettings = { ...((scenario as any)?.audienceSettings || {}) };
+    delete nextAudienceSettings[key];
+    updates.creoBriefs = nextCreoBriefs;
+    updates.audienceSettings = nextAudienceSettings;
+    update(updates);
+
+    const staleKeys = ['1', '2', '3', `1:${key}`, `2:${key}`, `3:${key}`];
+    setSavedSteps(prev => {
+      const next = new Set(prev);
+      staleKeys.forEach(k => next.delete(k));
+      return next;
+    });
+    setSkippedSteps(prev => {
+      const next = new Set(prev);
+      staleKeys.forEach(k => next.delete(k));
+      return next;
+    });
+  };
+
   const toggleAdSet = (id: string, hasCreo: boolean) => {
     if (hasCreo) {
       // Groups with creo are open by default — toggling manages the
@@ -2090,6 +2131,15 @@ const ScenarioBuilder: React.FC = () => {
                       <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ background: 'hsl(220 14% 94%)', color: 'hsl(220 10% 40%)' }}>
                         {c.audiences.length} груп · {c.creoList.length} крео
                       </span>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleDeleteCampaign(c.key); }}
+                        className="shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        title="Видалити ціль кампанії"
+                        aria-label="Видалити ціль кампанії"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
 
 
