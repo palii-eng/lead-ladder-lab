@@ -116,6 +116,7 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
       `}</style>
       <div
         className="fixed z-40 pointer-events-none"
+        data-spotlight-ring={targetSelector}
         style={{
           top: rect.top - 6,
           left: rect.left - 6,

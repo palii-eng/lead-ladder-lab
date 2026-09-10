@@ -489,14 +489,24 @@ const DebugOnboardBadge: React.FC<{
 }> = ({ onboardStep, onboardActive, clientActions, filledBriefOpen, scenario }) => {
   const [step0Found, setStep0Found] = useState(false);
   const [step0Count, setStep0Count] = useState(0);
+  const [step0Rect, setStep0Rect] = useState<string>('—');
+  const [ringCount, setRingCount] = useState(0);
   useEffect(() => {
     const check = () => {
       const els = document.querySelectorAll('[data-step-index="0"]');
       setStep0Count(els.length);
-      setStep0Found(Array.from(els).some(el => {
+      const visible = Array.from(els).filter(el => {
         const r = el.getBoundingClientRect();
         return r.width > 0 && r.height > 0;
-      }));
+      });
+      setStep0Found(visible.length > 0);
+      if (visible.length > 0) {
+        const r = visible[0].getBoundingClientRect();
+        setStep0Rect(`t${Math.round(r.top)} l${Math.round(r.left)} w${Math.round(r.width)} h${Math.round(r.height)}`);
+      } else {
+        setStep0Rect('—');
+      }
+      setRingCount(document.querySelectorAll(`[data-spotlight-ring='[data-step-index="0"]']`).length);
     };
     check();
     const id = setInterval(check, 500);
@@ -507,10 +517,10 @@ const DebugOnboardBadge: React.FC<{
 
   return (
     <div
-      className="fixed bottom-2 left-2 z-[999] px-2.5 py-1.5 rounded-md text-[10px] font-mono bg-black/85 text-lime-300 pointer-events-none select-none whitespace-pre"
+      className="fixed bottom-2 left-2 z-[999] px-2.5 py-1.5 rounded-md text-[10px] font-mono bg-black/85 text-lime-300 pointer-events-none select-none whitespace-pre-wrap max-w-[95vw]"
       title="Діагностика онбордингу (видно тільки тестерам)"
     >
-      {`onboard: ${onboardStep}  active:${onboardActive ? 1 : 0}  brief:${clientActions.has('brief') ? 1 : 0}  payment:${clientActions.has('payment') ? 1 : 0}  briefOpen:${filledBriefOpen ? 1 : 0}  clientBrief:${scenario?.clientBrief ? 1 : 0}  flowGated:${flowGated ? 1 : 0}  step0InDOM:${step0Found ? 1 : 0} (${step0Count})  niche:${scenario?.niche ? '"' + scenario.niche + '"' : '—'}`}
+      {`onboard: ${onboardStep}  active:${onboardActive ? 1 : 0}  brief:${clientActions.has('brief') ? 1 : 0}  payment:${clientActions.has('payment') ? 1 : 0}  briefOpen:${filledBriefOpen ? 1 : 0}  clientBrief:${scenario?.clientBrief ? 1 : 0}  flowGated:${flowGated ? 1 : 0}  step0InDOM:${step0Found ? 1 : 0} (${step0Count})  rect:${step0Rect}  rings:${ringCount}  niche:${scenario?.niche ? '"' + scenario.niche + '"' : '—'}`}
     </div>
   );
 };
