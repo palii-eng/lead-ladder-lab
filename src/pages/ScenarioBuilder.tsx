@@ -34,8 +34,8 @@ import { useAuth } from '@/context/AuthContext';
 // dice roll: each week presents a metrics snapshot (sometimes with a
 // problem, sometimes calm), the marketer picks an action, and the outcome
 // depends on whether the action actually fixes the underlying issue.
-type LaunchProblemType = 'cpm_high' | 'ctr_low' | 'freq_high';
-type LaunchActionKey = 'continue' | 'change_creo' | 'new_audience' | 'restart_objective' | 'disable_audience';
+type LaunchProblemType = 'cpm_high' | 'ctr_low' | 'freq_high' | 'ad_rejected' | 'bad_lead_quality' | 'learning_reset' | 'client_unhappy' | 'budget_overspend';
+type LaunchActionKey = 'continue' | 'change_creo' | 'new_audience' | 'restart_objective' | 'disable_audience' | 'edit_resubmit' | 'qualify_leadform' | 'wait' | 'message_client' | 'adjust_budget';
 
 interface LaunchProblem {
   type: LaunchProblemType;
@@ -53,12 +53,19 @@ interface LaunchProblem {
   targetAudienceId?: string;
   targetAudienceName?: string;
   targetBranchLabel?: string;
+  /** ad_rejected — ad set shows a moderation-rejected badge instead of stats. */
+  rejected?: boolean;
 }
 
 const LAUNCH_PROBLEM_TEMPLATES: Omit<LaunchProblem, 'cplPct' | 'cpmPct'>[] = [
   { type: 'cpm_high', cpl: 'high', ctr: 'normal', cpm: 'high', freq: 'normal' },
   { type: 'ctr_low', cpl: 'high', ctr: 'low', cpm: 'normal', freq: 'normal' },
   { type: 'freq_high', cpl: 'high', ctr: 'normal', cpm: 'normal', freq: 'high' },
+  { type: 'ad_rejected', cpl: 'normal', ctr: 'normal', cpm: 'normal', freq: 'normal', rejected: true },
+  { type: 'bad_lead_quality', cpl: 'normal', ctr: 'normal', cpm: 'normal', freq: 'normal' },
+  { type: 'learning_reset', cpl: 'high', ctr: 'normal', cpm: 'high', freq: 'normal' },
+  { type: 'client_unhappy', cpl: 'normal', ctr: 'normal', cpm: 'normal', freq: 'normal' },
+  { type: 'budget_overspend', cpl: 'normal', ctr: 'normal', cpm: 'normal', freq: 'normal' },
 ];
 
 const randomInRange = (min: number, max: number) => Math.floor(min + Math.random() * (max - min + 1));
@@ -74,7 +81,7 @@ const buildLaunchProblem = (type: LaunchProblemType): LaunchProblem => {
   };
 };
 
-const LAUNCH_PROBLEM_TYPES: LaunchProblemType[] = ['cpm_high', 'ctr_low', 'freq_high'];
+const LAUNCH_PROBLEM_TYPES: LaunchProblemType[] = ['cpm_high', 'ctr_low', 'freq_high', 'ad_rejected', 'bad_lead_quality', 'learning_reset', 'client_unhappy', 'budget_overspend'];
 
 const launchHashSeed = (s: string): number => {
   let h = 2166136261;
@@ -89,12 +96,27 @@ const LAUNCH_ACTIONS: { key: LaunchActionKey; label: string }[] = [
   { key: 'restart_objective', label: 'Перезапустити на нову ціль' },
 ];
 
+// Контекстна дія, яка зʼявляється додатковою кнопкою тільки для свого типу
+// проблеми — щоб не захаращувати екран усіма 10 діями одразу щотижня.
+const CONTEXTUAL_ACTION_BY_PROBLEM: Partial<Record<LaunchProblemType, { key: LaunchActionKey; label: string }>> = {
+  ad_rejected: { key: 'edit_resubmit', label: 'Відредагувати та подати повторно' },
+  bad_lead_quality: { key: 'qualify_leadform', label: 'Додати кваліфікаційні питання в лідформу' },
+  learning_reset: { key: 'wait', label: 'Почекати кілька днів' },
+  client_unhappy: { key: 'message_client', label: 'Написати клієнту з поясненням цифр' },
+  budget_overspend: { key: 'adjust_budget', label: 'Скоригувати денний ліміт' },
+};
+
 // Which action(s) actually address each problem type. Disabling the exact
 // audience causing the problem is always a valid fix, regardless of type.
 const LAUNCH_CORRECT_FIX: Record<LaunchProblemType, LaunchActionKey[]> = {
   cpm_high: ['new_audience', 'disable_audience'],
   ctr_low: ['change_creo', 'disable_audience'],
   freq_high: ['change_creo', 'new_audience', 'disable_audience'],
+  ad_rejected: ['edit_resubmit', 'change_creo'],
+  bad_lead_quality: ['qualify_leadform'],
+  learning_reset: ['wait'],
+  client_unhappy: ['message_client'],
+  budget_overspend: ['adjust_budget', 'disable_audience'],
 };
 
 const LAUNCH_ACTION_SUCCESS_TEXT: Record<LaunchActionKey, string> = {
@@ -103,12 +125,29 @@ const LAUNCH_ACTION_SUCCESS_TEXT: Record<LaunchActionKey, string> = {
   new_audience: 'Ви створили нову аудиторію — CPM пішов униз, покази стали дешевшими.',
   restart_objective: 'Перезапуск кампанії на нову ціль допоміг — алгоритм знайшов кращу аудиторію.',
   disable_audience: 'Ви вимкнули проблемну аудиторію — решта кампанії одразу підтягнулась.',
+  edit_resubmit: 'Ви виправили оголошення і подали на повторну модерацію — цього разу пройшло, покази відновились.',
+  qualify_leadform: 'Ви додали кваліфікаційні питання в лідформу — заявок стало менше, зате всі цільові.',
+  wait: 'Ви дали алгоритму кілька днів на стабілізацію — навчальна фаза завершилась, метрики вирівнялись.',
+  message_client: 'Ви пояснили клієнту, що цифри в межах норми і показали динаміку — клієнт заспокоївся.',
+  adjust_budget: 'Ви скоригували денний ліміт — темп витрат вирівнявся під графік місяця.',
 };
 
 // What the client actually notices/reports (they only see their own lead
 // cost going up, and only for the specific campaign/audience it's coming
 // from — not the ad account's internal metrics).
 const launchClientLine = (p: LaunchProblem): string => {
+  switch (p.type) {
+    case 'ad_rejected':
+      return 'Дзвонив клієнт — каже, що не бачить оголошення в стрічці вже другий день. Перевірте, будь ласка, чи все на публікації.';
+    case 'bad_lead_quality':
+      return 'Ліди йдуть дешево і в потрібній кількості, але клієнт скаржиться: 8 з 10 — це школярі й просто зацікавлені, а не платоспроможні клієнти.';
+    case 'client_unhappy':
+      return 'Клієнт пише: "Чому так мало лідів? У конкурента реклама всюди!" — хоча всі цифри по кампанії в межах прогнозу.';
+    case 'budget_overspend':
+      return 'За перші 4 дні тижня вже витрачено 90% бюджету. Клієнт питає, чи продовжуємо в такому темпі, чи стримуємо витрати.';
+    default:
+      break;
+  }
   if (p.cpl !== 'high') return 'Ліди йдуть за прогнозом.';
   const where = p.targetBranchLabel || p.targetAudienceName;
   return where
@@ -1849,7 +1888,7 @@ const ScenarioBuilder: React.FC = () => {
         ? (scenario.leadTypes as string[])
         : ['main'];
 
-    type Row = { id: string; kind: 'aud'; label: string; sub?: string; creoCount: number; cpm: number; ctr: number; freq: number; age: string; geo: string; bad?: boolean };
+    type Row = { id: string; kind: 'aud'; label: string; sub?: string; creoCount: number; cpm: number; ctr: number; freq: number; age: string; geo: string; bad?: boolean; rejected?: boolean };
     const rows: Row[] = [];
 
     let adSetCounter = 0;
@@ -1892,6 +1931,7 @@ const ScenarioBuilder: React.FC = () => {
         if (problem.ctr === 'low') target.ctr = Number((target.ctr * 0.4).toFixed(2));
         if (problem.freq === 'high') target.freq = Number((2.6 + (target.freq % 1)).toFixed(1));
         target.bad = true;
+        if (problem.rejected) target.rejected = true;
       }
     }
 
@@ -1929,11 +1969,21 @@ const ScenarioBuilder: React.FC = () => {
                     </span>
                   </div>
                 </td>
-                <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.cpm === 'high' ? 'text-destructive font-semibold' : ''}`}>${r.cpm.toFixed(2)}</td>
-                <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.ctr === 'low' ? 'text-destructive font-semibold' : ''}`}>{r.ctr.toFixed(2)}%</td>
-                <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.freq === 'high' ? 'text-destructive font-semibold' : ''}`}>{r.freq.toFixed(1)}</td>
-                <td className="px-2 py-2 text-right text-muted-foreground">{r.age}</td>
-                <td className="px-3 py-2 text-right text-muted-foreground whitespace-nowrap">{r.geo}</td>
+                {r.rejected ? (
+                  <td colSpan={5} className="px-3 py-2 text-right">
+                    <span className="inline-flex items-center gap-1 text-destructive font-semibold text-[11px]">
+                      ⛔ Відхилено модерацією
+                    </span>
+                  </td>
+                ) : (
+                  <>
+                    <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.cpm === 'high' ? 'text-destructive font-semibold' : ''}`}>${r.cpm.toFixed(2)}</td>
+                    <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.ctr === 'low' ? 'text-destructive font-semibold' : ''}`}>{r.ctr.toFixed(2)}%</td>
+                    <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.freq === 'high' ? 'text-destructive font-semibold' : ''}`}>{r.freq.toFixed(1)}</td>
+                    <td className="px-2 py-2 text-right text-muted-foreground">{r.age}</td>
+                    <td className="px-3 py-2 text-right text-muted-foreground whitespace-nowrap">{r.geo}</td>
+                  </>
+                )}
               </tr>
             ))}
           </tbody>
@@ -6196,6 +6246,15 @@ const ScenarioBuilder: React.FC = () => {
                         </Button>
                       ))}
                     </div>
+                    {CONTEXTUAL_ACTION_BY_PROBLEM[launchProblem.type] && (
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start border-primary/40 text-primary hover:bg-primary/5 bg-card"
+                        onClick={() => handleLaunchAction(CONTEXTUAL_ACTION_BY_PROBLEM[launchProblem.type]!.key)}
+                      >
+                        {CONTEXTUAL_ACTION_BY_PROBLEM[launchProblem.type]!.label}
+                      </Button>
+                    )}
                     {getAllAdSets().length > 1 && launchProblem.targetAudienceName && (
                       <Button
                         variant="outline"
