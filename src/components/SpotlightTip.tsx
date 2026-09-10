@@ -34,7 +34,11 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
   useEffect(() => {
     if (!show) return;
     const update = () => {
-      const els = document.querySelectorAll(targetSelector);
+      const els = Array.from(document.querySelectorAll(targetSelector))
+        .filter(el => {
+          const r = el.getBoundingClientRect();
+          return r.width > 0 && r.height > 0;
+        });
       if (els.length === 0) { setRect(null); return; }
       let top = Infinity, left = Infinity, right = -Infinity, bottom = -Infinity;
       els.forEach(el => {
