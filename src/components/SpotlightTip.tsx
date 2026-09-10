@@ -72,21 +72,25 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
     const bw = el?.offsetWidth || 340;
     const bh = el?.offsetHeight || 120;
 
-    let top = rect.bottom + 14;
-    let left = Math.max(margin, rect.left);
+    const spaceRight = window.innerWidth - rect.right;
+    const spaceLeft = rect.left;
 
-    const overflowsBottom = top + bh > window.innerHeight - margin;
-    if (overflowsBottom) {
-      // Пробуємо збоку від цілі (справа, або зліва якщо справа не влазить),
-      // вертикально вирівняну по центру цілі й притиснуту в межі екрана.
-      const spaceRight = window.innerWidth - rect.right;
-      const spaceLeft = rect.left;
-      if (spaceRight >= bw + 20 || spaceRight >= spaceLeft) {
-        left = Math.min(rect.right + 14, window.innerWidth - bw - margin);
-      } else {
-        left = Math.max(margin, rect.left - bw - 14);
-      }
-      top = Math.min(Math.max(margin, rect.top), window.innerHeight - bh - margin);
+    let top: number;
+    let left: number;
+
+    if (spaceRight >= bw + 20) {
+      // Праворуч від цілі — типовий випадок, і те, що дає найбільше
+      // повітря знизу для довгих текстів.
+      left = rect.right + 14;
+      top = rect.top;
+    } else if (spaceLeft >= bw + 20) {
+      // Немає місця справа — пробуємо зліва.
+      left = rect.left - bw - 14;
+      top = rect.top;
+    } else {
+      // Обидва боки затісні (вузький екран) — падаємо під ціль, як було.
+      left = Math.max(margin, rect.left);
+      top = rect.bottom + 14;
     }
 
     left = Math.min(Math.max(margin, left), window.innerWidth - bw - margin);
