@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useScenarios, Scenario, DecompositionScenario, DecompositionSet, createDefaultDecompSet, createDefaultBranchData, BranchData, ClientBrief } from '@/context/ScenariosContext';
@@ -580,109 +580,22 @@ const ScenarioBuilder: React.FC = () => {
 
   const [viewCreoIdx, setViewCreoIdx] = useState<number | null>(null);
 
-  // Ланцюжок підказок AI LeadОслав для першого сценарію: 1 = "зібрати
-  // бриф", 2 = "ось твій бриф, шаблон для реальних проєктів" (поки
-  // відкритий SheetContent із заповненим брифом), 3 = "обрати ціль
-  // кампанії". Крок зберігається в localStorage — 0 = неактивний/завершений.
+  // Ланцюжок підказок AI LeadОслав для першого сценарію. На відміну від
+  // попередньої версії (лічильник кроку, який просувався ланцюжком
+  // useEffect-переходів і міг "загубити" перехід через таймінги подій),
+  // тепер поточний крок ОБЧИСЛЮЄТЬСЯ напряму з реального стану сценарію
+  // щорендеру — це виключає цілий клас багів "перехід не спрацював".
+  // (Сама формула — нижче, після isStepCompleted, від якої вона залежить.)
   const ONBOARD_KEY_PREFIX = 'leadoslav_funnel_onboard_step_';
-  const [onboardStep, setOnboardStep] = useState(0);
+  const [onboardActive, setOnboardActive] = useState(false);
   useEffect(() => {
     if (!user?.id) return;
     try {
       const raw = localStorage.getItem(`${ONBOARD_KEY_PREFIX}${user.id}`);
-      if (raw === null) setOnboardStep(1);
-      else if (raw !== 'done') setOnboardStep(Number(raw) || 0);
-    } catch { /* localStorage unavailable — skip onboarding chain */ }
+      setOnboardActive(raw !== 'done');
+    } catch { setOnboardActive(false); }
   }, [user?.id]);
-  const advanceOnboard = (next: number | 'done') => {
-    setOnboardStep(next === 'done' ? 0 : next);
-    if (!user?.id) return;
-    try { localStorage.setItem(`${ONBOARD_KEY_PREFIX}${user.id}`, String(next)); } catch { /* ignore */ }
-  };
-  useEffect(() => {
-    if (onboardStep === 1 && clientActions.has('brief')) advanceOnboard(2);
-  }, [onboardStep, clientActions]);
-  useEffect(() => {
-    // Крок 2 показується поки відкрита панель заповненого брифу. Щойно вона
-    // закривається — переходимо до вибору ніші майже одразу (невелика
-    // затримка, а не миттєво, про всяк випадок). Якщо панель ще ВІДКРИТА —
-    // все одно не чекаємо на подію закриття нескінченно: є запасний ліміт
-    // часу, щоб тур гарантовано рухався далі, навіть якщо onOpenChange з
-    // якоїсь причини не спрацює як очікується.
-    if (onboardStep !== 2) return;
-    const delay = filledBriefOpen ? 15000 : 500;
-    const t = setTimeout(() => advanceOnboard(3), delay);
-    return () => clearTimeout(t);
-  }, [onboardStep, filledBriefOpen]);
-  useEffect(() => {
-    // Крок 3 — підсвітка картки "Вибір ніші" (КРОК 01). Щойно її пройдено,
-    // переходимо до вибору рекламного кабінету.
-    if (onboardStep === 3 && isStepCompleted(0)) advanceOnboard(4);
-  }, [onboardStep, scenario]);
-  useEffect(() => {
-    // Крок 4 — підсвітка картки "Джерело трафіку" (КРОК 02, Meta/TikTok Ads).
-    if (onboardStep === 4 && scenario?.leadSource) advanceOnboard(5);
-  }, [onboardStep, scenario?.leadSource]);
-  useEffect(() => {
-    if (onboardStep === 5 && scenario?.channel === 'leads') advanceOnboard(6);
-    // Якщо обрали не "Ліди" — крок про Лендінг нерелевантний, одразу до групи оголошень.
-    else if (onboardStep === 5 && scenario?.channel) advanceOnboard(7);
-  }, [onboardStep, scenario?.channel]);
-  useEffect(() => {
-    if (onboardStep === 6 && (scenario?.leadTypes || []).includes('landing')) advanceOnboard(7);
-  }, [onboardStep, scenario?.leadTypes]);
-  useEffect(() => {
-    // Крок 7 — підсвітка "Створити групу оголошень" (перша гіпотеза).
-    if (onboardStep !== 7) return;
-    const key = activeLeadType || 'main';
-    const rawAud = (scenario as any)?.audienceSettings?.[key];
-    const audiences = Array.isArray(rawAud) ? rawAud : (rawAud && (rawAud.tips || rawAud.checks) ? [{ id: 'legacy' }] : []);
-    if (audiences.length >= 1) advanceOnboard(8);
-  }, [onboardStep, scenario, activeLeadType]);
-  useEffect(() => {
-    // Крок 8 — підсвітка "+ Крео", мінімум 2 крео в групі.
-    if (onboardStep !== 8) return;
-    const key = activeLeadType || 'main';
-    const rawCreo = (scenario as any)?.creoBriefs?.[key];
-    const creoList = Array.isArray(rawCreo) ? rawCreo : (rawCreo?.format ? [rawCreo] : []);
-    if (creoList.length >= 2) advanceOnboard(9);
-  }, [onboardStep, scenario, activeLeadType]);
-  useEffect(() => {
-    // Крок 9 — підсвітка картки "Декомпозиція" (КРОК 05). Щойно відкрита
-    // панель — переходимо до кнопки AI-заповнення всередині неї.
-    if (onboardStep === 9 && activeStep === 4) advanceOnboard(10);
-  }, [onboardStep, activeStep]);
-  useEffect(() => {
-    if (onboardStep === 10 && isStepCompleted(4)) advanceOnboard(11);
-  }, [onboardStep, scenario]);
-  useEffect(() => {
-    // Крок 11 — підсвітка картки "Куди йдуть ліди" (КРОК 06). Щойно
-    // відкрита панель — переходимо до вибору KeepinCRM всередині неї.
-    if (onboardStep === 11 && activeStep === 5) advanceOnboard(12);
-  }, [onboardStep, activeStep]);
-  useEffect(() => {
-    if (onboardStep === 12 && (scenario?.leadDestinations || []).includes('KeepinCRM')) advanceOnboard(13);
-  }, [onboardStep, scenario?.leadDestinations]);
-  useEffect(() => {
-    // Крок 13 — підсвітка картки "Інтеграція" (КРОК 07).
-    if (onboardStep === 13 && activeStep === 6) advanceOnboard(14);
-  }, [onboardStep, activeStep]);
-  useEffect(() => {
-    if (onboardStep === 14 && scenario?.integrationMethod === 'ApiX-Drive') advanceOnboard(15);
-  }, [onboardStep, scenario?.integrationMethod]);
-  useEffect(() => {
-    // Крок 15 — підсвітка "Пропустити" на картці "Продажі" (крок 7).
-    if (onboardStep === 15 && isStepCompleted(7)) advanceOnboard(16);
-  }, [onboardStep, scenario]);
-  useEffect(() => {
-    // Крок 16 — підсвітка "Пропустити" на картці "Retention" (крок 8).
-    if (onboardStep === 16 && isStepCompleted(8)) advanceOnboard(17);
-  }, [onboardStep, scenario]);
-  useEffect(() => {
-    // Крок 17 — підсвітка "Запустити проєкт". Завершується, щойно натиснуто
-    // (відкривається модалка запуску).
-    if (onboardStep === 17 && launchResultOpen) advanceOnboard('done');
-  }, [onboardStep, launchResultOpen]);
+
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
   const [collapsedAdSets, setCollapsedAdSets] = useState<Set<string>>(new Set());
@@ -3338,6 +3251,40 @@ const ScenarioBuilder: React.FC = () => {
     }
     return isStepCompleted(i - 1, branchLeadType);
   };
+
+  // Формула кроку онбордингу — див. коментар вище (isStepCompleted вже
+  // визначена на цьому місці файлу, тож можна безпечно її викликати
+  // синхронно всередині useMemo).
+  const onboardStep = useMemo((): number | 'done' => {
+    if (!onboardActive) return 0;
+    if (!clientActions.has('brief')) return 1;
+    if (filledBriefOpen) return 2;
+    if (!scenario?.niche) return 3;
+    if (!scenario?.leadSource) return 4;
+    if (!scenario?.channel) return 5;
+    if (scenario.channel === 'leads' && !(scenario.leadTypes || []).includes('landing')) return 6;
+    const key = activeLeadType || 'main';
+    const rawAud = (scenario as any)?.audienceSettings?.[key];
+    const audiences = Array.isArray(rawAud) ? rawAud : (rawAud && (rawAud.tips || rawAud.checks) ? [{ id: 'legacy' }] : []);
+    if (audiences.length < 1) return 7;
+    const rawCreo = (scenario as any)?.creoBriefs?.[key];
+    const creoList = Array.isArray(rawCreo) ? rawCreo : (rawCreo?.format ? [rawCreo] : []);
+    if (creoList.length < 2) return 8;
+    if (!isStepCompleted(4)) return activeStep === 4 ? 10 : 9;
+    if (!(scenario?.leadDestinations || []).includes('KeepinCRM')) return activeStep === 5 ? 12 : 11;
+    if (scenario?.integrationMethod !== 'ApiX-Drive') return activeStep === 6 ? 14 : 13;
+    if (!isStepCompleted(7)) return 15;
+    if (!isStepCompleted(8)) return 16;
+    if (!launchResultOpen) return 17;
+    return 'done';
+  }, [onboardActive, clientActions, filledBriefOpen, scenario, activeLeadType, activeStep, launchResultOpen]);
+
+  useEffect(() => {
+    if (onboardStep === 'done' && onboardActive && user?.id) {
+      setOnboardActive(false);
+      try { localStorage.setItem(`${ONBOARD_KEY_PREFIX}${user.id}`, 'done'); } catch { /* ignore */ }
+    }
+  }, [onboardStep, onboardActive, user?.id]);
 
   // Декомпозиція (крок 4) додатково вимагає, щоб у кожній кампанії Ads
   // Manager вже було мінімум 1 група оголошень і 2 крео в ній —
