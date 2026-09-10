@@ -2579,29 +2579,6 @@ const ScenarioBuilder: React.FC = () => {
               hintNumber={21}
             />
 
-            <SpotlightTip
-              show={onboardStep === 3}
-              targetSelector='[data-step-index="0"]'
-              radius={16}
-              lines={[
-                'Для ефективної роботи з кожним проєктом треба чітко розуміти, яку воронку будемо будувати для конкретного клієнта. Від цього залежить, які інструменти потрібно підібрати. Для інсташопу, інфобізнесу, e-commerce та інших напрямів воронки можуть відрізнятися.',
-                'У цьому випадку стоматологічна клініка надає послуги кінцевому споживачу, тому це B2C-проєкт. Оберіть відповідний тип бізнесу.',
-              ]}
-              hintNumber={7}
-            />
-
-            <SpotlightTip
-              show={onboardStep === 4}
-              targetSelector='[data-step-index="1"]'
-              radius={16}
-              lines={[
-                'Тепер потрібно обрати рекламний кабінет — Meta Ads чи TikTok Ads.',
-                'Рекомендуємо почати з Meta Ads: простіше стартувати новачку, ширші можливості таргетингу, і підходить під переважну більшість ніш.',
-                'Натисни на цю картку і обери Meta Ads.',
-              ]}
-              hintNumber={8}
-            />
-
             {/* Footer summary */}
             <div className="flex items-center justify-between px-4 py-2 border-t border-border/60 text-[10px] text-muted-foreground" style={{ background: 'hsl(220 20% 98%)' }}>
               <span>Структура акаунту: {campaigns.length} {campaigns.length === 1 ? 'кампанія' : 'кампаній'} · {totalAudiences} груп · {totalCreo} оголошень</span>
@@ -4527,6 +4504,33 @@ const ScenarioBuilder: React.FC = () => {
         <DebugOnboardBadge onboardStep={onboardStep} onboardActive={onboardActive} clientActions={clientActions} filledBriefOpen={filledBriefOpen} scenario={scenario} />,
         document.body
       )}
+      {/* Ці дві підказки живуть тут, а не всередині PrepWorksNode — той
+          монтується лише ПІСЛЯ того, як обрано джерело лідів (isStepCompleted(1)),
+          тобто вже після кроків, які ці підказки мають підсвічувати. Якби вони
+          лежали всередині PrepWorksNode, онбординг ніколи не міг би дійти до
+          "Вибір ніші"/"Джерело лідів" — компонент з підказкою просто ще не
+          існував би в DOM. */}
+      <SpotlightTip
+        show={onboardStep === 3}
+        targetSelector='[data-step-index="0"]'
+        radius={16}
+        lines={[
+          'Для ефективної роботи з кожним проєктом треба чітко розуміти, яку воронку будемо будувати для конкретного клієнта. Від цього залежить, які інструменти потрібно підібрати. Для інсташопу, інфобізнесу, e-commerce та інших напрямів воронки можуть відрізнятися.',
+          'У цьому випадку стоматологічна клініка надає послуги кінцевому споживачу, тому це B2C-проєкт. Оберіть відповідний тип бізнесу.',
+        ]}
+        hintNumber={7}
+      />
+      <SpotlightTip
+        show={onboardStep === 4}
+        targetSelector='[data-step-index="1"]'
+        radius={16}
+        lines={[
+          'Тепер потрібно обрати рекламний кабінет — Meta Ads чи TikTok Ads.',
+          'Рекомендуємо почати з Meta Ads: простіше стартувати новачку, ширші можливості таргетингу, і підходить під переважну більшість ніш.',
+          'Натисни на цю картку і обери Meta Ads.',
+        ]}
+        hintNumber={8}
+      />
       {/* Header */}
       <header className="border-b border-border bg-card flex-shrink-0 z-20">
         <div className="px-6 py-3 flex items-center gap-4">
