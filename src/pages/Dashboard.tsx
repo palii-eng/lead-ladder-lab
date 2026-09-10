@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useScenarios, ClientBrief, createDefaultDecompSet } from '@/context/ScenariosContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Trophy, Award, Inbox, GraduationCap, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -43,7 +43,23 @@ const TREND_VIDEOS: DailyVideo[] = [
 const Dashboard: React.FC = () => {
   const { scenarios, loading, addScenario, updateScenario, deleteScenario } = useScenarios();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, profile, isTester } = useAuth();
+
+  // Ручне скидання онбордингу LeadОслав через URL: додай ?resetOnboarding=1
+  // до адреси дашборду — прибирає обидва ключі localStorage (дашборд +
+  // ланцюжок у сценарії) без ручного лазіння в DevTools/інкогніто. Зручно,
+  // бо нумерація кроків міняється в процесі розробки й старі значення
+  // localStorage можуть "застрягнути" на неактуальному кроці.
+  useEffect(() => {
+    if (searchParams.get('resetOnboarding') !== '1' || !user?.id) return;
+    try {
+      localStorage.removeItem(`leadoslav_tour_seen_${user.id}`);
+      localStorage.removeItem(`leadoslav_funnel_onboard_step_${user.id}`);
+    } catch { /* localStorage unavailable */ }
+    navigate('/', { replace: true });
+    window.location.reload();
+  }, [searchParams, user?.id, navigate]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [gamificationCollapsed, setGamificationCollapsed] = useState(false);
   const createBtnRef = useRef<HTMLButtonElement>(null);
