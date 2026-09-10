@@ -115,7 +115,7 @@ const Auth: React.FC = () => {
   return (
     <div
       className="min-h-screen flex items-center justify-center p-6"
-      style={{ background: 'linear-gradient(160deg, #16130f 0%, #2a2420 55%, #3a3128 100%)' }}
+      style={{ background: 'linear-gradient(160deg, #1414e0 0%, #1a1aff 55%, #2323ff 100%)' }}
     >
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center gap-3 mb-8 text-center">
@@ -128,7 +128,7 @@ const Auth: React.FC = () => {
           </p>
         </div>
 
-        <div className="glass-card p-6 bg-card shadow-2xl" style={{ borderRadius: 20 }}>
+        <div className="glass-card p-6 bg-white shadow-2xl" style={{ borderRadius: 20 }}>
           <Tabs value={tab} onValueChange={(v) => setTab(v as 'signin' | 'signup')}>
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="signin">Вхід</TabsTrigger>

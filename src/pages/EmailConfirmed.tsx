@@ -17,7 +17,7 @@ const EmailConfirmed: React.FC = () => {
   return (
     <div
       className="min-h-screen flex items-center justify-center p-6"
-      style={{ background: 'linear-gradient(160deg, #16130f 0%, #2a2420 55%, #3a3128 100%)' }}
+      style={{ background: 'linear-gradient(160deg, #1414e0 0%, #1a1aff 55%, #2323ff 100%)' }}
     >
       <div className="flex flex-col items-center gap-4 text-center">
         <img src={adschoolLogo} alt="ADS School" className="h-16 w-auto mb-2" />

@@ -2435,13 +2435,22 @@ const ScenarioBuilder: React.FC = () => {
                 <span className="text-[12px] font-bold">Додати кампанію</span>
               </button>
               <SpotlightTip
-                show={onboardStep === 5}
+                show={onboardStep === 5 && activeStep !== 2}
                 targetSelector='[data-tour="add-campaign-btn"]'
                 radius={12}
                 lines={[
                   'Тепер оберіть ціль кампанії. Від неї залежить, як саме буде запущена реклама та який результат ви отримаєте.',
                   'Для стоматологічної клініки потрібні ліди.',
                   'Давайте побудуємо першу гіпотезу: клієнт хоче отримувати заявки для свого відділу продажів. Запустимо рекламу з ціллю «Ліди».',
+                ]}
+                hintNumber={9}
+              />
+              <SpotlightTip
+                show={onboardStep === 5 && activeStep === 2}
+                targetSelector='[data-tour="channel-leads-btn"]'
+                radius={12}
+                lines={[
+                  'Обери ціль «Ліди» зліва — саме вона підходить, щоб зібрати заявки для відділу продажів клієнта.',
                 ]}
                 hintNumber={9}
               />
@@ -3572,7 +3581,7 @@ const ScenarioBuilder: React.FC = () => {
                   <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Основна ціль</p>
                   <div className="grid gap-2">
                     {CAMPAIGN_GOALS.map(goal => (
-                      <button key={goal.value} onClick={() => update({ channel: goal.value })}
+                      <button key={goal.value} data-tour={goal.value === 'leads' ? 'channel-leads-btn' : undefined} onClick={() => update({ channel: goal.value })}
                         className={`p-3 rounded-lg border text-left text-sm transition-all flex items-center gap-3 ${
                           scenario.channel === goal.value
                             ? 'border-primary bg-accent text-accent-foreground font-semibold'
