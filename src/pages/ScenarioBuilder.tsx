@@ -475,6 +475,38 @@ const calcMetrics = (d: DecompositionScenario) => {
   };
 };
 
+// Тимчасовий діагностичний бейдж для розслідування, чому онбординг іноді
+// "не підсвічує" наступний крок — показує обчислений крок і реальний стан
+// пов'язаних прапорців, плюс чи справді ціль підсвітки є в DOM прямо зараз.
+// Окремий top-level компонент (не inline у ScenarioBuilder), щоб мати
+// власний ефект з опитуванням document.querySelector без ризику TDZ.
+const DebugOnboardBadge: React.FC<{
+  onboardStep: number | 'done';
+  onboardActive: boolean;
+  clientActions: Set<string>;
+  filledBriefOpen: boolean;
+  scenario: any;
+}> = ({ onboardStep, onboardActive, clientActions, filledBriefOpen, scenario }) => {
+  const [step0Found, setStep0Found] = useState(false);
+  useEffect(() => {
+    const check = () => setStep0Found(!!document.querySelector('[data-step-index="0"]'));
+    check();
+    const id = setInterval(check, 500);
+    return () => clearInterval(id);
+  }, []);
+
+  const flowGated = !!scenario?.clientBrief && !(clientActions.has('brief') && clientActions.has('payment'));
+
+  return (
+    <div
+      className="fixed bottom-2 left-2 z-[999] px-2.5 py-1.5 rounded-md text-[10px] font-mono bg-black/85 text-lime-300 pointer-events-none select-none whitespace-pre"
+      title="Діагностика онбордингу (видно тільки тестерам)"
+    >
+      {`onboard: ${onboardStep}  active:${onboardActive ? 1 : 0}  brief:${clientActions.has('brief') ? 1 : 0}  payment:${clientActions.has('payment') ? 1 : 0}  briefOpen:${filledBriefOpen ? 1 : 0}  clientBrief:${scenario?.clientBrief ? 1 : 0}  flowGated:${flowGated ? 1 : 0}  step0InDOM:${step0Found ? 1 : 0}  niche:${scenario?.niche ? '"' + scenario.niche + '"' : '—'}`}
+    </div>
+  );
+};
+
 const ScenarioBuilder: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -4474,12 +4506,7 @@ const ScenarioBuilder: React.FC = () => {
   return (
     <div className="h-screen flex flex-col bg-muted overflow-hidden">
       {isTester && createPortal(
-        <div
-          className="fixed bottom-2 left-2 z-[999] px-2.5 py-1.5 rounded-md text-[10px] font-mono bg-black/85 text-lime-300 pointer-events-none select-none whitespace-pre"
-          title="Діагностика онбордингу (видно тільки тестерам)"
-        >
-          {`onboard: ${onboardStep}  active:${onboardActive?1:0}  brief:${clientActions.has('brief')?1:0}  briefOpen:${filledBriefOpen?1:0}  niche:${scenario?.niche ? '"'+scenario.niche+'"' : '—'}`}
-        </div>,
+        <DebugOnboardBadge onboardStep={onboardStep} onboardActive={onboardActive} clientActions={clientActions} filledBriefOpen={filledBriefOpen} scenario={scenario} />,
         document.body
       )}
       {/* Header */}
