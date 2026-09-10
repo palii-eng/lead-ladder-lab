@@ -22,9 +22,11 @@ interface SpotlightTipProps {
   onConfirm?: () => void;
   /** Наскрізний номер кроку в онбордингу — показує "Підказка N з 15". */
   hintNumber?: number;
+  /** Якщо true — пробує стати збоку від цілі одразу, а не тільки коли не влазить знизу. За замовчуванням false (звичайна поведінка — знизу). */
+  preferSide?: boolean;
 }
 
-export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector, lines, radius = 999, confirmLabel, onConfirm, hintNumber }) => {
+export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector, lines, radius = 999, confirmLabel, onConfirm, hintNumber, preferSide }) => {
   const [rect, setRect] = useState<DOMRect | null>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const [bubblePos, setBubblePos] = useState<{ top: number; left: number } | null>(null);
@@ -72,32 +74,31 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
     const bw = el?.offsetWidth || 340;
     const bh = el?.offsetHeight || 120;
 
-    const spaceRight = window.innerWidth - rect.right;
-    const spaceLeft = rect.left;
+    let top = rect.bottom + 14;
+    let left = Math.max(margin, rect.left);
 
-    let top: number;
-    let left: number;
-
-    if (spaceRight >= bw + 20) {
-      // Праворуч від цілі — типовий випадок, і те, що дає найбільше
-      // повітря знизу для довгих текстів.
-      left = rect.right + 14;
-      top = rect.top;
-    } else if (spaceLeft >= bw + 20) {
-      // Немає місця справа — пробуємо зліва.
-      left = rect.left - bw - 14;
-      top = rect.top;
-    } else {
-      // Обидва боки затісні (вузький екран) — падаємо під ціль, як було.
-      left = Math.max(margin, rect.left);
-      top = rect.bottom + 14;
+    const overflowsBottom = top + bh > window.innerHeight - margin;
+    if (preferSide || overflowsBottom) {
+      // Пробуємо збоку від цілі (справа, або зліва якщо справа не влазить),
+      // вертикально вирівняну по верху цілі й притиснуту в межі екрана.
+      const spaceRight = window.innerWidth - rect.right;
+      const spaceLeft = rect.left;
+      if (spaceRight >= bw + 20 || spaceRight >= spaceLeft) {
+        left = Math.min(rect.right + 14, window.innerWidth - bw - margin);
+        top = rect.top;
+      } else if (spaceLeft >= bw + 20) {
+        left = Math.max(margin, rect.left - bw - 14);
+        top = rect.top;
+      } else if (overflowsBottom) {
+        top = Math.min(Math.max(margin, rect.top), window.innerHeight - bh - margin);
+      }
     }
 
     left = Math.min(Math.max(margin, left), window.innerWidth - bw - margin);
     top = Math.min(Math.max(margin, top), window.innerHeight - bh - margin);
 
     setBubblePos(prev => (prev && prev.top === top && prev.left === left ? prev : { top, left }));
-  }, [rect, lines]);
+  }, [rect, lines, preferSide]);
 
   if (!show || !rect) return null;
 

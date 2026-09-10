@@ -1804,6 +1804,7 @@ const ScenarioBuilder: React.FC = () => {
       <SpotlightTip
         show={onboardStep === 1}
         targetSelector='[data-tour="meet-brief-btn"]'
+        preferSide
         lines={[
           'Вітаю! У тебе є перший теплий лід, який готовий працювати з тобою. Спробуй побудувати всю воронку роботи.',
           'Спочатку проведи міт з клієнтом — натисни на цю кнопку.',
