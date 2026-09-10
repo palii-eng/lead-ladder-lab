@@ -602,10 +602,22 @@ const ScenarioBuilder: React.FC = () => {
   useEffect(() => {
     if (onboardStep === 1 && clientActions.has('brief')) advanceOnboard(2);
   }, [onboardStep, clientActions]);
+  const filledBriefWasOpened = useRef(false);
+  useEffect(() => {
+    if (filledBriefOpen) filledBriefWasOpened.current = true;
+  }, [filledBriefOpen]);
   useEffect(() => {
     // Крок 2 показується поки відкрита панель заповненого брифу — щойно
-    // користувач її закриває (прочитав), переходимо до вибору ніші.
-    if (onboardStep === 2 && !filledBriefOpen) advanceOnboard(3);
+    // користувач її закриває (прочитав), переходимо до вибору ніші. Але
+    // якщо ця панель так і не відкрилась (наприклад, clientActions виставились
+    // напряму через "recovery"-логіку для сценаріїв з існуючим прогресом,
+    // минаючи природний потік) — не застрягаємо тут назавжди: за секунду без
+    // жодного відкриття панелі просто йдемо далі.
+    if (onboardStep !== 2) return;
+    if (filledBriefOpen) return;
+    if (filledBriefWasOpened.current) { advanceOnboard(3); return; }
+    const t = setTimeout(() => advanceOnboard(3), 1000);
+    return () => clearTimeout(t);
   }, [onboardStep, filledBriefOpen]);
   useEffect(() => {
     // Крок 3 — підсвітка картки "Вибір ніші" (КРОК 01). Щойно її пройдено,
