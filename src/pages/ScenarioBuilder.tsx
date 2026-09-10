@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useScenarios, Scenario, DecompositionScenario, DecompositionSet, createDefaultDecompSet, createDefaultBranchData, BranchData, ClientBrief } from '@/context/ScenariosContext';
@@ -4472,13 +4473,14 @@ const ScenarioBuilder: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col bg-muted overflow-hidden">
-      {isTester && (
+      {isTester && createPortal(
         <div
           className="fixed bottom-2 left-2 z-[999] px-2.5 py-1.5 rounded-md text-[10px] font-mono bg-black/85 text-lime-300 pointer-events-none select-none whitespace-pre"
           title="Діагностика онбордингу (видно тільки тестерам)"
         >
           {`onboard: ${onboardStep}  active:${onboardActive?1:0}  brief:${clientActions.has('brief')?1:0}  briefOpen:${filledBriefOpen?1:0}  niche:${scenario?.niche ? '"'+scenario.niche+'"' : '—'}`}
-        </div>
+        </div>,
+        document.body
       )}
       {/* Header */}
       <header className="border-b border-border bg-card flex-shrink-0 z-20">
