@@ -185,7 +185,7 @@ const Dashboard: React.FC = () => {
     seededDecomp.bad.budget = clientBudget;
     seededDecomp.realistic.budget = clientBudget;
     seededDecomp.positive.budget = clientBudget;
-    const projectPrice = Math.floor(Math.random() * (500 - 300 + 1)) + 300;
+    const projectPrice = Math.round((Math.random() * (500 - 300) + 300) / 50) * 50;
     updateScenario(s.id, {
       difficulty: lead._difficulty,
       clientBrief: brief as ClientBrief,

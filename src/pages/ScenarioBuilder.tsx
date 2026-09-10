@@ -1518,7 +1518,7 @@ const ScenarioBuilder: React.FC = () => {
           const isDefaultName = /^Сценарій #\d+$/.test(scenario.name);
           const shortTitle = brief.name && brief.niche ? `${brief.name} — ${brief.niche}` : (brief.niche || brief.name);
           const clientBudget = estimateClientBudgetUsd(brief.task);
-          const projectPrice = Math.floor(Math.random() * (500 - 300 + 1)) + 300;
+          const projectPrice = Math.round((Math.random() * (500 - 300) + 300) / 50) * 50;
           const seededDecomp = createDefaultDecompSet();
           seededDecomp.bad.budget = clientBudget;
           seededDecomp.realistic.budget = clientBudget;
