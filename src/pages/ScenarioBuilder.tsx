@@ -4472,6 +4472,14 @@ const ScenarioBuilder: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col bg-muted overflow-hidden">
+      {isTester && (
+        <div
+          className="fixed bottom-2 left-2 z-[999] px-2.5 py-1.5 rounded-md text-[10px] font-mono bg-black/85 text-lime-300 pointer-events-none select-none whitespace-pre"
+          title="Діагностика онбордингу (видно тільки тестерам)"
+        >
+          {`onboard: ${onboardStep}  active:${onboardActive?1:0}  brief:${clientActions.has('brief')?1:0}  briefOpen:${filledBriefOpen?1:0}  niche:${scenario?.niche ? '"'+scenario.niche+'"' : '—'}`}
+        </div>
+      )}
       {/* Header */}
       <header className="border-b border-border bg-card flex-shrink-0 z-20">
         <div className="px-6 py-3 flex items-center gap-4">
