@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useScenarios, ClientBrief, createDefaultDecompSet } from '@/context/ScenariosContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Trophy, Award, Inbox, GraduationCap, PlayCircle } from 'lucide-react';
@@ -67,6 +67,18 @@ const Dashboard: React.FC = () => {
   const [reviewByName, setReviewByName] = useState<Record<string, ReviewStatus>>({});
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [availableLeads, setAvailableLeads] = useState<AvailableLead[]>(() => pickAvailableLeads(LEADS_FEED_SIZE, daysSinceRegistration(profile?.created_at)));
+
+  // Ліди, яких уже взяли в роботу (є серед scenarios), не повинні лишатись у
+  // фіді "Опрацювання вхідних лідів" — інакше при поверненні на дашборд той
+  // самий (для куратованих днів — фіксований) лід продовжує там висіти.
+  const takenLeadNames = useMemo(
+    () => new Set(scenarios.map(s => s.clientBrief?.name).filter(Boolean)),
+    [scenarios]
+  );
+  const visibleLeads = useMemo(
+    () => availableLeads.filter(l => !takenLeadNames.has(l.name)),
+    [availableLeads, takenLeadNames]
+  );
   const [takingLeadKey, setTakingLeadKey] = useState<string | null>(null);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [activeLeadIdx, setActiveLeadIdx] = useState(0);
@@ -276,7 +288,7 @@ const Dashboard: React.FC = () => {
               </span>
               <h2 className="text-sm font-bold text-primary uppercase tracking-wide">Опрацювання вхідних лідів</h2>
               <span className="text-[11px] font-semibold text-muted-foreground bg-primary/10 px-1.5 py-0.5 rounded-full">
-                {availableLeads.length}
+                {visibleLeads.length}
               </span>
             </div>
             <span className="text-xs font-semibold text-muted-foreground">Кожен день — нові уроки</span>
@@ -285,9 +297,10 @@ const Dashboard: React.FC = () => {
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="relative" data-tour="leads-card">
               {(() => {
-                const lead = availableLeads[activeLeadIdx];
+                const safeIdx = visibleLeads.length > 0 ? activeLeadIdx % visibleLeads.length : 0;
+                const lead = visibleLeads[safeIdx];
                 if (!lead) return null;
-                const leadKey = `${lead.name}-${activeLeadIdx}`;
+                const leadKey = `${lead.name}-${safeIdx}`;
                 const isTaking = takingLeadKey === leadKey;
                 return (
                   <div
@@ -316,12 +329,12 @@ const Dashboard: React.FC = () => {
                       >
                         {isTaking ? 'Беремо в роботу…' : (<><Plus className="w-3.5 h-3.5" /> Взяти в роботу</>)}
                       </Button>
-                      {availableLeads.length > 1 && (
+                      {visibleLeads.length > 1 && (
                         <Button
                           size="sm"
                           variant="outline"
                           disabled={!!takingLeadKey}
-                          onClick={() => setActiveLeadIdx(v => (v + 1) % availableLeads.length)}
+                          onClick={() => setActiveLeadIdx(v => (v + 1) % visibleLeads.length)}
                           className="h-8 text-xs font-semibold"
                           title="Наступний лід"
                         >
@@ -329,18 +342,18 @@ const Dashboard: React.FC = () => {
                         </Button>
                       )}
                     </div>
-                    {availableLeads.length > 1 && (
+                    {visibleLeads.length > 1 && (
                       <div className="flex items-center justify-center gap-1.5 -mb-1">
-                        {availableLeads.map((_, i) => (
+                        {visibleLeads.map((_, i) => (
                           <button
                             key={i}
                             type="button"
                             onClick={() => setActiveLeadIdx(i)}
                             className="rounded-full transition-all"
                             style={{
-                              width: i === activeLeadIdx ? 16 : 6,
+                              width: i === safeIdx ? 16 : 6,
                               height: 6,
-                              background: i === activeLeadIdx ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.25)',
+                              background: i === safeIdx ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.25)',
                             }}
                             title={`Лід ${i + 1}`}
                           />
