@@ -602,21 +602,16 @@ const ScenarioBuilder: React.FC = () => {
   useEffect(() => {
     if (onboardStep === 1 && clientActions.has('brief')) advanceOnboard(2);
   }, [onboardStep, clientActions]);
-  const filledBriefWasOpened = useRef(false);
   useEffect(() => {
-    if (filledBriefOpen) filledBriefWasOpened.current = true;
-  }, [filledBriefOpen]);
-  useEffect(() => {
-    // Крок 2 показується поки відкрита панель заповненого брифу — щойно
-    // користувач її закриває (прочитав), переходимо до вибору ніші. Але
-    // якщо ця панель так і не відкрилась (наприклад, clientActions виставились
-    // напряму через "recovery"-логіку для сценаріїв з існуючим прогресом,
-    // минаючи природний потік) — не застрягаємо тут назавжди: за секунду без
-    // жодного відкриття панелі просто йдемо далі.
+    // Крок 2 показується поки відкрита панель заповненого брифу. Щойно вона
+    // закривається — переходимо до вибору ніші майже одразу (невелика
+    // затримка, а не миттєво, про всяк випадок). Якщо панель ще ВІДКРИТА —
+    // все одно не чекаємо на подію закриття нескінченно: є запасний ліміт
+    // часу, щоб тур гарантовано рухався далі, навіть якщо onOpenChange з
+    // якоїсь причини не спрацює як очікується.
     if (onboardStep !== 2) return;
-    if (filledBriefOpen) return;
-    if (filledBriefWasOpened.current) { advanceOnboard(3); return; }
-    const t = setTimeout(() => advanceOnboard(3), 1000);
+    const delay = filledBriefOpen ? 15000 : 500;
+    const t = setTimeout(() => advanceOnboard(3), delay);
     return () => clearTimeout(t);
   }, [onboardStep, filledBriefOpen]);
   useEffect(() => {
