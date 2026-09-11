@@ -2487,7 +2487,7 @@ const ScenarioBuilder: React.FC = () => {
             />
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 7 && activeStep !== 2}
+              show={onboardStep === 7 && activeStep !== 2 && !audienceOpen}
               targetSelector='[data-tour="create-audience-btn"]'
               radius={12}
               lines={[
@@ -2496,16 +2496,36 @@ const ScenarioBuilder: React.FC = () => {
               ]}
               hintNumber={11}
             />
+            <SpotlightTip
+              onSkipAll={skipOnboarding}
+              show={onboardStep === 7 && audienceOpen}
+              targetSelector='[data-tour="save-audience-btn"]'
+              radius={12}
+              lines={[
+                'Заповни назву гіпотези (і, за бажанням, попроси мене заповнити опис) та натисни «Зберегти».',
+              ]}
+              hintNumber={11}
+            />
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 8}
+              show={onboardStep === 8 && !creoOpen}
               targetSelector='[data-tour="create-creo-btn"]'
               radius={999}
               lines={[
                 'Далі потрібно додати мінімум 2 крео (варіанти оголошення) в цю групу.',
                 'Щоб пришвидшити процес — попроси мене написати ТЗ, я сам зроблю всю чорнову роботу: заголовок, підзаголовок, опис зображення. Тобі залишиться тільки перевірити й підправити.',
                 'Натисни «+ Крео».',
+              ]}
+              hintNumber={12}
+            />
+            <SpotlightTip
+              onSkipAll={skipOnboarding}
+              show={onboardStep === 8 && creoOpen && !!creoFormat}
+              targetSelector='[data-tour="save-creo-btn"]'
+              radius={12}
+              lines={[
+                'Заповни поля ТЗ (або попроси мене заповнити) і натисни «Зберегти адсет».',
               ]}
               hintNumber={12}
             />
@@ -5731,6 +5751,7 @@ const ScenarioBuilder: React.FC = () => {
                           setAudienceDescription('');
                           setEditingAudienceIdx(null);
                         }}
+                        data-tour="save-audience-btn"
                         className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
                       >
                         <Check className="w-4 h-4 mr-2" /> {editingAudienceIdx !== null ? 'Оновити' : 'Зберегти'}
@@ -5738,6 +5759,7 @@ const ScenarioBuilder: React.FC = () => {
                     )}
                     {audienceView === 'ai' && (
                       <Button
+                        data-tour="save-audience-btn"
                         disabled={!audienceName.trim() || !audienceTipsText.trim()}
                         onClick={() => {
                           const isEditing = editingAudienceIdx !== null;
@@ -6135,6 +6157,7 @@ const ScenarioBuilder: React.FC = () => {
               <Button variant="outline" onClick={() => setCreoOpen(false)}>Закрити</Button>
               {creoFormat && (
                 <Button
+                  data-tour="save-creo-btn"
                   onClick={() => {
                     const key = activeLeadType || 'main';
                     const current = (scenario as any)?.creoBriefs || {};
