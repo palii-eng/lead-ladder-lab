@@ -3350,18 +3350,35 @@ const ScenarioBuilder: React.FC = () => {
     if (!scenario?.leadSource) return 4;
     if (!scenario?.channel) return 5;
     if (scenario.channel === 'leads' && !(scenario.leadTypes || []).includes('landing')) return 6;
-    const key = activeLeadType || 'main';
-    const rawAud = (scenario as any)?.audienceSettings?.[key];
-    const audiences = Array.isArray(rawAud) ? rawAud : (rawAud && (rawAud.tips || rawAud.checks) ? [{ id: 'legacy' }] : []);
-    if (audiences.length < 1) return 7;
-    const rawCreo = (scenario as any)?.creoBriefs?.[key];
-    const creoList = Array.isArray(rawCreo) ? rawCreo : (rawCreo?.format ? [rawCreo] : []);
+    // Перевіряємо по ВСІХ реальних ключах кампаній (як getAdsManagerCampaignKeys/
+    // isAdsManagerMinMet нижче), а не лише по activeLeadType — той відображає
+    // фокус UI (яку панель/діалог востаннє відкривали) і не завжди встигає
+    // синхронізуватись із реальним ключем кампанії (тут — 'landing'), через що
+    // онбординг міг "не бачити" вже створену й повністю заповнену групу.
+    const campaignKeys = (scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0)
+      ? scenario.leadTypes!
+      : [activeLeadType || 'main'];
+    const parseAudiences = (k: string): any[] => {
+      const rawAud = (scenario as any)?.audienceSettings?.[k];
+      return Array.isArray(rawAud) ? rawAud : (rawAud && (rawAud.tips || rawAud.checks) ? [{ id: 'legacy' }] : []);
+    };
+    const parseCreo = (k: string): any[] => {
+      const rawCreo = (scenario as any)?.creoBriefs?.[k];
+      return Array.isArray(rawCreo) ? rawCreo : (rawCreo?.format ? [rawCreo] : []);
+    };
+    if (!campaignKeys.some(k => parseAudiences(k).length >= 1)) return 7;
     // Мало просто "2+ крео на кампанію загалом" — реальний гейт (isAdsManagerMinMet,
     // перевіряється при кліку на "Декомпозиція") вимагає 2+ крео В КОЖНІЙ групі
-    // аудиторій. Якщо перевіряти тут м'якше, онбординг пускає далі до того, як
-    // ця умова справді виконана — клік на "Декомпозиція" тоді впирається в тост
-    // "Виконайте мінімальну умову" замість реального переходу.
-    if (audiences.some((a: any) => creoList.filter((x: any) => x.audienceId === a.id).length < 2)) return 8;
+    // аудиторій у КОЖНІЙ кампанії. Якщо перевіряти тут м'якше, онбординг пускає
+    // далі до того, як ця умова справді виконана — клік на "Декомпозиція" тоді
+    // впирається в тост "Виконайте мінімальну умову" замість реального переходу.
+    const allCampaignsReady = campaignKeys.every(k => {
+      const auds = parseAudiences(k);
+      if (auds.length < 1) return false;
+      const creo = parseCreo(k);
+      return auds.every((a: any) => creo.filter((x: any) => x.audienceId === a.id).length >= 2);
+    });
+    if (!allCampaignsReady) return 8;
     if (!isStepCompleted(4)) return activeStep === 4 ? 10 : 9;
     if (!(scenario?.leadDestinations || []).includes('KeepinCRM')) return activeStep === 5 ? 12 : 11;
     if (scenario?.integrationMethod !== 'ApiX-Drive') return activeStep === 6 ? 14 : 13;
