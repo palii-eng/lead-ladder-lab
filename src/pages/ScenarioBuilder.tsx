@@ -646,6 +646,11 @@ const ScenarioBuilder: React.FC = () => {
       setOnboardActive(raw !== 'done');
     } catch { setOnboardActive(false); }
   }, [user?.id]);
+  const skipOnboarding = () => {
+    setOnboardActive(false);
+    if (!user?.id) return;
+    try { localStorage.setItem(`${ONBOARD_KEY_PREFIX}${user.id}`, 'done'); } catch { /* ignore */ }
+  };
 
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);
   const [expandedAdSets, setExpandedAdSets] = useState<Set<string>>(new Set());
@@ -4540,6 +4545,18 @@ const ScenarioBuilder: React.FC = () => {
         ]}
         hintNumber={8}
       />
+      {onboardActive && createPortal(
+        <button
+          type="button"
+          onClick={skipOnboarding}
+          className="fixed bottom-4 right-4 z-50 flex items-center gap-1.5 px-3 py-2 rounded-full bg-card border border-border text-muted-foreground text-xs font-semibold shadow-lg hover:text-foreground hover:border-primary/40 transition-colors"
+          title="Пропустити навчання"
+        >
+          <SkipForward className="w-3.5 h-3.5" />
+          Пропустити навчання
+        </button>,
+        document.body
+      )}
       {/* Header */}
       <header className="border-b border-border bg-card flex-shrink-0 z-20">
         <div className="px-6 py-3 flex items-center gap-4">
