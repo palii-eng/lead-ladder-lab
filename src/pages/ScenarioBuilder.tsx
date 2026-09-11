@@ -1660,11 +1660,10 @@ const ScenarioBuilder: React.FC = () => {
                 {b.niche}
               </p>
             )}
-            <p className="text-xs text-foreground leading-relaxed line-clamp-4 whitespace-pre-wrap">
+            <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
               {b.task}
             </p>
-            <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-border/60">
-              <span className="text-[10px] text-primary font-semibold">Читати повністю →</span>
+            <div className="flex items-center justify-end mt-2 pt-1.5 border-t border-border/60">
               <span className="text-[9px] text-muted-foreground">щойно</span>
             </div>
           </div>
