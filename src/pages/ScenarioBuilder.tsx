@@ -1989,7 +1989,12 @@ const ScenarioBuilder: React.FC = () => {
     const platformPrepLabel = isTikTok ? 'ПІДГОТОВКА · TIKTOK ADS MANAGER' : 'ПІДГОТОВКА · META ADS MANAGER';
 
     const isMulti = !!campaignKeys && campaignKeys.length > 0;
-    const keys: string[] = isMulti ? campaignKeys! : [branchKey || activeLeadType || 'main'];
+    // Без цієї умови тут завжди зʼявлялась "фантомна" кампанія #1 з невибраною
+    // ціллю (fallback-ключ 'main') одразу як тільки монтується PrepWorksNode —
+    // тобто ще ДО того, як користувач хоч раз натиснув "Додати кампанію" чи
+    // обрав ціль. isMulti-гілка тут не постраждає: campaignKeys передається
+    // лише коли scenario.channel вже 'leads', тобто ціль уже обрана.
+    const keys: string[] = isMulti ? campaignKeys! : (scenario.channel ? [branchKey || activeLeadType || 'main'] : []);
 
     // Build per-campaign data
     type CampaignData = {
