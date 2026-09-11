@@ -3343,6 +3343,45 @@ const ScenarioBuilder: React.FC = () => {
     }
   }, [onboardStep, onboardActive, user?.id]);
 
+  // Автопанорамування канваса під активну підказку онбордингу — картки
+  // (кампанії, кнопка "Додати кампанію" тощо) можуть виявитись за межами
+  // видимої області, якщо користувач раніше двигав/масштабував канвас, і
+  // тоді підсвітка виїжджає за правий край екрана. SpotlightTip уже вішає
+  // на свій ring div атрибут data-spotlight-ring — знаходимо його й,
+  // якщо він не повністю в межах canvasWrapperRef, підтягуємо канвас так,
+  // щоб ціль опинилась по центру. Кілька спроб з затримкою — бульбашка/
+  // панель ще можуть доанімовуватись у момент зміни кроку.
+  useEffect(() => {
+    if (!onboardActive || typeof onboardStep !== 'number') return;
+    let cancelled = false;
+    let attempts = 0;
+    const tryCenter = () => {
+      if (cancelled) return;
+      const wrapper = canvasWrapperRef.current;
+      const ring = document.querySelector('[data-spotlight-ring]');
+      if (wrapper && ring) {
+        const wrapRect = wrapper.getBoundingClientRect();
+        const targetRect = ring.getBoundingClientRect();
+        const margin = 24;
+        const fits =
+          targetRect.left >= wrapRect.left + margin &&
+          targetRect.right <= wrapRect.right - margin &&
+          targetRect.top >= wrapRect.top + margin &&
+          targetRect.bottom <= wrapRect.bottom - margin;
+        if (!fits) {
+          const dx = (wrapRect.left + wrapRect.width / 2) - (targetRect.left + targetRect.width / 2);
+          const dy = (wrapRect.top + wrapRect.height / 2) - (targetRect.top + targetRect.height / 2);
+          setCanvasOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+        }
+        return;
+      }
+      attempts += 1;
+      if (attempts < 8) setTimeout(tryCenter, 150);
+    };
+    const t = setTimeout(tryCenter, 200);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [onboardStep, activeStep, onboardActive]);
+
   // Декомпозиція (крок 4) додатково вимагає, щоб у кожній кампанії Ads
   // Manager вже було мінімум 1 група оголошень і 2 крео в ній —
   // без цього рекламний акаунт не готовий до запуску, тож рахувати
@@ -4589,18 +4628,6 @@ const ScenarioBuilder: React.FC = () => {
         ]}
         hintNumber={8}
       />
-      {onboardActive && createPortal(
-        <button
-          type="button"
-          onClick={skipOnboarding}
-          className="fixed bottom-4 right-4 z-50 flex items-center gap-1.5 px-3 py-2 rounded-full bg-card border border-border text-muted-foreground text-xs font-semibold shadow-lg hover:text-foreground hover:border-primary/40 transition-colors"
-          title="Пропустити навчання"
-        >
-          <SkipForward className="w-3.5 h-3.5" />
-          Пропустити навчання
-        </button>,
-        document.body
-      )}
       {/* Header */}
       <header className="border-b border-border bg-card flex-shrink-0 z-20">
         <div className="px-6 py-3 flex items-center gap-4">
