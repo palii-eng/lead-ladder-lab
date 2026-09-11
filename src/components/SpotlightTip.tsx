@@ -91,7 +91,7 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
     const bh = el?.offsetHeight || 120;
 
     let top = rect.bottom + 14;
-    let left = Math.max(margin, rect.left);
+    let left = Math.max(margin, rect.left - 40);
 
     const overflowsBottom = top + bh > window.innerHeight - margin;
     if (preferSide || overflowsBottom) {
@@ -170,6 +170,12 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
           top: (bubblePos || { top: rect.bottom + 14, left: Math.max(12, rect.left) }).top,
           left: (bubblePos || { top: rect.bottom + 14, left: Math.max(12, rect.left) }).left,
           visibility: bubblePos ? 'visible' : 'hidden',
+          // Ціль (кнопка/панель під нею) може ще "осідати" перші секунди після
+          // показу — SpotlightTip перевимірює позицію кілька разів (див. вище).
+          // Без плавного переходу кожне уточнення на пару пікселів виглядало як
+          // сіпання/друкування бульбашки; з transition це читається як один
+          // спокійний рух до фінального місця.
+          transition: 'top 0.2s ease-out, left 0.2s ease-out',
         }}
       >
         <div className="flex gap-2.5 items-start bg-card border border-primary rounded-xl shadow-lg p-3 max-w-[340px]">
