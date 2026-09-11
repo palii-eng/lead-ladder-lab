@@ -4891,14 +4891,20 @@ const ScenarioBuilder: React.FC = () => {
                             : [];
                           return (
                             <>
-                              <Button
-                                disabled={!ready}
-                                data-tour="launch-project-btn"
-                                className={`w-full gap-2 font-bold ${ready ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-md' : 'bg-muted text-muted-foreground cursor-not-allowed shadow-none hover:bg-muted'}`}
-                                onClick={(e) => { e.stopPropagation(); if (ready) startLaunch(); }}
-                              >
-                                🚀 Запустити проект
-                              </Button>
+                              {isLaunched ? (
+                                <div className="w-full gap-2 font-bold flex items-center justify-center rounded-md px-4 py-2 bg-success/10 text-success border border-success/30">
+                                  ✅ Проект запущений — оплата отримана
+                                </div>
+                              ) : (
+                                <Button
+                                  disabled={!ready}
+                                  data-tour="launch-project-btn"
+                                  className={`w-full gap-2 font-bold ${ready ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-md' : 'bg-muted text-muted-foreground cursor-not-allowed shadow-none hover:bg-muted'}`}
+                                  onClick={(e) => { e.stopPropagation(); if (ready) startLaunch(); }}
+                                >
+                                  🚀 Запустити проект
+                                </Button>
+                              )}
                               {!ready && missing.length > 0 && (
                                 <p className="text-[10px] text-muted-foreground text-center mt-1.5 px-1 leading-tight max-w-[220px]">
                                   Завершіть {missing.length > 1 ? 'ланцюжки' : 'ланцюжок'} «{missing.join('», «')}», щоб запустити проект
