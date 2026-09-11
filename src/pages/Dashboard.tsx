@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useScenarios, ClientBrief, createDefaultDecompSet } from '@/context/ScenariosContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Trophy, Award, Inbox, GraduationCap, PlayCircle } from 'lucide-react';
+import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Trophy, Award, Inbox, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,11 +23,6 @@ import { toast } from '@/hooks/use-toast';
 type ReviewStatus = 'pending' | 'in_review' | 'approved' | 'rejected';
 
 const LEADS_FEED_SIZE = 4;
-
-// Загальний відео-туторіал по сервісу (кнопка вгорі справа + перший крок
-// туру AI LeadОслав). Порожній рядок — просто заглушка "скоро зʼявиться",
-// поки не буде готового відео; вписати YouTube ID сюди, коли буде готове.
-const TUTORIAL_VIDEO_ID = '';
 
 // "Відео дня" — щоденний контент, новий кожен день з моменту реєстрації.
 // Поки заповнений лише перший день; коли зʼявляться відео на наступні дні —
@@ -82,7 +76,6 @@ const Dashboard: React.FC = () => {
     [availableLeads, takenLeadNames]
   );
   const [takingLeadKey, setTakingLeadKey] = useState<string | null>(null);
-  const [tutorialOpen, setTutorialOpen] = useState(false);
   const [activeLeadIdx, setActiveLeadIdx] = useState(0);
 
   const loadReviews = async () => {
@@ -229,39 +222,10 @@ const Dashboard: React.FC = () => {
             <span className="text-sm font-bold text-foreground">Навчальний простір AdSchool</span>
           </div>
           <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => setTutorialOpen(true)}
-              className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
-            >
-              <PlayCircle className="w-4 h-4" /> Відео-туторіал
-            </button>
             <UserMenu />
           </div>
         </div>
       </header>
-
-      <Dialog open={tutorialOpen} onOpenChange={setTutorialOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Відео-туторіал по сервісу</DialogTitle>
-          </DialogHeader>
-          {TUTORIAL_VIDEO_ID ? (
-            <div className="rounded-xl overflow-hidden bg-black aspect-video">
-              <iframe
-                src={`https://www.youtube.com/embed/${TUTORIAL_VIDEO_ID}`}
-                title="Відео-туторіал по сервісу"
-                className="w-full h-full"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground py-10 text-center">Відео скоро зʼявиться тут.</p>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Content */}
       <main className="container mx-auto px-6 py-8">
