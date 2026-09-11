@@ -4543,6 +4543,7 @@ const ScenarioBuilder: React.FC = () => {
         onSkipAll={skipOnboarding}
         show={onboardStep === 3}
         targetSelector='[data-step-index="0"]'
+        preferSide
         radius={16}
         lines={[
           'Для ефективної роботи з кожним проєктом треба чітко розуміти, яку воронку будемо будувати для конкретного клієнта. Від цього залежить, які інструменти потрібно підібрати. Для інсташопу, інфобізнесу, e-commerce та інших напрямів воронки можуть відрізнятися.',
@@ -4554,6 +4555,7 @@ const ScenarioBuilder: React.FC = () => {
         onSkipAll={skipOnboarding}
         show={onboardStep === 4}
         targetSelector='[data-step-index="1"]'
+        preferSide
         radius={16}
         lines={[
           'Тепер потрібно обрати рекламний кабінет — Meta Ads чи TikTok Ads.',
