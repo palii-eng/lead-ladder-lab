@@ -80,7 +80,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
               onClick={skipTour}
               className="text-[11px] font-medium text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
             >
-              Пропустити навчання
+              Закрити навчання
             </button>
           </DialogFooter>
         </DialogContent>
@@ -179,7 +179,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
                 onClick={skipTour}
                 className="mt-2.5 text-[10px] font-medium text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
               >
-                Пропустити навчання
+                Закрити навчання
               </button>
             </div>
           </div>

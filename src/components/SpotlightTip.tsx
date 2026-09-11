@@ -26,7 +26,7 @@ interface SpotlightTipProps {
   preferSide?: boolean;
   /** Який бік пробувати першим, коли preferSide (чи переповнення знизу) увімкнене. За замовчуванням 'right'. */
   sidePosition?: 'left' | 'right';
-  /** Якщо задано — в бульбашці зʼявляється кнопка "Пропустити навчання", яка одразу завершує весь тур. */
+  /** Якщо задано — в бульбашці зʼявляється кнопка "Закрити навчання", яка одразу завершує весь тур. */
   onSkipAll?: () => void;
 }
 
@@ -203,7 +203,7 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
                     onClick={onSkipAll}
                     className="text-[10px] font-medium text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors shrink-0"
                   >
-                    Пропустити навчання
+                    Закрити навчання
                   </button>
                 )}
               </div>
@@ -214,7 +214,7 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
                   onClick={onSkipAll}
                   className="text-[10px] font-medium text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
                 >
-                  Пропустити навчання
+                  Закрити навчання
                 </button>
               </div>
             )}
