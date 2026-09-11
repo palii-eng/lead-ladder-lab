@@ -3535,6 +3535,7 @@ const ScenarioBuilder: React.FC = () => {
                     return (
                       <button
                         key={label}
+                        data-tour={label === 'Послуги B2C' ? 'niche-b2c-btn' : undefined}
                         onClick={() => update({ niche: label })}
                         className={`h-[72px] flex flex-col items-center justify-center gap-1 p-2 rounded-lg border-2 transition-all ${active ? 'border-primary bg-primary/5' : 'border-border bg-secondary hover:border-primary/40'}`}
                       >
@@ -4541,13 +4542,24 @@ const ScenarioBuilder: React.FC = () => {
           існував би в DOM. */}
       <SpotlightTip
         onSkipAll={skipOnboarding}
-        show={onboardStep === 3}
+        show={onboardStep === 3 && activeStep !== 0}
         targetSelector='[data-step-index="0"]'
         preferSide
         sidePosition="left"
         radius={16}
         lines={[
           'Для ефективної роботи з кожним проєктом треба чітко розуміти, яку воронку будемо будувати для конкретного клієнта. Від цього залежить, які інструменти потрібно підібрати. Для інсташопу, інфобізнесу, e-commerce та інших напрямів воронки можуть відрізнятися.',
+        ]}
+        hintNumber={7}
+      />
+      <SpotlightTip
+        onSkipAll={skipOnboarding}
+        show={onboardStep === 3 && activeStep === 0}
+        targetSelector='[data-tour="niche-b2c-btn"]'
+        preferSide
+        sidePosition="left"
+        radius={12}
+        lines={[
           'У цьому випадку стоматологічна клініка надає послуги кінцевому споживачу, тому це B2C-проєкт. Оберіть відповідний тип бізнесу.',
         ]}
         hintNumber={7}
