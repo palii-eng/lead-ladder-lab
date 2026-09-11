@@ -34,15 +34,6 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
   const [rect, setRect] = useState<DOMRect | null>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const [bubblePos, setBubblePos] = useState<{ top: number; left: number } | null>(null);
-  // Локальне "прочитано" для ЦІЄЇ конкретної підказки — «Зрозумів» лише
-  // ховає бульбашку, не займаючи реальний стан сценарію (той рухається
-  // сам, коли користувач виконає справжню дію). Скидається щоразу, коли
-  // ця підказка активується заново (show: false → true) чи змінюється ціль,
-  // інакше вона взагалі ніколи більше не змогла б показатись.
-  const [dismissed, setDismissed] = useState(false);
-  useEffect(() => {
-    if (show) setDismissed(false);
-  }, [show, targetSelector]);
 
   useEffect(() => {
     if (!show) return;
@@ -130,7 +121,7 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
     setBubblePos(prev => (prev && prev.top === top && prev.left === left ? prev : { top, left }));
   }, [rect, lines, preferSide]);
 
-  if (!show || dismissed || !rect) return null;
+  if (!show || !rect) return null;
 
   return createPortal(
     <>
@@ -202,20 +193,15 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
                   </button>
                 )}
               </div>
-            ) : (
-              <div className="flex items-center gap-2 mt-2.5">
-                <Button size="sm" onClick={() => setDismissed(true)} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 text-xs h-7">
-                  Зрозумів
-                </Button>
-                {onSkipAll && (
-                  <button
-                    type="button"
-                    onClick={onSkipAll}
-                    className="text-[10px] font-medium text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors shrink-0"
-                  >
-                    Пропустити навчання
-                  </button>
-                )}
+            ) : onSkipAll && (
+              <div className="mt-2.5">
+                <button
+                  type="button"
+                  onClick={onSkipAll}
+                  className="text-[10px] font-medium text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+                >
+                  Пропустити навчання
+                </button>
               </div>
             )}
           </div>

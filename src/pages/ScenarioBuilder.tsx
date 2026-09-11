@@ -3572,7 +3572,7 @@ const ScenarioBuilder: React.FC = () => {
                 {LEAD_SOURCES.map(src => {
                   const LogoIcon = src.LogoComponent === 'meta' ? MetaIcon : src.LogoComponent === 'tiktok' ? TikTokIcon : GoogleIcon;
                   return (
-                    <button key={src.value} disabled={src.soon} onClick={() => handleLeadSourceSelect(src.value)}
+                    <button key={src.value} data-tour={src.value === 'meta' ? 'leadsource-meta-btn' : undefined} disabled={src.soon} onClick={() => handleLeadSourceSelect(src.value)}
                       className={`p-3 rounded-lg border text-left text-sm transition-all flex items-center gap-3 ${
                         scenario.leadSource === src.value
                           ? 'border-primary bg-accent text-accent-foreground font-semibold'
@@ -4566,13 +4566,24 @@ const ScenarioBuilder: React.FC = () => {
       />
       <SpotlightTip
         onSkipAll={skipOnboarding}
-        show={onboardStep === 4}
+        show={onboardStep === 4 && activeStep !== 1}
         targetSelector='[data-step-index="1"]'
         preferSide
         sidePosition="left"
         radius={16}
         lines={[
           'Тепер потрібно обрати рекламний кабінет — Meta Ads чи TikTok Ads.',
+        ]}
+        hintNumber={8}
+      />
+      <SpotlightTip
+        onSkipAll={skipOnboarding}
+        show={onboardStep === 4 && activeStep === 1}
+        targetSelector='[data-tour="leadsource-meta-btn"]'
+        preferSide
+        sidePosition="left"
+        radius={12}
+        lines={[
           'Рекомендуємо почати з Meta Ads: простіше стартувати новачку, ширші можливості таргетингу, і підходить під переважну більшість ніш.',
           'Натисни на цю картку і обери Meta Ads.',
         ]}
