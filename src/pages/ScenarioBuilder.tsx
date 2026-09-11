@@ -1859,7 +1859,12 @@ const ScenarioBuilder: React.FC = () => {
       return Number(v.toFixed(dec));
     };
     const AGES = ['18–24', '25–34', '25–44', '30–45', '35–54'];
-    const GEOS = ['🇺🇦 Україна', '🇺🇦 Київ +40км', '🇺🇦 міста 100k+', '🇵🇱 Польща', '🇩🇪 Німеччина'];
+    // Лише Україна — це локальний семпл геотаргетингу для симуляції, а не
+    // реальна географія з брифу конкретного клієнта (та лежить вільним
+    // текстом у getBriefForClient і не парситься тут). Раніше в пулі були й
+    // Польща/Німеччина, що виглядало абсурдно для клієнтів на кшталт
+    // львівської стоматології, у якої в брифі "Львів + область".
+    const GEOS = ['🇺🇦 Україна', '🇺🇦 Місто клієнта +50км', '🇺🇦 міста 100k+', '🇺🇦 Обласний центр'];
 
     const keys: string[] =
       scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0
@@ -6414,6 +6419,23 @@ const ScenarioBuilder: React.FC = () => {
                           {a.label}
                         </Button>
                       ))}
+                      {/* Періодичний "відволікаючий" варіант: збільшення бюджету — не
+                          показуємо тут, коли реальна проблема саме в бюджеті (для неї
+                          вже є своя контекстна кнопка "Скоригувати денний ліміт" нижче,
+                          яка й зараховується як правильна дія). У решті випадків цей
+                          варіант завжди неправильний (LAUNCH_CORRECT_FIX визнає
+                          'adjust_budget' валідним фіксом лише для budget_overspend) —
+                          перевіряємо, чи студент не тягнеться до бюджету там, де
+                          насправді проблема в CTR/CPM/частоті показів тощо. */}
+                      {launchProblem.type !== 'budget_overspend' && launchHashSeed(`${scenario.id}-budget-${launchWeek}`) % 3 === 0 && (
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-sm bg-card"
+                          onClick={() => handleLaunchAction('adjust_budget')}
+                        >
+                          Збільшити бюджет
+                        </Button>
+                      )}
                     </div>
                     {CONTEXTUAL_ACTION_BY_PROBLEM[launchProblem.type] && (
                       <Button
