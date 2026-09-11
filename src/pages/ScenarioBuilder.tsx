@@ -2509,7 +2509,7 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 8 && !creoOpen}
+              show={onboardStep === 8 && !creoOpen && !audienceOpen}
               targetSelector='[data-tour="create-creo-btn"]'
               radius={999}
               lines={[
@@ -2532,7 +2532,7 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 9}
+              show={onboardStep === 9 && !audienceOpen && !creoOpen}
               targetSelector='[data-step-index="4"]'
               radius={16}
               lines={[
@@ -2546,7 +2546,7 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 10}
+              show={onboardStep === 10 && !audienceOpen && !creoOpen}
               targetSelector='[data-tour="decomp-ai-fill-btn"]'
               radius={999}
               lines={[
@@ -2559,7 +2559,7 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 11}
+              show={onboardStep === 11 && !audienceOpen && !creoOpen}
               targetSelector='[data-step-index="5"]'
               radius={16}
               lines={[
@@ -2571,7 +2571,7 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 12}
+              show={onboardStep === 12 && !audienceOpen && !creoOpen}
               targetSelector='[data-tour="keepincrm-btn"]'
               radius={10}
               lines={[
@@ -2582,7 +2582,7 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 13}
+              show={onboardStep === 13 && !audienceOpen && !creoOpen}
               targetSelector='[data-step-index="6"]'
               radius={16}
               lines={[
@@ -2594,7 +2594,7 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 14}
+              show={onboardStep === 14 && !audienceOpen && !creoOpen}
               targetSelector='[data-tour="apix-drive-btn"]'
               radius={12}
               lines={[
@@ -2605,7 +2605,7 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 15}
+              show={onboardStep === 15 && !audienceOpen && !creoOpen}
               targetSelector='[data-step-index="7"] [title="Пропустити цей крок"]'
               radius={999}
               lines={[
@@ -2617,7 +2617,7 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 16}
+              show={onboardStep === 16 && !audienceOpen && !creoOpen}
               targetSelector='[data-step-index="8"] [title="Пропустити цей крок"]'
               radius={999}
               lines={[
@@ -2628,7 +2628,7 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 17}
+              show={onboardStep === 17 && !audienceOpen && !creoOpen}
               targetSelector='[data-tour="launch-project-btn"]'
               radius={12}
               lines={[
