@@ -24,11 +24,13 @@ interface SpotlightTipProps {
   hintNumber?: number;
   /** Якщо true — пробує стати збоку від цілі одразу, а не тільки коли не влазить знизу. За замовчуванням false (звичайна поведінка — знизу). */
   preferSide?: boolean;
+  /** Який бік пробувати першим, коли preferSide (чи переповнення знизу) увімкнене. За замовчуванням 'right'. */
+  sidePosition?: 'left' | 'right';
   /** Якщо задано — в бульбашці зʼявляється кнопка "Пропустити навчання", яка одразу завершує весь тур. */
   onSkipAll?: () => void;
 }
 
-export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector, lines, radius = 999, confirmLabel, onConfirm, hintNumber, preferSide, onSkipAll }) => {
+export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector, lines, radius = 999, confirmLabel, onConfirm, hintNumber, preferSide, sidePosition = 'right', onSkipAll }) => {
   const [rect, setRect] = useState<DOMRect | null>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const [bubblePos, setBubblePos] = useState<{ top: number; left: number } | null>(null);
@@ -94,14 +96,27 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
 
     const overflowsBottom = top + bh > window.innerHeight - margin;
     if (preferSide || overflowsBottom) {
-      // Пробуємо збоку від цілі (справа, або зліва якщо справа не влазить),
-      // вертикально вирівняну по верху цілі й притиснуту в межі екрана.
+      // Пробуємо збоку від цілі — спершу бажаний бік (sidePosition), і лише
+      // якщо там реально не влазить (а на протилежному — влазить або більше
+      // місця), пробуємо інший. Вертикально вирівняно по верху цілі й
+      // притиснуто в межі екрана.
       const spaceRight = window.innerWidth - rect.right;
       const spaceLeft = rect.left;
-      if (spaceRight >= bw + 20 || spaceRight >= spaceLeft) {
+      const fitsRight = spaceRight >= bw + 20;
+      const fitsLeft = spaceLeft >= bw + 20;
+      const preferred = sidePosition;
+      const preferredFits = preferred === 'right' ? fitsRight : fitsLeft;
+      const otherFits = preferred === 'right' ? fitsLeft : fitsRight;
+      const useSide: 'left' | 'right' | null = preferredFits
+        ? preferred
+        : otherFits
+        ? (preferred === 'right' ? 'left' : 'right')
+        : (spaceRight >= spaceLeft ? 'right' : 'left');
+
+      if (useSide === 'right') {
         left = Math.min(rect.right + 14, window.innerWidth - bw - margin);
         top = rect.top;
-      } else if (spaceLeft >= bw + 20) {
+      } else if (useSide === 'left') {
         left = Math.max(margin, rect.left - bw - 14);
         top = rect.top;
       } else if (overflowsBottom) {
