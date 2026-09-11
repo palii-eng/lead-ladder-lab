@@ -35,7 +35,7 @@ import { useAuth } from '@/context/AuthContext';
 // dice roll: each week presents a metrics snapshot (sometimes with a
 // problem, sometimes calm), the marketer picks an action, and the outcome
 // depends on whether the action actually fixes the underlying issue.
-type LaunchProblemType = 'cpm_high' | 'ctr_low' | 'freq_high' | 'ad_rejected' | 'bad_lead_quality' | 'learning_reset' | 'client_unhappy' | 'budget_overspend';
+type LaunchProblemType = 'cpm_high' | 'ctr_low' | 'freq_high' | 'ad_rejected' | 'bad_lead_quality' | 'learning_reset' | 'client_unhappy';
 type LaunchActionKey = 'continue' | 'change_creo' | 'new_audience' | 'restart_objective' | 'disable_audience' | 'edit_resubmit' | 'qualify_leadform' | 'wait' | 'message_client' | 'adjust_budget';
 
 interface LaunchProblem {
@@ -66,7 +66,6 @@ const LAUNCH_PROBLEM_TEMPLATES: Omit<LaunchProblem, 'cplPct' | 'cpmPct'>[] = [
   { type: 'bad_lead_quality', cpl: 'normal', ctr: 'normal', cpm: 'normal', freq: 'normal' },
   { type: 'learning_reset', cpl: 'high', ctr: 'normal', cpm: 'high', freq: 'normal' },
   { type: 'client_unhappy', cpl: 'normal', ctr: 'normal', cpm: 'normal', freq: 'normal' },
-  { type: 'budget_overspend', cpl: 'normal', ctr: 'normal', cpm: 'normal', freq: 'normal' },
 ];
 
 const randomInRange = (min: number, max: number) => Math.floor(min + Math.random() * (max - min + 1));
@@ -82,7 +81,7 @@ const buildLaunchProblem = (type: LaunchProblemType): LaunchProblem => {
   };
 };
 
-const LAUNCH_PROBLEM_TYPES: LaunchProblemType[] = ['cpm_high', 'ctr_low', 'freq_high', 'ad_rejected', 'bad_lead_quality', 'learning_reset', 'client_unhappy', 'budget_overspend'];
+const LAUNCH_PROBLEM_TYPES: LaunchProblemType[] = ['cpm_high', 'ctr_low', 'freq_high', 'ad_rejected', 'bad_lead_quality', 'learning_reset', 'client_unhappy'];
 
 const launchHashSeed = (s: string): number => {
   let h = 2166136261;
@@ -104,7 +103,6 @@ const CONTEXTUAL_ACTION_BY_PROBLEM: Partial<Record<LaunchProblemType, { key: Lau
   bad_lead_quality: { key: 'qualify_leadform', label: 'Додати кваліфікаційні питання в лідформу' },
   learning_reset: { key: 'wait', label: 'Почекати кілька днів' },
   client_unhappy: { key: 'message_client', label: 'Написати клієнту з поясненням цифр' },
-  budget_overspend: { key: 'adjust_budget', label: 'Скоригувати денний ліміт' },
 };
 
 // Which action(s) actually address each problem type. Disabling the exact
@@ -117,7 +115,6 @@ const LAUNCH_CORRECT_FIX: Record<LaunchProblemType, LaunchActionKey[]> = {
   bad_lead_quality: ['qualify_leadform'],
   learning_reset: ['wait'],
   client_unhappy: ['message_client'],
-  budget_overspend: ['adjust_budget', 'disable_audience'],
 };
 
 const LAUNCH_ACTION_SUCCESS_TEXT: Record<LaunchActionKey, string> = {
@@ -141,11 +138,9 @@ const launchClientLine = (p: LaunchProblem): string => {
     case 'ad_rejected':
       return 'Дзвонив клієнт — каже, що не бачить оголошення в стрічці вже другий день. Перевірте, будь ласка, чи все на публікації.';
     case 'bad_lead_quality':
-      return 'Ліди йдуть дешево і в потрібній кількості, але клієнт скаржиться: 8 з 10 — це школярі й просто зацікавлені, а не платоспроможні клієнти.';
+      return 'Ліди йдуть дешево і в потрібній кількості, але клієнт скаржиться: 8 з 10 — це не цільова аудиторія, просто зацікавлені, а не платоспроможні клієнти.';
     case 'client_unhappy':
       return 'Клієнт пише: "Чому так мало лідів? У конкурента реклама всюди!" — хоча всі цифри по кампанії в межах прогнозу.';
-    case 'budget_overspend':
-      return 'За перші 4 дні тижня вже витрачено 90% бюджету. Клієнт питає, чи продовжуємо в такому темпі, чи стримуємо витрати.';
     default:
       break;
   }
@@ -6419,15 +6414,12 @@ const ScenarioBuilder: React.FC = () => {
                           {a.label}
                         </Button>
                       ))}
-                      {/* Періодичний "відволікаючий" варіант: збільшення бюджету — не
-                          показуємо тут, коли реальна проблема саме в бюджеті (для неї
-                          вже є своя контекстна кнопка "Скоригувати денний ліміт" нижче,
-                          яка й зараховується як правильна дія). У решті випадків цей
-                          варіант завжди неправильний (LAUNCH_CORRECT_FIX визнає
-                          'adjust_budget' валідним фіксом лише для budget_overspend) —
-                          перевіряємо, чи студент не тягнеться до бюджету там, де
-                          насправді проблема в CTR/CPM/частоті показів тощо. */}
-                      {launchProblem.type !== 'budget_overspend' && launchHashSeed(`${scenario.id}-budget-${launchWeek}`) % 3 === 0 && (
+                      {/* Періодичний "відволікаючий" варіант: збільшення бюджету ніколи
+                          не є правильним фіксом жодного з поточних типів проблем
+                          (LAUNCH_CORRECT_FIX його ніде не визнає) — перевіряємо, чи
+                          студент не тягнеться до бюджету там, де насправді проблема
+                          в CTR/CPM/частоті показів тощо. */}
+                      {launchHashSeed(`${scenario.id}-budget-${launchWeek}`) % 3 === 0 && (
                         <Button
                           variant="outline"
                           className="w-full justify-start text-sm bg-card"
