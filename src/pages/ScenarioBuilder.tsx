@@ -1771,6 +1771,7 @@ const ScenarioBuilder: React.FC = () => {
         <DollarSign className="w-3.5 h-3.5 shrink-0" /> {paymentTermsLabel}
       </span>
       <SpotlightTip
+        onSkipAll={skipOnboarding}
         show={onboardStep === 1}
         targetSelector='[data-tour="meet-brief-btn"]'
         preferSide
@@ -2440,6 +2441,7 @@ const ScenarioBuilder: React.FC = () => {
                 <span className="text-[12px] font-bold">Додати кампанію</span>
               </button>
               <SpotlightTip
+                onSkipAll={skipOnboarding}
                 show={onboardStep === 5 && activeStep !== 2}
                 targetSelector='[data-tour="add-campaign-btn"]'
                 radius={12}
@@ -2451,6 +2453,7 @@ const ScenarioBuilder: React.FC = () => {
                 hintNumber={9}
               />
               <SpotlightTip
+                onSkipAll={skipOnboarding}
                 show={onboardStep === 5 && activeStep === 2}
                 targetSelector='[data-tour="channel-leads-btn"]'
                 radius={12}
@@ -2462,6 +2465,7 @@ const ScenarioBuilder: React.FC = () => {
             </div>
 
             <SpotlightTip
+              onSkipAll={skipOnboarding}
               show={onboardStep === 6}
               targetSelector='[data-tour="landing-option-btn"]'
               radius={12}
@@ -2472,6 +2476,7 @@ const ScenarioBuilder: React.FC = () => {
             />
 
             <SpotlightTip
+              onSkipAll={skipOnboarding}
               show={onboardStep === 7}
               targetSelector='[data-tour="create-audience-btn"]'
               radius={12}
@@ -2483,6 +2488,7 @@ const ScenarioBuilder: React.FC = () => {
             />
 
             <SpotlightTip
+              onSkipAll={skipOnboarding}
               show={onboardStep === 8}
               targetSelector='[data-tour="create-creo-btn"]'
               radius={999}
@@ -2495,6 +2501,7 @@ const ScenarioBuilder: React.FC = () => {
             />
 
             <SpotlightTip
+              onSkipAll={skipOnboarding}
               show={onboardStep === 9}
               targetSelector='[data-step-index="4"]'
               radius={16}
@@ -2508,6 +2515,7 @@ const ScenarioBuilder: React.FC = () => {
             />
 
             <SpotlightTip
+              onSkipAll={skipOnboarding}
               show={onboardStep === 10}
               targetSelector='[data-tour="decomp-ai-fill-btn"]'
               radius={999}
@@ -2520,6 +2528,7 @@ const ScenarioBuilder: React.FC = () => {
             />
 
             <SpotlightTip
+              onSkipAll={skipOnboarding}
               show={onboardStep === 11}
               targetSelector='[data-step-index="5"]'
               radius={16}
@@ -2531,6 +2540,7 @@ const ScenarioBuilder: React.FC = () => {
             />
 
             <SpotlightTip
+              onSkipAll={skipOnboarding}
               show={onboardStep === 12}
               targetSelector='[data-tour="keepincrm-btn"]'
               radius={10}
@@ -2541,6 +2551,7 @@ const ScenarioBuilder: React.FC = () => {
             />
 
             <SpotlightTip
+              onSkipAll={skipOnboarding}
               show={onboardStep === 13}
               targetSelector='[data-step-index="6"]'
               radius={16}
@@ -2552,6 +2563,7 @@ const ScenarioBuilder: React.FC = () => {
             />
 
             <SpotlightTip
+              onSkipAll={skipOnboarding}
               show={onboardStep === 14}
               targetSelector='[data-tour="apix-drive-btn"]'
               radius={12}
@@ -2562,6 +2574,7 @@ const ScenarioBuilder: React.FC = () => {
             />
 
             <SpotlightTip
+              onSkipAll={skipOnboarding}
               show={onboardStep === 15}
               targetSelector='[data-step-index="7"] [title="Пропустити цей крок"]'
               radius={999}
@@ -2573,6 +2586,7 @@ const ScenarioBuilder: React.FC = () => {
             />
 
             <SpotlightTip
+              onSkipAll={skipOnboarding}
               show={onboardStep === 16}
               targetSelector='[data-step-index="8"] [title="Пропустити цей крок"]'
               radius={999}
@@ -2583,6 +2597,7 @@ const ScenarioBuilder: React.FC = () => {
             />
 
             <SpotlightTip
+              onSkipAll={skipOnboarding}
               show={onboardStep === 17}
               targetSelector='[data-tour="launch-project-btn"]'
               radius={12}
@@ -4525,6 +4540,7 @@ const ScenarioBuilder: React.FC = () => {
           "Вибір ніші"/"Джерело лідів" — компонент з підказкою просто ще не
           існував би в DOM. */}
       <SpotlightTip
+        onSkipAll={skipOnboarding}
         show={onboardStep === 3}
         targetSelector='[data-step-index="0"]'
         radius={16}
@@ -4535,6 +4551,7 @@ const ScenarioBuilder: React.FC = () => {
         hintNumber={7}
       />
       <SpotlightTip
+        onSkipAll={skipOnboarding}
         show={onboardStep === 4}
         targetSelector='[data-step-index="1"]'
         radius={16}
@@ -5123,6 +5140,7 @@ const ScenarioBuilder: React.FC = () => {
               Шаблон брифа
             </a>
             <SpotlightTip
+              onSkipAll={skipOnboarding}
               show={onboardStep === 2 && filledBriefOpen}
               targetSelector='a[title="Завантажити пустий шаблон брифа"]'
               radius={12}

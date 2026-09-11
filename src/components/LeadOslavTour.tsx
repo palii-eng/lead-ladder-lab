@@ -27,6 +27,11 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
     } catch { /* localStorage unavailable — skip tour */ }
   }, [user]);
 
+  const skipTour = () => {
+    setStep(0);
+    markLeadOslavTourSeen(user?.id);
+  };
+
   useEffect(() => {
     if (step !== 4) return;
     const update = () => setRect(createBtnRef.current?.getBoundingClientRect() ?? null);
@@ -66,10 +71,17 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
               </p>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-col gap-2">
             <Button onClick={() => setStep(2)} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
               Зрозумів
             </Button>
+            <button
+              type="button"
+              onClick={skipTour}
+              className="text-[11px] font-medium text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+            >
+              Пропустити навчання
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -88,6 +100,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
         ]}
         confirmLabel="Зрозумів"
         onConfirm={() => setStep(3)}
+        onSkipAll={skipTour}
         hintNumber={2}
       />
     );
@@ -106,6 +119,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
         ]}
         confirmLabel="Зрозумів"
         onConfirm={() => setStep(4)}
+        onSkipAll={skipTour}
         hintNumber={3}
       />
     );
@@ -160,6 +174,13 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
               <p className="text-xs text-foreground leading-snug">
                 Давайте для початку знайдемо ваш перший проєкт та спробуємо втримати його якомога довше. Сьогодні у вас є 4 нових ліди. Давайте візьмемо в роботу першого з них. Натисніть «+ Взяти в роботу»!
               </p>
+              <button
+                type="button"
+                onClick={skipTour}
+                className="mt-2.5 text-[10px] font-medium text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+              >
+                Пропустити навчання
+              </button>
             </div>
           </div>
         </div>
