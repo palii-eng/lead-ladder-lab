@@ -37,7 +37,9 @@ const TARGETING_VIDEOS: DailyVideo[] = [
   { day: 1, youtubeId: 'jPYI67MSFjE', caption: 'Етапи роботи над проектом по таргету' },
 ];
 const TREND_VIDEOS: DailyVideo[] = [
-  { day: 1, youtubeId: 'IT8hrMJmeeM', caption: 'Вайбкодимо сайти безлімітно' },
+  { day: 1, youtubeId: 'fz635iOwzEc', caption: 'Як використовувати GPT у роботі маркетолога' },
+  { day: 2, youtubeId: 'DJvqK6TShMs', caption: 'Актуальна тема для маркетолога' },
+  { day: 3, youtubeId: 'IT8hrMJmeeM', caption: 'Вайбкодимо сайти безлімітно' },
 ];
 
 const Dashboard: React.FC = () => {
