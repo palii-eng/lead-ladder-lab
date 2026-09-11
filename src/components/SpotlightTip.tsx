@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { LeadOslavAvatar } from '@/components/LeadOslav';
@@ -35,7 +35,15 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
   const bubbleRef = useRef<HTMLDivElement>(null);
   const [bubblePos, setBubblePos] = useState<{ top: number; left: number } | null>(null);
 
-  useEffect(() => {
+  // useLayoutEffect, а не useEffect — навмисно. При переході з однієї
+  // підказки на іншу (той самий крок, ціль уже в панелі) старий тултіп
+  // ховається синхронно (show стає false), а новий стартує з rect=null.
+  // Якщо вимірювання цілі робити в useEffect (після пофарбування кадру),
+  // браузер встигає намалювати проміжний кадр БЕЗ жодного тултіпа — тобто
+  // без затемнювального оверлею — і це виглядає як блимання білим. У
+  // useLayoutEffect вимірювання й пов'язаний ре-рендер встигають
+  // відбутися до того, як браузер покаже кадр користувачу.
+  useLayoutEffect(() => {
     if (!show) return;
     const update = () => {
       const els = Array.from(document.querySelectorAll(targetSelector))

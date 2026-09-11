@@ -2477,7 +2477,17 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 7}
+              show={onboardStep === 7 && activeStep === 2}
+              targetSelector='[data-tour="save-lead-types-btn"]'
+              radius={12}
+              lines={[
+                'Ціль обрано — тепер натисни «Зберегти та продовжити», щоб зафіксувати вибір.',
+              ]}
+              hintNumber={11}
+            />
+            <SpotlightTip
+              onSkipAll={skipOnboarding}
+              show={onboardStep === 7 && activeStep !== 2}
               targetSelector='[data-tour="create-audience-btn"]'
               radius={12}
               lines={[
@@ -3532,6 +3542,7 @@ const ScenarioBuilder: React.FC = () => {
         </Button>
       )}
       <Button
+        data-tour={step === 2 ? 'save-lead-types-btn' : undefined}
         onClick={() => handleSaveStep(step)}
         disabled={disabled !== undefined ? disabled : !canSaveStep(step, activeLeadType)}
         className={`gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold ${showSkip ? 'flex-1' : 'w-full'}`}
