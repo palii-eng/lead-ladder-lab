@@ -4935,6 +4935,17 @@ const ScenarioBuilder: React.FC = () => {
                 const renderNextMonthNode = () => (
                   <div className="flex items-start flex-shrink-0">
                     <div className="flex flex-col relative" style={{ width: '240px' }}>
+                      {/* Невидимий спейсер, що ТОЧНО повторює розмітку "✅ Проект
+                          запущений" + конектора над сусідньою карткою "Результати
+                          першого місяця" (вони в тому ж флекс-рядку) — без нього
+                          заголовки "КРОК" двох карток не вирівнювались по одній
+                          лінії, бо цей стовпчик коротший зверху. */}
+                      <div className="w-full gap-2 font-bold flex items-center justify-center rounded-md px-4 py-2 border invisible" aria-hidden="true">
+                        ✅ Проект запущений — оплата отримана
+                      </div>
+                      <div className="flex justify-center py-1" aria-hidden="true">
+                        <div className="w-px h-4 border-l-2 border-dashed border-transparent" />
+                      </div>
                       <div className="flex items-center gap-2 mb-2 px-1 h-4">
                         <span className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground/70">
                           КРОК {String(STEPS.length + 1).padStart(2, '0')}
