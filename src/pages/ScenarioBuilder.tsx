@@ -161,7 +161,7 @@ const STEPS = [
   { title: 'Інтеграція', icon: '🔗' },
   { title: 'Продажі', icon: '💰' },
   { title: 'Retention', icon: '🔄' },
-  { title: 'Результат', icon: '🏆' },
+  { title: 'Результати першого місяця', icon: '🏆' },
 ];
 
 // Red/grey flag metadata for client-brief risk hints. Red = serious structural
@@ -4563,11 +4563,17 @@ const ScenarioBuilder: React.FC = () => {
               <div className="sticky bottom-0 bg-card pt-3 pb-2 -mx-4 px-4 border-t border-border mt-4 z-10 space-y-2">
                 <Button
                   variant="outline"
-                  className="w-full gap-2 font-bold border-primary text-primary hover:bg-primary/5"
+                  disabled={isTester}
+                  className="w-full gap-2 font-bold border-primary text-primary hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={sendToCurator}
                 >
                   📤 Відправити куратору
                 </Button>
+                {isTester && (
+                  <p className="text-[10px] text-muted-foreground text-center -mt-1">
+                    Доступно тільки для студентів
+                  </p>
+                )}
                 <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
                   onClick={startLaunch}>
                   🚀 Запустити проект
@@ -4970,6 +4976,46 @@ const ScenarioBuilder: React.FC = () => {
                   );
                 };
 
+                // Заблокований плейсхолдер після успішного запуску — тимчасово,
+                // поки логіки другого місяця ще немає в продукті. Не клікабельний
+                // навмисно (жодного onClick), лише позначає, що буде далі.
+                const renderNextMonthNode = () => (
+                  <div className="flex items-start flex-shrink-0">
+                    <div className="flex flex-col relative" style={{ width: '240px' }}>
+                      <div className="flex items-center gap-2 mb-2 px-1 h-4">
+                        <span className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground/70">
+                          КРОК {String(STEPS.length + 1).padStart(2, '0')}
+                        </span>
+                      </div>
+                      <div
+                        className="relative w-full rounded-2xl p-4 text-left cursor-not-allowed"
+                        style={{ background: 'hsl(var(--muted))', boxShadow: 'inset 0 0 0 1px hsl(var(--border))' }}
+                      >
+                        <span
+                          className="absolute -top-2 -right-2 flex items-center justify-center w-10 h-10 rounded-full border-2 border-background"
+                          style={{ background: 'hsl(var(--muted-foreground) / 0.15)' }}
+                        >
+                          <Lock className="w-5 h-5 text-muted-foreground/50" strokeWidth={2} />
+                        </span>
+                        <h3 className="text-[15px] font-bold leading-tight pr-8 text-muted-foreground/60">
+                          Почати другий місяць
+                        </h3>
+                        <p className="text-[12px] leading-snug mt-2 text-muted-foreground/50">
+                          Продовження роботи з клієнтом наступного місяця.
+                        </p>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/40">
+                          <span
+                            className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-full"
+                            style={{ background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
+                          >
+                            <Lock className="w-3 h-3" strokeWidth={2.5} /> Вже згодом
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+
                 const flowGated = !!scenario.clientBrief && !hasCompletedClientGate;
 
                 if (!shouldBranch) {
@@ -5022,11 +5068,20 @@ const ScenarioBuilder: React.FC = () => {
                               }
                             }
                             postSteps.forEach((i, idx) => {
+                              const isLastStep = idx === postSteps.length - 1;
+                              const showNextMonth = i === 9 && scenario.monthSurvived === true;
                               nodes.push(
                                 <React.Fragment key={`post-${i}`}>
-                                  {renderNode(i, undefined, idx === postSteps.length - 1)}
+                                  {renderNode(i, undefined, isLastStep && !showNextMonth)}
                                 </React.Fragment>
                               );
+                              if (showNextMonth) {
+                                nodes.push(
+                                  <React.Fragment key="next-month">
+                                    {renderNextMonthNode()}
+                                  </React.Fragment>
+                                );
+                              }
                             });
                           }
                           return nodes;
@@ -5159,7 +5214,8 @@ const ScenarioBuilder: React.FC = () => {
                         className="flex items-start gap-0 flex-shrink-0"
                         style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}
                       >
-                        {renderNode(9, undefined, true)}
+                        {renderNode(9, undefined, scenario.monthSurvived !== true)}
+                        {scenario.monthSurvived === true && renderNextMonthNode()}
                       </div>
                     )}
                     </>}
