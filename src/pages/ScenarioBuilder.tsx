@@ -2566,7 +2566,7 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 15 && !audienceOpen && !creoOpen}
+              show={onboardStep === 15 && !audienceOpen && !creoOpen && !(activeStep === 7 && isStepCompletedStatic(scenario, 7))}
               targetSelector='[data-step-index="7"] [title="Пропустити цей крок"]'
               radius={999}
               lines={[
@@ -2578,12 +2578,36 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 16 && !audienceOpen && !creoOpen}
+              show={onboardStep === 15 && !audienceOpen && !creoOpen && activeStep === 7 && isStepCompletedStatic(scenario, 7)}
+              targetSelector='[data-tour="save-sales-btn"]'
+              radius={12}
+              lines={[
+                'Бачу, ви вже заповнили цей модуль — це не обов\'язково було, адже на курсі ми ще детально про це поговоримо, але це не проблема.',
+                'Натисніть «Зберегти та продовжити», щоб рухатись далі.',
+              ]}
+              hintNumber={19}
+            />
+
+            <SpotlightTip
+              onSkipAll={skipOnboarding}
+              show={onboardStep === 16 && !audienceOpen && !creoOpen && !(activeStep === 8 && isStepCompletedStatic(scenario, 8))}
               targetSelector='[data-step-index="8"] [title="Пропустити цей крок"]'
               radius={999}
               lines={[
                 'Аналогічна історія, наразі пропускаємо, повернемось згодом.',
                 'Натисніть в модулі на «Пропустити», щоб продовжити.',
+              ]}
+              hintNumber={20}
+            />
+
+            <SpotlightTip
+              onSkipAll={skipOnboarding}
+              show={onboardStep === 16 && !audienceOpen && !creoOpen && activeStep === 8 && isStepCompletedStatic(scenario, 8)}
+              targetSelector='[data-tour="save-retention-btn"]'
+              radius={12}
+              lines={[
+                'Бачу, ви вже заповнили цей модуль — це не обов\'язково було, адже на курсі ми ще детально про це поговоримо, але це не проблема.',
+                'Натисніть «Зберегти та продовжити», щоб рухатись далі.',
               ]}
               hintNumber={20}
             />
@@ -3546,7 +3570,7 @@ const ScenarioBuilder: React.FC = () => {
         </Button>
       )}
       <Button
-        data-tour={step === 2 ? 'save-lead-types-btn' : undefined}
+        data-tour={step === 2 ? 'save-lead-types-btn' : step === 7 ? 'save-sales-btn' : undefined}
         onClick={() => handleSaveStep(step)}
         disabled={disabled !== undefined ? disabled : !canSaveStep(step, activeLeadType)}
         className={`gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold ${showSkip ? 'flex-1' : 'w-full'}`}
@@ -4353,6 +4377,7 @@ const ScenarioBuilder: React.FC = () => {
                   <SkipForward className="w-4 h-4" /> Пропустити
                 </Button>
                 <Button
+                  data-tour="save-retention-btn"
                   onClick={() => handleSaveStep(8)}
                   disabled={!canSaveStep(8, activeLeadType)}
                   className="flex-1 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
