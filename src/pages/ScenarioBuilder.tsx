@@ -4186,9 +4186,9 @@ const ScenarioBuilder: React.FC = () => {
                           )}
                         </span>
                         <Button
-                          variant="secondary"
+                          variant="outline"
                           size="sm"
-                          className="gap-1.5 text-xs shrink-0"
+                          className="gap-1.5 text-xs shrink-0 bg-card border-amber-400/50 text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/30 shadow-sm"
                           disabled={!hasSalesChannel}
                           onClick={() => fetchSalesRecommendation(s.type, `${s.icon} ${s.title}`)}
                         >
