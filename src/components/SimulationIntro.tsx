@@ -717,6 +717,36 @@ const photoKeyFor = (gender: Gender, seed: number) => {
   return list[Math.abs(seed) % list.length];
 };
 
+// Only 5 illustrated portraits exist per gender (FEMALE_KEYS/MALE_KEYS) —
+// photoKeyFor alone (a plain seed % 5) can easily hand two clients shown in
+// the same batch the identical photo. This assigns keys per-batch instead:
+// each gender gets its own seeded shuffle of its 5 keys, handed out in that
+// order so nobody repeats until the batch actually needs more than 5 of the
+// same gender (unavoidable with only 5 assets, but at least not random).
+const assignPhotoKeys = (genders: Gender[], seedBase: number): string[] => {
+  const seededShuffle = (arr: string[], seed: number) => {
+    const a = [...arr];
+    let s = seed || 1;
+    for (let i = a.length - 1; i > 0; i--) {
+      s = (s * 9301 + 49297) % 233280;
+      const j = Math.floor((s / 233280) * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+  const order: Record<Gender, string[]> = {
+    female: seededShuffle(FEMALE_KEYS, seedBase),
+    male: seededShuffle(MALE_KEYS, seedBase + 1),
+  };
+  const used: Record<Gender, number> = { female: 0, male: 0 };
+  return genders.map(g => {
+    const list = order[g];
+    const key = list[used[g] % list.length];
+    used[g] += 1;
+    return key;
+  });
+};
+
 // Shared with Dashboard.tsx's "Опрацювання вхідних лідів" feed — picks `n`
 // random leads from the same client pool used by the full-screen intro,
 // so a card tapped there resolves to a real, fully-formed brief instead of
@@ -765,12 +795,14 @@ export const pickAvailableLeads = (n: number, day: number = 5): AvailableLead[] 
     ];
   }
 
-  const shuffled = (isFixedOrder ? tagged : tagged
+  const selected = (isFixedOrder ? tagged : tagged
     .map((x, i) => ({ ...x, k: Math.random() + i }))
     .sort((a, z) => a.k - z.k))
-    .slice(0, n)
+    .slice(0, n);
+  const photoKeys = assignPhotoKeys(selected.map(x => x.c.gender), seedBase);
+  const shuffled = selected
     .map((x, i) => {
-      const key = photoKeyFor(x.c.gender, seedBase + i * 7);
+      const key = photoKeys[i];
       return {
         name: x.c.name,
         niche: x.c.niche,
@@ -805,11 +837,13 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
       ...LUCKY_CLIENTS.map(c => ({ c, d: 'lucky' as const })),
       ...HARD_CLIENTS.map(c => ({ c, d: 'suffer' as const })),
     ];
-    return tagged
+    const orderedTagged = tagged
       .map((x, i) => ({ ...x, k: Math.random() + i }))
-      .sort((a, z) => a.k - z.k)
+      .sort((a, z) => a.k - z.k);
+    const photoKeys = assignPhotoKeys(orderedTagged.map(x => x.c.gender), seedBase);
+    return orderedTagged
       .map((x, i) => {
-        const key = photoKeyFor(x.c.gender, seedBase + i * 7);
+        const key = photoKeys[i];
         return {
           name: x.c.name,
           niche: x.c.niche,
