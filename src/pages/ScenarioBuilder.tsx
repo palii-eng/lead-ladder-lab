@@ -1853,19 +1853,20 @@ const ScenarioBuilder: React.FC = () => {
       return Number(v.toFixed(dec));
     };
     const AGES = ['18–24', '25–34', '25–44', '30–45', '35–54'];
-    // Лише Україна — це локальний семпл геотаргетингу для симуляції, а не
-    // реальна географія з брифу конкретного клієнта (та лежить вільним
-    // текстом у getBriefForClient і не парситься тут). Раніше в пулі були й
-    // Польща/Німеччина, що виглядало абсурдно для клієнтів на кшталт
-    // львівської стоматології, у якої в брифі "Львів + область".
-    const GEOS = ['🇺🇦 Україна', '🇺🇦 Місто клієнта +50км', '🇺🇦 міста 100k+', '🇺🇦 Обласний центр'];
+    // Країна для всіх клієнтів у цьому тренажері — Україна (реальна географія
+    // з брифу конкретного клієнта лежить вільним текстом у getBriefForClient
+    // і тут не парситься, тож не варіюємо її по рядках). Місто — окрема
+    // колонка, що варіюється per-гіпотеза: одна аудиторія може таргетуватись
+    // на всю країну, інша — на конкретне місто клієнта.
+    const COUNTRY = '🇺🇦 Україна';
+    const CITIES = ['Вся країна', 'Київ', 'Львів', 'Одеса', 'Харків', 'Дніпро', 'Обласні центри 100k+'];
 
     const keys: string[] =
       scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0
         ? (scenario.leadTypes as string[])
         : ['main'];
 
-    type Row = { id: string; kind: 'aud'; label: string; sub?: string; creoCount: number; cpm: number; ctr: number; freq: number; age: string; geo: string; bad?: boolean; rejected?: boolean };
+    type Row = { id: string; kind: 'aud'; label: string; sub?: string; creoCount: number; cpm: number; ctr: number; freq: number; age: string; country: string; city: string; bad?: boolean; rejected?: boolean };
     const rows: Row[] = [];
 
     let adSetCounter = 0;
@@ -1880,7 +1881,7 @@ const ScenarioBuilder: React.FC = () => {
         adSetCounter += 1;
         const seed = hash(`${key}:${a.id || idx}:${week}`);
         const age = pick(AGES, seed);
-        const geo = pick(GEOS, seed >> 3);
+        const city = pick(CITIES, seed >> 3);
         const creoCount = creoList.filter(x => x.audienceId === a.id).length;
         rows.push({
           id: `a-${key}-${a.id || idx}`,
@@ -1892,7 +1893,8 @@ const ScenarioBuilder: React.FC = () => {
           ctr: rand(seed >> 5, 0.9, 2.3),
           freq: rand(seed >> 7, 1.1, 1.9, 1),
           age,
-          geo,
+          country: COUNTRY,
+          city,
         });
       });
     });
@@ -1930,7 +1932,8 @@ const ScenarioBuilder: React.FC = () => {
               <th className="text-right font-semibold px-2 py-2">CTR</th>
               <th className="text-right font-semibold px-2 py-2">Частота</th>
               <th className="text-right font-semibold px-2 py-2">Вік</th>
-              <th className="text-right font-semibold px-3 py-2">Країна</th>
+              <th className="text-right font-semibold px-2 py-2">Країна</th>
+              <th className="text-right font-semibold px-3 py-2">Місто</th>
             </tr>
           </thead>
           <tbody>
@@ -1947,7 +1950,7 @@ const ScenarioBuilder: React.FC = () => {
                   </div>
                 </td>
                 {r.rejected ? (
-                  <td colSpan={5} className="px-3 py-2 text-right">
+                  <td colSpan={6} className="px-3 py-2 text-right">
                     <span className="inline-flex items-center gap-1 text-destructive font-semibold text-[11px]">
                       ⛔ Відхилено модерацією
                     </span>
@@ -1958,7 +1961,8 @@ const ScenarioBuilder: React.FC = () => {
                     <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.ctr === 'low' ? 'text-destructive font-semibold' : ''}`}>{r.ctr.toFixed(2)}%</td>
                     <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.freq === 'high' ? 'text-destructive font-semibold' : ''}`}>{r.freq.toFixed(1)}</td>
                     <td className="px-2 py-2 text-right text-muted-foreground">{r.age}</td>
-                    <td className="px-3 py-2 text-right text-muted-foreground whitespace-nowrap">{r.geo}</td>
+                    <td className="px-2 py-2 text-right text-muted-foreground whitespace-nowrap">{r.country}</td>
+                    <td className="px-3 py-2 text-right text-muted-foreground whitespace-nowrap">{r.city}</td>
                   </>
                 )}
               </tr>
