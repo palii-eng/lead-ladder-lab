@@ -6362,7 +6362,7 @@ const ScenarioBuilder: React.FC = () => {
             <X className="w-4 h-4" />
           </button>
           {/* Прогрес утримання клієнта — 4 тижні */}
-          <div className="flex items-center gap-1.5 mb-2">
+          <div className="flex items-center gap-1.5 mb-2 pr-10">
             {[1, 2, 3, 4].map(w => {
               const result = launchWeekResults[w - 1]; // true=solved, false=not solved, null=not reached yet
               const done = result !== null;
