@@ -2818,7 +2818,7 @@ const ScenarioBuilder: React.FC = () => {
     const { nextWeekNum, nextResults, finishedProblemType } = pending;
     if (nextWeekNum > 4) {
       const solvedCount = nextResults.filter(Boolean).length;
-      setLaunchPhase(solvedCount >= 2 ? 'month_success' : 'month_failure');
+      setLaunchPhase(solvedCount >= 3 ? 'month_success' : 'month_failure');
       return;
     }
     setLaunchWeek(nextWeekNum);
