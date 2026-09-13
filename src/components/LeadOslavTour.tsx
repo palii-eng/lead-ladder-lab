@@ -10,9 +10,12 @@ const SEEN_KEY_PREFIX = 'leadoslav_tour_seen_';
 
 interface LeadOslavTourProps {
   createBtnRef: React.RefObject<HTMLButtonElement>;
+  /** Fires whenever the tour starts/ends — lets the dashboard disable
+   * distracting actions (like cycling past the lead card) while it runs. */
+  onActiveChange?: (active: boolean) => void;
 }
 
-export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) => {
+export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef, onActiveChange }) => {
   const { user } = useAuth();
   // 0 = not running, 1 = welcome, 2 = leads-card spotlight, 3 = daily-videos
   // spotlight, 4 = spotlight on the create button
@@ -26,6 +29,10 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef }) =>
       if (!localStorage.getItem(key)) setStep(1);
     } catch { /* localStorage unavailable — skip tour */ }
   }, [user]);
+
+  useEffect(() => {
+    onActiveChange?.(step !== 0);
+  }, [step, onActiveChange]);
 
   const skipTour = () => {
     setStep(0);

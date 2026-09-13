@@ -58,6 +58,11 @@ const Dashboard: React.FC = () => {
     window.location.reload();
   }, [searchParams, user?.id, navigate]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  // While the LeadOslav onboarding tour is running, the "Наступний" button
+  // lets a tester cycle past the highlighted lead without ever clicking
+  // "Взяти в роботу" — disabled for the duration so the tour actually forces
+  // that action instead of being skippable.
+  const [tourActive, setTourActive] = useState(false);
   const [gamificationCollapsed, setGamificationCollapsed] = useState(false);
   const createBtnRef = useRef<HTMLButtonElement>(null);
   const scenarioToDelete = deleteId ? scenarios.find(s => s.id === deleteId) : null;
@@ -289,10 +294,10 @@ const Dashboard: React.FC = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          disabled={!!takingLeadKey}
+                          disabled={!!takingLeadKey || tourActive}
                           onClick={() => setActiveLeadIdx(v => (v + 1) % visibleLeads.length)}
                           className="h-8 text-xs font-semibold"
-                          title="Наступний лід"
+                          title={tourActive ? 'Спочатку візьміть перший лід в роботу' : 'Наступний лід'}
                         >
                           Наступний →
                         </Button>
@@ -304,14 +309,15 @@ const Dashboard: React.FC = () => {
                           <button
                             key={i}
                             type="button"
+                            disabled={tourActive}
                             onClick={() => setActiveLeadIdx(i)}
-                            className="rounded-full transition-all"
+                            className="rounded-full transition-all disabled:cursor-not-allowed"
                             style={{
                               width: i === safeIdx ? 16 : 6,
                               height: 6,
                               background: i === safeIdx ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.25)',
                             }}
-                            title={`Лід ${i + 1}`}
+                            title={tourActive ? 'Спочатку візьміть перший лід в роботу' : `Лід ${i + 1}`}
                           />
                         ))}
                       </div>
@@ -476,7 +482,7 @@ const Dashboard: React.FC = () => {
       </AlertDialog>
 
       <GamificationSidebar collapsed={gamificationCollapsed} onToggle={() => setGamificationCollapsed(v => !v)} />
-      {isTester && <LeadOslavTour createBtnRef={createBtnRef} />}
+      {isTester && <LeadOslavTour createBtnRef={createBtnRef} onActiveChange={setTourActive} />}
     </div>
   );
 };
