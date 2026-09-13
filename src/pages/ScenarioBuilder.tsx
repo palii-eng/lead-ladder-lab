@@ -4745,40 +4745,36 @@ const ScenarioBuilder: React.FC = () => {
               </div>
 
               <div className="sticky bottom-0 bg-card pt-3 pb-2 -mx-4 px-4 border-t border-border mt-4 z-10 space-y-2">
-                <Button
-                  variant="outline"
-                  disabled={isTester}
-                  className="w-full gap-2 font-bold border-primary text-primary hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={sendToCurator}
-                >
-                  📤 Відправити куратору
-                </Button>
-                {isTester && (
-                  <p className="text-[10px] text-muted-foreground text-center -mt-1">
-                    Доступно тільки для студентів
-                  </p>
-                )}
-                <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
-                  onClick={startLaunch}>
-                  🚀 Запустити проект
-                </Button>
-                {getUnreadyCampaigns().length > 0 && (
-                  <p className="text-xs text-warning text-center">
-                    ⚠️ Потрібно мінімум 1 аудиторія в кампанії, і 2 крео в ній
-                  </p>
-                )}
-                {scenario.status === 'completed' && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full gap-2 text-muted-foreground hover:text-foreground text-xs"
-                    onClick={() => {
-                      update({ status: 'draft', monthSurvived: false });
-                      toast({ title: 'Результат скинуто', description: 'Можна запустити проект заново.' });
-                    }}
-                  >
-                    ↺ Скинути результат (для перетестування)
-                  </Button>
+                {scenario.status === 'completed' ? (
+                  <div className="w-full rounded-md px-4 py-2.5 text-center text-sm font-semibold bg-muted text-muted-foreground border border-border">
+                    {scenario.monthSurvived ? '✅ Проєкт завершено — успішно' : '⚠️ Проєкт завершено — клієнт пішов'}
+                    <p className="text-[10px] font-normal mt-0.5">Проєкт закрито, змінювати чи запускати повторно вже не можна.</p>
+                  </div>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      disabled={isTester}
+                      className="w-full gap-2 font-bold border-primary text-primary hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={sendToCurator}
+                    >
+                      📤 Відправити куратору
+                    </Button>
+                    {isTester && (
+                      <p className="text-[10px] text-muted-foreground text-center -mt-1">
+                        Доступно тільки для студентів
+                      </p>
+                    )}
+                    <Button className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
+                      onClick={startLaunch}>
+                      🚀 Запустити проект
+                    </Button>
+                    {getUnreadyCampaigns().length > 0 && (
+                      <p className="text-xs text-warning text-center">
+                        ⚠️ Потрібно мінімум 1 аудиторія в кампанії, і 2 крео в ній
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -5072,6 +5068,10 @@ const ScenarioBuilder: React.FC = () => {
                   // whenever status happens to be 'completed' (which could be stale data
                   // from before this weekly simulation existed).
                   const isLaunched = scenario.monthSurvived === true;
+                  // A completed project — win or loss — is closed for good: no relaunching,
+                  // no editing. isLaunched alone only covered the win case, leaving a failed
+                  // project's "🚀 Запустити проект" button still clickable.
+                  const isCompleted = scenario.status === 'completed';
 
                   return (
                     <div key={`${stepIdx}-${branchLeadType || 'main'}`} className="flex items-start" data-flow-node data-step-index={stepIdx}>
@@ -5083,9 +5083,9 @@ const ScenarioBuilder: React.FC = () => {
                             : [];
                           return (
                             <>
-                              {isLaunched ? (
-                                <div className="w-full gap-2 font-bold flex items-center justify-center rounded-md px-4 py-2 bg-success/10 text-success border border-success/30">
-                                  ✅ Проект запущений — оплата отримана
+                              {isCompleted ? (
+                                <div className={`w-full gap-2 font-bold flex items-center justify-center rounded-md px-4 py-2 border ${isLaunched ? 'bg-success/10 text-success border-success/30' : 'bg-muted text-muted-foreground border-border'}`}>
+                                  {isLaunched ? '✅ Проект запущений — оплата отримана' : '⚠️ Проєкт завершено — клієнт пішов'}
                                 </div>
                               ) : (
                                 <Button
@@ -5102,15 +5102,15 @@ const ScenarioBuilder: React.FC = () => {
                                   Завершіть {missing.length > 1 ? 'ланцюжки' : 'ланцюжок'} «{missing.join('», «')}», щоб запустити проект
                                 </p>
                               )}
-                              {isLaunched && (
+                              {isCompleted && (
                                 <div className="flex justify-center py-1">
-                                  <div className="w-px h-4 border-l-2 border-dashed border-success/50" />
+                                  <div className={`w-px h-4 border-l-2 border-dashed ${isLaunched ? 'border-success/50' : 'border-border'}`} />
                                 </div>
                               )}
                             </>
                           );
                         })()}
-                        {(stepIdx !== 9 || isLaunched) && (
+                        {(stepIdx !== 9 || isCompleted) && (
                           <FlowNode
                             icon={s.icon}
                             title={branchLeadType && (stepIdx === 3 || stepIdx === 4)
