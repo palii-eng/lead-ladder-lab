@@ -245,7 +245,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onSkip(); }}
-            className="absolute top-11 right-1 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 shadow-sm transition-colors"
+            className="absolute top-14 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 shadow-sm transition-colors"
             title="Пропустити цей крок"
           >
             <SkipForward className="w-3 h-3" strokeWidth={2.5} />
