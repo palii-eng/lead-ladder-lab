@@ -6587,16 +6587,27 @@ const ScenarioBuilder: React.FC = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={launchResultOpen} onOpenChange={(o) => { if (!o) setLaunchResultOpen(false); }}>
-        <AlertDialogContent className="max-h-[95vh] overflow-y-auto sm:max-w-4xl">
-          <button
-            type="button"
-            onClick={() => setLaunchResultOpen(false)}
-            className="absolute top-4 right-4 w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors z-10"
-            title="Закрити"
-          >
-            <X className="w-4 h-4" />
-          </button>
+      <AlertDialog
+        open={launchResultOpen}
+        onOpenChange={(o) => { if (!o && launchPhase !== 'month_success' && launchPhase !== 'month_failure') setLaunchResultOpen(false); }}
+      >
+        <AlertDialogContent
+          className="max-h-[95vh] overflow-y-auto sm:max-w-4xl"
+          onEscapeKeyDown={(e) => { if (launchPhase === 'month_success' || launchPhase === 'month_failure') e.preventDefault(); }}
+        >
+          {/* На фінальному екрані (успіх/провал місяця) єдиний вихід — кнопка
+              "Завершити проект": прибираємо хрестик, щоб не можна було
+              закрити діалог, оминувши явне завершення проєкту. */}
+          {launchPhase !== 'month_success' && launchPhase !== 'month_failure' && (
+            <button
+              type="button"
+              onClick={() => setLaunchResultOpen(false)}
+              className="absolute top-4 right-4 w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors z-10"
+              title="Закрити"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
           {/* Прогрес утримання клієнта — 4 тижні */}
           <div className="flex items-center gap-1.5 mb-2 pr-10">
             {[1, 2, 3, 4].map(w => {
