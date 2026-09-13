@@ -1934,6 +1934,9 @@ const ScenarioBuilder: React.FC = () => {
         if (problem.ctr === 'low') target.ctr = Number((target.ctr * 0.4).toFixed(2));
         if (problem.freq === 'high') target.freq = Number((2.6 + (target.freq % 1)).toFixed(1));
         if (problem.cpm === 'high' || problem.ctr === 'low') target.result = Math.max(1, Math.round(target.result * 0.5));
+        // Scripted week 2 during onboarding (see showLaunchAction2Hint) has a
+        // hard-coded "14 заявок" in the hint text — keep the table in sync.
+        if (launchIntroForOnboardingRef.current && week === 2 && problem.type === 'bad_lead_quality') target.result = 14;
         target.bad = true;
         if (problem.rejected) target.rejected = true;
       }
