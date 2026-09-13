@@ -220,7 +220,7 @@ const CrmBoard: React.FC = () => {
             </button>
           </div>
           <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => openAddCard(funnel.stages[0]?.id)}>
-            <Plus className="w-3.5 h-3.5" /> Add
+            <Plus className="w-3.5 h-3.5" /> Додати новий лід
           </Button>
         </div>
 
