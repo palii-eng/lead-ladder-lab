@@ -559,6 +559,11 @@ const ScenarioBuilder: React.FC = () => {
   // "Створити нову аудиторію" is a genuinely correct fix here (see
   // LAUNCH_CORRECT_FIX.freq_high), so this week is meant to actually be won.
   const showLaunchAction3Hint = launchWeek === 3 && launchIntroForOnboardingRef.current && launchProblem?.type === 'freq_high';
+  // Week 4 is force-scripted to client_unhappy during onboarding — every
+  // action here is made to fail (see resolveWeekAction's isScriptedWeek4Loss)
+  // so nothing is disabled; the hint just frames the lesson and lets the
+  // student pick freely before the client leaves anyway.
+  const showLaunchAction4Hint = launchWeek === 4 && launchIntroForOnboardingRef.current && launchProblem?.type === 'client_unhappy';
   // One entry per week (index 0 = week 1) — null until that week's action is
   // resolved, then true/false for whether the problem was actually fixed.
   const [launchWeekResults, setLaunchWeekResults] = useState<(boolean | null)[]>([null, null, null, null]);
@@ -2901,7 +2906,13 @@ const ScenarioBuilder: React.FC = () => {
     const weekJustFinished = launchWeek;
     const problemAtResolution = launchProblem;
 
-    const solved: boolean = actionKey === 'continue'
+    // Week 4's scripted onboarding lesson (see showLaunchAction4Hint) is
+    // that not every client can be saved — whatever the student picks here,
+    // it's meant to fail, ending in "client left" (month_failure).
+    const isScriptedWeek4Loss = launchIntroForOnboardingRef.current && weekJustFinished === 4 && problemAtResolution.type === 'client_unhappy';
+    const solved: boolean = isScriptedWeek4Loss
+      ? false
+      : actionKey === 'continue'
       ? false
       : LAUNCH_CORRECT_FIX[problemAtResolution.type].includes(actionKey);
 
@@ -2940,14 +2951,14 @@ const ScenarioBuilder: React.FC = () => {
     }
     setLaunchWeek(nextWeekNum);
     setLaunchFeedback(null);
-    // During onboarding, weeks 2 and 3 are scripted (bad_lead_quality, then
-    // freq_high — see showLaunchAction2Hint/showLaunchAction3Hint below) so
-    // the guided hints always match what's actually on screen; otherwise
-    // this pool pick is random.
+    // During onboarding, weeks 2-4 are scripted (bad_lead_quality, freq_high,
+    // client_unhappy — see showLaunchAction2Hint/3Hint/4Hint below) so the
+    // guided hints always match what's actually on screen; otherwise this
+    // pool pick is random.
     const candidates = LAUNCH_PROBLEM_TYPES.filter(t => t !== finishedProblemType);
     const pool = candidates.length > 0 ? candidates : LAUNCH_PROBLEM_TYPES;
     const forcedType: LaunchProblemType | null = launchIntroForOnboardingRef.current
-      ? (nextWeekNum === 2 ? 'bad_lead_quality' : nextWeekNum === 3 ? 'freq_high' : null)
+      ? (nextWeekNum === 2 ? 'bad_lead_quality' : nextWeekNum === 3 ? 'freq_high' : nextWeekNum === 4 ? 'client_unhappy' : null)
       : null;
     setLaunchProblem(attachLaunchTarget(buildLaunchProblem(forcedType || pool[Math.floor(Math.random() * pool.length)]), nextWeekNum));
     setLaunchPhase('week');
@@ -6722,7 +6733,7 @@ const ScenarioBuilder: React.FC = () => {
               </AlertDialogHeader>
               <AlertDialogFooter className="flex-col sm:flex-col sm:justify-start sm:space-x-0">
                 {launchProblem ? (
-                  <div className="w-full rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2.5">
+                  <div data-tour={showLaunchAction4Hint ? 'week4-actions-block' : undefined} className="w-full rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2.5">
                     <p className="text-sm font-semibold text-foreground">Ваші дії?</p>
                     <div className="grid grid-cols-2 gap-2">
                       {LAUNCH_ACTIONS.map(a => (
@@ -6812,6 +6823,21 @@ const ScenarioBuilder: React.FC = () => {
                       ]}
                       hintNumber={25}
                     />
+                    <SpotlightTip
+                      onSkipAll={skipOnboarding}
+                      show={showLaunchAction4Hint}
+                      targetSelector='[data-tour="week4-actions-block"]'
+                      radius={16}
+                      lines={[
+                        'Знову клієнт негативить :(',
+                        'Начебто все в нормі за плановими показниками, але лідів менше.',
+                        'Причин може бути багато. Можливо, є сенс збільшити бюджет, а можливо — перезапустити кампанію.',
+                        'Загалом треба пояснити клієнту, що наше завдання зараз — підібрати воронку, яка буде стабільно працювати. І на це може знадобитися певний час.',
+                        'Тому треба тестувати різні гіпотези: аудиторії, цілі, креативи та інші налаштування.',
+                        'Обери будь-який варіант, який вважаєш за потрібне протестувати.',
+                      ]}
+                      hintNumber={26}
+                    />
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground w-full py-1">
@@ -6865,8 +6891,18 @@ const ScenarioBuilder: React.FC = () => {
             <>
               <AlertDialogHeader>
                 <AlertDialogTitle>⚠️ Проєкт не втримав перший місяць</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Вирішено лише {launchWeekResults.filter(Boolean).length} з 4 проблем — цього недостатньо. Клієнт незадоволений результатами і хоче переглянути співпрацю.
+                <AlertDialogDescription asChild>
+                  {launchIntroForOnboardingRef.current ? (
+                    <div className="space-y-2 text-left">
+                      <p>Схоже, клієнт не хоче чекати — він хоче результат тут і зараз.</p>
+                      <p>Як я і казав, таке буває. Близько 2 із 10 клієнтів можуть іти щомісяця — це нормальна ситуація для агенції.</p>
+                      <p>Головне — не впадати в депресію та не починати шукати проблему в самому собі. Не кожного клієнта вдається втримати, і не кожен проєкт буде успішним.</p>
+                      <p>Рухаємося далі!</p>
+                      <p className="font-medium text-foreground">Наступний кейс спробуй запустити самостійно. Нехай щастить!</p>
+                    </div>
+                  ) : (
+                    <p>Вирішено лише {launchWeekResults.filter(Boolean).length} з 4 проблем — цього недостатньо. Клієнт незадоволений результатами і хоче переглянути співпрацю.</p>
+                  )}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
