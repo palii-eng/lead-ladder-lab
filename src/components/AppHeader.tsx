@@ -1,0 +1,101 @@
+import React, { useState } from 'react';
+import { GraduationCap, Newspaper } from 'lucide-react';
+import { ModeSwitch } from '@/components/ModeSwitch';
+import { UserMenu } from '@/components/UserMenu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+
+interface NewsItem {
+  date: string;
+  tag: string;
+  title: string;
+  text: string;
+}
+
+// Демо-контент для іконки новин у хедері — щоб було видно, як це виглядає.
+// Реальні новини з ринку (апдейти Meta/Google/TikTok Ads тощо) сюди
+// вписуватимуться вручну; поки тут заглушкові приклади.
+const MARKETING_NEWS: NewsItem[] = [
+  {
+    date: '10 вер 2026',
+    tag: 'Meta Ads',
+    title: 'Оновлення Advantage+ для лідогенерації',
+    text: 'Meta розширила автоматичний підбір креативів для кампаній з ціллю «Ліди» — тепер система тестує більше комбінацій заголовків і зображень без ручного налаштування.',
+  },
+  {
+    date: '8 вер 2026',
+    tag: 'Google Ads',
+    title: 'Performance Max отримав деталізовані звіти по каналах',
+    text: 'У звітах Performance Max тепер видно розбивку показів і конверсій по кожному каналу (пошук, дисплей, YouTube) окремо, а не лише сукупно.',
+  },
+  {
+    date: '5 вер 2026',
+    tag: 'TikTok Ads',
+    title: 'Нові вимоги до модерації лідформ',
+    text: 'TikTok посилив перевірку лідформ на відповідність рекламній політиці — рекомендують чіткіше формулювати питання, щоб уникнути затримок на модерації.',
+  },
+  {
+    date: '2 вер 2026',
+    tag: 'AI & Маркетинг',
+    title: 'AI-генерація креативів стає нормою',
+    text: 'Все більше агенцій використовують AI для першого чорнового варіанту креативів, залишаючи людині фінальне редагування та адаптацію під бренд.',
+  },
+];
+
+interface AppHeaderProps {
+  active: 'sim' | 'crm';
+}
+
+// Shared top bar for both the simulator (Dashboard) and the CRM — identical
+// on every page so switching between them doesn't feel like leaving into a
+// different app.
+export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
+  const [newsOpen, setNewsOpen] = useState(false);
+
+  return (
+    <>
+      <header className="border-b border-border sticky top-0 z-50 bg-card">
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <GraduationCap className="w-5 h-5 text-primary" />
+            <span className="text-sm font-bold text-foreground">Навчальний простір AdSchool</span>
+            <ModeSwitch active={active} />
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setNewsOpen(true)}
+              className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+              title="Новини маркетингу"
+            >
+              <Newspaper className="w-4 h-4" /> Новини
+            </button>
+            <UserMenu />
+          </div>
+        </div>
+      </header>
+
+      <Dialog open={newsOpen} onOpenChange={setNewsOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Newspaper className="w-4 h-4 text-primary" /> Новини маркетингу
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {MARKETING_NEWS.map((n, i) => (
+              <div key={i} className="rounded-lg border border-border p-3">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Badge variant="secondary" className="text-[10px]">{n.tag}</Badge>
+                  <span className="text-[10px] text-muted-foreground">{n.date}</span>
+                </div>
+                <p className="text-sm font-semibold text-foreground mb-1">{n.title}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{n.text}</p>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};

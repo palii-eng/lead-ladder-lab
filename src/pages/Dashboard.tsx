@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useScenarios, ClientBrief, createDefaultDecompSet } from '@/context/ScenariosContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Award, Inbox, GraduationCap, Newspaper } from 'lucide-react';
+import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Award, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { UserMenu } from '@/components/UserMenu';
+import { AppHeader } from '@/components/AppHeader';
 import { GamificationSidebar } from '@/components/GamificationSidebar';
 import { LeadOslavTour, markLeadOslavTourSeen } from '@/components/LeadOslavTour';
 import { pickAvailableLeads, AvailableLead } from '@/components/SimulationIntro';
@@ -17,7 +16,6 @@ import { truncateForPreview } from '@/lib/truncateForPreview';
 import { DailyVideoCard, DailyVideo } from '@/components/DailyVideoCard';
 import { estimateClientBudgetUsd } from '@/lib/budgetEstimate';
 import { resolveClientPhoto } from '@/data/clientPhotos';
-import { ModeSwitch } from '@/components/ModeSwitch';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,42 +24,6 @@ import { toast } from '@/hooks/use-toast';
 type ReviewStatus = 'pending' | 'in_review' | 'approved' | 'rejected';
 
 const LEADS_FEED_SIZE = 4;
-
-// Демо-контент для іконки новин у хедері — щоб було видно, як це виглядає.
-// Реальні новини з ринку (апдейти Meta/Google/TikTok Ads тощо) сюди
-// вписуватимуться вручну; поки тут заглушкові приклади.
-interface NewsItem {
-  date: string;
-  tag: string;
-  title: string;
-  text: string;
-}
-const MARKETING_NEWS: NewsItem[] = [
-  {
-    date: '10 вер 2026',
-    tag: 'Meta Ads',
-    title: 'Оновлення Advantage+ для лідогенерації',
-    text: 'Meta розширила автоматичний підбір креативів для кампаній з ціллю «Ліди» — тепер система тестує більше комбінацій заголовків і зображень без ручного налаштування.',
-  },
-  {
-    date: '8 вер 2026',
-    tag: 'Google Ads',
-    title: 'Performance Max отримав деталізовані звіти по каналах',
-    text: 'У звітах Performance Max тепер видно розбивку показів і конверсій по кожному каналу (пошук, дисплей, YouTube) окремо, а не лише сукупно.',
-  },
-  {
-    date: '5 вер 2026',
-    tag: 'TikTok Ads',
-    title: 'Нові вимоги до модерації лідформ',
-    text: 'TikTok посилив перевірку лідформ на відповідність рекламній політиці — рекомендують чіткіше формулювати питання, щоб уникнути затримок на модерації.',
-  },
-  {
-    date: '2 вер 2026',
-    tag: 'AI & Маркетинг',
-    title: 'AI-генерація креативів стає нормою',
-    text: 'Все більше агенцій використовують AI для першого чорнового варіанту креативів, залишаючи людині фінальне редагування та адаптацію під бренд.',
-  },
-];
 
 // "Відео дня" — щоденний контент, новий кожен день з моменту реєстрації.
 // Поки заповнений лише перший день; коли зʼявляться відео на наступні дні —
@@ -116,7 +78,6 @@ const Dashboard: React.FC = () => {
   );
   const [takingLeadKey, setTakingLeadKey] = useState<string | null>(null);
   const [activeLeadIdx, setActiveLeadIdx] = useState(0);
-  const [newsOpen, setNewsOpen] = useState(false);
 
   const loadReviews = async () => {
     if (!user?.id) return;
@@ -254,49 +215,7 @@ const Dashboard: React.FC = () => {
       className="min-h-screen bg-background transition-[padding] duration-200"
       style={{ paddingLeft: gamificationCollapsed ? 56 : 300 }}
     >
-      {/* Header */}
-      <header className="border-b border-border sticky top-0 z-50 bg-card">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <GraduationCap className="w-5 h-5 text-primary" />
-            <span className="text-sm font-bold text-foreground">Навчальний простір AdSchool</span>
-            <ModeSwitch active="sim" />
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => setNewsOpen(true)}
-              className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
-              title="Новини маркетингу"
-            >
-              <Newspaper className="w-4 h-4" /> Новини
-            </button>
-            <UserMenu />
-          </div>
-        </div>
-      </header>
-
-      <Dialog open={newsOpen} onOpenChange={setNewsOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Newspaper className="w-4 h-4 text-primary" /> Новини маркетингу
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            {MARKETING_NEWS.map((n, i) => (
-              <div key={i} className="rounded-lg border border-border p-3">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <Badge variant="secondary" className="text-[10px]">{n.tag}</Badge>
-                  <span className="text-[10px] text-muted-foreground">{n.date}</span>
-                </div>
-                <p className="text-sm font-semibold text-foreground mb-1">{n.title}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">{n.text}</p>
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AppHeader active="sim" />
 
       {/* Content */}
       <main className="container mx-auto px-6 py-8">

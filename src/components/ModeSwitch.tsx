@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Rocket, Trello } from 'lucide-react';
+import { Rocket, Contact } from 'lucide-react';
 
 interface ModeSwitchProps {
   active: 'sim' | 'crm';
@@ -29,7 +29,7 @@ export const ModeSwitch: React.FC<ModeSwitchProps> = ({ active }) => {
           active === 'crm' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
         }`}
       >
-        <Trello className="w-3.5 h-3.5" /> CRM
+        <Contact className="w-3.5 h-3.5" /> CRM
       </button>
     </div>
   );

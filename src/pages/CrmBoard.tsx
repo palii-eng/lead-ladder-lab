@@ -4,7 +4,7 @@ import {
   LayoutGrid, List as ListIcon, Phone, Mail, CalendarDays, Tag,
 } from 'lucide-react';
 import { useCrm, CrmCard as CrmCardType, CrmStage } from '@/context/CrmContext';
-import { ModeSwitch } from '@/components/ModeSwitch';
+import { AppHeader } from '@/components/AppHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -67,19 +67,25 @@ const CrmBoard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm">
-        Завантаження CRM…
+      <div className="min-h-screen flex flex-col">
+        <AppHeader active="crm" />
+        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+          Завантаження CRM…
+        </div>
       </div>
     );
   }
 
   if (!funnel) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-muted-foreground text-sm">Воронок ще немає</p>
-        <Button onClick={() => addFunnel('Воронка 1')} className="gap-2">
-          <Plus className="w-4 h-4" /> Створити воронку
-        </Button>
+      <div className="min-h-screen flex flex-col">
+        <AppHeader active="crm" />
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <p className="text-muted-foreground text-sm">Воронок ще немає</p>
+          <Button onClick={() => addFunnel('Воронка 1')} className="gap-2">
+            <Plus className="w-4 h-4" /> Створити воронку
+          </Button>
+        </div>
       </div>
     );
   }
@@ -122,12 +128,11 @@ const CrmBoard: React.FC = () => {
   );
 
   return (
-    <div className="h-screen bg-background flex overflow-hidden">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <AppHeader active="crm" />
+      <div className="flex-1 flex min-h-0">
       {/* Sidebar */}
       <aside className="w-60 shrink-0 border-r border-border bg-card flex flex-col">
-        <div className="p-3 border-b border-border">
-          <ModeSwitch active="crm" />
-        </div>
         <div className="p-3 flex-1 overflow-y-auto">
           <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide px-2 mb-1.5">Воронки</p>
           <div className="space-y-0.5">
@@ -328,6 +333,7 @@ const CrmBoard: React.FC = () => {
             </div>
           </div>
         )}
+      </div>
       </div>
 
       {/* Add card dialog */}

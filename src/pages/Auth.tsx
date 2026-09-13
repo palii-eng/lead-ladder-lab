@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 import { Eye, EyeOff } from 'lucide-react';
 import adschoolLogo from '@/assets/adschool-logo.png';
@@ -54,12 +55,13 @@ const Auth: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const next = getSafeNextUrl(searchParams);
-  const isTesterLink = searchParams.get('ref') === 'tester';
+  const isTesterLink = searchParams.get('ref') === 'start';
   const [tab, setTab] = useState<'signin' | 'signup'>(isTesterLink ? 'signup' : 'signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   useEffect(() => {
     if (!loading && user) navigate(next ?? '/', { replace: true });
@@ -81,6 +83,10 @@ const Auth: React.FC = () => {
     e.preventDefault();
     if (password.length < 6) {
       toast({ title: 'Пароль занадто короткий', description: 'Мінімум 6 символів', variant: 'destructive' });
+      return;
+    }
+    if (!agreedToTerms) {
+      toast({ title: 'Потрібна згода', description: 'Підтвердіть згоду з політикою конфіденційності та офертою', variant: 'destructive' });
       return;
     }
     setSubmitting(true);
@@ -167,7 +173,37 @@ const Auth: React.FC = () => {
                   <PasswordInput id="su-password" value={password} onChange={setPassword} minLength={6} />
 
                 </div>
-                <Button type="submit" className="w-full" disabled={submitting}>
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    id="su-terms"
+                    checked={agreedToTerms}
+                    onCheckedChange={(v) => setAgreedToTerms(v === true)}
+                    className="mt-0.5"
+                  />
+                  <Label htmlFor="su-terms" className="text-xs font-normal leading-snug text-muted-foreground cursor-pointer">
+                    Погоджуюсь з{' '}
+                    <a
+                      href="https://ads-school.online/privacy-policy/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline underline-offset-2 hover:text-primary/80"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      політикою конфіденційності
+                    </a>{' '}
+                    та{' '}
+                    <a
+                      href="https://branched-wound-fa6.notion.site/10e01f2801f480de8c34f7ecf9f44688"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline underline-offset-2 hover:text-primary/80"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      офертою
+                    </a>
+                  </Label>
+                </div>
+                <Button type="submit" className="w-full" disabled={submitting || !agreedToTerms}>
                   {submitting ? 'Відправка…' : 'Зареєструватися'}
                 </Button>
                 {!isTesterLink && (
