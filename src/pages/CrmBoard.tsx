@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   Plus, Pencil, Trash2, MoreHorizontal, Search,
-  LayoutGrid, List as ListIcon, Phone, Mail, CalendarDays, Tag,
+  LayoutGrid, List as ListIcon, Phone, Mail, CalendarDays, Tag, User, UserPlus, Layers,
 } from 'lucide-react';
 import { useCrm, CrmCard as CrmCardType, CrmStage } from '@/context/CrmContext';
 import { AppHeader } from '@/components/AppHeader';
@@ -27,6 +27,14 @@ const Chip: React.FC<{ icon: React.ElementType; children: React.ReactNode }> = (
   <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground bg-secondary rounded px-1.5 py-0.5">
     <Icon className="w-3 h-3" /> {children}
   </span>
+);
+
+// Input with a leading icon — used throughout the lead-card form dialogs.
+const IconInput: React.FC<React.ComponentProps<typeof Input> & { icon: React.ElementType }> = ({ icon: Icon, className, ...props }) => (
+  <div className="relative">
+    <Icon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+    <Input className={`pl-9 h-10 ${className || ''}`} {...props} />
+  </div>
 );
 
 const CrmBoard: React.FC = () => {
@@ -338,49 +346,55 @@ const CrmBoard: React.FC = () => {
 
       {/* Add card dialog */}
       <AlertDialog open={!!addCardStageId} onOpenChange={(o) => { if (!o) setAddCardStageId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Новий лід</AlertDialogTitle>
+        <AlertDialogContent className="sm:max-w-md rounded-2xl p-0 gap-0 overflow-hidden">
+          <AlertDialogHeader className="flex-row items-center gap-3 space-y-0 text-left p-6 pb-2">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <UserPlus className="w-5 h-5 text-primary" />
+            </div>
+            <AlertDialogTitle className="text-base font-bold">Новий лід</AlertDialogTitle>
           </AlertDialogHeader>
-          <div className="space-y-2">
-            <Input value={cardDraft.title} onChange={e => setCardDraft({ ...cardDraft, title: e.target.value })} placeholder="Ім'я" autoFocus />
-            <Input value={cardDraft.phone} onChange={e => setCardDraft({ ...cardDraft, phone: e.target.value })} placeholder="Телефон" />
-            <Input value={cardDraft.email} onChange={e => setCardDraft({ ...cardDraft, email: e.target.value })} placeholder="Email" />
-            <Input value={cardDraft.source} onChange={e => setCardDraft({ ...cardDraft, source: e.target.value })} placeholder="Джерело (напр. квіз, лендінг)" />
-            <div className="flex items-center gap-2">
-              <label className="text-xs text-muted-foreground whitespace-nowrap">Етап</label>
+          <div className="px-6 pb-6 pt-2 space-y-3">
+            <IconInput icon={User} value={cardDraft.title} onChange={e => setCardDraft({ ...cardDraft, title: e.target.value })} placeholder="Ім'я" autoFocus />
+            <IconInput icon={Phone} value={cardDraft.phone} onChange={e => setCardDraft({ ...cardDraft, phone: e.target.value })} placeholder="Телефон" />
+            <IconInput icon={Mail} value={cardDraft.email} onChange={e => setCardDraft({ ...cardDraft, email: e.target.value })} placeholder="Email" />
+            <IconInput icon={Tag} value={cardDraft.source} onChange={e => setCardDraft({ ...cardDraft, source: e.target.value })} placeholder="Джерело (напр. квіз, лендінг)" />
+            <div className="relative">
+              <Layers className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10 pointer-events-none" />
               <Select value={addCardStageId || undefined} onValueChange={setAddCardStageId}>
-                <SelectTrigger className="h-8 text-xs flex-1"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-10 pl-9"><SelectValue placeholder="Етап" /></SelectTrigger>
                 <SelectContent>
                   {funnel.stages.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            <Textarea value={cardDraft.note} onChange={e => setCardDraft({ ...cardDraft, note: e.target.value })} placeholder="Нотатка" className="min-h-[60px]" />
+            <Textarea value={cardDraft.note} onChange={e => setCardDraft({ ...cardDraft, note: e.target.value })} placeholder="Нотатка" className="min-h-[70px] resize-none" />
           </div>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="p-4 bg-secondary/40 border-t border-border">
             <AlertDialogCancel>Скасувати</AlertDialogCancel>
-            <AlertDialogAction disabled={!cardDraft.title.trim()} onClick={submitAddCard}>Додати</AlertDialogAction>
+            <AlertDialogAction disabled={!cardDraft.title.trim()} onClick={submitAddCard}>Додати лід</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       {/* Edit card dialog */}
       <AlertDialog open={!!editingCard} onOpenChange={(o) => { if (!o) setEditingCard(null); }}>
-        <AlertDialogContent>
+        <AlertDialogContent className="sm:max-w-md rounded-2xl p-0 gap-0 overflow-hidden">
           {editingCard && (
             <>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Картка ліда</AlertDialogTitle>
+              <AlertDialogHeader className="flex-row items-center gap-3 space-y-0 text-left p-6 pb-2">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <User className="w-5 h-5 text-primary" />
+                </div>
+                <AlertDialogTitle className="text-base font-bold">Картка ліда</AlertDialogTitle>
               </AlertDialogHeader>
-              <div className="space-y-2">
-                <Input value={editingCard.card.title} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, title: e.target.value } })} placeholder="Ім'я" />
-                <Input value={editingCard.card.phone} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, phone: e.target.value } })} placeholder="Телефон" />
-                <Input value={editingCard.card.email} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, email: e.target.value } })} placeholder="Email" />
-                <Input value={editingCard.card.source} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, source: e.target.value } })} placeholder="Джерело" />
-                <Textarea value={editingCard.card.note} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, note: e.target.value } })} placeholder="Нотатка" className="min-h-[80px]" />
+              <div className="px-6 pb-6 pt-2 space-y-3">
+                <IconInput icon={User} value={editingCard.card.title} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, title: e.target.value } })} placeholder="Ім'я" />
+                <IconInput icon={Phone} value={editingCard.card.phone} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, phone: e.target.value } })} placeholder="Телефон" />
+                <IconInput icon={Mail} value={editingCard.card.email} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, email: e.target.value } })} placeholder="Email" />
+                <IconInput icon={Tag} value={editingCard.card.source} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, source: e.target.value } })} placeholder="Джерело" />
+                <Textarea value={editingCard.card.note} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, note: e.target.value } })} placeholder="Нотатка" className="min-h-[80px] resize-none" />
               </div>
-              <AlertDialogFooter className="flex-row justify-between sm:justify-between">
+              <AlertDialogFooter className="flex-row items-center justify-between sm:justify-between p-4 bg-secondary/40 border-t border-border">
                 <Button
                   variant="ghost"
                   className="text-destructive hover:text-destructive gap-1.5"

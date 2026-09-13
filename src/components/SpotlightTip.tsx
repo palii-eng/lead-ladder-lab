@@ -140,7 +140,7 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
         }
       `}</style>
       <div
-        className="fixed z-40 pointer-events-none"
+        className="fixed z-[60] pointer-events-none"
         data-spotlight-ring={targetSelector}
         style={{
           top: rect.top - 6,
@@ -152,7 +152,7 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
         }}
       />
       <div
-        className="fixed z-40 pointer-events-none animate-ping"
+        className="fixed z-[60] pointer-events-none animate-ping"
         style={{
           top: rect.top - 6,
           left: rect.left - 6,
@@ -165,7 +165,7 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
       />
       <div
         ref={bubbleRef}
-        className="fixed z-50"
+        className="fixed z-[70]"
         style={{
           top: (bubblePos || { top: rect.bottom + 14, left: Math.max(12, rect.left) }).top,
           left: (bubblePos || { top: rect.bottom + 14, left: Math.max(12, rect.left) }).left,
