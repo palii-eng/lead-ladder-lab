@@ -2505,7 +2505,7 @@ const ScenarioBuilder: React.FC = () => {
                 'Для цього кейсу попроси мене це зробити — це пришвидшить процес.',
                 'При реальній роботі це одне з ваших завдань: або створювати креативи самостійно, або писати ТЗ для дизайнера.',
               ]}
-              hintNumber={11}
+              hintNumber={12}
             />
             <SpotlightTip
               onSkipAll={skipOnboarding}
@@ -2513,9 +2513,9 @@ const ScenarioBuilder: React.FC = () => {
               targetSelector='[data-tour="save-audience-btn"]'
               radius={12}
               lines={[
-                'Заповни назву гіпотези (і, за бажанням, попроси мене заповнити опис) та натисни «Зберегти».',
+                'Супер, тисни «Зберегти».',
               ]}
-              hintNumber={11}
+              hintNumber={12}
             />
 
             <SpotlightTip
@@ -2528,7 +2528,7 @@ const ScenarioBuilder: React.FC = () => {
                 'Щоб пришвидшити процес — попроси мене написати ТЗ, я сам зроблю всю чорнову роботу: заголовок, підзаголовок, опис зображення. Тобі залишиться тільки перевірити й підправити.',
                 'Натисни «+ Крео».',
               ]}
-              hintNumber={12}
+              hintNumber={13}
             />
             <SpotlightTip
               onSkipAll={skipOnboarding}
@@ -2538,7 +2538,7 @@ const ScenarioBuilder: React.FC = () => {
               lines={[
                 'Наразі для спрощення та швидкого запуску попроси мене самостійно заповнити це ТЗ, щоб ми могли швидше запустити його в роботу.',
               ]}
-              hintNumber={12}
+              hintNumber={13}
             />
             <SpotlightTip
               onSkipAll={skipOnboarding}
@@ -2550,7 +2550,7 @@ const ScenarioBuilder: React.FC = () => {
                   ? 'Супер! Тепер збережи й зроби те саме для наступного крео. Саме їх ми й запустимо в рекламу.'
                   : 'Супер, рухаємось далі, натисни «Зберегти адсет».',
               ]}
-              hintNumber={12}
+              hintNumber={13}
             />
 
             <SpotlightTip
@@ -2564,7 +2564,7 @@ const ScenarioBuilder: React.FC = () => {
                 'Нам треба чітко розуміти, яка ціна ліда для нас є допустимою, а за якої ціни треба все вимикати.',
                 'Натисніть на блок «Декомпозиція».',
               ]}
-              hintNumber={13}
+              hintNumber={14}
             />
 
             <SpotlightTip
@@ -2577,7 +2577,7 @@ const ScenarioBuilder: React.FC = () => {
                 'Я відправлю відео на цю тему.',
                 'А поки натисни на кнопку «Попросити AI LeadОслава».',
               ]}
-              hintNumber={14}
+              hintNumber={15}
             />
             <SpotlightTip
               onSkipAll={skipOnboarding}
@@ -2587,7 +2587,7 @@ const ScenarioBuilder: React.FC = () => {
               lines={[
                 'Супер, тисни «Зберегти та продовжити».',
               ]}
-              hintNumber={14}
+              hintNumber={15}
             />
 
             <SpotlightTip
@@ -2599,7 +2599,7 @@ const ScenarioBuilder: React.FC = () => {
                 'Далі нам треба не просто розуміти, як створити рекламну кампанію, але й налаштувати подальший рух лідів для бізнесу.',
                 'Клієнт писав у брифі, що в нього KeepinCRM. Давайте зважимо на це — оберіть відповідну CRM-систему.',
               ]}
-              hintNumber={15}
+              hintNumber={16}
             />
 
             <SpotlightTip
@@ -2610,7 +2610,7 @@ const ScenarioBuilder: React.FC = () => {
               lines={[
                 'Оберіть KeepinCRM.',
               ]}
-              hintNumber={16}
+              hintNumber={17}
             />
 
             <SpotlightTip
@@ -2622,7 +2622,7 @@ const ScenarioBuilder: React.FC = () => {
                 'Дані з сайту не потраплять магічним чином у CRM-систему. Для цього треба працювати з інтеграціями.',
                 'На курсах ADSchool ми ще про це поговоримо. Натисніть на цей блок!',
               ]}
-              hintNumber={17}
+              hintNumber={18}
             />
 
             <SpotlightTip
@@ -2633,7 +2633,7 @@ const ScenarioBuilder: React.FC = () => {
               lines={[
                 'А тепер обери інтеграцію через конектор Apix-Drive. Це дозволить передати дані напряму з сайту в потрібну нам CRM-систему.',
               ]}
-              hintNumber={18}
+              hintNumber={19}
             />
 
             <SpotlightTip
@@ -2645,7 +2645,7 @@ const ScenarioBuilder: React.FC = () => {
                 'Далі в нас залишаються два модулі, які в навчанні ми можемо пропустити, адже на курсі будемо більш детально про це говорити.',
                 'Натисніть в модулі на «Пропустити», щоб продовжити.',
               ]}
-              hintNumber={19}
+              hintNumber={20}
             />
 
             <SpotlightTip
@@ -2657,7 +2657,7 @@ const ScenarioBuilder: React.FC = () => {
                 'Бачу, ви вже заповнили цей модуль — це не обов\'язково було, адже на курсі ми ще детально про це поговоримо, але це не проблема.',
                 'Натисніть «Зберегти та продовжити», щоб рухатись далі.',
               ]}
-              hintNumber={19}
+              hintNumber={20}
             />
 
             <SpotlightTip
@@ -2668,7 +2668,7 @@ const ScenarioBuilder: React.FC = () => {
               lines={[
                 'Бачу, ви вже заповнили цей модуль. Відкрийте картку ще раз і натисніть «Зберегти та продовжити», щоб рухатись далі.',
               ]}
-              hintNumber={19}
+              hintNumber={20}
             />
 
             <SpotlightTip
@@ -2680,7 +2680,7 @@ const ScenarioBuilder: React.FC = () => {
                 'Аналогічна історія, наразі пропускаємо, повернемось згодом.',
                 'Натисніть в модулі на «Пропустити», щоб продовжити.',
               ]}
-              hintNumber={20}
+              hintNumber={21}
             />
 
             <SpotlightTip
@@ -2692,7 +2692,7 @@ const ScenarioBuilder: React.FC = () => {
                 'Бачу, ви вже заповнили цей модуль — це не обов\'язково було, адже на курсі ми ще детально про це поговоримо, але це не проблема.',
                 'Натисніть «Зберегти та продовжити», щоб рухатись далі.',
               ]}
-              hintNumber={20}
+              hintNumber={21}
             />
 
             <SpotlightTip
@@ -2703,7 +2703,7 @@ const ScenarioBuilder: React.FC = () => {
               lines={[
                 'Бачу, ви вже заповнили цей модуль. Відкрийте картку ще раз і натисніть «Зберегти та продовжити», щоб рухатись далі.',
               ]}
-              hintNumber={20}
+              hintNumber={21}
             />
 
             <SpotlightTip
@@ -2715,7 +2715,7 @@ const ScenarioBuilder: React.FC = () => {
                 'Ну що ж, рекламна гіпотеза готова, передача лідів у CRM теж, цифри по декомпозиції ми порахували. Час запускати проєкт!',
                 'Тисни «Запустити».',
               ]}
-              hintNumber={21}
+              hintNumber={22}
             />
 
             {/* Footer summary */}
