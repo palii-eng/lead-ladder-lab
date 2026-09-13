@@ -544,6 +544,10 @@ const ScenarioBuilder: React.FC = () => {
   // One entry per week (index 0 = week 1) — null until that week's action is
   // resolved, then true/false for whether the problem was actually fixed.
   const [launchWeekResults, setLaunchWeekResults] = useState<(boolean | null)[]>([null, null, null, null]);
+  // Holds what the "resolved" screen's manual "Продовжити" button needs to
+  // apply once clicked — replaces a fixed setTimeout so the user reads the
+  // outcome at their own pace instead of it auto-advancing after 1.8s.
+  const pendingWeekAdvance = useRef<{ nextWeekNum: number; nextResults: (boolean | null)[]; finishedProblemType: LaunchProblemType } | null>(null);
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [videoDialogStep, setVideoDialogStep] = useState(0);
   const [skillsOpen, setSkillsOpen] = useState(false);
@@ -2770,7 +2774,9 @@ const ScenarioBuilder: React.FC = () => {
   // Each week presents exactly one problem and gets exactly one action
   // attempt — no retry loop. Whether it counts as solved:
   //  - the action that actually addresses this problem type → always solved
-  //  - "Продовжити без змін" → 20% chance it resolves on its own
+  //  - "Продовжити без змін" → never solved (inaction shouldn't accidentally
+  //    "fix" an ads problem — that would undercut the whole point of the
+  //    simulation, which is to teach the correct action per problem type)
   //  - anything else → not solved
   // After all 4 weeks, solving 2 or more counts as a successful launch.
   const resolveWeekAction = (actionKey: LaunchActionKey) => {
@@ -2778,12 +2784,9 @@ const ScenarioBuilder: React.FC = () => {
     const weekJustFinished = launchWeek;
     const problemAtResolution = launchProblem;
 
-    let solved: boolean;
-    if (actionKey === 'continue') {
-      solved = Math.random() < 0.2;
-    } else {
-      solved = LAUNCH_CORRECT_FIX[problemAtResolution.type].includes(actionKey);
-    }
+    const solved: boolean = actionKey === 'continue'
+      ? false
+      : LAUNCH_CORRECT_FIX[problemAtResolution.type].includes(actionKey);
 
     const nextResults = [...launchWeekResults];
     nextResults[weekJustFinished - 1] = solved;
@@ -2798,20 +2801,32 @@ const ScenarioBuilder: React.FC = () => {
     );
     setLaunchPhase('resolved');
 
-    setTimeout(() => {
-      const nextWeekNum = weekJustFinished + 1;
-      if (nextWeekNum > 4) {
-        const solvedCount = nextResults.filter(Boolean).length;
-        setLaunchPhase(solvedCount >= 2 ? 'month_success' : 'month_failure');
-        return;
-      }
-      setLaunchWeek(nextWeekNum);
-      setLaunchFeedback(null);
-      const candidates = LAUNCH_PROBLEM_TYPES.filter(t => t !== problemAtResolution.type);
-      const pool = candidates.length > 0 ? candidates : LAUNCH_PROBLEM_TYPES;
-      setLaunchProblem(attachLaunchTarget(buildLaunchProblem(pool[Math.floor(Math.random() * pool.length)]), nextWeekNum));
-      setLaunchPhase('week');
-    }, 1800);
+    pendingWeekAdvance.current = {
+      nextWeekNum: weekJustFinished + 1,
+      nextResults,
+      finishedProblemType: problemAtResolution.type,
+    };
+  };
+
+  // Fired by the "resolved" screen's "Продовжити" button — replaces what
+  // used to be a fixed 1.8s auto-advance timer, which was too fast to
+  // actually read the outcome text before it moved on.
+  const advanceAfterWeekResolution = () => {
+    const pending = pendingWeekAdvance.current;
+    if (!pending) return;
+    pendingWeekAdvance.current = null;
+    const { nextWeekNum, nextResults, finishedProblemType } = pending;
+    if (nextWeekNum > 4) {
+      const solvedCount = nextResults.filter(Boolean).length;
+      setLaunchPhase(solvedCount >= 2 ? 'month_success' : 'month_failure');
+      return;
+    }
+    setLaunchWeek(nextWeekNum);
+    setLaunchFeedback(null);
+    const candidates = LAUNCH_PROBLEM_TYPES.filter(t => t !== finishedProblemType);
+    const pool = candidates.length > 0 ? candidates : LAUNCH_PROBLEM_TYPES;
+    setLaunchProblem(attachLaunchTarget(buildLaunchProblem(pool[Math.floor(Math.random() * pool.length)]), nextWeekNum));
+    setLaunchPhase('week');
   };
 
   const handleLaunchAction = (actionKey: LaunchActionKey) => {
@@ -6517,7 +6532,7 @@ const ScenarioBuilder: React.FC = () => {
                     {CONTEXTUAL_ACTION_BY_PROBLEM[launchProblem.type] && (
                       <Button
                         variant="outline"
-                        className="w-full justify-start border-primary/40 text-primary hover:bg-primary/5 bg-card"
+                        className="w-full justify-start text-sm bg-card"
                         onClick={() => handleLaunchAction(CONTEXTUAL_ACTION_BY_PROBLEM[launchProblem.type]!.key)}
                       >
                         {CONTEXTUAL_ACTION_BY_PROBLEM[launchProblem.type]!.label}
@@ -6526,7 +6541,7 @@ const ScenarioBuilder: React.FC = () => {
                     {getAllAdSets().length > 1 && launchProblem.targetAudienceName && (
                       <Button
                         variant="outline"
-                        className="w-full justify-start border-destructive/40 text-destructive hover:bg-destructive/5 bg-card"
+                        className="w-full justify-start text-sm bg-card"
                         onClick={() => handleLaunchAction('disable_audience')}
                       >
                         Вимкнути «{launchProblem.targetAudienceName}»
@@ -6551,10 +6566,14 @@ const ScenarioBuilder: React.FC = () => {
                 </AlertDialogTitle>
                 <AlertDialogDescription className={launchWeekSolved ? '' : 'text-destructive'}>{launchFeedback}</AlertDialogDescription>
               </AlertDialogHeader>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>Переходимо до наступного тижня...</span>
-              </div>
+              <AlertDialogFooter>
+                <Button
+                  onClick={advanceAfterWeekResolution}
+                  className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+                >
+                  Продовжити
+                </Button>
+              </AlertDialogFooter>
             </>
           )}
 
