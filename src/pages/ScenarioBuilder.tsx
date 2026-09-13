@@ -599,18 +599,26 @@ const ScenarioBuilder: React.FC = () => {
   // щорендеру — це виключає цілий клас багів "перехід не спрацював".
   // (Сама формула — нижче, після isStepCompleted, від якої вона залежить.)
   const ONBOARD_KEY_PREFIX = 'leadoslav_funnel_onboard_step_';
+  // Must match SEEN_KEY_PREFIX in LeadOslavTour.tsx — see the comment there:
+  // closing either the dashboard welcome tour or this in-scenario chain
+  // should permanently stop both.
+  const DASHBOARD_TOUR_SEEN_KEY_PREFIX = 'leadoslav_tour_seen_';
   const [onboardActive, setOnboardActive] = useState(false);
   useEffect(() => {
     if (!user?.id) return;
     try {
       const raw = localStorage.getItem(`${ONBOARD_KEY_PREFIX}${user.id}`);
-      setOnboardActive(raw !== 'done');
+      const closedElsewhere = localStorage.getItem(`${DASHBOARD_TOUR_SEEN_KEY_PREFIX}${user.id}`) === '1';
+      setOnboardActive(raw !== 'done' && !closedElsewhere);
     } catch { setOnboardActive(false); }
   }, [user?.id]);
   const skipOnboarding = () => {
     setOnboardActive(false);
     if (!user?.id) return;
-    try { localStorage.setItem(`${ONBOARD_KEY_PREFIX}${user.id}`, 'done'); } catch { /* ignore */ }
+    try {
+      localStorage.setItem(`${ONBOARD_KEY_PREFIX}${user.id}`, 'done');
+      localStorage.setItem(`${DASHBOARD_TOUR_SEEN_KEY_PREFIX}${user.id}`, '1');
+    } catch { /* ignore */ }
   };
 
   const [preselectedAudienceId, setPreselectedAudienceId] = useState<string | null>(null);

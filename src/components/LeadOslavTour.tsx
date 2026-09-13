@@ -7,6 +7,11 @@ import { SpotlightTip } from '@/components/SpotlightTip';
 import { TOTAL_ONBOARD_HINTS } from '@/lib/onboardingHints';
 
 const SEEN_KEY_PREFIX = 'leadoslav_tour_seen_';
+// Must match ONBOARD_KEY_PREFIX in ScenarioBuilder.tsx — the two onboarding
+// chains (dashboard welcome tour here, in-scenario SpotlightTip chain
+// there) share one "close training" intent: closing either one should
+// permanently stop both, not just the one the student happened to be on.
+const SCENARIO_ONBOARD_KEY_PREFIX = 'leadoslav_funnel_onboard_step_';
 
 interface LeadOslavTourProps {
   createBtnRef: React.RefObject<HTMLButtonElement>;
@@ -27,8 +32,9 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef, onSt
   useEffect(() => {
     if (!user) return;
     try {
-      const key = `${SEEN_KEY_PREFIX}${user.id}`;
-      if (!localStorage.getItem(key)) setStep(1);
+      const seenHere = !!localStorage.getItem(`${SEEN_KEY_PREFIX}${user.id}`);
+      const closedElsewhere = localStorage.getItem(`${SCENARIO_ONBOARD_KEY_PREFIX}${user.id}`) === 'done';
+      if (!seenHere && !closedElsewhere) setStep(1);
     } catch { /* localStorage unavailable — skip tour */ }
   }, [user]);
 
@@ -202,5 +208,10 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef, onSt
 
 export const markLeadOslavTourSeen = (userId: string | undefined) => {
   if (!userId) return;
-  try { localStorage.setItem(`${SEEN_KEY_PREFIX}${userId}`, '1'); } catch { /* ignore */ }
+  try {
+    localStorage.setItem(`${SEEN_KEY_PREFIX}${userId}`, '1');
+    // Closing this tour also stops the separate in-scenario onboarding
+    // chain — one "close training" click should mean no more training.
+    localStorage.setItem(`${SCENARIO_ONBOARD_KEY_PREFIX}${userId}`, 'done');
+  } catch { /* ignore */ }
 };
