@@ -5102,15 +5102,15 @@ const ScenarioBuilder: React.FC = () => {
                                   Завершіть {missing.length > 1 ? 'ланцюжки' : 'ланцюжок'} «{missing.join('», «')}», щоб запустити проект
                                 </p>
                               )}
-                              {isCompleted && (
+                              {isLaunched && (
                                 <div className="flex justify-center py-1">
-                                  <div className={`w-px h-4 border-l-2 border-dashed ${isLaunched ? 'border-success/50' : 'border-border'}`} />
+                                  <div className="w-px h-4 border-l-2 border-dashed border-success/50" />
                                 </div>
                               )}
                             </>
                           );
                         })()}
-                        {(stepIdx !== 9 || isCompleted) && (
+                        {(stepIdx !== 9 || isLaunched) && (
                           <FlowNode
                             icon={s.icon}
                             title={branchLeadType && (stepIdx === 3 || stepIdx === 4)
