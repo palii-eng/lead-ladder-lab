@@ -44,7 +44,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef, onSt
 
   const skipTour = () => {
     setStep(0);
-    markLeadOslavTourSeen(user?.id);
+    closeAllLeadOslavTraining(user?.id);
   };
 
   useEffect(() => {
@@ -206,12 +206,22 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef, onSt
   return null;
 };
 
+// Marks only THIS tour (the dashboard welcome walkthrough) as seen. Called
+// both on explicit skip and as a side effect of the student simply taking a
+// lead into work (Dashboard's handleCreate/handleTakeLead) — the latter is
+// normal, expected progress, not an opt-out, so it must NOT also kill the
+// separate in-scenario onboarding chain that hasn't even started yet.
 export const markLeadOslavTourSeen = (userId: string | undefined) => {
+  if (!userId) return;
+  try { localStorage.setItem(`${SEEN_KEY_PREFIX}${userId}`, '1'); } catch { /* ignore */ }
+};
+
+// Explicit "Закрити навчання" click only: stops both onboarding chains for
+// good, since that's the one signal that actually means "no more training".
+export const closeAllLeadOslavTraining = (userId: string | undefined) => {
   if (!userId) return;
   try {
     localStorage.setItem(`${SEEN_KEY_PREFIX}${userId}`, '1');
-    // Closing this tour also stops the separate in-scenario onboarding
-    // chain — one "close training" click should mean no more training.
     localStorage.setItem(`${SCENARIO_ONBOARD_KEY_PREFIX}${userId}`, 'done');
   } catch { /* ignore */ }
 };
