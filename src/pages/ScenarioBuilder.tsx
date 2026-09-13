@@ -537,6 +537,12 @@ const ScenarioBuilder: React.FC = () => {
   const [launchProblem, setLaunchProblem] = useState<LaunchProblem | null>(null);
   const [launchFeedback, setLaunchFeedback] = useState<string | null>(null);
   const [launchWeekSolved, setLaunchWeekSolved] = useState<boolean>(false);
+  // Week-1 onboarding intro card: shown only when the launch was started
+  // while the onboarding tour was still active (captured at launch time,
+  // before opening the dialog flips onboarding to "done") — stays hidden
+  // once dismissed or for any subsequent scenario/launch.
+  const [launchIntroDismissed, setLaunchIntroDismissed] = useState(false);
+  const launchIntroForOnboardingRef = useRef(false);
   // One entry per week (index 0 = week 1) — null until that week's action is
   // resolved, then true/false for whether the problem was actually fixed.
   const [launchWeekResults, setLaunchWeekResults] = useState<(boolean | null)[]>([null, null, null, null]);
@@ -2807,6 +2813,8 @@ const ScenarioBuilder: React.FC = () => {
     setLaunchProblem(attachLaunchTarget(buildLaunchProblem('ctr_low'), 1));
     setLaunchFeedback(null);
     setLaunchPhase('launching');
+    launchIntroForOnboardingRef.current = onboardActive;
+    setLaunchIntroDismissed(false);
     setLaunchResultOpen(true);
     setTimeout(() => setLaunchPhase('week'), 1800);
   };
@@ -6559,7 +6567,37 @@ const ScenarioBuilder: React.FC = () => {
             </div>
           )}
 
-          {launchPhase === 'week' && (
+          {launchPhase === 'week' && launchWeek === 1 && launchIntroForOnboardingRef.current && !launchIntroDismissed && (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="sr-only">Тиждень 1</AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                  <div className="flex items-start gap-3">
+                    <LeadOslavAvatar size={44} />
+                    <div className="flex-1 rounded-2xl rounded-tl-sm bg-muted px-4 py-3 space-y-2">
+                      <p className="text-sm font-bold text-foreground">AI LeadОслав</p>
+                      <p className="text-sm text-foreground">Ну що ж, настав час відповідати за обіцянки.</p>
+                      <p className="text-sm text-foreground">
+                        Під час запуску проєктів у тебе завжди виникатимуть проблеми. Рідко коли все йде за планом,
+                        але важливо вміти працювати із запереченнями та вирішувати проблеми, що виникають.
+                      </p>
+                      <p className="text-sm text-foreground">Давай розглянемо занепокоєння клієнта.</p>
+                    </div>
+                  </div>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="sm:justify-start">
+                <Button
+                  onClick={() => setLaunchIntroDismissed(true)}
+                  className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+                >
+                  Продовжити
+                </Button>
+              </AlertDialogFooter>
+            </>
+          )}
+
+          {launchPhase === 'week' && !(launchWeek === 1 && launchIntroForOnboardingRef.current && !launchIntroDismissed) && (
             <>
               <AlertDialogHeader>
                 <AlertDialogTitle className="sr-only">
