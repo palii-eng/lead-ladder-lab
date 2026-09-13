@@ -145,7 +145,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({
 
   return (
     <div className="flex items-start flex-shrink-0">
-      <div className="flex flex-col relative" style={{ width: '240px' }}>
+      <div className="flex flex-col relative" style={{ width: '270px' }}>
         {/* Step badge above */}
         <div className="flex items-center gap-2 mb-2 px-1 h-4">
           <span className={`font-mono text-[10px] tracking-widest uppercase ${
@@ -199,9 +199,10 @@ const FlowNode: React.FC<FlowNodeProps> = ({
             <p className="text-[11px] text-muted-foreground mt-0.5 pr-8">{subTitle}</p>
           )}
 
-          {/* Description */}
+          {/* Description — reserve extra right space when the quick-skip pill
+              is shown so its text never wraps under that pill. */}
           <p
-            className={`text-[12px] leading-snug mt-2 ${
+            className={`text-[12px] leading-snug mt-2 ${onSkip ? 'pr-16' : ''} ${
               state === 'locked' ? 'text-muted-foreground/50' : 'text-muted-foreground'
             }`}
           >

@@ -4007,15 +4007,8 @@ const ScenarioBuilder: React.FC = () => {
             { key: 'averageCheck', label: 'Середній чек', suffix: '$' },
             { key: 'marginality', label: 'Маржинальність', suffix: '%' },
           ];
-          const isInfobiz = scenario.niche === 'Інфобізнес';
           return (
             <div className="space-y-4">
-              {isInfobiz && (
-                <div className="flex items-center gap-2 p-2 rounded-lg border border-border bg-secondary hover:border-primary/40 transition-all">
-                  <span className="text-xs font-medium text-foreground flex-1">{INFOBIZ_DECOMP_VIDEO.title}</span>
-                  <VideoBadge url={INFOBIZ_DECOMP_VIDEO.url} title={INFOBIZ_DECOMP_VIDEO.title} size="sm" />
-                </div>
-              )}
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-foreground">
                   {isTikTokSource ? 'TIKTOK AD CALCULATOR' : 'META AD CALCULATOR'}
@@ -5083,7 +5076,7 @@ const ScenarioBuilder: React.FC = () => {
                 // навмисно (жодного onClick), лише позначає, що буде далі.
                 const renderNextMonthNode = () => (
                   <div className="flex items-start flex-shrink-0">
-                    <div className="flex flex-col relative" style={{ width: '240px' }}>
+                    <div className="flex flex-col relative" style={{ width: '270px' }}>
                       {/* Невидимий спейсер, що ТОЧНО повторює розмітку "✅ Проект
                           запущений" + конектора над сусідньою карткою "Результати
                           першого місяця" (вони в тому ж флекс-рядку) — без нього
@@ -5569,7 +5562,10 @@ const ScenarioBuilder: React.FC = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 pt-2">
-            {(STEP_VIDEOS[videoDialogStep] || []).map((v, i) => (
+            {[
+              ...(STEP_VIDEOS[videoDialogStep] || []),
+              ...(videoDialogStep === 4 && scenario.niche === 'Інфобізнес' ? [INFOBIZ_DECOMP_VIDEO] : []),
+            ].map((v, i) => (
               <a
                 key={i}
                 href={v.url}
