@@ -1862,7 +1862,29 @@ const ScenarioBuilder: React.FC = () => {
         ? (scenario.leadTypes as string[])
         : ['main'];
 
-    type Row = { id: string; kind: 'aud'; label: string; sub?: string; creoCount: number; cpm: number; ctr: number; freq: number; age: string; country: string; city: string; bad?: boolean; rejected?: boolean };
+    // Назва й приблизний обсяг результату залежать від цілі кампанії — те, що
+    // клієнт реально отримує з реклами (заявки для лідгену, кліки для
+    // трафіку, покази для впізнаваності і т.д.), а не абстрактна метрика.
+    const RESULT_LABEL_BY_CHANNEL: Record<string, string> = {
+      leads: 'Заявки',
+      traffic: 'Кліки',
+      engagement: 'Взаємодії',
+      awareness: 'Охоплення',
+      app_promotion: 'Встановлення',
+      sales: 'Покупки',
+    };
+    const resultLabel = RESULT_LABEL_BY_CHANNEL[scenario.channel || ''] || 'Результат';
+    const RESULT_UNIT_BY_CHANNEL: Record<string, string> = {
+      leads: 'заявок',
+      traffic: 'кліків',
+      engagement: 'взаємодій',
+      awareness: 'охоплення',
+      app_promotion: 'встановлень',
+      sales: 'покупок',
+    };
+    const resultUnit = RESULT_UNIT_BY_CHANNEL[scenario.channel || ''] || 'результатів';
+
+    type Row = { id: string; kind: 'aud'; label: string; sub?: string; creoCount: number; cpm: number; ctr: number; freq: number; age: string; country: string; city: string; result: number; bad?: boolean; rejected?: boolean };
     const rows: Row[] = [];
 
     let adSetCounter = 0;
@@ -1891,6 +1913,7 @@ const ScenarioBuilder: React.FC = () => {
           age,
           country: COUNTRY,
           city,
+          result: Math.round(rand(seed >> 11, 8, 38, 0)),
         });
       });
     });
@@ -1905,6 +1928,7 @@ const ScenarioBuilder: React.FC = () => {
         if (problem.cpm === 'high') target.cpm = Number((target.cpm * (1 + (problem.cpmPct || 25) / 100)).toFixed(2));
         if (problem.ctr === 'low') target.ctr = Number((target.ctr * 0.4).toFixed(2));
         if (problem.freq === 'high') target.freq = Number((2.6 + (target.freq % 1)).toFixed(1));
+        if (problem.cpm === 'high' || problem.ctr === 'low') target.result = Math.max(1, Math.round(target.result * 0.5));
         target.bad = true;
         if (problem.rejected) target.rejected = true;
       }
@@ -1927,6 +1951,7 @@ const ScenarioBuilder: React.FC = () => {
               <th className="text-right font-semibold px-2 py-2">CPM</th>
               <th className="text-right font-semibold px-2 py-2">CTR</th>
               <th className="text-right font-semibold px-2 py-2">Частота</th>
+              <th className="text-right font-semibold px-2 py-2">{resultLabel}</th>
               <th className="text-right font-semibold px-2 py-2">Вік</th>
               <th className="text-right font-semibold px-2 py-2">Країна</th>
               <th className="text-right font-semibold px-3 py-2">Місто</th>
@@ -1946,7 +1971,7 @@ const ScenarioBuilder: React.FC = () => {
                   </div>
                 </td>
                 {r.rejected ? (
-                  <td colSpan={6} className="px-3 py-2 text-right">
+                  <td colSpan={7} className="px-3 py-2 text-right">
                     <span className="inline-flex items-center gap-1 text-destructive font-semibold text-[11px]">
                       ⛔ Відхилено модерацією
                     </span>
@@ -1956,6 +1981,9 @@ const ScenarioBuilder: React.FC = () => {
                     <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.cpm === 'high' ? 'text-destructive font-semibold' : ''}`}>${r.cpm.toFixed(2)}</td>
                     <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.ctr === 'low' ? 'text-destructive font-semibold' : ''}`}>{r.ctr.toFixed(2)}%</td>
                     <td className={`px-2 py-2 text-right tabular-nums ${r.bad && problem?.freq === 'high' ? 'text-destructive font-semibold' : ''}`}>{r.freq.toFixed(1)}</td>
+                    <td className={`px-2 py-2 text-right tabular-nums whitespace-nowrap ${r.bad && (problem?.cpm === 'high' || problem?.ctr === 'low') ? 'text-destructive font-semibold' : 'text-foreground font-medium'}`}>
+                      {r.result} {resultUnit}
+                    </td>
                     <td className="px-2 py-2 text-right text-muted-foreground">{r.age}</td>
                     <td className="px-2 py-2 text-right text-muted-foreground whitespace-nowrap">{r.country}</td>
                     <td className="px-3 py-2 text-right text-muted-foreground whitespace-nowrap">{r.city}</td>
