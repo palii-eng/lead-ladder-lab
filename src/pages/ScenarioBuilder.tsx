@@ -3992,6 +3992,16 @@ const ScenarioBuilder: React.FC = () => {
                   {fillBenchLoading ? 'AI LeadОслав аналізує ринок…' : 'Попросити AI LeadОслава'}
                 </Button>
               </div>
+              <a
+                href="https://docs.google.com/spreadsheets/d/1JTqVMzNW2WWwtOFPvXMm2WD4lS2s2_oKjG5jzeSjbBM/edit?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-background hover:bg-accent text-xs font-medium text-foreground transition-colors w-fit"
+                title="Завантажити шаблон декомпозиції"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Завантажити шаблон декомпозиції
+              </a>
               <div className="flex gap-1">
                 {([
                   { key: 'bad' as const, label: '😟 Гірший', bg: 'bg-warning text-warning-foreground', inactive: 'bg-secondary text-secondary-foreground' },
