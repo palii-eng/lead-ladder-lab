@@ -71,7 +71,7 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
 
   if (collapsed) {
     return (
-      <aside className="fixed left-0 top-0 h-screen w-14 border-r border-border bg-card flex flex-col items-center py-4 gap-3 z-30">
+      <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-14 border-r border-border bg-card flex flex-col items-center py-4 gap-3 z-30">
         <button
           type="button"
           onClick={onToggle}
@@ -92,7 +92,7 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-[300px] border-r border-border bg-card overflow-y-auto z-30">
+    <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-[300px] border-r border-border bg-card overflow-y-auto z-30">
       <div className="flex items-center justify-between px-4 pt-4">
         <h2 className="font-bold text-foreground">Ваш прогрес</h2>
         <button

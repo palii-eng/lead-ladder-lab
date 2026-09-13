@@ -253,12 +253,12 @@ const Dashboard: React.FC = () => {
 
 
   return (
+    <>
+    <AppHeader active="sim" />
     <div
       className="min-h-screen bg-background transition-[padding] duration-200"
       style={{ paddingLeft: gamificationCollapsed ? 56 : 300 }}
     >
-      <AppHeader active="sim" />
-
       {/* Content */}
       <main className="container mx-auto px-6 py-8">
         {corruptKeys.length > 0 && (
@@ -529,6 +529,7 @@ const Dashboard: React.FC = () => {
       <GamificationSidebar collapsed={gamificationCollapsed} onToggle={() => setGamificationCollapsed(v => !v)} />
       {isTester && <LeadOslavTour createBtnRef={createBtnRef} onStepChange={setTourStep} />}
     </div>
+    </>
   );
 };
 
