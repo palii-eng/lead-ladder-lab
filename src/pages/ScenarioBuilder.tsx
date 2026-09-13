@@ -2844,6 +2844,12 @@ const ScenarioBuilder: React.FC = () => {
         title: '🎉 Проєкт зараховано!',
         description: `+1 проєкт${earned > 0 ? `, +$${earned.toLocaleString()} на баланс` : ''} (усього: $${totalAfter.toLocaleString()})`,
       });
+    } else {
+      toast({
+        title: '❌ Клієнт пішов',
+        description: 'Проєкт не зараховано, оплата не отримана.',
+        variant: 'destructive',
+      });
     }
     update({ status: 'completed', monthSurvived: isSuccess });
     setLaunchResultOpen(false);
@@ -4728,7 +4734,9 @@ const ScenarioBuilder: React.FC = () => {
           <div className="flex-1" />
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="text-xs">
-              {scenario.status === 'completed' ? '✅ Завершено' : '📝 Чернетка'}
+              {scenario.status === 'completed'
+                ? (scenario.monthSurvived ? '✅ Завершено' : '❌ Клієнт пішов')
+                : '📝 Чернетка'}
             </Badge>
           </div>
         </div>

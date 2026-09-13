@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useScenarios, ClientBrief, createDefaultDecompSet } from '@/context/ScenariosContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Trophy, Award, Inbox, GraduationCap, Newspaper } from 'lucide-react';
+import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Award, Inbox, GraduationCap, Newspaper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -425,13 +425,22 @@ const Dashboard: React.FC = () => {
                   style={{ animationDelay: `${i * 60}ms` }}
                   onClick={() => navigate(`/scenario/${s.id}`)}
                 >
-                  {(s.monthSurvived || s.status === 'completed') && (
+                  {s.monthSurvived === true && (
                     <span
                       className="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center ring-2 ring-card shadow-sm z-10"
                       style={{ background: 'hsl(142 71% 45%)' }}
-                      title={s.monthSurvived ? 'Проєкт витримав перший місяць' : 'Проєкт завершено'}
+                      title="Проєкт витримав перший місяць — зараховано й оплачено"
                     >
-                      {s.monthSurvived ? <Award className="w-3.5 h-3.5 text-white" /> : <Trophy className="w-3.5 h-3.5 text-white" />}
+                      <Award className="w-3.5 h-3.5 text-white" />
+                    </span>
+                  )}
+                  {s.status === 'completed' && s.monthSurvived === false && (
+                    <span
+                      className="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center ring-2 ring-card shadow-sm z-10"
+                      style={{ background: 'hsl(0 70% 55%)' }}
+                      title="Клієнт пішов — проєкт не зараховано, оплата не отримана"
+                    >
+                      <UserX className="w-3.5 h-3.5 text-white" />
                     </span>
                   )}
                   <div className="flex items-center gap-3">
