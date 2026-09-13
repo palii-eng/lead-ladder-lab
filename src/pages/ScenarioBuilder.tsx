@@ -141,6 +141,8 @@ const launchClientLine = (p: LaunchProblem): string => {
       return 'Ліди йдуть дешево і в потрібній кількості, але клієнт скаржиться: 8 з 10 — це не цільова аудиторія, просто зацікавлені, а не платоспроможні клієнти.';
     case 'client_unhappy':
       return 'Клієнт пише: "Чому так мало лідів? У конкурента реклама всюди!" — хоча всі цифри по кампанії в межах прогнозу.';
+    case 'freq_high':
+      return 'Ситуація кращою не стає — тепер ще й частота виросла.';
     default:
       break;
   }
@@ -553,6 +555,10 @@ const ScenarioBuilder: React.FC = () => {
   // the right call, even though "Продовжити без змін" never counts as a
   // solved week mechanically (LAUNCH_CORRECT_FIX never lists it).
   const showLaunchAction2Hint = launchWeek === 2 && launchIntroForOnboardingRef.current && launchProblem?.type === 'bad_lead_quality';
+  // Week 3 is force-scripted to freq_high during onboarding — unlike week 2,
+  // "Створити нову аудиторію" is a genuinely correct fix here (see
+  // LAUNCH_CORRECT_FIX.freq_high), so this week is meant to actually be won.
+  const showLaunchAction3Hint = launchWeek === 3 && launchIntroForOnboardingRef.current && launchProblem?.type === 'freq_high';
   // One entry per week (index 0 = week 1) — null until that week's action is
   // resolved, then true/false for whether the problem was actually fixed.
   const [launchWeekResults, setLaunchWeekResults] = useState<(boolean | null)[]>([null, null, null, null]);
@@ -2934,13 +2940,15 @@ const ScenarioBuilder: React.FC = () => {
     }
     setLaunchWeek(nextWeekNum);
     setLaunchFeedback(null);
-    // During onboarding, week 2 is scripted to always be bad_lead_quality
-    // (see showLaunchAction2Hint below) so the guided "Продовжити без змін"
-    // hint always matches what's actually on screen — otherwise this pool
-    // pick is random.
+    // During onboarding, weeks 2 and 3 are scripted (bad_lead_quality, then
+    // freq_high — see showLaunchAction2Hint/showLaunchAction3Hint below) so
+    // the guided hints always match what's actually on screen; otherwise
+    // this pool pick is random.
     const candidates = LAUNCH_PROBLEM_TYPES.filter(t => t !== finishedProblemType);
     const pool = candidates.length > 0 ? candidates : LAUNCH_PROBLEM_TYPES;
-    const forcedType: LaunchProblemType | null = (launchIntroForOnboardingRef.current && nextWeekNum === 2) ? 'bad_lead_quality' : null;
+    const forcedType: LaunchProblemType | null = launchIntroForOnboardingRef.current
+      ? (nextWeekNum === 2 ? 'bad_lead_quality' : nextWeekNum === 3 ? 'freq_high' : null)
+      : null;
     setLaunchProblem(attachLaunchTarget(buildLaunchProblem(forcedType || pool[Math.floor(Math.random() * pool.length)]), nextWeekNum));
     setLaunchPhase('week');
   };
@@ -6720,9 +6728,9 @@ const ScenarioBuilder: React.FC = () => {
                       {LAUNCH_ACTIONS.map(a => (
                         <Button
                           key={a.key}
-                          data-tour={a.key === 'change_creo' ? 'change-creo-action-btn' : a.key === 'continue' ? 'continue-action-btn' : undefined}
+                          data-tour={a.key === 'change_creo' ? 'change-creo-action-btn' : a.key === 'continue' ? 'continue-action-btn' : a.key === 'new_audience' ? 'new-audience-action-btn' : undefined}
                           variant="outline"
-                          disabled={(showLaunchAction1Hint && a.key !== 'change_creo') || (showLaunchAction2Hint && a.key !== 'continue')}
+                          disabled={(showLaunchAction1Hint && a.key !== 'change_creo') || (showLaunchAction2Hint && a.key !== 'continue') || (showLaunchAction3Hint && a.key !== 'new_audience')}
                           className="w-full justify-start text-sm bg-card"
                           onClick={() => handleLaunchAction(a.key)}
                         >
@@ -6737,7 +6745,7 @@ const ScenarioBuilder: React.FC = () => {
                       {launchHashSeed(`${scenario.id}-budget-${launchWeek}`) % 3 === 0 && (
                         <Button
                           variant="outline"
-                          disabled={showLaunchAction1Hint || showLaunchAction2Hint}
+                          disabled={showLaunchAction1Hint || showLaunchAction2Hint || showLaunchAction3Hint}
                           className="w-full justify-start text-sm bg-card"
                           onClick={() => handleLaunchAction('adjust_budget')}
                         >
@@ -6748,7 +6756,7 @@ const ScenarioBuilder: React.FC = () => {
                     {CONTEXTUAL_ACTION_BY_PROBLEM[launchProblem.type] && (
                       <Button
                         variant="outline"
-                        disabled={showLaunchAction1Hint || showLaunchAction2Hint}
+                        disabled={showLaunchAction1Hint || showLaunchAction2Hint || showLaunchAction3Hint}
                         className="w-full justify-start text-sm bg-card"
                         onClick={() => handleLaunchAction(CONTEXTUAL_ACTION_BY_PROBLEM[launchProblem.type]!.key)}
                       >
@@ -6758,7 +6766,7 @@ const ScenarioBuilder: React.FC = () => {
                     {getAllAdSets().length > 1 && launchProblem.targetAudienceName && (
                       <Button
                         variant="outline"
-                        disabled={showLaunchAction1Hint || showLaunchAction2Hint}
+                        disabled={showLaunchAction1Hint || showLaunchAction2Hint || showLaunchAction3Hint}
                         className="w-full justify-start text-sm bg-card"
                         onClick={() => handleLaunchAction('disable_audience')}
                       >
@@ -6790,6 +6798,19 @@ const ScenarioBuilder: React.FC = () => {
                         'Давай спробуємо пояснити клієнту, що нам потрібно трохи більше часу, а точніше — більше лідів для аналізу та оптимізації. Натисни «Продовжити без змін».',
                       ]}
                       hintNumber={24}
+                    />
+                    <SpotlightTip
+                      onSkipAll={skipOnboarding}
+                      show={showLaunchAction3Hint}
+                      targetSelector='[data-tour="new-audience-action-btn"]'
+                      radius={12}
+                      lines={[
+                        'Що тут сказати...',
+                        'Таке теж буває. Не завжди клієнт вірить у все, що ви кажете, і це теж своєрідний урок.',
+                        'Ну і, звичайно, не всі ваші рішення можуть бути гарантовано правильними. Іноді, що б ви не робили, ситуація тільки погіршується...',
+                        'Тепер давай спробуємо перезапустити аудиторію. Це теж лише гіпотеза, але, можливо, спрацює. Натисни «Створити нову аудиторію».',
+                      ]}
+                      hintNumber={25}
                     />
                   </div>
                 ) : (
