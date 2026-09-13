@@ -237,10 +237,6 @@ const STEP_VIDEOS: Record<number, { title: string; url: string }[]> = {
   1: [
     { title: 'Огляд рекламних платформ', url: 'https://ads-school.online/' },
   ],
-  2: [
-    { title: 'Огляд рекламних каналів', url: 'https://ads-school.online/' },
-    { title: 'SEO vs PPC: що обрати', url: 'https://ads-school.online/' },
-  ],
   3: [
     { title: 'Деталізація формату воронки', url: 'https://ads-school.online/' },
   ],
