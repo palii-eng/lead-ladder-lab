@@ -277,7 +277,7 @@ const CrmBoard: React.FC = () => {
                       {visibleCards.map(card => renderCardTile(stage, card))}
 
                       <button
-                        className="w-full text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/60 rounded-lg p-2 flex items-center gap-1.5 justify-center transition-colors"
+                        className="w-full text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/60 rounded-lg py-1 px-2 flex items-center gap-1.5 justify-center transition-colors"
                         onClick={() => openAddCard(stage.id)}
                       >
                         <Plus className="w-3.5 h-3.5" /> Картка
