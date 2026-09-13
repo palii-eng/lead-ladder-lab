@@ -10,12 +10,14 @@ const SEEN_KEY_PREFIX = 'leadoslav_tour_seen_';
 
 interface LeadOslavTourProps {
   createBtnRef: React.RefObject<HTMLButtonElement>;
-  /** Fires whenever the tour starts/ends — lets the dashboard disable
-   * distracting actions (like cycling past the lead card) while it runs. */
-  onActiveChange?: (active: boolean) => void;
+  /** Fires whenever the current tour step changes — lets the dashboard
+   * disable distracting/early actions (cycling past the lead card, taking
+   * it into work before the tour has walked through the rest) while it's
+   * still running. 0 means the tour isn't active. */
+  onStepChange?: (step: 0 | 1 | 2 | 3 | 4) => void;
 }
 
-export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef, onActiveChange }) => {
+export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef, onStepChange }) => {
   const { user } = useAuth();
   // 0 = not running, 1 = welcome, 2 = leads-card spotlight, 3 = daily-videos
   // spotlight, 4 = spotlight on the create button
@@ -31,8 +33,8 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef, onAc
   }, [user]);
 
   useEffect(() => {
-    onActiveChange?.(step !== 0);
-  }, [step, onActiveChange]);
+    onStepChange?.(step);
+  }, [step, onStepChange]);
 
   const skipTour = () => {
     setStep(0);
@@ -143,7 +145,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef, onAc
         `}</style>
         {/* Spotlight ring around the target button + dims the rest of the page */}
         <div
-          className="fixed z-40 pointer-events-none"
+          className="fixed z-[60] pointer-events-none"
           style={{
             top: rect.top - 6,
             left: rect.left - 6,
@@ -154,7 +156,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef, onAc
           }}
         />
         <div
-          className="fixed z-40 rounded-lg pointer-events-none animate-ping"
+          className="fixed z-[60] rounded-lg pointer-events-none animate-ping"
           style={{
             top: rect.top - 6,
             left: rect.left - 6,
@@ -166,7 +168,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef, onAc
         />
 
         <div
-          className="fixed z-50"
+          className="fixed z-[70]"
           style={{ top: rect.bottom + 14, left: Math.max(12, rect.right - 320) }}
         >
           <div className="flex gap-2.5 items-start bg-card border border-primary rounded-xl shadow-lg p-3 max-w-[320px]">

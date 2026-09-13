@@ -59,10 +59,15 @@ const Dashboard: React.FC = () => {
   }, [searchParams, user?.id, navigate]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   // While the LeadOslav onboarding tour is running, the "Наступний" button
-  // lets a tester cycle past the highlighted lead without ever clicking
-  // "Взяти в роботу" — disabled for the duration so the tour actually forces
-  // that action instead of being skippable.
-  const [tourActive, setTourActive] = useState(false);
+  // (and the carousel dots) let a tester cycle past the highlighted lead
+  // without ever clicking "Взяти в роботу" — disabled for the duration.
+  // "Взяти в роботу" itself is disabled too until the tour actually reaches
+  // step 4 (its own explicit "click this now" instruction) — otherwise a
+  // click on step 2 jumps straight into a scenario and skips the rest of
+  // the tour (the daily-videos hint on step 3 never gets shown).
+  const [tourStep, setTourStep] = useState<0 | 1 | 2 | 3 | 4>(0);
+  const tourActive = tourStep !== 0;
+  const canTakeLead = tourStep === 0 || tourStep === 4;
   const [gamificationCollapsed, setGamificationCollapsed] = useState(false);
   const createBtnRef = useRef<HTMLButtonElement>(null);
   const scenarioToDelete = deleteId ? scenarios.find(s => s.id === deleteId) : null;
@@ -284,7 +289,7 @@ const Dashboard: React.FC = () => {
                       <Button
                         ref={createBtnRef}
                         size="sm"
-                        disabled={!!takingLeadKey}
+                        disabled={!!takingLeadKey || !canTakeLead}
                         onClick={() => handleTakeLead(lead, leadKey)}
                         className="flex-1 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-xs h-8"
                       >
@@ -482,7 +487,7 @@ const Dashboard: React.FC = () => {
       </AlertDialog>
 
       <GamificationSidebar collapsed={gamificationCollapsed} onToggle={() => setGamificationCollapsed(v => !v)} />
-      {isTester && <LeadOslavTour createBtnRef={createBtnRef} onActiveChange={setTourActive} />}
+      {isTester && <LeadOslavTour createBtnRef={createBtnRef} onStepChange={setTourStep} />}
     </div>
   );
 };
