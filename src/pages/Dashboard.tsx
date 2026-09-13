@@ -16,6 +16,7 @@ import { daysSinceRegistration } from '@/lib/daysSinceRegistration';
 import { truncateForPreview } from '@/lib/truncateForPreview';
 import { DailyVideoCard, DailyVideo } from '@/components/DailyVideoCard';
 import { estimateClientBudgetUsd } from '@/lib/budgetEstimate';
+import { resolveClientPhoto } from '@/data/clientPhotos';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -444,7 +445,7 @@ const Dashboard: React.FC = () => {
                               className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-accent bg-secondary cursor-help block"
                             >
                               <img
-                                src={s.clientBrief.photo}
+                                src={resolveClientPhoto(s.clientBrief)}
                                 alt={s.clientBrief.name}
                                 className="w-full h-full object-cover"
                               />

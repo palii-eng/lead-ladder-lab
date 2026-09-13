@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Scenario } from '@/context/ScenariosContext';
 import { Loader2, Zap, Eye } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { resolveClientPhoto } from '@/data/clientPhotos';
 
 interface SharedRow {
   scenario: Scenario;
@@ -115,8 +116,8 @@ const SharedScenario: React.FC = () => {
           <section className="glass-card p-5">
             <h3 className="text-sm font-bold text-foreground mb-3">Клієнт</h3>
             <div className="flex gap-4">
-              {s.clientBrief.photo && (
-                <img src={s.clientBrief.photo} alt={s.clientBrief.name} className="w-16 h-16 rounded-full object-cover ring-2 ring-accent" />
+              {(s.clientBrief.photoKey || s.clientBrief.photo) && (
+                <img src={resolveClientPhoto(s.clientBrief)} alt={s.clientBrief.name} className="w-16 h-16 rounded-full object-cover ring-2 ring-accent" />
               )}
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-foreground">{s.clientBrief.name}</p>

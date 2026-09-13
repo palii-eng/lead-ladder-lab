@@ -3580,27 +3580,34 @@ const ScenarioBuilder: React.FC = () => {
     </button>
   );
 
-  const SaveButton: React.FC<{ step: number; sticky?: boolean; disabled?: boolean; label?: string; showSkip?: boolean }> = ({ step, disabled, label, showSkip }) => (
-    <div className="sticky bottom-0 bg-card pt-3 pb-2 -mx-4 px-4 border-t border-border mt-4 z-10 flex gap-2">
-      {showSkip && (
+  const SaveButton: React.FC<{ step: number; sticky?: boolean; disabled?: boolean; label?: string; showSkip?: boolean }> = ({ step, disabled, label, showSkip }) => {
+    // Skip тільки поки крок дійсно порожній — щойно даних вистачає для
+    // "Зберегти та продовжити" (та сама умова, що й дизейблить її), пропуск
+    // уже не має сенсу і кнопка ховається, а не просто стає неактивною.
+    const saveDisabled = disabled !== undefined ? disabled : !canSaveStep(step, activeLeadType);
+    const canSkip = showSkip && saveDisabled;
+    return (
+      <div className="sticky bottom-0 bg-card pt-3 pb-2 -mx-4 px-4 border-t border-border mt-4 z-10 flex gap-2">
+        {canSkip && (
+          <Button
+            variant="outline"
+            onClick={() => handleSaveStep(step, { skipped: true })}
+            className="flex-1 gap-2"
+          >
+            <SkipForward className="w-4 h-4" /> Пропустити
+          </Button>
+        )}
         <Button
-          variant="outline"
-          onClick={() => handleSaveStep(step, { skipped: true })}
-          className="flex-1 gap-2"
+          data-tour={step === 2 ? 'save-lead-types-btn' : step === 7 ? 'save-sales-btn' : undefined}
+          onClick={() => handleSaveStep(step)}
+          disabled={saveDisabled}
+          className={`gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold ${canSkip ? 'flex-1' : 'w-full'}`}
         >
-          <SkipForward className="w-4 h-4" /> Пропустити
+          <Save className="w-4 h-4" /> {label || 'Зберегти та продовжити'}
         </Button>
-      )}
-      <Button
-        data-tour={step === 2 ? 'save-lead-types-btn' : step === 7 ? 'save-sales-btn' : undefined}
-        onClick={() => handleSaveStep(step)}
-        disabled={disabled !== undefined ? disabled : !canSaveStep(step, activeLeadType)}
-        className={`gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold ${showSkip ? 'flex-1' : 'w-full'}`}
-      >
-        <Save className="w-4 h-4" /> {label || 'Зберегти та продовжити'}
-      </Button>
-    </div>
-  );
+      </div>
+    );
+  };
 
   const renderPanel = () => {
     if (activeStep === null) return null;
@@ -4390,18 +4397,20 @@ const ScenarioBuilder: React.FC = () => {
                 </div>
               )}
               <div className="sticky bottom-0 bg-card pt-3 pb-2 -mx-4 px-4 border-t border-border mt-4 z-10 flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => handleSaveStep(8, { skipped: true })}
-                  className="flex-1 gap-2"
-                >
-                  <SkipForward className="w-4 h-4" /> Пропустити
-                </Button>
+                {!canSaveStep(8, activeLeadType) && (
+                  <Button
+                    variant="outline"
+                    onClick={() => handleSaveStep(8, { skipped: true })}
+                    className="flex-1 gap-2"
+                  >
+                    <SkipForward className="w-4 h-4" /> Пропустити
+                  </Button>
+                )}
                 <Button
                   data-tour="save-retention-btn"
                   onClick={() => handleSaveStep(8)}
                   disabled={!canSaveStep(8, activeLeadType)}
-                  className="flex-1 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+                  className={`gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold ${!canSaveStep(8, activeLeadType) ? 'flex-1' : 'w-full'}`}
                 >
                   <Save className="w-4 h-4" /> Зберегти та продовжити
                 </Button>
