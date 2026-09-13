@@ -70,14 +70,17 @@ const Dashboard: React.FC = () => {
 
   // Ручне скидання онбордингу LeadОслав через URL: додай ?resetOnboarding=1
   // до адреси дашборду — прибирає обидва ключі localStorage (дашборд +
-  // ланцюжок у сценарії) без ручного лазіння в DevTools/інкогніто. Зручно,
-  // бо нумерація кроків міняється в процесі розробки й старі значення
-  // localStorage можуть "застрягнути" на неактуальному кроці.
+  // ланцюжок у сценарії), а також список "відмовлених" лідів, щоб куратовані
+  // ліди дня знову були доступні для повторного проходження навчання, без
+  // ручного лазіння в DevTools/інкогніто. Зручно, бо нумерація кроків
+  // міняється в процесі розробки й старі значення localStorage можуть
+  // "застрягнути" на неактуальному кроці.
   useEffect(() => {
     if (searchParams.get('resetOnboarding') !== '1' || !user?.id) return;
     try {
       localStorage.removeItem(`leadoslav_tour_seen_${user.id}`);
       localStorage.removeItem(`leadoslav_funnel_onboard_step_${user.id}`);
+      localStorage.removeItem(`${DECLINED_LEADS_PREFIX}${user.id}`);
     } catch { /* localStorage unavailable */ }
     navigate('/', { replace: true });
     window.location.reload();
