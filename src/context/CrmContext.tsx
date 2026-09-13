@@ -6,6 +6,10 @@ import { useAuth } from '@/context/AuthContext';
 export interface CrmCard {
   id: string;
   title: string;
+  phone: string;
+  email: string;
+  source: string;
+  score: number;
   note: string;
   createdAt: string;
 }
@@ -13,12 +17,14 @@ export interface CrmCard {
 export interface CrmStage {
   id: string;
   name: string;
+  color: string;
   cards: CrmCard[];
 }
 
 export interface CrmFunnel {
   id: string;
   name: string;
+  color: string;
   stages: CrmStage[];
 }
 
@@ -26,12 +32,27 @@ export interface CrmBoard {
   funnels: CrmFunnel[];
 }
 
+// Cycled through for new funnels/stages so each gets a distinct dot color,
+// matching the colored-dot convention of real CRM tools.
+export const CRM_PALETTE = [
+  'hsl(232 80% 60%)',
+  'hsl(142 60% 45%)',
+  'hsl(266 65% 60%)',
+  'hsl(28 90% 55%)',
+  'hsl(330 70% 60%)',
+  'hsl(190 70% 45%)',
+  'hsl(0 70% 58%)',
+  'hsl(48 90% 50%)',
+];
+const colorAt = (i: number) => CRM_PALETTE[i % CRM_PALETTE.length];
+
 const DEFAULT_STAGES = ['Новий лід', 'В роботі', 'Переговори', 'Успішно', 'Відмова'];
 
-const createDefaultFunnel = (name: string): CrmFunnel => ({
+const createDefaultFunnel = (name: string, colorIdx = 0): CrmFunnel => ({
   id: crypto.randomUUID(),
   name,
-  stages: DEFAULT_STAGES.map(stageName => ({ id: crypto.randomUUID(), name: stageName, cards: [] })),
+  color: colorAt(colorIdx),
+  stages: DEFAULT_STAGES.map((stageName, i) => ({ id: crypto.randomUUID(), name: stageName, color: colorAt(i), cards: [] })),
 });
 
 const createDefaultBoard = (): CrmBoard => ({ funnels: [createDefaultFunnel('Воронка 1')] });
@@ -55,6 +76,23 @@ const persistLocal = (userId: string, board: CrmBoard) => {
   } catch {}
 };
 
+// Older saved boards may predate the phone/email/source/score/color fields —
+// backfill sane defaults so the UI never has to null-check every card.
+const normalizeBoard = (board: CrmBoard): CrmBoard => ({
+  funnels: board.funnels.map((f, fi) => ({
+    ...f,
+    color: f.color || colorAt(fi),
+    stages: f.stages.map((s, si) => ({
+      ...s,
+      color: s.color || colorAt(si),
+      cards: s.cards.map(c => ({
+        phone: '', email: '', source: '', score: 0, note: '',
+        ...c,
+      })),
+    })),
+  })),
+});
+
 const readCloud = async (userId: string): Promise<CrmBoard | null> => {
   const { data, error } = await supabase
     .from('crm_boards')
@@ -63,7 +101,7 @@ const readCloud = async (userId: string): Promise<CrmBoard | null> => {
     .maybeSingle();
   if (error) throw error;
   const board = data?.board as unknown as CrmBoard | undefined;
-  return board && Array.isArray(board.funnels) ? board : null;
+  return board && Array.isArray(board.funnels) ? normalizeBoard(board) : null;
 };
 
 const persistCloud = async (userId: string, board: CrmBoard) => {
@@ -72,6 +110,9 @@ const persistCloud = async (userId: string, board: CrmBoard) => {
     .upsert({ id: userId, user_id: userId, board: board as unknown as Json }, { onConflict: 'id' });
   if (error) throw error;
 };
+
+export type NewCardInput = { title: string; phone?: string; email?: string; source?: string; score?: number; note?: string };
+export type CardUpdate = Partial<Pick<CrmCard, 'title' | 'phone' | 'email' | 'source' | 'score' | 'note'>>;
 
 interface CrmContextValue {
   board: CrmBoard;
@@ -82,8 +123,8 @@ interface CrmContextValue {
   addStage: (funnelId: string, name: string) => void;
   renameStage: (funnelId: string, stageId: string, name: string) => void;
   deleteStage: (funnelId: string, stageId: string) => void;
-  addCard: (funnelId: string, stageId: string, title: string, note: string) => void;
-  updateCard: (funnelId: string, stageId: string, cardId: string, updates: Partial<Pick<CrmCard, 'title' | 'note'>>) => void;
+  addCard: (funnelId: string, stageId: string, data: NewCardInput) => void;
+  updateCard: (funnelId: string, stageId: string, cardId: string, updates: CardUpdate) => void;
   deleteCard: (funnelId: string, stageId: string, cardId: string) => void;
   moveCard: (funnelId: string, fromStageId: string, toStageId: string, cardId: string) => void;
 }
@@ -129,7 +170,7 @@ export const CrmProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
 
-    const local = readLocal(uid) || createDefaultBoard();
+    const local = normalizeBoard(readLocal(uid) || createDefaultBoard());
     setBoard(local);
     setLoading(true);
 
@@ -168,7 +209,7 @@ export const CrmProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [isApproved, queueSave]);
 
   const addFunnel = useCallback((name: string) => {
-    commit(prev => ({ funnels: [...prev.funnels, createDefaultFunnel(name || 'Нова воронка')] }));
+    commit(prev => ({ funnels: [...prev.funnels, createDefaultFunnel(name || 'Нова воронка', prev.funnels.length)] }));
   }, [commit]);
 
   const renameFunnel = useCallback((funnelId: string, name: string) => {
@@ -182,7 +223,7 @@ export const CrmProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addStage = useCallback((funnelId: string, name: string) => {
     commit(prev => ({
       funnels: prev.funnels.map(f => f.id === funnelId
-        ? { ...f, stages: [...f.stages, { id: crypto.randomUUID(), name: name || 'Новий етап', cards: [] }] }
+        ? { ...f, stages: [...f.stages, { id: crypto.randomUUID(), name: name || 'Новий етап', color: colorAt(f.stages.length), cards: [] }] }
         : f),
     }));
   }, [commit]);
@@ -203,20 +244,32 @@ export const CrmProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   }, [commit]);
 
-  const addCard = useCallback((funnelId: string, stageId: string, title: string, note: string) => {
+  const addCard = useCallback((funnelId: string, stageId: string, data: NewCardInput) => {
     commit(prev => ({
       funnels: prev.funnels.map(f => f.id === funnelId
         ? {
             ...f,
             stages: f.stages.map(s => s.id === stageId
-              ? { ...s, cards: [...s.cards, { id: crypto.randomUUID(), title, note, createdAt: new Date().toISOString() }] }
+              ? {
+                  ...s,
+                  cards: [...s.cards, {
+                    id: crypto.randomUUID(),
+                    title: data.title,
+                    phone: data.phone || '',
+                    email: data.email || '',
+                    source: data.source || '',
+                    score: data.score ?? 0,
+                    note: data.note || '',
+                    createdAt: new Date().toISOString(),
+                  }],
+                }
               : s),
           }
         : f),
     }));
   }, [commit]);
 
-  const updateCard = useCallback((funnelId: string, stageId: string, cardId: string, updates: Partial<Pick<CrmCard, 'title' | 'note'>>) => {
+  const updateCard = useCallback((funnelId: string, stageId: string, cardId: string, updates: CardUpdate) => {
     commit(prev => ({
       funnels: prev.funnels.map(f => f.id === funnelId
         ? {
