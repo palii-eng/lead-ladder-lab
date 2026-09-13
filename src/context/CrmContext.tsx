@@ -14,6 +14,7 @@ export interface CrmCard {
   instagramUrl: string;
   telegramUrl: string;
   briefUrl: string;
+  decompositionUrl: string;
   createdAt: string;
 }
 
@@ -91,7 +92,7 @@ const normalizeBoard = (board: CrmBoard): CrmBoard => ({
       color: s.color || colorAt(si),
       cards: s.cards.map(({ score: _score, ...c }: any) => ({
         phone: '', email: '', source: '', note: '',
-        websiteUrl: '', instagramUrl: '', telegramUrl: '', briefUrl: '',
+        websiteUrl: '', instagramUrl: '', telegramUrl: '', briefUrl: '', decompositionUrl: '',
         ...c,
       })),
     })),
@@ -126,8 +127,9 @@ export type NewCardInput = {
   instagramUrl?: string;
   telegramUrl?: string;
   briefUrl?: string;
+  decompositionUrl?: string;
 };
-export type CardUpdate = Partial<Pick<CrmCard, 'title' | 'phone' | 'email' | 'source' | 'note' | 'websiteUrl' | 'instagramUrl' | 'telegramUrl' | 'briefUrl'>>;
+export type CardUpdate = Partial<Pick<CrmCard, 'title' | 'phone' | 'email' | 'source' | 'note' | 'websiteUrl' | 'instagramUrl' | 'telegramUrl' | 'briefUrl' | 'decompositionUrl'>>;
 
 interface CrmContextValue {
   board: CrmBoard;
@@ -278,6 +280,7 @@ export const CrmProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     instagramUrl: data.instagramUrl || '',
                     telegramUrl: data.telegramUrl || '',
                     briefUrl: data.briefUrl || '',
+                    decompositionUrl: data.decompositionUrl || '',
                     createdAt: new Date().toISOString(),
                   }],
                 }

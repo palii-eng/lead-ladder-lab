@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
   Plus, Pencil, Trash2, MoreHorizontal, Search,
   LayoutGrid, List as ListIcon, Phone, Mail, CalendarDays, Tag, User, UserPlus, Layers,
-  Globe, Instagram, Send, FileText,
+  Globe, Instagram, Send, FileText, Calculator,
 } from 'lucide-react';
 import { useCrm, CrmCard as CrmCardType, CrmStage } from '@/context/CrmContext';
 import { AppHeader } from '@/components/AppHeader';
@@ -19,8 +19,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 
-const emptyCardDraft = { title: '', phone: '', email: '', source: '', note: '', websiteUrl: '', instagramUrl: '', telegramUrl: '', briefUrl: '' };
+const emptyCardDraft = { title: '', phone: '', email: '', source: '', note: '', websiteUrl: '', instagramUrl: '', telegramUrl: '', briefUrl: '', decompositionUrl: '' };
 
 // Small grey pill with an icon — the same footer-badge look Trello uses for
 // due dates / attachments on a card.
@@ -134,6 +135,7 @@ const CrmBoard: React.FC = () => {
           {card.instagramUrl && <Chip icon={Instagram}>Instagram</Chip>}
           {card.telegramUrl && <Chip icon={Send}>Telegram</Chip>}
           {card.briefUrl && <Chip icon={FileText}>Бриф</Chip>}
+          {card.decompositionUrl && <Chip icon={Calculator}>Декомпозиція</Chip>}
           <Chip icon={CalendarDays}>{new Date(card.createdAt).toLocaleDateString('uk-UA')}</Chip>
         </div>
       </div>
@@ -349,16 +351,16 @@ const CrmBoard: React.FC = () => {
       </div>
       </div>
 
-      {/* Add card dialog */}
-      <AlertDialog open={!!addCardStageId} onOpenChange={(o) => { if (!o) setAddCardStageId(null); }}>
-        <AlertDialogContent className="sm:max-w-md rounded-2xl p-0 gap-0 overflow-hidden">
-          <AlertDialogHeader className="flex-row items-center gap-3 space-y-0 text-left p-6 pb-2">
+      {/* Add card panel */}
+      <Sheet open={!!addCardStageId} onOpenChange={(o) => { if (!o) setAddCardStageId(null); }}>
+        <SheetContent side="right" className="w-full sm:max-w-md p-0 gap-0 flex flex-col">
+          <SheetHeader className="flex-row items-center gap-3 space-y-0 text-left p-6 pb-2 border-b border-border shrink-0">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <UserPlus className="w-5 h-5 text-primary" />
             </div>
-            <AlertDialogTitle className="text-base font-bold">Новий лід</AlertDialogTitle>
-          </AlertDialogHeader>
-          <div className="px-6 pb-6 pt-2 space-y-3">
+            <SheetTitle className="text-base font-bold">Новий лід</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
             <IconInput icon={User} value={cardDraft.title} onChange={e => setCardDraft({ ...cardDraft, title: e.target.value })} placeholder="Ім'я" autoFocus />
             <IconInput icon={Phone} value={cardDraft.phone} onChange={e => setCardDraft({ ...cardDraft, phone: e.target.value })} placeholder="Телефон" />
             <IconInput icon={Mail} value={cardDraft.email} onChange={e => setCardDraft({ ...cardDraft, email: e.target.value })} placeholder="Email" />
@@ -367,6 +369,7 @@ const CrmBoard: React.FC = () => {
             <IconInput icon={Instagram} value={cardDraft.instagramUrl} onChange={e => setCardDraft({ ...cardDraft, instagramUrl: e.target.value })} placeholder="Посилання на Instagram" />
             <IconInput icon={Send} value={cardDraft.telegramUrl} onChange={e => setCardDraft({ ...cardDraft, telegramUrl: e.target.value })} placeholder="Посилання на Telegram клієнта" />
             <IconInput icon={FileText} value={cardDraft.briefUrl} onChange={e => setCardDraft({ ...cardDraft, briefUrl: e.target.value })} placeholder="Посилання на бриф клієнта" />
+            <IconInput icon={Calculator} value={cardDraft.decompositionUrl} onChange={e => setCardDraft({ ...cardDraft, decompositionUrl: e.target.value })} placeholder="Посилання на декомпозицію" />
             <div className="relative">
               <Layers className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10 pointer-events-none" />
               <Select value={addCardStageId || undefined} onValueChange={setAddCardStageId}>
@@ -378,25 +381,25 @@ const CrmBoard: React.FC = () => {
             </div>
             <Textarea value={cardDraft.note} onChange={e => setCardDraft({ ...cardDraft, note: e.target.value })} placeholder="Нотатка" className="min-h-[70px] resize-none" />
           </div>
-          <AlertDialogFooter className="p-4 bg-secondary/40 border-t border-border">
-            <AlertDialogCancel>Скасувати</AlertDialogCancel>
-            <AlertDialogAction disabled={!cardDraft.title.trim()} onClick={submitAddCard}>Додати лід</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          <SheetFooter className="p-4 bg-secondary/40 border-t border-border flex-row justify-end gap-2 shrink-0">
+            <Button variant="outline" onClick={() => setAddCardStageId(null)}>Скасувати</Button>
+            <Button disabled={!cardDraft.title.trim()} onClick={submitAddCard}>Додати лід</Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
-      {/* Edit card dialog */}
-      <AlertDialog open={!!editingCard} onOpenChange={(o) => { if (!o) setEditingCard(null); }}>
-        <AlertDialogContent className="sm:max-w-md rounded-2xl p-0 gap-0 overflow-hidden">
+      {/* Edit card panel */}
+      <Sheet open={!!editingCard} onOpenChange={(o) => { if (!o) setEditingCard(null); }}>
+        <SheetContent side="right" className="w-full sm:max-w-md p-0 gap-0 flex flex-col">
           {editingCard && (
             <>
-              <AlertDialogHeader className="flex-row items-center gap-3 space-y-0 text-left p-6 pb-2">
+              <SheetHeader className="flex-row items-center gap-3 space-y-0 text-left p-6 pb-2 border-b border-border shrink-0">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <User className="w-5 h-5 text-primary" />
                 </div>
-                <AlertDialogTitle className="text-base font-bold">Картка ліда</AlertDialogTitle>
-              </AlertDialogHeader>
-              <div className="px-6 pb-6 pt-2 space-y-3">
+                <SheetTitle className="text-base font-bold">Картка ліда</SheetTitle>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
                 <IconInput icon={User} value={editingCard.card.title} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, title: e.target.value } })} placeholder="Ім'я" />
                 <IconInput icon={Phone} value={editingCard.card.phone} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, phone: e.target.value } })} placeholder="Телефон" />
                 <IconInput icon={Mail} value={editingCard.card.email} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, email: e.target.value } })} placeholder="Email" />
@@ -405,9 +408,10 @@ const CrmBoard: React.FC = () => {
                 <IconInput icon={Instagram} value={editingCard.card.instagramUrl} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, instagramUrl: e.target.value } })} placeholder="Посилання на Instagram" />
                 <IconInput icon={Send} value={editingCard.card.telegramUrl} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, telegramUrl: e.target.value } })} placeholder="Посилання на Telegram клієнта" />
                 <IconInput icon={FileText} value={editingCard.card.briefUrl} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, briefUrl: e.target.value } })} placeholder="Посилання на бриф клієнта" />
+                <IconInput icon={Calculator} value={editingCard.card.decompositionUrl} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, decompositionUrl: e.target.value } })} placeholder="Посилання на декомпозицію" />
                 <Textarea value={editingCard.card.note} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, note: e.target.value } })} placeholder="Нотатка" className="min-h-[80px] resize-none" />
               </div>
-              <AlertDialogFooter className="flex-row items-center justify-between sm:justify-between p-4 bg-secondary/40 border-t border-border">
+              <SheetFooter className="flex-row items-center justify-between p-4 bg-secondary/40 border-t border-border shrink-0">
                 <Button
                   variant="ghost"
                   className="text-destructive hover:text-destructive gap-1.5"
@@ -416,22 +420,22 @@ const CrmBoard: React.FC = () => {
                   <Trash2 className="w-4 h-4" /> Видалити
                 </Button>
                 <div className="flex gap-2">
-                  <AlertDialogCancel>Скасувати</AlertDialogCancel>
-                  <AlertDialogAction
+                  <Button variant="outline" onClick={() => setEditingCard(null)}>Скасувати</Button>
+                  <Button
                     onClick={() => {
-                      const { title, phone, email, source, note, websiteUrl, instagramUrl, telegramUrl, briefUrl } = editingCard.card;
-                      updateCard(funnel.id, editingCard.stageId, editingCard.card.id, { title: title.trim() || 'Без імені', phone, email, source, note, websiteUrl, instagramUrl, telegramUrl, briefUrl });
+                      const { title, phone, email, source, note, websiteUrl, instagramUrl, telegramUrl, briefUrl, decompositionUrl } = editingCard.card;
+                      updateCard(funnel.id, editingCard.stageId, editingCard.card.id, { title: title.trim() || 'Без імені', phone, email, source, note, websiteUrl, instagramUrl, telegramUrl, briefUrl, decompositionUrl });
                       setEditingCard(null);
                     }}
                   >
                     Зберегти
-                  </AlertDialogAction>
+                  </Button>
                 </div>
-              </AlertDialogFooter>
+              </SheetFooter>
             </>
           )}
-        </AlertDialogContent>
-      </AlertDialog>
+        </SheetContent>
+      </Sheet>
 
       {/* New funnel dialog */}
       <AlertDialog open={newFunnelOpen} onOpenChange={setNewFunnelOpen}>
