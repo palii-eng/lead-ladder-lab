@@ -5311,7 +5311,14 @@ const ScenarioBuilder: React.FC = () => {
           <>
             <div
               className="absolute inset-0 bg-foreground/5 z-30"
-              onClick={() => setActiveStep(null)}
+              onClick={() => {
+                // Поки триває онбординг, клік повз панель закривав її й скидав
+                // activeStep — а більшість підказок показуються саме за умови
+                // конкретного activeStep, тож підказка миттєво зникала. Клік
+                // "мимо" під час навчання просто ігноруємо.
+                if (onboardActive && onboardStep !== 'done') return;
+                setActiveStep(null);
+              }}
             />
             <div className="fixed right-0 top-0 bottom-0 z-40 animate-slide-in-right">
               {renderPanel()}
@@ -5322,7 +5329,12 @@ const ScenarioBuilder: React.FC = () => {
 
       {/* Client brief sheet */}
       <Sheet open={clientBriefOpen} onOpenChange={setClientBriefOpen}>
-        <SheetContent side="left" className="bg-card border-border w-full sm:max-w-md overflow-y-auto">
+        <SheetContent
+          side="left"
+          className="bg-card border-border w-full sm:max-w-md overflow-y-auto"
+          onInteractOutside={(e) => { if (onboardActive && onboardStep !== 'done') e.preventDefault(); }}
+          onEscapeKeyDown={(e) => { if (onboardActive && onboardStep !== 'done') e.preventDefault(); }}
+        >
           <SheetHeader>
             <SheetTitle className="text-foreground font-bold flex items-center gap-3">
               <img
@@ -5366,7 +5378,12 @@ const ScenarioBuilder: React.FC = () => {
 
       {/* Filled brief sheet */}
       <Sheet open={filledBriefOpen} onOpenChange={setFilledBriefOpen}>
-        <SheetContent side="left" className="bg-card border-border w-full sm:max-w-[680px] overflow-y-auto">
+        <SheetContent
+          side="left"
+          className="bg-card border-border w-full sm:max-w-[680px] overflow-y-auto"
+          onInteractOutside={(e) => { if (onboardActive && onboardStep !== 'done') e.preventDefault(); }}
+          onEscapeKeyDown={(e) => { if (onboardActive && onboardStep !== 'done') e.preventDefault(); }}
+        >
           <SheetHeader>
             <SheetTitle className="text-foreground font-bold flex items-center gap-3 pr-32">
               {(scenario.clientBrief?.photoKey || scenario.clientBrief?.photo) && (
@@ -5624,7 +5641,11 @@ const ScenarioBuilder: React.FC = () => {
           setEditingAudienceIdx(null);
         }
       }}>
-        <DialogContent className="bg-card border-border max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogContent
+          className="bg-card border-border max-w-2xl max-h-[85vh] overflow-hidden flex flex-col"
+          onInteractOutside={(e) => { if (onboardActive && onboardStep !== 'done') e.preventDefault(); }}
+          onEscapeKeyDown={(e) => { if (onboardActive && onboardStep !== 'done') e.preventDefault(); }}
+        >
           <DialogHeader>
             <DialogTitle className="text-foreground font-bold flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-base">👥</div>
@@ -5987,7 +6008,11 @@ const ScenarioBuilder: React.FC = () => {
 
       {/* Creo brief dialog */}
       <Dialog open={creoOpen} onOpenChange={(o) => { setCreoOpen(o); if (!o) { setCreoFormat(null); setCreoFields({}); setCreoVideoFormat(''); setViewCreoIdx(null); setPreselectedAudienceId(null); } }}>
-        <DialogContent className="bg-card border-border max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogContent
+          className="bg-card border-border max-w-2xl max-h-[85vh] overflow-hidden flex flex-col"
+          onInteractOutside={(e) => { if (onboardActive && onboardStep !== 'done') e.preventDefault(); }}
+          onEscapeKeyDown={(e) => { if (onboardActive && onboardStep !== 'done') e.preventDefault(); }}
+        >
           <DialogHeader>
             <DialogTitle className="text-foreground font-bold flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-base">📝</div>
