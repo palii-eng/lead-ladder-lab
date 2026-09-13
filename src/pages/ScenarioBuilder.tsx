@@ -577,6 +577,12 @@ const ScenarioBuilder: React.FC = () => {
   const [creoVideoFormat, setCreoVideoFormat] = useState<string>('');
   const [creoAiLoading, setCreoAiLoading] = useState(false);
   const creoFieldsFilled = Object.values(creoFields).some((v) => typeof v === 'string' && v.trim().length > 0);
+  const existingCreoCount = (() => {
+    const key = activeLeadType || 'main';
+    const raw = (scenario as any)?.creoBriefs?.[key];
+    if (Array.isArray(raw)) return raw.length;
+    return raw?.format ? 1 : 0;
+  })();
 
   const [viewCreoIdx, setViewCreoIdx] = useState<number | null>(null);
 
@@ -2512,7 +2518,9 @@ const ScenarioBuilder: React.FC = () => {
               targetSelector='[data-tour="save-creo-btn"]'
               radius={12}
               lines={[
-                'Супер! Тепер збережи й зроби те саме для наступного крео. Саме їх ми й запустимо в рекламу.',
+                existingCreoCount === 0
+                  ? 'Супер! Тепер збережи й зроби те саме для наступного крео. Саме їх ми й запустимо в рекламу.'
+                  : 'Супер, рухаємось далі, натисни «Зберегти адсет».',
               ]}
               hintNumber={12}
             />
