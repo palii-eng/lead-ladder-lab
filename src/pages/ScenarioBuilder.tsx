@@ -90,7 +90,7 @@ const launchHashSeed = (s: string): number => {
 };
 
 const LAUNCH_ACTIONS: { key: LaunchActionKey; label: string }[] = [
-  { key: 'continue', label: 'Продовжити без змін' },
+  { key: 'continue', label: 'Пояснити клієнту та продовжити без змін' },
   { key: 'change_creo', label: 'Змінити крео' },
   { key: 'new_audience', label: 'Створити нову аудиторію' },
   { key: 'restart_objective', label: 'Перезапустити на нову ціль' },
@@ -552,7 +552,7 @@ const ScenarioBuilder: React.FC = () => {
   const showLaunchAction1Hint = launchWeek === 1 && launchIntroForOnboardingRef.current && launchIntroDismissed && launchProblem?.type === 'ctr_low';
   // Week 2 is force-scripted to bad_lead_quality during onboarding (see
   // advanceAfterWeekResolution) — here the "lesson" is that patience is
-  // the right call, even though "Продовжити без змін" never counts as a
+  // the right call, even though "Пояснити клієнту та продовжити без змін" never counts as a
   // solved week mechanically (LAUNCH_CORRECT_FIX never lists it).
   const showLaunchAction2Hint = launchWeek === 2 && launchIntroForOnboardingRef.current && launchProblem?.type === 'bad_lead_quality';
   // Week 3 is force-scripted to freq_high during onboarding — unlike week 2,
@@ -2896,7 +2896,7 @@ const ScenarioBuilder: React.FC = () => {
   // Each week presents exactly one problem and gets exactly one action
   // attempt — no retry loop. Whether it counts as solved:
   //  - the action that actually addresses this problem type → always solved
-  //  - "Продовжити без змін" → never solved (inaction shouldn't accidentally
+  //  - "Пояснити клієнту та продовжити без змін" → never solved (inaction shouldn't accidentally
   //    "fix" an ads problem — that would undercut the whole point of the
   //    simulation, which is to teach the correct action per problem type)
   //  - anything else → not solved
@@ -6806,7 +6806,7 @@ const ScenarioBuilder: React.FC = () => {
                         'Перший тиждень — відвоювали!',
                         'Але тепер нова проблема: клієнт скаржиться, що аудиторія нецільова.',
                         'І тут може бути безліч причин, тому складно одразу сказати, у чому саме проблема. Але за тиждень ми отримали лише 14 заявок — цього недостатньо для нормальної оптимізації реклами.',
-                        'Давай спробуємо пояснити клієнту, що нам потрібно трохи більше часу, а точніше — більше лідів для аналізу та оптимізації. Натисни «Продовжити без змін».',
+                        'Давай спробуємо пояснити клієнту, що нам потрібно трохи більше часу, а точніше — більше лідів для аналізу та оптимізації. Натисни «Пояснити клієнту та продовжити без змін».',
                       ]}
                       hintNumber={24}
                     />
