@@ -209,6 +209,16 @@ const Dashboard: React.FC = () => {
     navigate(`/scenario/${s.id}`);
   };
 
+  // A project the client walked away from is closed — don't even navigate
+  // into it, just say so right here on the card.
+  const openScenario = (s: { id: string; status?: string; monthSurvived?: boolean }) => {
+    if (s.status === 'completed' && s.monthSurvived === false) {
+      toast({ title: 'Клієнт пішов', description: 'Проєкт завершено невдало — сценарій недоступний.', variant: 'destructive' });
+      return;
+    }
+    navigate(`/scenario/${s.id}`);
+  };
+
   // "Опрацювання вхідних лідів" — taking a lead card straight from the
   // dashboard skips the full-screen reveal/accept flow (SimulationIntro):
   // the scenario is created with the brief already attached, seeded with
@@ -387,7 +397,7 @@ const Dashboard: React.FC = () => {
                   key={s.id}
                   className="relative glass-card p-5 flex flex-col gap-4 animate-slide-up transition-shadow cursor-pointer hover:shadow-md"
                   style={{ animationDelay: `${i * 60}ms` }}
-                  onClick={() => navigate(`/scenario/${s.id}`)}
+                  onClick={() => openScenario(s)}
                 >
                   {s.monthSurvived === true && (
                     <span
@@ -475,7 +485,7 @@ const Dashboard: React.FC = () => {
                     <Button
                       size="sm"
                       className="flex-1 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/scenario/${s.id}`); }}
+                      onClick={(e) => { e.stopPropagation(); openScenario(s); }}
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
                       Відкрити
