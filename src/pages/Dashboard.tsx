@@ -284,7 +284,7 @@ const Dashboard: React.FC = () => {
                         <div className="text-[11px] text-muted-foreground truncate">{lead.niche || lead.role}</div>
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">{truncateForPreview(lead.task, 260)}</p>
+                    <p className="text-xs text-muted-foreground">{truncateForPreview(lead.task, 480)}</p>
                     <div className="flex items-center gap-2 mt-auto">
                       <Button
                         ref={createBtnRef}
