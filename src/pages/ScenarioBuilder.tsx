@@ -2541,13 +2541,23 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 10 && !audienceOpen && !creoOpen}
+              show={onboardStep === 10 && !audienceOpen && !creoOpen && !canSaveStep(4, activeLeadType) && !fillBenchLoading}
               targetSelector='[data-tour="decomp-ai-fill-btn"]'
               radius={999}
               lines={[
                 'Зараз ти можеш попросити мене це зробити, але в майбутньому треба приділити особливу увагу цьому блоку.',
                 'Я відправлю відео на цю тему.',
                 'А поки натисни на кнопку «Попросити AI LeadОслава».',
+              ]}
+              hintNumber={14}
+            />
+            <SpotlightTip
+              onSkipAll={skipOnboarding}
+              show={onboardStep === 10 && !audienceOpen && !creoOpen && canSaveStep(4, activeLeadType) && !fillBenchLoading}
+              targetSelector='[data-tour="decomp-save-btn"]'
+              radius={12}
+              lines={[
+                'Супер, тисни «Зберегти та продовжити».',
               ]}
               hintNumber={14}
             />
@@ -3649,7 +3659,7 @@ const ScenarioBuilder: React.FC = () => {
           </Button>
         )}
         <Button
-          data-tour={step === 2 ? 'save-lead-types-btn' : step === 7 ? 'save-sales-btn' : undefined}
+          data-tour={step === 2 ? 'save-lead-types-btn' : step === 4 ? 'decomp-save-btn' : step === 7 ? 'save-sales-btn' : undefined}
           onClick={() => handleSaveStep(step)}
           disabled={saveDisabled}
           className={`gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold ${canSkip ? 'flex-1' : 'w-full'}`}
