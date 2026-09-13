@@ -2566,7 +2566,7 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 15 && !audienceOpen && !creoOpen && !(activeStep === 7 && isStepCompletedStatic(scenario, 7))}
+              show={onboardStep === 15 && !audienceOpen && !creoOpen && !isStepCompletedStatic(scenario, 7)}
               targetSelector='[data-step-index="7"] [title="Пропустити цей крок"]'
               radius={999}
               lines={[
@@ -2578,7 +2578,7 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 15 && !audienceOpen && !creoOpen && activeStep === 7 && isStepCompletedStatic(scenario, 7)}
+              show={onboardStep === 15 && !audienceOpen && !creoOpen && isStepCompletedStatic(scenario, 7) && activeStep === 7}
               targetSelector='[data-tour="save-sales-btn"]'
               radius={12}
               lines={[
@@ -2590,7 +2590,18 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 16 && !audienceOpen && !creoOpen && !(activeStep === 8 && isStepCompletedStatic(scenario, 8))}
+              show={onboardStep === 15 && !audienceOpen && !creoOpen && isStepCompletedStatic(scenario, 7) && activeStep !== 7}
+              targetSelector='[data-step-index="7"] button'
+              radius={16}
+              lines={[
+                'Бачу, ви вже заповнили цей модуль. Відкрийте картку ще раз і натисніть «Зберегти та продовжити», щоб рухатись далі.',
+              ]}
+              hintNumber={19}
+            />
+
+            <SpotlightTip
+              onSkipAll={skipOnboarding}
+              show={onboardStep === 16 && !audienceOpen && !creoOpen && !isStepCompletedStatic(scenario, 8)}
               targetSelector='[data-step-index="8"] [title="Пропустити цей крок"]'
               radius={999}
               lines={[
@@ -2602,12 +2613,23 @@ const ScenarioBuilder: React.FC = () => {
 
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 16 && !audienceOpen && !creoOpen && activeStep === 8 && isStepCompletedStatic(scenario, 8)}
+              show={onboardStep === 16 && !audienceOpen && !creoOpen && isStepCompletedStatic(scenario, 8) && activeStep === 8}
               targetSelector='[data-tour="save-retention-btn"]'
               radius={12}
               lines={[
                 'Бачу, ви вже заповнили цей модуль — це не обов\'язково було, адже на курсі ми ще детально про це поговоримо, але це не проблема.',
                 'Натисніть «Зберегти та продовжити», щоб рухатись далі.',
+              ]}
+              hintNumber={20}
+            />
+
+            <SpotlightTip
+              onSkipAll={skipOnboarding}
+              show={onboardStep === 16 && !audienceOpen && !creoOpen && isStepCompletedStatic(scenario, 8) && activeStep !== 8}
+              targetSelector='[data-step-index="8"] button'
+              radius={16}
+              lines={[
+                'Бачу, ви вже заповнили цей модуль. Відкрийте картку ще раз і натисніть «Зберегти та продовжити», щоб рухатись далі.',
               ]}
               hintNumber={20}
             />
@@ -4932,7 +4954,7 @@ const ScenarioBuilder: React.FC = () => {
                               if (branchLeadType) setActiveLeadType(branchLeadType);
                               setActiveStep(activeStep === stepIdx && activeLeadType === branchLeadType ? null : stepIdx);
                             }}
-                            onSkip={(stepIdx === 7 || stepIdx === 8) ? () => {
+                            onSkip={(stepIdx === 7 || stepIdx === 8) && !(branchLeadType ? isStepCompletedForBranch(scenario, stepIdx, branchLeadType) : isStepCompletedStatic(scenario, stepIdx)) ? () => {
                               const key = (stepIdx < 3 || !isBranching) ? String(stepIdx) : `${stepIdx}:${branchLeadType || activeLeadType}`;
                               setSavedSteps(prev => {
                                 const next = new Set(prev);
