@@ -4364,9 +4364,18 @@ const ScenarioBuilder: React.FC = () => {
                         </div>
                       )}
                       {emailStrategyText && (
-                        <div className="prose prose-sm max-w-none text-xs text-foreground [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_ul]:my-1 [&_ol]:my-1 [&_p]:my-1 [&_strong]:text-foreground">
-                          <ReactMarkdown>{stripJsonBlock(emailStrategyText)}</ReactMarkdown>
-                        </div>
+                        emailStrategyLoading ? (
+                          // Поки текст ще стрімиться, рендеримо його як звичайний текст, а не
+                          // Markdown — на кожен шматок недороблений синтаксис (незакритий "**"
+                          // тощо) парситься по-різному, і ReactMarkdown щоразу перебудовує
+                          // інше дерево DOM. Це виглядає як блимання й скидає скрол вікна
+                          // нагору. Повний Markdown-рендер — лише після завершення стріму.
+                          <p className="text-xs text-foreground whitespace-pre-wrap">{stripJsonBlock(emailStrategyText)}</p>
+                        ) : (
+                          <div className="prose prose-sm max-w-none text-xs text-foreground [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_ul]:my-1 [&_ol]:my-1 [&_p]:my-1 [&_strong]:text-foreground">
+                            <ReactMarkdown>{stripJsonBlock(emailStrategyText)}</ReactMarkdown>
+                          </div>
+                        )
                       )}
                       {emailSummary && !emailStrategyLoading && (
                         <div className="mt-3 rounded-lg border-2 border-primary/40 bg-primary/5 p-3 space-y-2">
@@ -4606,9 +4615,13 @@ const ScenarioBuilder: React.FC = () => {
                   </div>
                 )}
                 {aiConclusionText && (
-                  <div className="prose prose-sm max-w-none text-foreground text-xs leading-relaxed max-h-80 overflow-y-auto">
-                    <ReactMarkdown>{aiConclusionText}</ReactMarkdown>
-                  </div>
+                  aiConclusionLoading ? (
+                    <p className="text-xs text-foreground leading-relaxed max-h-80 overflow-y-auto whitespace-pre-wrap">{aiConclusionText}</p>
+                  ) : (
+                    <div className="prose prose-sm max-w-none text-foreground text-xs leading-relaxed max-h-80 overflow-y-auto">
+                      <ReactMarkdown>{aiConclusionText}</ReactMarkdown>
+                    </div>
+                  )
                 )}
                 {aiConclusionLoading && aiConclusionText && (
                   <div className="flex items-center gap-1 text-muted-foreground text-xs mt-1">
@@ -5545,9 +5558,13 @@ const ScenarioBuilder: React.FC = () => {
               </div>
             )}
             {aiTipsText && (
-              <div className="prose prose-sm max-w-none text-foreground">
-                <ReactMarkdown>{aiTipsText}</ReactMarkdown>
-              </div>
+              aiTipsLoading ? (
+                <p className="text-sm text-foreground whitespace-pre-wrap">{aiTipsText}</p>
+              ) : (
+                <div className="prose prose-sm max-w-none text-foreground">
+                  <ReactMarkdown>{aiTipsText}</ReactMarkdown>
+                </div>
+              )
             )}
             {aiTipsLoading && aiTipsText && (
               <div className="flex items-center gap-1 text-muted-foreground text-xs mt-2">
@@ -5576,9 +5593,13 @@ const ScenarioBuilder: React.FC = () => {
               </div>
             )}
             {salesRecText && (
-              <div className="prose prose-sm max-w-none text-foreground">
-                <ReactMarkdown>{salesRecText.replace(/(\*\*Варіант\s*\d+[^*]*\*\*)/g, '\n\n$1\n\n').replace(/\n{3,}/g, '\n\n')}</ReactMarkdown>
-              </div>
+              salesRecLoading ? (
+                <p className="text-sm text-foreground whitespace-pre-wrap">{salesRecText}</p>
+              ) : (
+                <div className="prose prose-sm max-w-none text-foreground">
+                  <ReactMarkdown>{salesRecText.replace(/(\*\*Варіант\s*\d+[^*]*\*\*)/g, '\n\n$1\n\n').replace(/\n{3,}/g, '\n\n')}</ReactMarkdown>
+                </div>
+              )
             )}
             {salesRecLoading && salesRecText && (
               <div className="flex items-center gap-1 text-muted-foreground text-xs mt-2">
@@ -5818,9 +5839,13 @@ const ScenarioBuilder: React.FC = () => {
                       </Button>
                       {audienceTipsText && (
                         <div className="rounded-xl border border-border bg-muted/30 p-4 max-h-[40vh] overflow-y-auto">
-                          <div className="prose prose-sm max-w-none text-foreground">
-                            <ReactMarkdown>{audienceTipsText}</ReactMarkdown>
-                          </div>
+                          {audienceTipsLoading ? (
+                            <p className="text-sm text-foreground whitespace-pre-wrap">{audienceTipsText}</p>
+                          ) : (
+                            <div className="prose prose-sm max-w-none text-foreground">
+                              <ReactMarkdown>{audienceTipsText}</ReactMarkdown>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
