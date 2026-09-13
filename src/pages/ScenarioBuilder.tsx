@@ -548,6 +548,11 @@ const ScenarioBuilder: React.FC = () => {
   // correct fix and block the other action buttons so the student can't
   // wander off into an action LeadOslav hasn't explained yet.
   const showLaunchAction1Hint = launchWeek === 1 && launchIntroForOnboardingRef.current && launchIntroDismissed && launchProblem?.type === 'ctr_low';
+  // Week 2 is force-scripted to bad_lead_quality during onboarding (see
+  // advanceAfterWeekResolution) — here the "lesson" is that patience is
+  // the right call, even though "Продовжити без змін" never counts as a
+  // solved week mechanically (LAUNCH_CORRECT_FIX never lists it).
+  const showLaunchAction2Hint = launchWeek === 2 && launchIntroForOnboardingRef.current && launchProblem?.type === 'bad_lead_quality';
   // One entry per week (index 0 = week 1) — null until that week's action is
   // resolved, then true/false for whether the problem was actually fixed.
   const [launchWeekResults, setLaunchWeekResults] = useState<(boolean | null)[]>([null, null, null, null]);
@@ -2926,9 +2931,14 @@ const ScenarioBuilder: React.FC = () => {
     }
     setLaunchWeek(nextWeekNum);
     setLaunchFeedback(null);
+    // During onboarding, week 2 is scripted to always be bad_lead_quality
+    // (see showLaunchAction2Hint below) so the guided "Продовжити без змін"
+    // hint always matches what's actually on screen — otherwise this pool
+    // pick is random.
     const candidates = LAUNCH_PROBLEM_TYPES.filter(t => t !== finishedProblemType);
     const pool = candidates.length > 0 ? candidates : LAUNCH_PROBLEM_TYPES;
-    setLaunchProblem(attachLaunchTarget(buildLaunchProblem(pool[Math.floor(Math.random() * pool.length)]), nextWeekNum));
+    const forcedType: LaunchProblemType | null = (launchIntroForOnboardingRef.current && nextWeekNum === 2) ? 'bad_lead_quality' : null;
+    setLaunchProblem(attachLaunchTarget(buildLaunchProblem(forcedType || pool[Math.floor(Math.random() * pool.length)]), nextWeekNum));
     setLaunchPhase('week');
   };
 
@@ -6707,9 +6717,9 @@ const ScenarioBuilder: React.FC = () => {
                       {LAUNCH_ACTIONS.map(a => (
                         <Button
                           key={a.key}
-                          data-tour={a.key === 'change_creo' ? 'change-creo-action-btn' : undefined}
+                          data-tour={a.key === 'change_creo' ? 'change-creo-action-btn' : a.key === 'continue' ? 'continue-action-btn' : undefined}
                           variant="outline"
-                          disabled={showLaunchAction1Hint && a.key !== 'change_creo'}
+                          disabled={(showLaunchAction1Hint && a.key !== 'change_creo') || (showLaunchAction2Hint && a.key !== 'continue')}
                           className="w-full justify-start text-sm bg-card"
                           onClick={() => handleLaunchAction(a.key)}
                         >
@@ -6724,7 +6734,7 @@ const ScenarioBuilder: React.FC = () => {
                       {launchHashSeed(`${scenario.id}-budget-${launchWeek}`) % 3 === 0 && (
                         <Button
                           variant="outline"
-                          disabled={showLaunchAction1Hint}
+                          disabled={showLaunchAction1Hint || showLaunchAction2Hint}
                           className="w-full justify-start text-sm bg-card"
                           onClick={() => handleLaunchAction('adjust_budget')}
                         >
@@ -6735,7 +6745,7 @@ const ScenarioBuilder: React.FC = () => {
                     {CONTEXTUAL_ACTION_BY_PROBLEM[launchProblem.type] && (
                       <Button
                         variant="outline"
-                        disabled={showLaunchAction1Hint}
+                        disabled={showLaunchAction1Hint || showLaunchAction2Hint}
                         className="w-full justify-start text-sm bg-card"
                         onClick={() => handleLaunchAction(CONTEXTUAL_ACTION_BY_PROBLEM[launchProblem.type]!.key)}
                       >
@@ -6745,7 +6755,7 @@ const ScenarioBuilder: React.FC = () => {
                     {getAllAdSets().length > 1 && launchProblem.targetAudienceName && (
                       <Button
                         variant="outline"
-                        disabled={showLaunchAction1Hint}
+                        disabled={showLaunchAction1Hint || showLaunchAction2Hint}
                         className="w-full justify-start text-sm bg-card"
                         onClick={() => handleLaunchAction('disable_audience')}
                       >
@@ -6764,6 +6774,19 @@ const ScenarioBuilder: React.FC = () => {
                         'Давай так і зробимо. Натисни «Змінити крео».',
                       ]}
                       hintNumber={23}
+                    />
+                    <SpotlightTip
+                      onSkipAll={skipOnboarding}
+                      show={showLaunchAction2Hint}
+                      targetSelector='[data-tour="continue-action-btn"]'
+                      radius={12}
+                      lines={[
+                        'Перший тиждень — відвоювали!',
+                        'Але тепер нова проблема: клієнт скаржиться, що аудиторія нецільова.',
+                        'І тут може бути безліч причин, тому складно одразу сказати, у чому саме проблема. Але за тиждень ми отримали лише 14 заявок — цього недостатньо для нормальної оптимізації реклами.',
+                        'Давай спробуємо пояснити клієнту, що нам потрібно трохи більше часу, а точніше — більше лідів для аналізу та оптимізації. Натисни «Продовжити без змін».',
+                      ]}
+                      hintNumber={24}
                     />
                   </div>
                 ) : (
