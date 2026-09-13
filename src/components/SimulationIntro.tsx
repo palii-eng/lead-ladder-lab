@@ -712,40 +712,26 @@ const HARD_CLIENTS: ClientTemplate[] = [
 const FEMALE_KEYS = ['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10', 'f11'];
 const MALE_KEYS = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10', 'm11'];
 
-const photoKeyFor = (gender: Gender, seed: number) => {
-  const list = gender === 'female' ? FEMALE_KEYS : MALE_KEYS;
-  return list[Math.abs(seed) % list.length];
-};
-
-// Only 11 illustrated portraits exist per gender (FEMALE_KEYS/MALE_KEYS) —
-// photoKeyFor alone (a plain seed % 11) can easily hand two clients shown in
-// the same batch the identical photo. This assigns keys per-batch instead:
-// each gender gets its own seeded shuffle of its keys, handed out in that
-// order so nobody repeats until the batch actually needs more of the same
-// gender than there are assets (unavoidable, but at least not random).
-const assignPhotoKeys = (genders: Gender[], seedBase: number): string[] => {
-  const seededShuffle = (arr: string[], seed: number) => {
-    const a = [...arr];
-    let s = seed || 1;
-    for (let i = a.length - 1; i > 0; i--) {
-      s = (s * 9301 + 49297) % 233280;
-      const j = Math.floor((s / 233280) * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  };
-  const order: Record<Gender, string[]> = {
-    female: seededShuffle(FEMALE_KEYS, seedBase),
-    male: seededShuffle(MALE_KEYS, seedBase + 1),
-  };
+// Each named client gets ONE fixed portrait, forever — previously the photo
+// was picked with a fresh random seed on every render, so the same client
+// (e.g. "Андрій Коваленко") showed up with a different face on every page
+// reload, which reads as fake/random rather than an actual person attached
+// to that lead. Assignment is by each client's fixed position among
+// same-gender clients across LUCKY_CLIENTS+HARD_CLIENTS (a stable order,
+// since those arrays never get reshuffled), so it's deterministic across
+// reloads/sessions without needing to hand-list 120 keys. Only 11 assets
+// exist per gender, so distinct clients do still end up sharing a photo —
+// but which two share is now fixed, not something that changes every visit.
+const CLIENT_PHOTO_KEY: Record<string, string> = (() => {
   const used: Record<Gender, number> = { female: 0, male: 0 };
-  return genders.map(g => {
-    const list = order[g];
-    const key = list[used[g] % list.length];
-    used[g] += 1;
-    return key;
+  const map: Record<string, string> = {};
+  [...LUCKY_CLIENTS, ...HARD_CLIENTS].forEach(c => {
+    const list = c.gender === 'female' ? FEMALE_KEYS : MALE_KEYS;
+    map[c.name] = list[used[c.gender] % list.length];
+    used[c.gender] += 1;
   });
-};
+  return map;
+})();
 
 // Shared with Dashboard.tsx's "Опрацювання вхідних лідів" feed — picks `n`
 // random leads from the same client pool used by the full-screen intro,
@@ -778,7 +764,6 @@ const CURATED_DAY_NAMES: Record<number, string[]> = {
 };
 
 export const pickAvailableLeads = (n: number, day: number = 5): AvailableLead[] => {
-  const seedBase = Math.floor(Math.random() * 1000);
   let tagged: { c: ClientTemplate; d: 'lucky' | 'suffer' }[];
 
   const curatedNames = CURATED_DAY_NAMES[day] || null;
@@ -799,10 +784,9 @@ export const pickAvailableLeads = (n: number, day: number = 5): AvailableLead[] 
     .map((x, i) => ({ ...x, k: Math.random() + i }))
     .sort((a, z) => a.k - z.k))
     .slice(0, n);
-  const photoKeys = assignPhotoKeys(selected.map(x => x.c.gender), seedBase);
   const shuffled = selected
-    .map((x, i) => {
-      const key = photoKeys[i];
+    .map((x) => {
+      const key = CLIENT_PHOTO_KEY[x.c.name];
       return {
         name: x.c.name,
         niche: x.c.niche,
@@ -832,7 +816,6 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
   const [revealing, setRevealing] = useState(true);
 
   const pool = useMemo<(ClientBrief & { role?: string; photoKey: string; _difficulty: 'lucky' | 'suffer' })[]>(() => {
-    const seedBase = Math.floor(Math.random() * 1000);
     const tagged = [
       ...LUCKY_CLIENTS.map(c => ({ c, d: 'lucky' as const })),
       ...HARD_CLIENTS.map(c => ({ c, d: 'suffer' as const })),
@@ -840,10 +823,9 @@ const SimulationIntro: React.FC<Props> = ({ scenarioName, onAccept }) => {
     const orderedTagged = tagged
       .map((x, i) => ({ ...x, k: Math.random() + i }))
       .sort((a, z) => a.k - z.k);
-    const photoKeys = assignPhotoKeys(orderedTagged.map(x => x.c.gender), seedBase);
     return orderedTagged
-      .map((x, i) => {
-        const key = photoKeys[i];
+      .map((x) => {
+        const key = CLIENT_PHOTO_KEY[x.c.name];
         return {
           name: x.c.name,
           niche: x.c.niche,
