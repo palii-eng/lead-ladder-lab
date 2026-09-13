@@ -1280,6 +1280,21 @@ const ScenarioBuilder: React.FC = () => {
   // сценарій виглядали б знову "не заповненими", хоча насправді збережені.
   useEffect(() => {
     if (scenario?.skippedSteps) {
+      // Якщо крок раніше пропустили, а потім таки заповнили його реальними
+      // даними (не повернувшись натиснути "Зберегти" — наприклад, ввели
+      // Email-базу в Retention, залишивши старий прапорець "пропущено"),
+      // картка мала б назавжди зависати в "Пропущено" навіть після
+      // збереження. Реальні дані завжди скасовують застарілий skip.
+      const staleSkips = scenario.skippedSteps.filter(key => {
+        const [idxStr, branch] = key.split(':');
+        const idx = Number(idxStr);
+        return branch ? isStepCompletedForBranch(scenario, idx, branch) : isStepCompletedStatic(scenario, idx);
+      });
+      if (staleSkips.length > 0) {
+        const cleaned = scenario.skippedSteps.filter(key => !staleSkips.includes(key));
+        update({ skippedSteps: cleaned });
+        return;
+      }
       setSkippedSteps(prev => {
         const incoming = new Set(scenario.skippedSteps);
         if (prev.size === incoming.size && Array.from(prev).every(k => incoming.has(k))) return prev;
