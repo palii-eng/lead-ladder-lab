@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useScenarios, ClientBrief, createDefaultDecompSet } from '@/context/ScenariosContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Award, Inbox, GraduationCap, Newspaper, Trello } from 'lucide-react';
+import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Award, Inbox, GraduationCap, Newspaper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -17,6 +17,7 @@ import { truncateForPreview } from '@/lib/truncateForPreview';
 import { DailyVideoCard, DailyVideo } from '@/components/DailyVideoCard';
 import { estimateClientBudgetUsd } from '@/lib/budgetEstimate';
 import { resolveClientPhoto } from '@/data/clientPhotos';
+import { ModeSwitch } from '@/components/ModeSwitch';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -256,19 +257,12 @@ const Dashboard: React.FC = () => {
       {/* Header */}
       <header className="border-b border-border sticky top-0 z-50 bg-card">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <GraduationCap className="w-5 h-5 text-primary" />
             <span className="text-sm font-bold text-foreground">Навчальний простір AdSchool</span>
+            <ModeSwitch active="sim" />
           </div>
           <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => navigate('/crm')}
-              className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
-              title="CRM — воронки продажів"
-            >
-              <Trello className="w-4 h-4" /> CRM
-            </button>
             <button
               type="button"
               onClick={() => setNewsOpen(true)}

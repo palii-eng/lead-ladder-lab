@@ -9,7 +9,6 @@ export interface CrmCard {
   phone: string;
   email: string;
   source: string;
-  score: number;
   note: string;
   createdAt: string;
 }
@@ -76,8 +75,9 @@ const persistLocal = (userId: string, board: CrmBoard) => {
   } catch {}
 };
 
-// Older saved boards may predate the phone/email/source/score/color fields —
-// backfill sane defaults so the UI never has to null-check every card.
+// Older saved boards may predate the phone/email/source/color fields, or
+// still carry a since-removed score — backfill/strip so the UI never has to
+// null-check every card.
 const normalizeBoard = (board: CrmBoard): CrmBoard => ({
   funnels: board.funnels.map((f, fi) => ({
     ...f,
@@ -85,8 +85,8 @@ const normalizeBoard = (board: CrmBoard): CrmBoard => ({
     stages: f.stages.map((s, si) => ({
       ...s,
       color: s.color || colorAt(si),
-      cards: s.cards.map(c => ({
-        phone: '', email: '', source: '', score: 0, note: '',
+      cards: s.cards.map(({ score: _score, ...c }: any) => ({
+        phone: '', email: '', source: '', note: '',
         ...c,
       })),
     })),
@@ -111,8 +111,8 @@ const persistCloud = async (userId: string, board: CrmBoard) => {
   if (error) throw error;
 };
 
-export type NewCardInput = { title: string; phone?: string; email?: string; source?: string; score?: number; note?: string };
-export type CardUpdate = Partial<Pick<CrmCard, 'title' | 'phone' | 'email' | 'source' | 'score' | 'note'>>;
+export type NewCardInput = { title: string; phone?: string; email?: string; source?: string; note?: string };
+export type CardUpdate = Partial<Pick<CrmCard, 'title' | 'phone' | 'email' | 'source' | 'note'>>;
 
 interface CrmContextValue {
   board: CrmBoard;
@@ -258,7 +258,6 @@ export const CrmProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     phone: data.phone || '',
                     email: data.email || '',
                     source: data.source || '',
-                    score: data.score ?? 0,
                     note: data.note || '',
                     createdAt: new Date().toISOString(),
                   }],

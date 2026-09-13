@@ -1,14 +1,13 @@
 import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Plus, Pencil, Trash2, MoreHorizontal, Search,
-  LayoutGrid, List as ListIcon, Phone, Mail, Snowflake, Clock, Flame,
+  Plus, Pencil, Trash2, MoreHorizontal, Search,
+  LayoutGrid, List as ListIcon, Phone, Mail, CalendarDays, Tag,
 } from 'lucide-react';
 import { useCrm, CrmCard as CrmCardType, CrmStage } from '@/context/CrmContext';
+import { ModeSwitch } from '@/components/ModeSwitch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
@@ -20,18 +19,17 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-// Lead "temperature" badge — cold/neutral/hot bucketed off the 0-100 score,
-// same idea as a real CRM's lead-scoring pill.
-const scoreBadge = (score: number) => {
-  if (score >= 60) return { Icon: Flame, bg: 'hsl(4 85% 95%)', text: 'hsl(4 75% 42%)' };
-  if (score >= 30) return { Icon: Clock, bg: 'hsl(38 90% 94%)', text: 'hsl(30 75% 38%)' };
-  return { Icon: Snowflake, bg: 'hsl(210 60% 95%)', text: 'hsl(210 55% 45%)' };
-};
+const emptyCardDraft = { title: '', phone: '', email: '', source: '', note: '' };
 
-const emptyCardDraft = { title: '', phone: '', email: '', source: '', score: 0, note: '' };
+// Small grey pill with an icon — the same footer-badge look Trello uses for
+// due dates / attachments on a card.
+const Chip: React.FC<{ icon: React.ElementType; children: React.ReactNode }> = ({ icon: Icon, children }) => (
+  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground bg-secondary rounded px-1.5 py-0.5">
+    <Icon className="w-3 h-3" /> {children}
+  </span>
+);
 
 const CrmBoard: React.FC = () => {
-  const navigate = useNavigate();
   const {
     board, loading, addFunnel, renameFunnel, deleteFunnel,
     addStage, renameStage, deleteStage, addCard, updateCard, deleteCard, moveCard,
@@ -98,58 +96,37 @@ const CrmBoard: React.FC = () => {
     setCardDraft(emptyCardDraft);
   };
 
-  const renderCardTile = (stage: CrmStage, card: CrmCardType) => {
-    const badge = scoreBadge(card.score);
-    const Icon = badge.Icon;
-    return (
-      <div
-        key={card.id}
-        draggable
-        onDragStart={() => setDraggedCard({ stageId: stage.id, cardId: card.id })}
-        onClick={() => setEditingCard({ stageId: stage.id, card })}
-        className="bg-card border border-border rounded-lg p-3 cursor-grab active:cursor-grabbing hover:border-primary/40 transition-colors shadow-sm space-y-1.5"
-      >
-        <p className="text-sm font-semibold text-foreground truncate">{card.title || 'Без імені'}</p>
-        {card.phone && (
-          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-            <Phone className="w-3 h-3 shrink-0" /> {card.phone}
-          </p>
-        )}
-        {card.email && !card.phone && (
-          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-            <Mail className="w-3 h-3 shrink-0" /> {card.email}
-          </p>
-        )}
-        {card.source && <p className="text-xs text-muted-foreground truncate">{card.source}</p>}
-        <div className="flex items-center justify-between gap-2 pt-0.5">
-          <span className="text-[10px] text-muted-foreground">
-            {new Date(card.createdAt).toLocaleDateString('uk-UA')}
-          </span>
-          <div className="flex items-center gap-1">
-            {card.score > 0 && (
-              <span
-                className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-                style={{ background: badge.bg, color: badge.text }}
-              >
-                <Icon className="w-3 h-3" /> {card.score}%
-              </span>
-            )}
-            {card.source && <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">Лід</Badge>}
-          </div>
+  // Trello-style tile: a thin colored label strip up top (the stage's
+  // color), title, and a footer row of small icon chips — same fields as
+  // before (phone/email/source/date), just laid out the Trello way.
+  const renderCardTile = (stage: CrmStage, card: CrmCardType) => (
+    <div
+      key={card.id}
+      draggable
+      onDragStart={() => setDraggedCard({ stageId: stage.id, cardId: card.id })}
+      onClick={() => setEditingCard({ stageId: stage.id, card })}
+      className="bg-card rounded-lg shadow-sm hover:shadow-md border border-border/60 overflow-hidden cursor-grab active:cursor-grabbing transition-shadow"
+    >
+      <div className="h-1.5" style={{ background: stage.color }} />
+      <div className="p-2.5 space-y-1.5">
+        <p className="text-sm font-medium text-foreground leading-snug">{card.title || 'Без імені'}</p>
+        {card.note && <p className="text-xs text-muted-foreground line-clamp-2">{card.note}</p>}
+        <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+          {card.source && <Chip icon={Tag}>{card.source}</Chip>}
+          {card.phone && <Chip icon={Phone}>{card.phone}</Chip>}
+          {card.email && <Chip icon={Mail}>{card.email}</Chip>}
+          <Chip icon={CalendarDays}>{new Date(card.createdAt).toLocaleDateString('uk-UA')}</Chip>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
 
   return (
     <div className="h-screen bg-background flex overflow-hidden">
       {/* Sidebar */}
       <aside className="w-60 shrink-0 border-r border-border bg-card flex flex-col">
-        <div className="p-4 flex items-center gap-2 border-b border-border">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="gap-2 text-muted-foreground hover:text-foreground -ml-2">
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <span className="font-bold text-foreground text-sm">CRM</span>
+        <div className="p-3 border-b border-border">
+          <ModeSwitch active="crm" />
         </div>
         <div className="p-3 flex-1 overflow-y-auto">
           <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide px-2 mb-1.5">Воронки</p>
@@ -318,44 +295,33 @@ const CrmBoard: React.FC = () => {
               <table className="w-full text-sm">
                 <thead className="bg-secondary/60">
                   <tr>
-                    {['Ім\'я', 'Телефон', 'Email', 'Джерело', 'Етап', 'Оцінка', 'Дата'].map(h => (
+                    {['Ім\'я', 'Телефон', 'Email', 'Джерело', 'Етап', 'Дата'].map(h => (
                       <th key={h} className="text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wide px-3 py-2">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {allCardsFlat.filter(({ card }) => matchesSearch(card)).map(({ stage, card }) => {
-                    const badge = scoreBadge(card.score);
-                    const Icon = badge.Icon;
-                    return (
-                      <tr
-                        key={card.id}
-                        className="border-t border-border hover:bg-secondary/30 cursor-pointer transition-colors"
-                        onClick={() => setEditingCard({ stageId: stage.id, card })}
-                      >
-                        <td className="px-3 py-2 font-semibold text-foreground">{card.title || 'Без імені'}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{card.phone || '—'}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{card.email || '—'}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{card.source || '—'}</td>
-                        <td className="px-3 py-2">
-                          <span className="inline-flex items-center gap-1.5 text-xs">
-                            <span className="w-1.5 h-1.5 rounded-full" style={{ background: stage.color }} />
-                            {stage.name}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2">
-                          {card.score > 0 ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: badge.bg, color: badge.text }}>
-                              <Icon className="w-3 h-3" /> {card.score}%
-                            </span>
-                          ) : '—'}
-                        </td>
-                        <td className="px-3 py-2 text-muted-foreground text-xs">{new Date(card.createdAt).toLocaleDateString('uk-UA')}</td>
-                      </tr>
-                    );
-                  })}
+                  {allCardsFlat.filter(({ card }) => matchesSearch(card)).map(({ stage, card }) => (
+                    <tr
+                      key={card.id}
+                      className="border-t border-border hover:bg-secondary/30 cursor-pointer transition-colors"
+                      onClick={() => setEditingCard({ stageId: stage.id, card })}
+                    >
+                      <td className="px-3 py-2 font-semibold text-foreground">{card.title || 'Без імені'}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{card.phone || '—'}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{card.email || '—'}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{card.source || '—'}</td>
+                      <td className="px-3 py-2">
+                        <span className="inline-flex items-center gap-1.5 text-xs">
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: stage.color }} />
+                          {stage.name}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-muted-foreground text-xs">{new Date(card.createdAt).toLocaleDateString('uk-UA')}</td>
+                    </tr>
+                  ))}
                   {allCardsFlat.length === 0 && (
-                    <tr><td colSpan={7} className="px-3 py-8 text-center text-muted-foreground text-sm">Ще немає лідів у цій воронці</td></tr>
+                    <tr><td colSpan={6} className="px-3 py-8 text-center text-muted-foreground text-sm">Ще немає лідів у цій воронці</td></tr>
                   )}
                 </tbody>
               </table>
@@ -384,15 +350,6 @@ const CrmBoard: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center gap-2">
-              <label className="text-xs text-muted-foreground whitespace-nowrap">Оцінка ліда: {cardDraft.score}%</label>
-              <input
-                type="range" min={0} max={100} step={5}
-                value={cardDraft.score}
-                onChange={e => setCardDraft({ ...cardDraft, score: Number(e.target.value) })}
-                className="flex-1"
-              />
-            </div>
             <Textarea value={cardDraft.note} onChange={e => setCardDraft({ ...cardDraft, note: e.target.value })} placeholder="Нотатка" className="min-h-[60px]" />
           </div>
           <AlertDialogFooter>
@@ -415,15 +372,6 @@ const CrmBoard: React.FC = () => {
                 <Input value={editingCard.card.phone} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, phone: e.target.value } })} placeholder="Телефон" />
                 <Input value={editingCard.card.email} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, email: e.target.value } })} placeholder="Email" />
                 <Input value={editingCard.card.source} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, source: e.target.value } })} placeholder="Джерело" />
-                <div className="flex items-center gap-2">
-                  <label className="text-xs text-muted-foreground whitespace-nowrap">Оцінка ліда: {editingCard.card.score}%</label>
-                  <input
-                    type="range" min={0} max={100} step={5}
-                    value={editingCard.card.score}
-                    onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, score: Number(e.target.value) } })}
-                    className="flex-1"
-                  />
-                </div>
                 <Textarea value={editingCard.card.note} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, note: e.target.value } })} placeholder="Нотатка" className="min-h-[80px]" />
               </div>
               <AlertDialogFooter className="flex-row justify-between sm:justify-between">
@@ -438,8 +386,8 @@ const CrmBoard: React.FC = () => {
                   <AlertDialogCancel>Скасувати</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={() => {
-                      const { title, phone, email, source, score, note } = editingCard.card;
-                      updateCard(funnel.id, editingCard.stageId, editingCard.card.id, { title: title.trim() || 'Без імені', phone, email, source, score, note });
+                      const { title, phone, email, source, note } = editingCard.card;
+                      updateCard(funnel.id, editingCard.stageId, editingCard.card.id, { title: title.trim() || 'Без імені', phone, email, source, note });
                       setEditingCard(null);
                     }}
                   >
