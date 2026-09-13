@@ -2497,7 +2497,19 @@ const ScenarioBuilder: React.FC = () => {
             />
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 7 && audienceOpen && !audienceTipsLoading}
+              show={onboardStep === 7 && audienceOpen && audienceView === 'choose'}
+              targetSelector='[data-tour="audience-choose-ai-btn"]'
+              radius={12}
+              lines={[
+                'Візуал для реклами — це суперважлива складова. Ти можеш як самостійно прописати ТЗ, так і попросити мене зробити це за тебе.',
+                'Для цього кейсу попроси мене це зробити — це пришвидшить процес.',
+                'При реальній роботі це одне з ваших завдань: або створювати креативи самостійно, або писати ТЗ для дизайнера.',
+              ]}
+              hintNumber={11}
+            />
+            <SpotlightTip
+              onSkipAll={skipOnboarding}
+              show={onboardStep === 7 && audienceOpen && audienceView !== 'choose' && !audienceTipsLoading}
               targetSelector='[data-tour="save-audience-btn"]'
               radius={12}
               lines={[
@@ -5830,6 +5842,7 @@ const ScenarioBuilder: React.FC = () => {
                           </div>
                         </button>
                         <button
+                          data-tour="audience-choose-ai-btn"
                           onClick={() => {
                             const autoName = `Гіпотеза ${savedAudiences.length + 1}`;
                             setAudienceName(autoName);
