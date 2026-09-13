@@ -543,6 +543,11 @@ const ScenarioBuilder: React.FC = () => {
   // once dismissed or for any subsequent scenario/launch.
   const [launchIntroDismissed, setLaunchIntroDismissed] = useState(false);
   const launchIntroForOnboardingRef = useRef(false);
+  // Week 1's problem is always hard-coded to 'ctr_low' (see startLaunch) —
+  // during onboarding, once the intro card is dismissed, spotlight the one
+  // correct fix and block the other action buttons so the student can't
+  // wander off into an action LeadOslav hasn't explained yet.
+  const showLaunchAction1Hint = launchWeek === 1 && launchIntroForOnboardingRef.current && launchIntroDismissed && launchProblem?.type === 'ctr_low';
   // One entry per week (index 0 = week 1) — null until that week's action is
   // resolved, then true/false for whether the problem was actually fixed.
   const [launchWeekResults, setLaunchWeekResults] = useState<(boolean | null)[]>([null, null, null, null]);
@@ -6674,7 +6679,9 @@ const ScenarioBuilder: React.FC = () => {
                       {LAUNCH_ACTIONS.map(a => (
                         <Button
                           key={a.key}
+                          data-tour={a.key === 'change_creo' ? 'change-creo-action-btn' : undefined}
                           variant="outline"
+                          disabled={showLaunchAction1Hint && a.key !== 'change_creo'}
                           className="w-full justify-start text-sm bg-card"
                           onClick={() => handleLaunchAction(a.key)}
                         >
@@ -6689,6 +6696,7 @@ const ScenarioBuilder: React.FC = () => {
                       {launchHashSeed(`${scenario.id}-budget-${launchWeek}`) % 3 === 0 && (
                         <Button
                           variant="outline"
+                          disabled={showLaunchAction1Hint}
                           className="w-full justify-start text-sm bg-card"
                           onClick={() => handleLaunchAction('adjust_budget')}
                         >
@@ -6699,6 +6707,7 @@ const ScenarioBuilder: React.FC = () => {
                     {CONTEXTUAL_ACTION_BY_PROBLEM[launchProblem.type] && (
                       <Button
                         variant="outline"
+                        disabled={showLaunchAction1Hint}
                         className="w-full justify-start text-sm bg-card"
                         onClick={() => handleLaunchAction(CONTEXTUAL_ACTION_BY_PROBLEM[launchProblem.type]!.key)}
                       >
@@ -6708,12 +6717,26 @@ const ScenarioBuilder: React.FC = () => {
                     {getAllAdSets().length > 1 && launchProblem.targetAudienceName && (
                       <Button
                         variant="outline"
+                        disabled={showLaunchAction1Hint}
                         className="w-full justify-start text-sm bg-card"
                         onClick={() => handleLaunchAction('disable_audience')}
                       >
                         Вимкнути «{launchProblem.targetAudienceName}»
                       </Button>
                     )}
+                    <SpotlightTip
+                      onSkipAll={skipOnboarding}
+                      show={showLaunchAction1Hint}
+                      targetSelector='[data-tour="change-creo-action-btn"]'
+                      radius={12}
+                      lines={[
+                        'Так, ліди подорожчали. Але чому?',
+                        'Зверни увагу на CTR — він доволі низький. Ця метрика показує, наскільки креатив цікавий для аудиторії.',
+                        'Якщо цей показник менше 1%, це може бути причиною низьких результатів. Ймовірно, треба перезапустити креатив.',
+                        'Давай так і зробимо. Натисни «Змінити крео».',
+                      ]}
+                      hintNumber={23}
+                    />
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground w-full py-1">
