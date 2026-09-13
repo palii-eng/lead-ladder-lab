@@ -1547,6 +1547,24 @@ const ScenarioBuilder: React.FC = () => {
     );
   }
 
+  // A project the client walked away from is closed for good — no viewing
+  // the funnel, no editing, nothing. Block the whole page instead of just
+  // disabling individual buttons deeper in the builder.
+  if (scenario.status === 'completed' && scenario.monthSurvived === false) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-sm px-6">
+          <div className="text-4xl mb-3">⚠️</div>
+          <h2 className="text-xl font-bold text-foreground mb-2">Клієнт пішов — сценарій недоступний</h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            Проєкт «{scenario.clientBrief?.name || scenario.name}» завершено невдало. Переглянути чи змінити його вже не можна.
+          </p>
+          <Button onClick={() => navigate('/')} variant="secondary">На головну</Button>
+        </div>
+      </div>
+    );
+  }
+
   const hasExistingProgress = scenarioHasExistingProgress;
 
   // If the scenario looks "thin" (only a brief, no progress) but cloud sync is still
