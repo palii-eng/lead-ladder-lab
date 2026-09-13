@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useScenarios, ClientBrief, createDefaultDecompSet } from '@/context/ScenariosContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Award, Inbox, GraduationCap, Newspaper } from 'lucide-react';
+import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Award, Inbox, GraduationCap, Newspaper, Trello } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -261,6 +261,14 @@ const Dashboard: React.FC = () => {
             <span className="text-sm font-bold text-foreground">Навчальний простір AdSchool</span>
           </div>
           <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => navigate('/crm')}
+              className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+              title="CRM — воронки продажів"
+            >
+              <Trello className="w-4 h-4" /> CRM
+            </button>
             <button
               type="button"
               onClick={() => setNewsOpen(true)}

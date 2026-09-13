@@ -5,9 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { ScenariosProvider } from "@/context/ScenariosContext";
+import { CrmProvider } from "@/context/CrmContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import ScenarioBuilder from "./pages/ScenarioBuilder";
+import CrmBoard from "./pages/CrmBoard";
 import SharedScenario from "./pages/SharedScenario";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
@@ -23,18 +25,21 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ScenariosProvider>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/confirmed" element={<EmailConfirmed />} />
-              <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
-              <Route path="/share/:shareId" element={<SharedScenario />} />
-              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/scenario/:id" element={<ProtectedRoute><ScenarioBuilder /></ProtectedRoute>} />
-              <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <CrmProvider>
+              <Toaster />
+              <Sonner />
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/confirmed" element={<EmailConfirmed />} />
+                <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+                <Route path="/share/:shareId" element={<SharedScenario />} />
+                <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/scenario/:id" element={<ProtectedRoute><ScenarioBuilder /></ProtectedRoute>} />
+                <Route path="/crm" element={<ProtectedRoute><CrmBoard /></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </CrmProvider>
           </ScenariosProvider>
         </AuthProvider>
       </BrowserRouter>

@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      crm_boards: {
+        Row: {
+          board: Json
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          board?: Json
+          created_at?: string
+          id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          board?: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
