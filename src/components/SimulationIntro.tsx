@@ -709,20 +709,20 @@ const HARD_CLIENTS: ClientTemplate[] = [
 
 
 // Hand-painted illustrated portraits (AI-generated, project assets)
-const FEMALE_KEYS = ['f1', 'f2', 'f3', 'f4', 'f5'];
-const MALE_KEYS = ['m1', 'm2', 'm3', 'm4', 'm5'];
+const FEMALE_KEYS = ['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10', 'f11'];
+const MALE_KEYS = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10', 'm11'];
 
 const photoKeyFor = (gender: Gender, seed: number) => {
   const list = gender === 'female' ? FEMALE_KEYS : MALE_KEYS;
   return list[Math.abs(seed) % list.length];
 };
 
-// Only 5 illustrated portraits exist per gender (FEMALE_KEYS/MALE_KEYS) —
-// photoKeyFor alone (a plain seed % 5) can easily hand two clients shown in
+// Only 11 illustrated portraits exist per gender (FEMALE_KEYS/MALE_KEYS) —
+// photoKeyFor alone (a plain seed % 11) can easily hand two clients shown in
 // the same batch the identical photo. This assigns keys per-batch instead:
-// each gender gets its own seeded shuffle of its 5 keys, handed out in that
-// order so nobody repeats until the batch actually needs more than 5 of the
-// same gender (unavoidable with only 5 assets, but at least not random).
+// each gender gets its own seeded shuffle of its keys, handed out in that
+// order so nobody repeats until the batch actually needs more of the same
+// gender than there are assets (unavoidable, but at least not random).
 const assignPhotoKeys = (genders: Gender[], seedBase: number): string[] => {
   const seededShuffle = (arr: string[], seed: number) => {
     const a = [...arr];
