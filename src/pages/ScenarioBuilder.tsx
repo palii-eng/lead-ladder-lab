@@ -576,6 +576,7 @@ const ScenarioBuilder: React.FC = () => {
   const [creoFields, setCreoFields] = useState<Record<string, string>>({});
   const [creoVideoFormat, setCreoVideoFormat] = useState<string>('');
   const [creoAiLoading, setCreoAiLoading] = useState(false);
+  const creoFieldsFilled = Object.values(creoFields).some((v) => typeof v === 'string' && v.trim().length > 0);
 
   const [viewCreoIdx, setViewCreoIdx] = useState<number | null>(null);
 
@@ -2474,7 +2475,7 @@ const ScenarioBuilder: React.FC = () => {
             />
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 7 && audienceOpen}
+              show={onboardStep === 7 && audienceOpen && !audienceTipsLoading}
               targetSelector='[data-tour="save-audience-btn"]'
               radius={12}
               lines={[
@@ -2497,11 +2498,21 @@ const ScenarioBuilder: React.FC = () => {
             />
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 8 && creoOpen && !!creoFormat}
+              show={onboardStep === 8 && creoOpen && !!creoFormat && (creoFormat !== 'video' || !!creoVideoFormat) && !creoFieldsFilled && !creoAiLoading}
+              targetSelector='[data-tour="ai-fill-creo-btn"]'
+              radius={12}
+              lines={[
+                'Попроси мене заповнити ТЗ — натисни «Попросити AI LeadОслава заповнити».',
+              ]}
+              hintNumber={12}
+            />
+            <SpotlightTip
+              onSkipAll={skipOnboarding}
+              show={onboardStep === 8 && creoOpen && !!creoFormat && creoFieldsFilled && !creoAiLoading}
               targetSelector='[data-tour="save-creo-btn"]'
               radius={12}
               lines={[
-                'Заповни поля ТЗ (або попроси мене заповнити) і натисни «Зберегти адсет».',
+                'Опис готовий — перевір поля та натисни «Зберегти адсет».',
               ]}
               hintNumber={12}
             />
@@ -6309,6 +6320,7 @@ const ScenarioBuilder: React.FC = () => {
               {creoFormat && (creoFormat !== 'video' || creoVideoFormat) && (
                 <Button
                   variant="outline"
+                  data-tour="ai-fill-creo-btn"
                   disabled={creoAiLoading}
                   onClick={async () => {
                     if (!scenario) return;

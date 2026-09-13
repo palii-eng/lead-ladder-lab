@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
   Plus, Pencil, Trash2, MoreHorizontal, Search,
   LayoutGrid, List as ListIcon, Phone, Mail, CalendarDays, Tag, User, UserPlus, Layers,
+  Globe, Instagram, Send, FileText,
 } from 'lucide-react';
 import { useCrm, CrmCard as CrmCardType, CrmStage } from '@/context/CrmContext';
 import { AppHeader } from '@/components/AppHeader';
@@ -19,7 +20,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-const emptyCardDraft = { title: '', phone: '', email: '', source: '', note: '' };
+const emptyCardDraft = { title: '', phone: '', email: '', source: '', note: '', websiteUrl: '', instagramUrl: '', telegramUrl: '', briefUrl: '' };
 
 // Small grey pill with an icon — the same footer-badge look Trello uses for
 // due dates / attachments on a card.
@@ -129,6 +130,10 @@ const CrmBoard: React.FC = () => {
           {card.source && <Chip icon={Tag}>{card.source}</Chip>}
           {card.phone && <Chip icon={Phone}>{card.phone}</Chip>}
           {card.email && <Chip icon={Mail}>{card.email}</Chip>}
+          {card.websiteUrl && <Chip icon={Globe}>Сайт</Chip>}
+          {card.instagramUrl && <Chip icon={Instagram}>Instagram</Chip>}
+          {card.telegramUrl && <Chip icon={Send}>Telegram</Chip>}
+          {card.briefUrl && <Chip icon={FileText}>Бриф</Chip>}
           <Chip icon={CalendarDays}>{new Date(card.createdAt).toLocaleDateString('uk-UA')}</Chip>
         </div>
       </div>
@@ -358,6 +363,10 @@ const CrmBoard: React.FC = () => {
             <IconInput icon={Phone} value={cardDraft.phone} onChange={e => setCardDraft({ ...cardDraft, phone: e.target.value })} placeholder="Телефон" />
             <IconInput icon={Mail} value={cardDraft.email} onChange={e => setCardDraft({ ...cardDraft, email: e.target.value })} placeholder="Email" />
             <IconInput icon={Tag} value={cardDraft.source} onChange={e => setCardDraft({ ...cardDraft, source: e.target.value })} placeholder="Джерело (напр. квіз, лендінг)" />
+            <IconInput icon={Globe} value={cardDraft.websiteUrl} onChange={e => setCardDraft({ ...cardDraft, websiteUrl: e.target.value })} placeholder="Посилання на сайт" />
+            <IconInput icon={Instagram} value={cardDraft.instagramUrl} onChange={e => setCardDraft({ ...cardDraft, instagramUrl: e.target.value })} placeholder="Посилання на Instagram" />
+            <IconInput icon={Send} value={cardDraft.telegramUrl} onChange={e => setCardDraft({ ...cardDraft, telegramUrl: e.target.value })} placeholder="Посилання на Telegram клієнта" />
+            <IconInput icon={FileText} value={cardDraft.briefUrl} onChange={e => setCardDraft({ ...cardDraft, briefUrl: e.target.value })} placeholder="Посилання на бриф клієнта" />
             <div className="relative">
               <Layers className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10 pointer-events-none" />
               <Select value={addCardStageId || undefined} onValueChange={setAddCardStageId}>
@@ -392,6 +401,10 @@ const CrmBoard: React.FC = () => {
                 <IconInput icon={Phone} value={editingCard.card.phone} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, phone: e.target.value } })} placeholder="Телефон" />
                 <IconInput icon={Mail} value={editingCard.card.email} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, email: e.target.value } })} placeholder="Email" />
                 <IconInput icon={Tag} value={editingCard.card.source} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, source: e.target.value } })} placeholder="Джерело" />
+                <IconInput icon={Globe} value={editingCard.card.websiteUrl} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, websiteUrl: e.target.value } })} placeholder="Посилання на сайт" />
+                <IconInput icon={Instagram} value={editingCard.card.instagramUrl} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, instagramUrl: e.target.value } })} placeholder="Посилання на Instagram" />
+                <IconInput icon={Send} value={editingCard.card.telegramUrl} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, telegramUrl: e.target.value } })} placeholder="Посилання на Telegram клієнта" />
+                <IconInput icon={FileText} value={editingCard.card.briefUrl} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, briefUrl: e.target.value } })} placeholder="Посилання на бриф клієнта" />
                 <Textarea value={editingCard.card.note} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, note: e.target.value } })} placeholder="Нотатка" className="min-h-[80px] resize-none" />
               </div>
               <AlertDialogFooter className="flex-row items-center justify-between sm:justify-between p-4 bg-secondary/40 border-t border-border">
@@ -406,8 +419,8 @@ const CrmBoard: React.FC = () => {
                   <AlertDialogCancel>Скасувати</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={() => {
-                      const { title, phone, email, source, note } = editingCard.card;
-                      updateCard(funnel.id, editingCard.stageId, editingCard.card.id, { title: title.trim() || 'Без імені', phone, email, source, note });
+                      const { title, phone, email, source, note, websiteUrl, instagramUrl, telegramUrl, briefUrl } = editingCard.card;
+                      updateCard(funnel.id, editingCard.stageId, editingCard.card.id, { title: title.trim() || 'Без імені', phone, email, source, note, websiteUrl, instagramUrl, telegramUrl, briefUrl });
                       setEditingCard(null);
                     }}
                   >

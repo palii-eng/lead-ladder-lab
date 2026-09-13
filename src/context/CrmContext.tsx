@@ -10,6 +10,10 @@ export interface CrmCard {
   email: string;
   source: string;
   note: string;
+  websiteUrl: string;
+  instagramUrl: string;
+  telegramUrl: string;
+  briefUrl: string;
   createdAt: string;
 }
 
@@ -87,6 +91,7 @@ const normalizeBoard = (board: CrmBoard): CrmBoard => ({
       color: s.color || colorAt(si),
       cards: s.cards.map(({ score: _score, ...c }: any) => ({
         phone: '', email: '', source: '', note: '',
+        websiteUrl: '', instagramUrl: '', telegramUrl: '', briefUrl: '',
         ...c,
       })),
     })),
@@ -111,8 +116,18 @@ const persistCloud = async (userId: string, board: CrmBoard) => {
   if (error) throw error;
 };
 
-export type NewCardInput = { title: string; phone?: string; email?: string; source?: string; note?: string };
-export type CardUpdate = Partial<Pick<CrmCard, 'title' | 'phone' | 'email' | 'source' | 'note'>>;
+export type NewCardInput = {
+  title: string;
+  phone?: string;
+  email?: string;
+  source?: string;
+  note?: string;
+  websiteUrl?: string;
+  instagramUrl?: string;
+  telegramUrl?: string;
+  briefUrl?: string;
+};
+export type CardUpdate = Partial<Pick<CrmCard, 'title' | 'phone' | 'email' | 'source' | 'note' | 'websiteUrl' | 'instagramUrl' | 'telegramUrl' | 'briefUrl'>>;
 
 interface CrmContextValue {
   board: CrmBoard;
@@ -259,6 +274,10 @@ export const CrmProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     email: data.email || '',
                     source: data.source || '',
                     note: data.note || '',
+                    websiteUrl: data.websiteUrl || '',
+                    instagramUrl: data.instagramUrl || '',
+                    telegramUrl: data.telegramUrl || '',
+                    briefUrl: data.briefUrl || '',
                     createdAt: new Date().toISOString(),
                   }],
                 }
