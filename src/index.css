@@ -65,6 +65,15 @@
     @apply border-border;
   }
 
+  /* Reserve scrollbar space consistently across routes — without this,
+     a page whose body scrolls (Dashboard) vs one that doesn't (CRM, which
+     uses its own h-screen/overflow-hidden layout) render the centered
+     header container at slightly different horizontal offsets, making
+     the header buttons visibly shift when switching between them. */
+  html {
+    scrollbar-gutter: stable;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
