@@ -3,6 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { useAuth } from '@/context/AuthContext';
 
+export interface CrmFile {
+  name: string;
+  url: string;
+  size: number;
+}
+
 export interface CrmCard {
   id: string;
   title: string;
@@ -15,6 +21,7 @@ export interface CrmCard {
   telegramUrl: string;
   briefUrl: string;
   decompositionUrl: string;
+  files: CrmFile[];
   createdAt: string;
 }
 
@@ -93,6 +100,7 @@ const normalizeBoard = (board: CrmBoard): CrmBoard => ({
       cards: s.cards.map(({ score: _score, ...c }: any) => ({
         phone: '', email: '', source: '', note: '',
         websiteUrl: '', instagramUrl: '', telegramUrl: '', briefUrl: '', decompositionUrl: '',
+        files: [],
         ...c,
       })),
     })),
@@ -128,8 +136,9 @@ export type NewCardInput = {
   telegramUrl?: string;
   briefUrl?: string;
   decompositionUrl?: string;
+  files?: CrmFile[];
 };
-export type CardUpdate = Partial<Pick<CrmCard, 'title' | 'phone' | 'email' | 'source' | 'note' | 'websiteUrl' | 'instagramUrl' | 'telegramUrl' | 'briefUrl' | 'decompositionUrl'>>;
+export type CardUpdate = Partial<Pick<CrmCard, 'title' | 'phone' | 'email' | 'source' | 'note' | 'websiteUrl' | 'instagramUrl' | 'telegramUrl' | 'briefUrl' | 'decompositionUrl' | 'files'>>;
 
 interface CrmContextValue {
   board: CrmBoard;
@@ -281,6 +290,7 @@ export const CrmProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     telegramUrl: data.telegramUrl || '',
                     briefUrl: data.briefUrl || '',
                     decompositionUrl: data.decompositionUrl || '',
+                    files: data.files || [],
                     createdAt: new Date().toISOString(),
                   }],
                 }

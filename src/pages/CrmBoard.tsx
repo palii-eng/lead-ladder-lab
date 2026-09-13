@@ -2,9 +2,9 @@ import React, { useMemo, useState } from 'react';
 import {
   Plus, Pencil, Trash2, MoreHorizontal, Search,
   LayoutGrid, List as ListIcon, Phone, Mail, CalendarDays, Tag, User, UserPlus, Layers,
-  Globe, Instagram, Send, FileText, Calculator,
+  Globe, Instagram, Send, FileText, Calculator, Paperclip, X, Loader2, Download,
 } from 'lucide-react';
-import { useCrm, CrmCard as CrmCardType, CrmStage } from '@/context/CrmContext';
+import { useCrm, CrmCard as CrmCardType, CrmStage, CrmFile } from '@/context/CrmContext';
 import { AppHeader } from '@/components/AppHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,8 +20,19 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
-const emptyCardDraft = { title: '', phone: '', email: '', source: '', note: '', websiteUrl: '', instagramUrl: '', telegramUrl: '', briefUrl: '', decompositionUrl: '' };
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
+const emptyCardDraft = { title: '', phone: '', email: '', source: '', note: '', websiteUrl: '', instagramUrl: '', telegramUrl: '', briefUrl: '', decompositionUrl: '', files: [] as CrmFile[] };
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} Б`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} КБ`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
+};
 
 // Small grey pill with an icon — the same footer-badge look Trello uses for
 // due dates / attachments on a card.
@@ -39,11 +50,76 @@ const IconInput: React.FC<React.ComponentProps<typeof Input> & { icon: React.Ele
   </div>
 );
 
+// File attachments for a lead card — upload to the "crm-attachments" bucket
+// (10MB/file cap enforced both here and by the bucket's own limit) and keep
+// just {name, url, size} on the card itself.
+const FileAttachments: React.FC<{ files: CrmFile[]; onChange: (files: CrmFile[]) => void; userId: string | undefined }> = ({ files, onChange, userId }) => {
+  const [uploading, setUploading] = useState(false);
+
+  const handleFiles = async (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0 || !userId) return;
+    const picked = Array.from(fileList);
+    const oversized = picked.filter(f => f.size > MAX_FILE_SIZE);
+    if (oversized.length > 0) {
+      toast({ title: 'Файл завеликий', description: `Максимум 10 МБ: ${oversized.map(f => f.name).join(', ')}`, variant: 'destructive' });
+    }
+    const toUpload = picked.filter(f => f.size <= MAX_FILE_SIZE);
+    if (toUpload.length === 0) return;
+
+    setUploading(true);
+    try {
+      const uploaded: CrmFile[] = [];
+      for (const file of toUpload) {
+        const path = `${userId}/${crypto.randomUUID()}-${file.name}`;
+        const { error } = await supabase.storage.from('crm-attachments').upload(path, file);
+        if (error) {
+          toast({ title: 'Не вдалося завантажити', description: `${file.name}: ${error.message}`, variant: 'destructive' });
+          continue;
+        }
+        const { data } = supabase.storage.from('crm-attachments').getPublicUrl(path);
+        uploaded.push({ name: file.name, url: data.publicUrl, size: file.size });
+      }
+      if (uploaded.length > 0) onChange([...files, ...uploaded]);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-semibold text-foreground block">Файли</label>
+      {files.length > 0 && (
+        <div className="space-y-1.5">
+          {files.map((f, i) => (
+            <div key={i} className="flex items-center gap-2 p-2 rounded-lg border border-border bg-secondary/40 text-xs">
+              <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <span className="flex-1 truncate font-medium text-foreground">{f.name}</span>
+              <span className="text-muted-foreground shrink-0">{formatFileSize(f.size)}</span>
+              <a href={f.url} target="_blank" rel="noopener noreferrer" title="Завантажити" className="text-primary hover:text-primary/80 shrink-0">
+                <Download className="w-3.5 h-3.5" />
+              </a>
+              <button type="button" onClick={() => onChange(files.filter((_, idx) => idx !== i))} title="Видалити" className="text-muted-foreground hover:text-destructive shrink-0">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <label className="flex items-center justify-center gap-1.5 h-9 rounded-lg border border-dashed border-border hover:border-primary/50 text-xs font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+        {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Paperclip className="w-3.5 h-3.5" />}
+        {uploading ? 'Завантаження…' : 'Прикріпити файл (до 10 МБ)'}
+        <input type="file" multiple className="hidden" disabled={uploading} onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }} />
+      </label>
+    </div>
+  );
+};
+
 const CrmBoard: React.FC = () => {
   const {
     board, loading, addFunnel, renameFunnel, deleteFunnel,
     addStage, renameStage, deleteStage, addCard, updateCard, deleteCard, moveCard,
   } = useCrm();
+  const { user } = useAuth();
 
   const [activeFunnelId, setActiveFunnelId] = useState<string | null>(null);
   const funnel = board.funnels.find(f => f.id === activeFunnelId) || board.funnels[0] || null;
@@ -136,6 +212,7 @@ const CrmBoard: React.FC = () => {
           {card.telegramUrl && <Chip icon={Send}>Telegram</Chip>}
           {card.briefUrl && <Chip icon={FileText}>Бриф</Chip>}
           {card.decompositionUrl && <Chip icon={Calculator}>Декомпозиція</Chip>}
+          {card.files?.length > 0 && <Chip icon={Paperclip}>{card.files.length} {card.files.length === 1 ? 'файл' : 'файли'}</Chip>}
           <Chip icon={CalendarDays}>{new Date(card.createdAt).toLocaleDateString('uk-UA')}</Chip>
         </div>
       </div>
@@ -380,6 +457,7 @@ const CrmBoard: React.FC = () => {
               </Select>
             </div>
             <Textarea value={cardDraft.note} onChange={e => setCardDraft({ ...cardDraft, note: e.target.value })} placeholder="Нотатка" className="min-h-[70px] resize-none" />
+            <FileAttachments files={cardDraft.files} onChange={(files) => setCardDraft({ ...cardDraft, files })} userId={user?.id} />
           </div>
           <SheetFooter className="p-4 bg-secondary/40 border-t border-border flex-row justify-end gap-2 shrink-0">
             <Button variant="outline" onClick={() => setAddCardStageId(null)}>Скасувати</Button>
@@ -410,6 +488,7 @@ const CrmBoard: React.FC = () => {
                 <IconInput icon={FileText} value={editingCard.card.briefUrl} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, briefUrl: e.target.value } })} placeholder="Посилання на бриф клієнта" />
                 <IconInput icon={Calculator} value={editingCard.card.decompositionUrl} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, decompositionUrl: e.target.value } })} placeholder="Посилання на декомпозицію" />
                 <Textarea value={editingCard.card.note} onChange={e => setEditingCard({ ...editingCard, card: { ...editingCard.card, note: e.target.value } })} placeholder="Нотатка" className="min-h-[80px] resize-none" />
+                <FileAttachments files={editingCard.card.files} onChange={(files) => setEditingCard({ ...editingCard, card: { ...editingCard.card, files } })} userId={user?.id} />
               </div>
               <SheetFooter className="flex-row items-center justify-between p-4 bg-secondary/40 border-t border-border shrink-0">
                 <Button
@@ -423,8 +502,8 @@ const CrmBoard: React.FC = () => {
                   <Button variant="outline" onClick={() => setEditingCard(null)}>Скасувати</Button>
                   <Button
                     onClick={() => {
-                      const { title, phone, email, source, note, websiteUrl, instagramUrl, telegramUrl, briefUrl, decompositionUrl } = editingCard.card;
-                      updateCard(funnel.id, editingCard.stageId, editingCard.card.id, { title: title.trim() || 'Без імені', phone, email, source, note, websiteUrl, instagramUrl, telegramUrl, briefUrl, decompositionUrl });
+                      const { title, phone, email, source, note, websiteUrl, instagramUrl, telegramUrl, briefUrl, decompositionUrl, files } = editingCard.card;
+                      updateCard(funnel.id, editingCard.stageId, editingCard.card.id, { title: title.trim() || 'Без імені', phone, email, source, note, websiteUrl, instagramUrl, telegramUrl, briefUrl, decompositionUrl, files });
                       setEditingCard(null);
                     }}
                   >
