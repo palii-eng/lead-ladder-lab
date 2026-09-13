@@ -37,6 +37,31 @@ const TREND_VIDEOS: DailyVideo[] = [
   { day: 3, youtubeId: 'IT8hrMJmeeM', caption: 'Вайбкодимо сайти безлімітно' },
 ];
 
+// Клієнти, від яких студент явно відмовився ("Відмовитись від клієнта" на
+// вже взятому в роботу проєкті), не повинні знову зʼявлятись у фіді
+// "Опрацювання вхідних лідів" — інакше видалений сценарій просто звільняє
+// імʼя з takenLeadNames і той самий лід випливає знову. Персистимо окремо
+// від scenarios, бо сам сценарій справді видаляється безслідно.
+const DECLINED_LEADS_PREFIX = 'declined_leads_';
+
+const readDeclinedLeadNames = (userId: string): Set<string> => {
+  try {
+    const raw = localStorage.getItem(`${DECLINED_LEADS_PREFIX}${userId}`);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : []);
+  } catch {
+    return new Set();
+  }
+};
+
+const addDeclinedLeadName = (userId: string, name: string) => {
+  try {
+    const next = readDeclinedLeadNames(userId);
+    next.add(name);
+    localStorage.setItem(`${DECLINED_LEADS_PREFIX}${userId}`, JSON.stringify(Array.from(next)));
+  } catch { /* ignore */ }
+};
+
 const Dashboard: React.FC = () => {
   const { scenarios, loading, addScenario, updateScenario, deleteScenario } = useScenarios();
   const navigate = useNavigate();
@@ -82,9 +107,13 @@ const Dashboard: React.FC = () => {
     () => new Set(scenarios.map(s => s.clientBrief?.name).filter(Boolean)),
     [scenarios]
   );
+  const [declinedLeadNames, setDeclinedLeadNames] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    setDeclinedLeadNames(user?.id ? readDeclinedLeadNames(user.id) : new Set());
+  }, [user?.id]);
   const visibleLeads = useMemo(
-    () => availableLeads.filter(l => !takenLeadNames.has(l.name)),
-    [availableLeads, takenLeadNames]
+    () => availableLeads.filter(l => !takenLeadNames.has(l.name) && !declinedLeadNames.has(l.name)),
+    [availableLeads, takenLeadNames, declinedLeadNames]
   );
   const [takingLeadKey, setTakingLeadKey] = useState<string | null>(null);
   const [activeLeadIdx, setActiveLeadIdx] = useState(0);
@@ -478,7 +507,15 @@ const Dashboard: React.FC = () => {
             <AlertDialogCancel>Скасувати</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => { if (deleteId) deleteScenario(deleteId); setDeleteId(null); }}
+              onClick={() => {
+                const clientName = scenarioToDelete?.clientBrief?.name;
+                if (user?.id && clientName) {
+                  addDeclinedLeadName(user.id, clientName);
+                  setDeclinedLeadNames(prev => new Set(prev).add(clientName));
+                }
+                if (deleteId) deleteScenario(deleteId);
+                setDeleteId(null);
+              }}
             >
               Так, відмовитись
             </AlertDialogAction>
