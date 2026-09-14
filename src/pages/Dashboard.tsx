@@ -30,6 +30,7 @@ const LEADS_FEED_SIZE = 4;
 // просто додати нові записи з відповідним day.
 const TARGETING_VIDEOS: DailyVideo[] = [
   { day: 1, youtubeId: 'jPYI67MSFjE', caption: 'Етапи роботи над проектом по таргету' },
+  { day: 2, youtubeId: 'YgPhObm7OfQ', caption: 'Відео з курсу' },
 ];
 const TREND_VIDEOS: DailyVideo[] = [
   { day: 1, youtubeId: 'fz635iOwzEc', caption: 'Як використовувати GPT у роботі маркетолога' },
