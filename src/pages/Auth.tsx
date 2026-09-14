@@ -56,7 +56,8 @@ const Auth: React.FC = () => {
   const [searchParams] = useSearchParams();
   const next = getSafeNextUrl(searchParams);
   const isTesterLink = searchParams.get('ref') === 'start';
-  const [tab, setTab] = useState<'signin' | 'signup'>(isTesterLink ? 'signup' : 'signin');
+  const isStudentLink = searchParams.get('ref') === 'student';
+  const [tab, setTab] = useState<'signin' | 'signup'>(isTesterLink || isStudentLink ? 'signup' : 'signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -90,7 +91,7 @@ const Auth: React.FC = () => {
       return;
     }
     setSubmitting(true);
-    const { error } = await signUp(email, password, fullName, isTesterLink ? 'tester_link' : undefined);
+    const { error } = await signUp(email, password, fullName, isStudentLink ? 'student_link' : isTesterLink ? 'tester_link' : undefined);
     if (error) {
       setSubmitting(false);
       toast({ title: 'Помилка реєстрації', description: error.message, variant: 'destructive' });
@@ -110,11 +111,7 @@ const Auth: React.FC = () => {
       setTab('signin');
       return;
     }
-    toast(
-      isTesterLink
-        ? { title: 'Ласкаво просимо!', description: 'Акаунт створено, ви одразу в системі.' }
-        : { title: 'Ласкаво просимо!', description: 'Акаунт створено. Доступ до сценаріїв відкриється після підтвердження адміністратора.' }
-    );
+    toast({ title: 'Ласкаво просимо!', description: 'Акаунт створено, ви одразу в системі.' });
     navigate(next ?? '/', { replace: true });
   };
 
@@ -206,11 +203,6 @@ const Auth: React.FC = () => {
                 <Button type="submit" className="w-full" disabled={submitting || !agreedToTerms}>
                   {submitting ? 'Відправка…' : 'Зареєструватися'}
                 </Button>
-                {!isTesterLink && (
-                  <p className="text-xs text-muted-foreground text-center">
-                    Після реєстрації потрібен апрув адміністратора.
-                  </p>
-                )}
               </form>
             </TabsContent>
           </Tabs>

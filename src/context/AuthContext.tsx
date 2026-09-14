@@ -4,6 +4,13 @@ import type { Session, User } from '@supabase/supabase-js';
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 
+// Продакшн-домен, на який реально налаштований Redirect URL у Supabase
+// Auth. Лінк підтвердження email мусить вести саме сюди незалежно від
+// того, з якого origin (прев'ю-домен, localhost і т.д.) людина
+// реєструється — інакше Supabase відхиляє редірект і email лишається
+// непідтвердженим назавжди, хоч лист і надійшов.
+const PRODUCTION_ORIGIN = 'https://sim.ads-school.online';
+
 export interface Profile {
   id: string;
   email: string;
@@ -90,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp: AuthContextType['signUp'] = async (email, password, fullName, signupSource) => {
-    const redirectUrl = `${window.location.origin}/confirmed`;
+    const redirectUrl = `${window.location.hostname === 'localhost' ? window.location.origin : PRODUCTION_ORIGIN}/confirmed`;
     const { error } = await supabase.auth.signUp({
       email,
       password,

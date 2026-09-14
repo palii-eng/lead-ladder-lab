@@ -29,8 +29,8 @@ const LEADS_FEED_SIZE = 4;
 // Поки заповнений лише перший день; коли зʼявляться відео на наступні дні —
 // просто додати нові записи з відповідним day.
 const TARGETING_VIDEOS: DailyVideo[] = [
-  { day: 1, youtubeId: 'jPYI67MSFjE', caption: 'Етапи роботи над проектом по таргету' },
-  { day: 2, youtubeId: 'YgPhObm7OfQ', caption: 'Відео з курсу' },
+  { day: 1, youtubeId: 'YgPhObm7OfQ', caption: 'Відео з курсу' },
+  { day: 2, youtubeId: 'jPYI67MSFjE', caption: 'Етапи роботи над проектом по таргету' },
 ];
 const TREND_VIDEOS: DailyVideo[] = [
   { day: 1, youtubeId: 'fz635iOwzEc', caption: 'Як використовувати GPT у роботі маркетолога' },
