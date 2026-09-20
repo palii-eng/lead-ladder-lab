@@ -6941,9 +6941,21 @@ const ScenarioBuilder: React.FC = () => {
           {launchPhase === 'month_success' && (
             <>
               <AlertDialogHeader>
-                <AlertDialogTitle>🏆 Проєкт успішно пройшов перший місяць!</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Вирішено {launchWeekResults.filter(Boolean).length} з 4 проблем — клієнт задоволений, метрики дотримані, ви переходите на другий місяць співпраці.
+                <AlertDialogTitle>{launchIntroForOnboardingRef.current ? '🎉 Проєкт успішно втримано' : '🏆 Проєкт успішно пройшов перший місяць!'}</AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                  {launchIntroForOnboardingRef.current ? (
+                    <div className="space-y-2 text-left">
+                      <p>Чудова робота! Клієнт вирішив продовжити співпрацю.</p>
+                      <p>Тобі вдалося правильно відпрацювати ситуацію, знайти рішення та зберегти проєкт.</p>
+                      <p>У реальній роботі такі ситуації трапляються регулярно. Клієнти можуть бути незадоволені результатами, ставити складні запитання або навіть думати про завершення співпраці.</p>
+                      <p>Головне — не панікувати, аналізувати ситуацію, аргументувати свої рішення та пропонувати конкретні наступні кроки.</p>
+                      <p>Цього разу все вдалося. Проєкт залишається з нами 💪</p>
+                      <p>Рухаємося далі!</p>
+                      <p className="font-medium text-foreground">Наступний кейс спробуй пройти самостійно. Нехай щастить!</p>
+                    </div>
+                  ) : (
+                    <p>Вирішено {launchWeekResults.filter(Boolean).length} з 4 проблем — клієнт задоволений, метрики дотримані, ви переходите на другий місяць співпраці.</p>
+                  )}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
