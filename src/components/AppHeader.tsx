@@ -126,7 +126,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
   return (
     <>
       <header className="border-b border-border sticky top-0 z-50 bg-card h-16">
-        <div className="container mx-auto px-6 h-full flex items-center justify-between">
+        <div className="w-full px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-3">
             <GraduationCap className="w-5 h-5 text-primary" />
             <span className="text-sm font-bold text-foreground">Навчальний простір AdSchool</span>
