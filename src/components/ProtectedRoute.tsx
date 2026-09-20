@@ -58,9 +58,19 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode; requireApprov
         localStorage.removeItem(`leadoslav_tour_seen_${user.id}`);
         localStorage.removeItem(`leadoslav_funnel_onboard_step_${user.id}`);
         localStorage.removeItem(`${DECLINED_LEADS_PREFIX}${user.id}`);
+        // Прибираємо всі взяті в роботу проєкти — щоб кабінет виглядав так,
+        // ніби юзер щойно зареєструвався, а не просто скинув онбординг-флаги
+        // поверх старої історії. Ключі мусять збігатись з STORAGE_KEY_PREFIX
+        // (+ :deleted, :legacyImported) у ScenariosContext.tsx.
+        localStorage.removeItem(`scenarios:${user.id}`);
+        localStorage.removeItem(`scenarios:${user.id}:deleted`);
+        localStorage.removeItem(`scenarios:${user.id}:legacyImported`);
       } catch { /* localStorage unavailable */ }
       try {
         await supabase.from('profiles').update({ created_at: new Date().toISOString() }).eq('id', user.id);
+      } catch { /* best-effort */ }
+      try {
+        await supabase.from('scenario_workspaces').upsert({ id: user.id, user_id: user.id, scenarios: [] }, { onConflict: 'id' });
       } catch { /* best-effort */ }
       navigate('/', { replace: true });
       window.location.reload();
