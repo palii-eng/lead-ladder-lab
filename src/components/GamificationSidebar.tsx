@@ -168,7 +168,7 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
               icon={Sparkles}
               title="Студент ADSchool"
               status={accessTier === 'student' ? `${studentQuota.remaining} з ${studentQuota.banked} проєктів доступно` : undefined}
-              bullets={['5 нових проєктів щодня (накопичуються)', 'Відкриває адміністратор/модератор після реєстрації']}
+              bullets={['5 нових проєктів щодня', 'Відкриває адміністратор/модератор після реєстрації']}
             />
           )}
           {!isStaff && (
