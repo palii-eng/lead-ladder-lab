@@ -49,6 +49,10 @@ export interface ClientBrief {
   source?: string;
   redFlags?: string[];
   greyFlags?: string[];
+  /** True for a scenario started via "Додати свій сценарій" — no real
+   *  curated client, marketer can add free-form context afterward via
+   *  ScenarioBuilder's "Додати інформацію" button. */
+  isCustom?: boolean;
 }
 
 export interface Scenario {

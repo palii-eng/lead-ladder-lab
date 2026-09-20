@@ -496,6 +496,12 @@ const ScenarioBuilder: React.FC = () => {
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [clientBriefOpen, setClientBriefOpen] = useState(false);
   const [filledBriefOpen, setFilledBriefOpen] = useState(false);
+  // "Додати інформацію" — для проєктів без реального клієнта
+  // (clientBrief.isCustom), дозволяє дописати довільний контекст, який іде в
+  // ту саму clientBrief.task, яку вже читають AI-підказки (audience-tips,
+  // creo-brief) для порад.
+  const [customInfoOpen, setCustomInfoOpen] = useState(false);
+  const [customInfoText, setCustomInfoText] = useState('');
   const [clientActions, setClientActions] = useState<Set<string>>(() => {
     const saved = scenario?.clientActions;
     if (Array.isArray(saved) && saved.length) return new Set(saved);
@@ -1639,6 +1645,29 @@ const ScenarioBuilder: React.FC = () => {
   }
 
   const hasCompletedClientGate = clientActions.has('brief') && clientActions.has('payment');
+
+  const openCustomInfo = () => {
+    setCustomInfoText(scenario.clientBrief?.task || '');
+    setCustomInfoOpen(true);
+  };
+
+  const saveCustomInfo = () => {
+    update({ clientBrief: { ...scenario.clientBrief!, task: customInfoText.trim() } });
+    setCustomInfoOpen(false);
+  };
+
+  const AddCustomInfoButton: React.FC = () => {
+    if (!scenario.clientBrief?.isCustom) return null;
+    return (
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); openCustomInfo(); }}
+        className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors"
+      >
+        <Plus className="w-3 h-3" /> Додати інформацію
+      </button>
+    );
+  };
 
   const ClientInfoCard: React.FC<{ compact?: boolean }> = ({ compact }) => {
     const b = scenario.clientBrief!;
@@ -5305,6 +5334,7 @@ const ScenarioBuilder: React.FC = () => {
                         <div className="flex items-center pr-6">
                           <div className="flex flex-col items-center">
                             <ClientInfoCard />
+                            <AddCustomInfoButton />
                             <ClientActionsColumn />
                           </div>
                           {!flowGated && <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />}
@@ -5382,6 +5412,7 @@ const ScenarioBuilder: React.FC = () => {
                     <div className="flex items-center flex-shrink-0 pr-6" style={{ marginTop: `${((leadTypes.length - 1) * branchRowHeight) / 2}px` }}>
                       <div className="flex flex-col items-center">
                         <ClientInfoCard />
+                        <AddCustomInfoButton />
                         <ClientActionsColumn />
                       </div>
                       {!flowGated && <div className="w-10 h-px border-t-2 border-dashed border-border ml-2" />}
@@ -5574,6 +5605,26 @@ const ScenarioBuilder: React.FC = () => {
           <ClientFlagsPanel redFlags={scenario.clientBrief?.redFlags} greyFlags={scenario.clientBrief?.greyFlags} />
         </SheetContent>
       </Sheet>
+
+      {/* "Додати інформацію" — довільний контекст клієнта/ніші для проєктів без готового брифу */}
+      <Dialog open={customInfoOpen} onOpenChange={setCustomInfoOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Додати інформацію</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={customInfoText}
+            onChange={(e) => setCustomInfoText(e.target.value)}
+            rows={7}
+            placeholder="Опишіть клієнта, нішу, задачу — все, що вважаєте важливим..."
+          />
+          <p className="text-xs text-muted-foreground -mt-1">Це допоможе AI LeadОславу краще надати поради.</p>
+          <div className="flex gap-2 mt-1">
+            <Button variant="outline" onClick={() => setCustomInfoOpen(false)} className="flex-1">Скасувати</Button>
+            <Button onClick={saveCustomInfo} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">Зберегти</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Filled brief sheet */}
       <Sheet open={filledBriefOpen} onOpenChange={setFilledBriefOpen}>
