@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 const SALES_TELEGRAM_URL = 'https://t.me/sales_adschool';
 const PM_TELEGRAM_URL = 'https://t.me/project_adschool';
-const ADSCHOOL_PRODUCTS_URL = 'https://ads-school.online/';
+const ADSCHOOL_PRODUCTS_URL = 'https://ads-school.online/?utm_source=sim';
 
 const DemoExpiredScreen: React.FC<{ onSignOut: () => void }> = ({ onSignOut }) => (
   <div className="min-h-screen flex items-center justify-center bg-background p-6">
@@ -20,11 +20,10 @@ const DemoExpiredScreen: React.FC<{ onSignOut: () => void }> = ({ onSignOut }) =
           проджект-менеджеру в Telegram:
           <br />
           👉{' '}
-          <a href={PM_TELEGRAM_URL} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">
-            {PM_TELEGRAM_URL}
+          <a href={PM_TELEGRAM_URL} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 font-medium">
+            Написати проджект-менеджеру
           </a>
         </p>
-        <p>Він допоможе отримати доступ до симулятора.</p>
       </div>
       <div className="flex flex-col gap-2 pt-2">
         <Button asChild className="w-full">
