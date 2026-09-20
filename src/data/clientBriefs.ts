@@ -122,6 +122,18 @@ const hasExistingAdsMention = (text: string): string | null => {
 // Where the client genuinely wouldn't have a precise number (margin,
 // repeat-purchase rate, exact conversion), the field states that plainly
 // ("клієнт не рахує/не назвав") instead of pointing at a future call.
+// Клієнти з офлайн-бізнесом (студія, клініка, салон, майстерня тощо) працюють
+// у межах ОДНОГО конкретного міста — генеричний "Україна, здебільшого великі
+// та середні міста" тут вводить в оману (немає сенсу таргетувати всю країну
+// на танцювальну студію чи автосервіс). Місто підбирається детерміновано за
+// іменем клієнта, щоб не змінювалось між рендерами.
+const OFFLINE_CITIES = ['Київ', 'Харків', 'Одеса', 'Дніпро', 'Львів', 'Запоріжжя', 'Вінниця'];
+const pickOfflineCity = (seed: string): string => {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return OFFLINE_CITIES[h % OFFLINE_CITIES.length];
+};
+
 export const synthesizeBrief = (client: BriefSourceClient): BriefField[] => {
   const task = client.task || '';
   const niche = client.niche || 'не вказана ніша';
@@ -144,13 +156,16 @@ export const synthesizeBrief = (client: BriefSourceClient): BriefField[] => {
   const isCounterfeit = greys.has('counterfeit');
   const isCrypto = greys.has('crypto');
   const isInfobiz = greys.has('questionable_infobiz');
+  const isOffline = greys.has('offline_business');
   const noWebsite = noCrm || soloOwner || isTelegram || isCounterfeit;
 
   return fill([
     url || (noWebsite ? 'Немає сайту, продажі через соцмережі/директ' : 'Сайту немає, працює тільки через соцмережі'), // сайт
     handle || (isTelegram ? 'Тільки Telegram-канал, без інших соцмереж' : 'Instagram, посилання скинув клієнт'), // соцмережі
     'Клієнт не орієнтується у конкурентах, назвав нішу загалом без конкретних імен', // конкуренти
-    'Україна, здебільшого великі та середні міста', // географія
+    isOffline
+      ? `${pickOfflineCity(client.name || niche)} + область (радіус ~15-20 км) — офлайн-локація, просування тільки в межах міста`
+      : 'Україна, здебільшого великі та середні міста', // географія
     `ЦА за нішею "${niche}": дорослі платоспроможні клієнти, точний портрет клієнт описав лише загально`, // опис клієнта
     `За нішею "${niche}" — базові позиції клієнт назвав орієнтовно, без детальної розбивки попиту`, // послуги з найб. попитом
     'Чіткого пріоритету не розставляв — назвав усі напрямки однаково важливими', // порядок пріоритету
