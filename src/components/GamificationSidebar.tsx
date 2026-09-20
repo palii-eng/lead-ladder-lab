@@ -194,12 +194,12 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
         </div>
 
 
-        <div className="py-4 space-y-2 pb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <Trophy className="w-4 h-4 text-warning" />
-            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Рівні</span>
-          </div>
-          {!isStaff && (
+        {!isStaff && (
+          <div className="py-4 space-y-2 pb-8">
+            <div className="flex items-center gap-2 mb-2">
+              <Trophy className="w-4 h-4 text-warning" />
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Рівні</span>
+            </div>
             <AccessTierCard
               tierKey="demo"
               current={accessTier}
@@ -212,8 +212,6 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
               }
               bullets={['Повний доступ на 3 дні з моменту реєстрації', 'Далі — тільки для студентів ADSchool']}
             />
-          )}
-          {!isStaff && (
             <AccessTierCard
               tierKey="student"
               current={accessTier}
@@ -222,8 +220,6 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
               status={accessTier === 'student' ? `${studentQuota.remaining} з ${studentQuota.banked} проєктів доступно` : undefined}
               bullets={['5 нових проєктів щодня', 'Відкриває адміністратор/модератор після реєстрації']}
             />
-          )}
-          {!isStaff && (
             <AccessTierCard
               tierKey="graduate"
               current={accessTier}
@@ -231,8 +227,8 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
               title="Пройшов симулятор"
               bullets={['25 успішно запущених проєктів', 'Курс зараховано модератором/адміном']}
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </aside>
   );
