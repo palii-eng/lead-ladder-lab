@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useScenarios, ClientBrief, createDefaultDecompSet } from '@/context/ScenariosContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Award, Inbox, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Award, Inbox, ChevronDown, ChevronUp, MessageSquarePlus, Target, FilePlus2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -29,11 +30,6 @@ const LEADS_FEED_SIZE = 4;
 // "Відео дня" — щоденний контент, новий кожен день з моменту реєстрації.
 // Поки заповнений лише перший день; коли зʼявляться відео на наступні дні —
 // просто додати нові записи з відповідним day.
-const TARGETING_VIDEOS: DailyVideo[] = [
-  { day: 1, youtubeId: 'YgPhObm7OfQ', caption: 'Стратегія розвитку та зростання таргетолога з нуля' },
-  { day: 2, youtubeId: 'jPYI67MSFjE', caption: 'Етапи роботи над проектом по таргету' },
-  { day: 3, youtubeId: 'DX_f6DdoPvA', caption: 'Відео з курсу' },
-];
 const TREND_VIDEOS: DailyVideo[] = [
   { day: 1, youtubeId: 'fz635iOwzEc', caption: 'Як використовувати GPT у роботі маркетолога' },
   { day: 2, youtubeId: 'DJvqK6TShMs', caption: 'Актуальна тема для маркетолога' },
@@ -93,6 +89,12 @@ const Dashboard: React.FC = () => {
   );
   const [gamificationCollapsed, setGamificationCollapsed] = useState(false);
   const [leadsBlockCollapsed, setLeadsBlockCollapsed] = useState(false);
+  // "Додати свій сценарій" — вибір способу старту: вставити чат клієнта з
+  // брифом (customChatFormOpen) або одразу навчальний режим з вибору ніші.
+  const [customScenarioOpen, setCustomScenarioOpen] = useState(false);
+  const [customChatFormOpen, setCustomChatFormOpen] = useState(false);
+  const [customClientName, setCustomClientName] = useState('');
+  const [customClientTask, setCustomClientTask] = useState('');
   const createBtnRef = useRef<HTMLButtonElement>(null);
   const scenarioToDelete = deleteId ? scenarios.find(s => s.id === deleteId) : null;
   const [reviewByName, setReviewByName] = useState<Record<string, ReviewStatus>>({});
@@ -265,6 +267,57 @@ const Dashboard: React.FC = () => {
     setActiveLeadIdx(0);
   };
 
+  const canCreateNewProject = (): boolean => {
+    if (accessTier === 'student' && !studentQuota.canCreate) {
+      toast({ title: 'Денний ліміт вичерпано', description: 'Нові проєкти для студентів нараховуються по 5 щодня — спробуйте завтра.', variant: 'destructive' });
+      return false;
+    }
+    return true;
+  };
+
+  // "Навчальний режим — одразу з ніші": проєкт без реального клієнта, той
+  // самий мінімальний stub-бриф, який ScenarioBuilder уже вміє відкривати
+  // для legacy-сценаріїв без брифу — тож нішу/воронку можна будувати вільно,
+  // без сюжету навколо конкретного клієнта.
+  const startTrainingFromNiche = () => {
+    if (!canCreateNewProject()) return;
+    markLeadOslavTourSeen(user?.id);
+    const defaultName = `Сценарій #${scenarios.length + 1}`;
+    const s = addScenario(defaultName, '');
+    const brief: ClientBrief = { name: 'Клієнт', photo: '', task: '', niche: '', source: '' };
+    updateScenario(s.id, { clientBrief: brief });
+    setCustomScenarioOpen(false);
+    navigate(`/scenario/${s.id}`);
+  };
+
+  // "Вставити чат клієнта з брифом": те саме, що взяти готовий лід, тільки
+  // текст задачі клієнта — свій, вставлений вручну, замість заготовленого.
+  const submitCustomClientChat = () => {
+    if (!canCreateNewProject()) return;
+    const task = customClientTask.trim();
+    if (!task) {
+      toast({ title: 'Додайте текст', description: 'Встав повідомлення клієнта, щоб продовжити.', variant: 'destructive' });
+      return;
+    }
+    markLeadOslavTourSeen(user?.id);
+    const name = customClientName.trim() || 'Клієнт';
+    const defaultName = `${name} — власний сценарій`;
+    const s = addScenario(defaultName, '');
+    const brief: ClientBrief = { name, photo: '', task, niche: '', source: 'Власний сценарій' };
+    const clientBudget = estimateClientBudgetUsd(task);
+    const seededDecomp = createDefaultDecompSet();
+    seededDecomp.bad.budget = clientBudget;
+    seededDecomp.realistic.budget = clientBudget;
+    seededDecomp.positive.budget = clientBudget;
+    const projectPrice = Math.round((Math.random() * (500 - 300) + 300) / 50) * 50;
+    updateScenario(s.id, { clientBrief: brief, decomposition: seededDecomp, projectPrice });
+    setCustomChatFormOpen(false);
+    setCustomScenarioOpen(false);
+    setCustomClientName('');
+    setCustomClientTask('');
+    navigate(`/scenario/${s.id}`);
+  };
+
 
   return (
     <>
@@ -388,7 +441,17 @@ const Dashboard: React.FC = () => {
                 );
               })()}
             </div>
-            <DailyVideoCard label="Закриті відео, тільки для абітурієнтів" videos={TARGETING_VIDEOS} registeredAt={profile?.created_at} tourTag="daily-videos" />
+            <button
+              type="button"
+              onClick={() => { if (canCreateNewProject()) setCustomScenarioOpen(true); }}
+              className="glass-card p-3.5 flex flex-col items-center justify-center gap-2 text-center hover:border-primary/40 transition-colors"
+            >
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <FilePlus2 className="w-5 h-5 text-primary" />
+              </div>
+              <span className="text-sm font-semibold text-foreground">Додати свій сценарій</span>
+              <span className="text-[11px] text-muted-foreground leading-snug">Встав чат клієнта або почни одразу з вибору ніші</span>
+            </button>
             <DailyVideoCard label="Залишайся в тренді" videos={TREND_VIDEOS} registeredAt={profile?.created_at} tourTag="daily-videos" />
           </div>
           )}
@@ -523,6 +586,70 @@ const Dashboard: React.FC = () => {
           </div>
         )}
       </main>
+
+      <Dialog open={customScenarioOpen} onOpenChange={(o) => { setCustomScenarioOpen(o); if (!o) setCustomChatFormOpen(false); }}>
+        <DialogContent className="max-w-md">
+          {!customChatFormOpen ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Додати свій сценарій</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-muted-foreground -mt-1">Як хочете почати?</p>
+              <div className="grid gap-2 mt-1">
+                <button
+                  type="button"
+                  onClick={() => setCustomChatFormOpen(true)}
+                  className="p-3 rounded-lg border border-border text-left hover:border-primary/40 transition-colors"
+                >
+                  <div className="font-semibold text-sm text-foreground flex items-center gap-2">
+                    <MessageSquarePlus className="w-4 h-4 text-primary shrink-0" /> Вставити чат клієнта з брифом
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Встав повідомлення реального чи вигаданого клієнта — з нього зберемо бриф.</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={startTrainingFromNiche}
+                  className="p-3 rounded-lg border border-border text-left hover:border-primary/40 transition-colors"
+                >
+                  <div className="font-semibold text-sm text-foreground flex items-center gap-2">
+                    <Target className="w-4 h-4 text-primary shrink-0" /> Навчальний режим — одразу з ніші
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Без клієнта — одразу оберіть нішу і будуйте воронку самостійно.</div>
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>Вставити чат клієнта</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-semibold text-foreground mb-1 block">
+                    Імʼя клієнта <span className="text-muted-foreground font-normal">(не обовʼязково)</span>
+                  </label>
+                  <Input value={customClientName} onChange={(e) => setCustomClientName(e.target.value)} placeholder="Наприклад: Андрій Коваленко" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Повідомлення / бриф клієнта *</label>
+                  <Textarea
+                    value={customClientTask}
+                    onChange={(e) => setCustomClientTask(e.target.value)}
+                    rows={6}
+                    placeholder="Встав сюди переписку або опис задачі клієнта..."
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 mt-1">
+                <Button variant="outline" onClick={() => setCustomChatFormOpen(false)} className="flex-1">← Назад</Button>
+                <Button onClick={submitCustomClientChat} disabled={!customClientTask.trim()} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
+                  Створити проєкт
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
