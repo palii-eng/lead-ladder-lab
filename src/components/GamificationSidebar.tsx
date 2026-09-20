@@ -113,9 +113,9 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
           <ChevronRight className="w-4 h-4" />
         </button>
         {profile?.avatar_url ? (
-          <img src={profile.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover" />
+          <img src={profile.avatar_url} alt="" className="w-11 h-11 rounded-full object-cover" />
         ) : (
-          <div className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
+          <div className="w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-base font-bold">
             {initial}
           </div>
         )}
@@ -143,11 +143,11 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
 
       <div className="px-4">
         <div className="flex flex-col items-center gap-3 py-6 border-b border-border">
-          <label className="relative w-24 h-24 rounded-full cursor-pointer group shrink-0">
+          <label className="relative w-28 h-28 rounded-full cursor-pointer group shrink-0">
             {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="" className="w-24 h-24 rounded-full object-cover" />
+              <img src={profile.avatar_url} alt="" className="w-28 h-28 rounded-full object-cover" />
             ) : (
-              <div className="w-24 h-24 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-3xl font-bold">
+              <div className="w-28 h-28 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-3xl font-bold">
                 {initial}
               </div>
             )}
