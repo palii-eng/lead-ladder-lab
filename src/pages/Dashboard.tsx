@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useScenarios, ClientBrief, createDefaultDecompSet } from '@/context/ScenariosContext';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Award, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -68,34 +68,11 @@ const addDeclinedLeadName = (userId: string, name: string) => {
 const Dashboard: React.FC = () => {
   const { scenarios, loading, addScenario, updateScenario, deleteScenario } = useScenarios();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { user, profile, isTester, isStaff, accessTier, studentSince } = useAuth();
 
-  // Ручне скидання онбордингу LeadОслав через URL: додай ?resetOnboarding=1
-  // до адреси дашборду — прибирає обидва ключі localStorage (дашборд +
-  // ланцюжок у сценарії), а також список "відмовлених" лідів, щоб куратовані
-  // ліди дня знову були доступні для повторного проходження навчання, без
-  // ручного лазіння в DevTools/інкогніто. Зручно, бо нумерація кроків
-  // міняється в процесі розробки й старі значення localStorage можуть
-  // "застрягнути" на неактуальному кроці.
-  useEffect(() => {
-    if (searchParams.get('resetOnboarding') !== '1' || !user?.id) return;
-    (async () => {
-      try {
-        localStorage.removeItem(`leadoslav_tour_seen_${user.id}`);
-        localStorage.removeItem(`leadoslav_funnel_onboard_step_${user.id}`);
-        localStorage.removeItem(`${DECLINED_LEADS_PREFIX}${user.id}`);
-      } catch { /* localStorage unavailable */ }
-      // Ліди дня й "Відео дня" рахуються від profile.created_at — без
-      // цього кабінет далі показував би ліди/відео поточного реального дня,
-      // а не день 1, хоч онбординг-флаги й скинуті.
-      try {
-        await supabase.from('profiles').update({ created_at: new Date().toISOString() }).eq('id', user.id);
-      } catch { /* best-effort */ }
-      navigate('/', { replace: true });
-      window.location.reload();
-    })();
-  }, [searchParams, user?.id, navigate]);
+  // Скидання онбордингу/демо через URL (?resetOnboarding=1) тепер
+  // обробляється в ProtectedRoute — воно має спрацювати ДО перевірки
+  // demoExpired, яка інакше блокує монтування Dashboard узагалі.
   const [deleteId, setDeleteId] = useState<string | null>(null);
   // While the LeadOslav onboarding tour is running, the "Наступний" button
   // (and the carousel dots) let a tester cycle past the highlighted lead

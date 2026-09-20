@@ -1,7 +1,11 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+
+// Must match DECLINED_LEADS_PREFIX in Dashboard.tsx.
+const DECLINED_LEADS_PREFIX = 'declined_leads_';
 
 const SALES_TELEGRAM_URL = 'https://t.me/sales_adschool';
 const PM_TELEGRAM_URL = 'https://t.me/project_adschool';
@@ -40,6 +44,28 @@ const DemoExpiredScreen: React.FC<{ onSignOut: () => void }> = ({ onSignOut }) =
 
 export const ProtectedRoute: React.FC<{ children: React.ReactNode; requireApproved?: boolean }> = ({ children, requireApproved = true }) => {
   const { user, profile, loading, signOut, demoExpired } = useAuth();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  // Ручне скидання онбордингу/демо через URL: ?resetOnboarding=1. Must run
+  // here (before the demoExpired gate below) — a Dashboard-local effect
+  // never got a chance to fire once demo access already expired, since
+  // Dashboard itself never mounted past that gate.
+  useEffect(() => {
+    if (searchParams.get('resetOnboarding') !== '1' || !user?.id) return;
+    (async () => {
+      try {
+        localStorage.removeItem(`leadoslav_tour_seen_${user.id}`);
+        localStorage.removeItem(`leadoslav_funnel_onboard_step_${user.id}`);
+        localStorage.removeItem(`${DECLINED_LEADS_PREFIX}${user.id}`);
+      } catch { /* localStorage unavailable */ }
+      try {
+        await supabase.from('profiles').update({ created_at: new Date().toISOString() }).eq('id', user.id);
+      } catch { /* best-effort */ }
+      navigate('/', { replace: true });
+      window.location.reload();
+    })();
+  }, [searchParams, user?.id, navigate]);
 
   if (loading) {
     return (
