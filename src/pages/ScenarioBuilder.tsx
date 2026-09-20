@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useScenarios, Scenario, DecompositionScenario, DecompositionSet, createDefaultDecompSet, createDefaultBranchData, BranchData, ClientBrief } from '@/context/ScenariosContext';
-import { getGamificationProgress } from '@/components/GamificationSidebar';
 import { LeadOslavAvatar } from '@/components/LeadOslav';
 import { estimateClientBudgetUsd } from '@/lib/budgetEstimate';
 import { SpotlightTip } from '@/components/SpotlightTip';
@@ -17,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
-import { ArrowLeft, ArrowRight, Check, ChevronRight, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward, AlertTriangle, Database, User, Send, Copy, Bitcoin, TrendingUp, TrendingDown, ExternalLink, Pencil, Trash2, Lock, MapPin, Target } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronRight, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, HeartPulse, Plane, HardHat, FileText, SkipForward, AlertTriangle, Database, User, Send, Copy, Bitcoin, TrendingUp, TrendingDown, ExternalLink, Pencil, Trash2, Lock, MapPin, Target } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { VideoBadge } from '@/components/VideoBadge';
 import { supabase } from '@/integrations/supabase/client';
@@ -480,17 +479,6 @@ const ScenarioBuilder: React.FC = () => {
   const { scenarios, getScenario, updateScenario, loading: scenariosLoading } = useScenarios();
   const scenario = getScenario(id!);
   const { user, profile, isTester } = useAuth();
-
-  // Marketer's current gamification level — drives payment terms shown in
-  // the client-actions column (levels 1-2: pay at month end, level 3: 50%
-  // upfront, levels 4-5: 100% upfront).
-  const completedProjectsCount = scenarios.filter(s => s.monthSurvived).length;
-  const { currentLevel: marketerLevel } = getGamificationProgress(completedProjectsCount);
-  const paymentTermsLabel = !marketerLevel || marketerLevel.level <= 2
-    ? 'На вашому рівні — оплата в кінці місяця'
-    : marketerLevel.level === 3
-    ? 'На вашому рівні — 50% предоплата'
-    : 'На вашому рівні — 100% оплати одразу';
 
   // Which set of campaign goals / sub-goals to show depends on the chosen ad
   // platform — TikTok's objective taxonomy differs from Meta's (see the
@@ -1707,7 +1695,7 @@ const ScenarioBuilder: React.FC = () => {
               </p>
             )}
             <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
-              {b.task}
+              {b.task || 'Запит від клієнта'}
             </p>
             <div className="flex items-center justify-end mt-2 pt-1.5 border-t border-border/60">
               <span className="text-[9px] text-muted-foreground">щойно</span>
@@ -1807,9 +1795,6 @@ const ScenarioBuilder: React.FC = () => {
           </button>
         );
       })}
-      <span className="px-3 py-2 rounded-full bg-muted border border-border text-muted-foreground text-xs font-semibold flex items-center gap-1.5 text-center">
-        <DollarSign className="w-3.5 h-3.5 shrink-0" /> {paymentTermsLabel}
-      </span>
       <SpotlightTip
         onSkipAll={skipOnboarding}
         show={onboardStep === 1}
