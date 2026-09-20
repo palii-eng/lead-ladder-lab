@@ -5,9 +5,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { ArrowLeft, Check, X, RefreshCw, ExternalLink, Eye, Trash2, ShieldCheck, ShieldPlus, ShieldMinus, GraduationCap, UserPlus } from 'lucide-react';
+import { ArrowLeft, Check, X, RefreshCw, ExternalLink, Eye, Trash2, ShieldCheck, GraduationCap } from 'lucide-react';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 type AppRole = 'admin' | 'moderator' | 'user' | 'tester';
+
+const ROLE_OPTIONS: { value: AppRole; label: string }[] = [
+  { value: 'tester', label: 'Тестер (Демо)' },
+  { value: 'user', label: 'Студент' },
+  { value: 'moderator', label: 'Модератор' },
+  { value: 'admin', label: 'Супер-адмін' },
+];
 
 interface UserRow {
   id: string;
@@ -183,34 +191,17 @@ const Admin: React.FC = () => {
     }
   };
 
-  const toggleModerator = async (row: UserRow) => {
-    if (!isAdmin) return;
+  // Пряма зміна ролі через select — тільки супер-адмін (RLS на user_roles
+  // теж дозволяє insert/delete лише admin, тож це узгоджено з бекендом).
+  // Видаляємо всі наявні рядки ролі юзера й ставимо рівно одну нову.
+  const changeRole = async (row: UserRow, newRole: AppRole) => {
+    if (!isAdmin || newRole === row.role) return;
     try {
-      if (row.role === 'moderator') {
-        const { error } = await supabase.from('user_roles').delete().eq('user_id', row.id).eq('role', 'moderator');
-        if (error) throw error;
-        toast({ title: 'Права модератора знято' });
-      } else {
-        const { error } = await supabase.from('user_roles').insert({ user_id: row.id, role: 'moderator' });
-        if (error) throw error;
-        toast({ title: 'Призначено модератором' });
-      }
-      load();
-    } catch (e: unknown) {
-      toast({ title: 'Помилка', description: (e as Error).message, variant: 'destructive' });
-    }
-  };
-
-  // Демо (tester) → Студент ADSchool: знімає роль tester і ставить user,
-  // яка одразу відкриває другий рівень доступу (5 проєктів/день, без
-  // онбордингу). Доступно і модератору, і адміну.
-  const promoteToStudent = async (row: UserRow) => {
-    try {
-      const { error: delErr } = await supabase.from('user_roles').delete().eq('user_id', row.id).eq('role', 'tester');
+      const { error: delErr } = await supabase.from('user_roles').delete().eq('user_id', row.id);
       if (delErr) throw delErr;
-      const { error: insErr } = await supabase.from('user_roles').insert({ user_id: row.id, role: 'user' });
+      const { error: insErr } = await supabase.from('user_roles').insert({ user_id: row.id, role: newRole });
       if (insErr) throw insErr;
-      toast({ title: 'Підвищено до Студент ADSchool' });
+      toast({ title: 'Роль оновлено', description: ROLE_OPTIONS.find(o => o.value === newRole)?.label });
       load();
     } catch (e: unknown) {
       toast({ title: 'Помилка', description: (e as Error).message, variant: 'destructive' });
@@ -310,20 +301,33 @@ const Admin: React.FC = () => {
                         <div className="text-xs text-muted-foreground">{r.email}</div>
                       </td>
                       <td className="p-3">
-                        <div className="flex gap-1 flex-wrap">
-                          <Badge
-                            variant="outline"
-                            className={
-                              r.role === 'admin' ? 'border-primary text-primary' :
-                              r.role === 'moderator' ? 'border-accent-foreground text-accent-foreground' :
-                              r.role === 'tester' ? 'border-warning text-warning' :
-                              'text-muted-foreground'
-                            }
-                          >
-                            {r.role === 'admin' ? 'Супер-адмін' : r.role === 'moderator' ? 'Модератор' : r.role === 'tester' ? 'Демо' : 'Студент'}
-                          </Badge>
+                        <div className="flex flex-col gap-1.5">
+                          {isAdmin ? (
+                            <Select value={r.role} onValueChange={(v) => changeRole(r, v as AppRole)}>
+                              <SelectTrigger className="h-8 w-[150px] text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {ROLE_OPTIONS.map(o => (
+                                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className={
+                                r.role === 'admin' ? 'border-primary text-primary' :
+                                r.role === 'moderator' ? 'border-accent-foreground text-accent-foreground' :
+                                r.role === 'tester' ? 'border-warning text-warning' :
+                                'text-muted-foreground'
+                              }
+                            >
+                              {ROLE_OPTIONS.find(o => o.value === r.role)?.label}
+                            </Badge>
+                          )}
                           {r.is_graduate && (
-                            <Badge className="bg-success text-success-foreground gap-1">
+                            <Badge className="bg-success text-success-foreground gap-1 w-fit">
                               <GraduationCap className="w-3 h-3" /> Випускник
                             </Badge>
                           )}
@@ -362,22 +366,10 @@ const Admin: React.FC = () => {
                               <X className="w-3.5 h-3.5 mr-1" /> Відхилити
                             </Button>
                           )}
-                          {isStaff && r.role === 'tester' && (
-                            <Button size="sm" onClick={() => promoteToStudent(r)}>
-                              <UserPlus className="w-3.5 h-3.5 mr-1" /> Зробити студентом
-                            </Button>
-                          )}
                           {isStaff && r.role !== 'admin' && r.role !== 'tester' && (
                             <Button size="sm" variant={r.is_graduate ? 'outline' : 'default'} onClick={() => toggleGraduate(r)}>
                               <GraduationCap className="w-3.5 h-3.5 mr-1" />
                               {r.is_graduate ? 'Зняти статус випускника' : 'Зарахувати як випускника'}
-                            </Button>
-                          )}
-                          {isAdmin && r.role !== 'admin' && (
-                            <Button size="sm" variant="outline" onClick={() => toggleModerator(r)}>
-                              {r.role === 'moderator'
-                                ? <><ShieldMinus className="w-3.5 h-3.5 mr-1" /> Зняти модератора</>
-                                : <><ShieldPlus className="w-3.5 h-3.5 mr-1" /> Зробити модератором</>}
                             </Button>
                           )}
                           {isAdmin && r.role !== 'admin' && (
