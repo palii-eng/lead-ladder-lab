@@ -210,7 +210,7 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
                   ? (demoDaysLeft > 0 ? `Лишилось ${demoDaysLeft} ${demoDaysLeft === 1 ? 'день' : 'дні(в)'}` : 'Доступ завершено')
                   : undefined
               }
-              bullets={['Повний доступ на 3 дні з моменту реєстрації', 'Далі — тільки для студентів ADSchool']}
+              bullets={['Повний доступ на 1 день з моменту реєстрації', 'Далі — тільки для студентів ADSchool']}
             />
             <AccessTierCard
               tierKey="student"

@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
 import { daysSinceRegistration } from '@/lib/daysSinceRegistration';
 
-export const DEMO_ACCESS_DAYS = 3;
+export const DEMO_ACCESS_DAYS = 1;
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 
@@ -26,7 +26,7 @@ export interface Profile {
 }
 
 // Три рівні доступу поверх ролі (tester/user/admin/moderator):
-//  - 'demo'     — щойно зареєстрований (роль tester), доступ лише 3 дні
+//  - 'demo'     — щойно зареєстрований (роль tester), доступ лише 1 день
 //  - 'student'  — підвищений адміном/модератором до "Студент ADSchool"
 //  - 'graduate' — позначений як такий, що пройшов симулятор (is_graduate)
 // Staff (admin/moderator) не мають рівня — у них повний доступ завжди.
@@ -44,7 +44,7 @@ interface AuthContextType {
   accessTier: AccessTier;
   /** Коли роль user (студент) було призначено — точка відліку для щоденної квоти лідів. */
   studentSince: string | null;
-  /** true, якщо це демо (tester) і минуло більше 3 днів з реєстрації — доступ заблоковано. */
+  /** true, якщо це демо (tester) і минуло більше DEMO_ACCESS_DAYS днів з реєстрації — доступ заблоковано. */
   demoExpired: boolean;
   loading: boolean;
   signUp: (email: string, password: string, fullName: string, signupSource?: string) => Promise<{ error: Error | null }>;
