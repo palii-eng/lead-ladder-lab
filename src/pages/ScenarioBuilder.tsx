@@ -5,6 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useScenarios, Scenario, DecompositionScenario, DecompositionSet, createDefaultDecompSet, createDefaultBranchData, BranchData, ClientBrief } from '@/context/ScenariosContext';
 import { LeadOslavAvatar } from '@/components/LeadOslav';
 import { estimateClientBudgetUsd } from '@/lib/budgetEstimate';
+import { truncateForPreview } from '@/lib/truncateForPreview';
 import { SpotlightTip } from '@/components/SpotlightTip';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1727,9 +1728,12 @@ const ScenarioBuilder: React.FC = () => {
               </p>
             )}
             <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
-              {b.task || 'Запит від клієнта'}
+              {b.task ? (b.isManual ? truncateForPreview(b.task, 500) : b.task) : 'Запит від клієнта'}
             </p>
-            <div className="flex items-center justify-end mt-2 pt-1.5 border-t border-border/60">
+            <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-border/60">
+              {b.isManual && b.task.length > 500 ? (
+                <span className="text-[9px] text-primary font-semibold">Натисніть, щоб побачити повністю</span>
+              ) : <span />}
               <span className="text-[9px] text-muted-foreground">щойно</span>
             </div>
           </div>
