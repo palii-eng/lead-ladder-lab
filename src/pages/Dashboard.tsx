@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useScenarios, ClientBrief, createDefaultDecompSet } from '@/context/ScenariosContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Award, Inbox } from 'lucide-react';
+import { Plus, LayoutDashboard, UserX, ExternalLink, Send, Clock, CheckCircle2, XCircle, Award, Inbox, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
@@ -92,6 +92,7 @@ const Dashboard: React.FC = () => {
     [accessTier, studentSince, scenarios]
   );
   const [gamificationCollapsed, setGamificationCollapsed] = useState(false);
+  const [leadsBlockCollapsed, setLeadsBlockCollapsed] = useState(false);
   const createBtnRef = useRef<HTMLButtonElement>(null);
   const scenarioToDelete = deleteId ? scenarios.find(s => s.id === deleteId) : null;
   const [reviewByName, setReviewByName] = useState<Record<string, ReviewStatus>>({});
@@ -302,9 +303,20 @@ const Dashboard: React.FC = () => {
                 {visibleLeads.length}
               </span>
             </div>
-            <span className="text-xs font-semibold text-muted-foreground">Кожен день — нові уроки</span>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setLeadsBlockCollapsed(v => !v)}
+                className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-primary/10 transition-colors text-muted-foreground"
+                title={leadsBlockCollapsed ? 'Розгорнути' : 'Згорнути'}
+              >
+                {leadsBlockCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              </button>
+              <span className="text-xs font-semibold text-muted-foreground">Кожен день — нові уроки</span>
+            </div>
           </div>
 
+          {!leadsBlockCollapsed && (
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="relative" data-tour="leads-card">
               {(() => {
@@ -379,6 +391,7 @@ const Dashboard: React.FC = () => {
             <DailyVideoCard label="Закриті відео, тільки для абітурієнтів" videos={TARGETING_VIDEOS} registeredAt={profile?.created_at} tourTag="daily-videos" />
             <DailyVideoCard label="Залишайся в тренді" videos={TREND_VIDEOS} registeredAt={profile?.created_at} tourTag="daily-videos" />
           </div>
+          )}
         </div>
 
         {loading ? (
