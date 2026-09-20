@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { LeadOslavAvatar } from '@/components/LeadOslav';
-import { SpotlightTip } from '@/components/SpotlightTip';
+import { SpotlightTip, SpotlightClickBlocker } from '@/components/SpotlightTip';
 import { TOTAL_ONBOARD_HINTS } from '@/lib/onboardingHints';
 
 const SEEN_KEY_PREFIX = 'leadoslav_tour_seen_';
@@ -149,6 +149,7 @@ export const LeadOslavTour: React.FC<LeadOslavTourProps> = ({ createBtnRef, onSt
             50% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.5), 0 0 0 4px hsl(var(--primary)), 0 0 4px 2px hsl(var(--primary) / 0.3); }
           }
         `}</style>
+        <SpotlightClickBlocker rect={rect} />
         {/* Spotlight ring around the target button + dims the rest of the page */}
         <div
           className="fixed z-[60] pointer-events-none"

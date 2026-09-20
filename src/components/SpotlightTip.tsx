@@ -30,6 +30,25 @@ interface SpotlightTipProps {
   onSkipAll?: () => void;
 }
 
+// Чотири смуги навколо цілі, які фізично перекривають решту сторінки під
+// час онбордингу — раніше підсвітка була суто візуальною (pointer-events-none
+// на кільці), тож хедер/сайдбар/інші кнопки лишались повністю клікабельними.
+// Сама ціль лишається доступною, бо смуги обгортають її, а не перекривають.
+export const SpotlightClickBlocker: React.FC<{ rect: DOMRect; padding?: number }> = ({ rect, padding = 6 }) => {
+  const top = rect.top - padding;
+  const left = rect.left - padding;
+  const right = rect.right + padding;
+  const bottom = rect.bottom + padding;
+  return (
+    <>
+      <div className="fixed z-[58]" style={{ top: 0, left: 0, right: 0, height: Math.max(0, top) }} />
+      <div className="fixed z-[58]" style={{ top: Math.max(0, bottom), left: 0, right: 0, bottom: 0 }} />
+      <div className="fixed z-[58]" style={{ top, left: 0, width: Math.max(0, left), height: bottom - top }} />
+      <div className="fixed z-[58]" style={{ top, left: Math.max(0, right), right: 0, height: bottom - top }} />
+    </>
+  );
+};
+
 export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector, lines, radius = 999, confirmLabel, onConfirm, hintNumber, preferSide, sidePosition = 'right', onSkipAll }) => {
   const [rect, setRect] = useState<DOMRect | null>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
@@ -139,6 +158,7 @@ export const SpotlightTip: React.FC<SpotlightTipProps> = ({ show, targetSelector
           50% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.5), 0 0 0 4px hsl(var(--primary)), 0 0 4px 2px hsl(var(--primary) / 0.3); }
         }
       `}</style>
+      <SpotlightClickBlocker rect={rect} />
       <div
         className="fixed z-[60] pointer-events-none"
         data-spotlight-ring={targetSelector}
