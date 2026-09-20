@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { format, videoFormat, niche, channel, clientBrief, decomposition } = await req.json();
+    const { format, videoFormat, niche, channel, clientBrief, decomposition, existingCreo } = await req.json();
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
 
@@ -48,6 +48,16 @@ serve(async (req) => {
       throw new Error("Unknown format");
     }
 
+    let existingCreoCtx = "";
+    if (Array.isArray(existingCreo) && existingCreo.length > 0) {
+      const summaries = existingCreo.map((c: any, i: number) => {
+        const f = c.fields || {};
+        const bits = [f.h1, f.subtitle, f.imageDesc, f.logic, f.script].filter(Boolean).join(" | ").slice(0, 250);
+        return `${i + 1}. [${c.format}] ${bits}`;
+      }).join("\n");
+      existingCreoCtx = `\n\nВже створені крео для цієї кампанії (НЕ ПОВТОРЮЙ заголовки, ідеї, кути подачі чи сценарії з них — придумай щось ПРИНЦИПОВО ІНШЕ: інший хук, інший ракурс на проблему/вигоду, інша візуальна ідея):\n${summaries}`;
+    }
+
     const systemPrompt = `Ти — топовий креативний директор performance-агентства (10+ років у Meta/TikTok Ads), який пише ТЗ для дизайнерів так, щоб крео реально конвертило.
 
 СУВОРІ ПРАВИЛА:
@@ -60,7 +70,7 @@ serve(async (req) => {
     const userPrompt = `Ніша: ${niche || "не вказано"}
 Ціль кампанії: ${goalLabel}
 ${clientCtx}
-${decompCtx}
+${decompCtx}${existingCreoCtx}
 
 Створи ТЗ для крео. ${schemaDescription}
 

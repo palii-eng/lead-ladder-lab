@@ -6495,6 +6495,14 @@ const ScenarioBuilder: React.FC = () => {
                     if (!scenario) return;
                     setCreoAiLoading(true);
                     try {
+                      // Раніше створені крео (по всіх аудиторіях/адсетах цієї
+                      // кампанії, не тільки поточної) — щоб AI не повторював
+                      // ті самі заголовки/сценарії при генерації нового ТЗ.
+                      const allCreoBriefs = (scenario as any)?.creoBriefs || {};
+                      const existingCreo = Object.values(allCreoBriefs).flatMap((raw: any) => {
+                        const list: any[] = Array.isArray(raw) ? raw : (raw?.format ? [raw] : []);
+                        return list.map(item => ({ format: item.format, fields: item.fields }));
+                      });
                       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/creo-brief`, {
                         method: 'POST',
                         headers: {
@@ -6508,6 +6516,7 @@ const ScenarioBuilder: React.FC = () => {
                           channel: scenario.channel,
                           clientBrief: scenario.clientBrief,
                           decomposition: scenario.decomposition,
+                          existingCreo,
                         }),
                       });
                       if (!resp.ok) {

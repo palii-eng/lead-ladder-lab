@@ -44,12 +44,24 @@ serve(async (req) => {
       ? `\nКлієнт: ${clientBrief.name || ""}${clientBrief.task ? ` — ${clientBrief.task}` : ""}`
       : "";
 
+    // Витягуємо саме розділ "Інтереси" з попередньої AI-відповіді окремо —
+    // він іде ближче до кінця структурованого тексту (після цілі/гео/статі/
+    // мови), тож простий slice(0, N) на невеликій довжині міг обрізати його
+    // ще до того, як AI взагалі побачить, які інтереси вже використані.
+    const extractInterests = (text: string): string => {
+      const match = text.match(/❤️[^\n]*Інтерес[\s\S]*?(?=\n[📱⚡🎯🌍👥🗣️]|$)/i);
+      return match ? match[0].trim().slice(0, 600) : "";
+    };
+
     let previousContext = "";
     if (Array.isArray(previousAudiences) && previousAudiences.length > 0) {
-      previousContext = `\n\nПопередньо створені аудиторії для цього клієнта (НЕ ПОВТОРЮЙ їх — запропонуй НОВУ, відмінну від цих):\n` +
+      previousContext = `\n\nПопередньо створені аудиторії для цього клієнта (НЕ ПОВТОРЮЙ їх — запропонуй НОВУ, відмінну від цих, і ОСОБЛИВО не повторюй уже використані інтереси/поведінки — обери інші):\n` +
         previousAudiences.map((a: any, i: number) => {
-          const body = a.mode === 'ai' ? (a.tips || '').slice(0, 400) : (a.description || '').slice(0, 400);
-          return `${i + 1}. ${a.name || 'Без назви'} (${a.mode === 'ai' ? 'AI' : 'ручна'})\n${body}`;
+          if (a.mode !== 'ai') return `${i + 1}. ${a.name || 'Без назви'} (ручна)\n${(a.description || '').slice(0, 400)}`;
+          const tips = a.tips || '';
+          const interests = extractInterests(tips);
+          const summary = tips.slice(0, 500);
+          return `${i + 1}. ${a.name || 'Без назви'} (AI)\n${summary}${interests ? `\nВикористані інтереси/поведінки (не повторювати): ${interests}` : ''}`;
         }).join("\n\n");
     }
 
