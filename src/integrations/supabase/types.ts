@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      community_chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          user_id: string
+          user_level: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          user_id: string
+          user_level: string
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          user_id?: string
+          user_level?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
       crm_boards: {
         Row: {
           board: Json
