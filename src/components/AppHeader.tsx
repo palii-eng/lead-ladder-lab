@@ -254,7 +254,17 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
                 <p className="text-xs text-muted-foreground text-center">Поки що тут порожньо — напишіть перше повідомлення.</p>
               )}
               {messages.map(m => (
-                <div key={m.id} className="rounded-lg border border-border bg-secondary/30 p-2.5 group">
+                <div
+                  key={m.id}
+                  role={canWriteChat ? 'button' : undefined}
+                  tabIndex={canWriteChat ? 0 : undefined}
+                  onClick={() => canWriteChat && setReplyTarget(m)}
+                  onKeyDown={(e) => { if (canWriteChat && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setReplyTarget(m); } }}
+                  title={canWriteChat ? 'Натисніть, щоб відповісти на це повідомлення' : undefined}
+                  className={`rounded-lg border border-border bg-secondary/30 p-2.5 group transition-colors ${
+                    canWriteChat ? 'cursor-pointer hover:border-primary/40 hover:bg-secondary/50' : ''
+                  }`}
+                >
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <span className="text-xs font-semibold text-foreground truncate">{m.user_name}</span>
@@ -270,18 +280,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
                         {new Date(m.created_at).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                       {canWriteChat && (
-                        <button
-                          type="button"
-                          onClick={() => setReplyTarget(m)}
-                          className="opacity-0 group-hover:opacity-100 text-[10px] text-muted-foreground hover:text-primary transition-opacity flex items-center gap-0.5"
-                        >
+                        <span className="opacity-0 group-hover:opacity-100 text-[10px] text-primary transition-opacity flex items-center gap-0.5">
                           <Reply className="w-3 h-3" /> Відповісти
-                        </button>
+                        </span>
                       )}
                       {isStaff && (
                         <button
                           type="button"
-                          onClick={() => deleteMessage(m.id)}
+                          onClick={(e) => { e.stopPropagation(); deleteMessage(m.id); }}
                           className="opacity-0 group-hover:opacity-100 text-[10px] text-muted-foreground hover:text-destructive transition-opacity"
                         >
                           Видалити
