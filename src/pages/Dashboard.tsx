@@ -30,7 +30,7 @@ const LEADS_FEED_SIZE = 4;
 // Поки заповнений лише перший день; коли зʼявляться відео на наступні дні —
 // просто додати нові записи з відповідним day.
 const TARGETING_VIDEOS: DailyVideo[] = [
-  { day: 1, youtubeId: 'YgPhObm7OfQ', caption: 'Відео з курсу' },
+  { day: 1, youtubeId: 'YgPhObm7OfQ', caption: 'Стратегія розвитку та зростання таргетолога з нуля' },
   { day: 2, youtubeId: 'jPYI67MSFjE', caption: 'Етапи роботи над проектом по таргету' },
   { day: 3, youtubeId: 'DX_f6DdoPvA', caption: 'Відео з курсу' },
 ];
