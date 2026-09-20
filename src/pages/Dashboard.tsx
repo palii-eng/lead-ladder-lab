@@ -79,13 +79,21 @@ const Dashboard: React.FC = () => {
   // "застрягнути" на неактуальному кроці.
   useEffect(() => {
     if (searchParams.get('resetOnboarding') !== '1' || !user?.id) return;
-    try {
-      localStorage.removeItem(`leadoslav_tour_seen_${user.id}`);
-      localStorage.removeItem(`leadoslav_funnel_onboard_step_${user.id}`);
-      localStorage.removeItem(`${DECLINED_LEADS_PREFIX}${user.id}`);
-    } catch { /* localStorage unavailable */ }
-    navigate('/', { replace: true });
-    window.location.reload();
+    (async () => {
+      try {
+        localStorage.removeItem(`leadoslav_tour_seen_${user.id}`);
+        localStorage.removeItem(`leadoslav_funnel_onboard_step_${user.id}`);
+        localStorage.removeItem(`${DECLINED_LEADS_PREFIX}${user.id}`);
+      } catch { /* localStorage unavailable */ }
+      // Ліди дня й "Відео дня" рахуються від profile.created_at — без
+      // цього кабінет далі показував би ліди/відео поточного реального дня,
+      // а не день 1, хоч онбординг-флаги й скинуті.
+      try {
+        await supabase.from('profiles').update({ created_at: new Date().toISOString() }).eq('id', user.id);
+      } catch { /* best-effort */ }
+      navigate('/', { replace: true });
+      window.location.reload();
+    })();
   }, [searchParams, user?.id, navigate]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   // While the LeadOslav onboarding tour is running, the "Наступний" button
