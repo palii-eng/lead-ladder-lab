@@ -6267,7 +6267,15 @@ const ScenarioBuilder: React.FC = () => {
                   {f.h1 && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">H1</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.h1}</div></div>)}
                   {f.subtitle && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Підзаголовок</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.subtitle}</div></div>)}
                   {f.cards && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Кількість карток</div><div className="text-sm text-foreground">{f.cards}</div></div>)}
-                  {f.imageDesc && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Опис зображення</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.imageDesc}</div></div>)}
+                  {f.imageDesc && (
+                    <div>
+                      <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Опис зображення</div>
+                      <div className="text-sm text-foreground whitespace-pre-wrap">{f.imageDesc}</div>
+                      {item.format !== 'video' && !isTikTokSource && (
+                        <p className="text-xs text-muted-foreground mt-1">Потрібні ресайзи: 1:1 (пост), 4:5 (пост/сторіз), 9:16 (сторіз)</p>
+                      )}
+                    </div>
+                  )}
                   {f.logic && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Логіка карток</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.logic}</div></div>)}
                   {f.script && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Сценарій</div><div className="text-sm text-foreground whitespace-pre-wrap">{f.script}</div></div>)}
                   {f.timing && (<div><div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Таймінг</div><div className="text-sm text-foreground">{f.timing} сек</div></div>)}
@@ -6408,6 +6416,11 @@ const ScenarioBuilder: React.FC = () => {
                     placeholder="Що зображено, стиль, колірна гамма, обʼєкти..."
                     rows={3}
                   />
+                  {!isTikTokSource && (
+                    <p className="text-xs text-muted-foreground mt-1.5">
+                      Потрібні ресайзи: 1:1 (пост), 4:5 (пост/сторіз), 9:16 (сторіз)
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -6452,6 +6465,11 @@ const ScenarioBuilder: React.FC = () => {
                     placeholder="Стиль, колір, обʼєкти..."
                     rows={3}
                   />
+                  {!isTikTokSource && (
+                    <p className="text-xs text-muted-foreground mt-1.5">
+                      Потрібні ресайзи: 1:1 (пост), 4:5 (пост/сторіз), 9:16 (сторіз)
+                    </p>
+                  )}
                 </div>
                 {isTikTokSource && (
                   <div>
