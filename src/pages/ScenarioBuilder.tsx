@@ -3230,7 +3230,7 @@ const ScenarioBuilder: React.FC = () => {
     };
     const baseBudget = (isBranching && activeLeadType
       ? getBranch().decomposition.realistic.budget
-      : scenario.decomposition.realistic.budget) || 10000;
+      : scenario.decomposition.realistic.budget) || 2000;
     return {
       bad: make({ cpm: 1.3, ctr: 0.7, cpl: 1.5, conv: 0.65 }, baseBudget),
       realistic: make({ cpm: 1, ctr: 1, cpl: 1, conv: 1 }, baseBudget),
@@ -3242,7 +3242,7 @@ const ScenarioBuilder: React.FC = () => {
     if (fillBenchLoading) return;
     const baseBudget = (isBranching && activeLeadType
       ? getBranch().decomposition.realistic.budget
-      : scenario.decomposition.realistic.budget) || 10000;
+      : scenario.decomposition.realistic.budget) || 2000;
     const cacheKey = `decomp:ai:${scenario.niche || ''}:${scenario.channel || ''}:${activeLeadType || (scenario.leadTypes?.[0] || '')}:${baseBudget}`;
     const applySet = (set: DecompositionSet) => {
       if (isBranching && activeLeadType) updateBranch({ decomposition: set });

@@ -6,7 +6,19 @@
 // a larger business (chain/network/big turnover) with no explicit figure.
 const UAH_TO_USD_RATE = 41;
 
+// Test-budget range for this simulator's projects: $500–$5000. A client's
+// task text can parse to anything (tiny "1500 грн" asks, huge "мільйон"
+// businesses) — clamp so decompositions always stay in a realistic training
+// range instead of an extreme outlier.
+const MIN_PROJECT_BUDGET = 500;
+const MAX_PROJECT_BUDGET = 5000;
+
 export const estimateClientBudgetUsd = (task: string): number => {
+  const clamp = (v: number) => Math.min(MAX_PROJECT_BUDGET, Math.max(MIN_PROJECT_BUDGET, v));
+  return clamp(estimateClientBudgetUsdRaw(task));
+};
+
+const estimateClientBudgetUsdRaw = (task: string): number => {
   if (!task) return 2000;
 
   // Explicit USD: "$50-70k/міс", "$5000", "$2 000"
