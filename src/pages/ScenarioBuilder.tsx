@@ -4274,7 +4274,7 @@ const ScenarioBuilder: React.FC = () => {
                         }`}
                         style={selected && isRu ? { borderColor: 'hsl(28 90% 50%)' } : undefined}
                       >
-                        {selected && <span className="w-2 h-2 rounded-full" style={{ background: isRu ? 'hsl(28 90% 50%)' : undefined }} />}
+                        {selected && <span className={`w-2 h-2 rounded-full ${isRu ? '' : 'bg-primary'}`} style={isRu ? { background: 'hsl(28 90% 50%)' } : undefined} />}
                       </span>
                       <span className={`flex-1 ${isRu ? 'font-medium' : ''}`} style={isRu ? { color: 'hsl(20 70% 30%)' } : undefined}>{d.name}</span>
                       {isRu && (
