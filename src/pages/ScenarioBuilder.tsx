@@ -3833,15 +3833,17 @@ const ScenarioBuilder: React.FC = () => {
                   })}
                 </div>
 
-                <div>
-                  <p className="text-xs text-muted-foreground mb-2">Свій варіант:</p>
-                  <Input
-                    value={isCustom ? selected : ''}
-                    onChange={e => update({ niche: e.target.value })}
-                    placeholder="Введіть свою нішу..."
-                    className="bg-secondary border-border text-foreground text-base py-5 placeholder:text-muted-foreground"
-                  />
-                </div>
+                {!onboardActive && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">Свій варіант:</p>
+                    <Input
+                      value={isCustom ? selected : ''}
+                      onChange={e => update({ niche: e.target.value })}
+                      placeholder="Введіть свою нішу..."
+                      className="bg-secondary border-border text-foreground text-base py-5 placeholder:text-muted-foreground"
+                    />
+                  </div>
+                )}
 
 
 
