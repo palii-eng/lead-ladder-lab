@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { GraduationCap, Newspaper, MessageCircle, Send } from 'lucide-react';
+import { GraduationCap, Newspaper, MessageCircle, Send, Reply, X } from 'lucide-react';
 import { ModeSwitch } from '@/components/ModeSwitch';
 import { UserMenu } from '@/components/UserMenu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
@@ -43,6 +43,9 @@ interface ChatMessageRow {
   completed_projects: number;
   message: string;
   created_at: string;
+  reply_to_id: string | null;
+  reply_to_user_name: string | null;
+  reply_to_message: string | null;
 }
 
 interface AppHeaderProps {
@@ -71,6 +74,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
   const [chatText, setChatText] = useState('');
   const [sending, setSending] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [replyTarget, setReplyTarget] = useState<ChatMessageRow | null>(null);
   const chatOpenRef = useRef(chatOpen);
   chatOpenRef.current = chatOpen;
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -157,6 +161,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
       user_level: levelLabel,
       completed_projects: completedProjectsCount,
       message: text,
+      reply_to_id: replyTarget?.id || null,
+      reply_to_user_name: replyTarget?.user_name || null,
+      reply_to_message: replyTarget?.message.slice(0, 200) || null,
     });
     setSending(false);
     if (error) {
@@ -164,6 +171,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
       return;
     }
     setChatText('');
+    setReplyTarget(null);
   };
 
   const deleteMessage = async (id: string) => {
@@ -261,6 +269,15 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
                       <span className="text-[10px] text-muted-foreground">
                         {new Date(m.created_at).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}
                       </span>
+                      {canWriteChat && (
+                        <button
+                          type="button"
+                          onClick={() => setReplyTarget(m)}
+                          className="opacity-0 group-hover:opacity-100 text-[10px] text-muted-foreground hover:text-primary transition-opacity flex items-center gap-0.5"
+                        >
+                          <Reply className="w-3 h-3" /> Відповісти
+                        </button>
+                      )}
                       {isStaff && (
                         <button
                           type="button"
@@ -272,25 +289,44 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
                       )}
                     </div>
                   </div>
+                  {m.reply_to_id && (
+                    <div className="mb-1.5 pl-2 border-l-2 border-primary/40 text-[10px] text-muted-foreground">
+                      <span className="font-semibold text-foreground/70">↩ {m.reply_to_user_name || 'Видалено'}:</span>{' '}
+                      <span className="line-clamp-1">{m.reply_to_message}</span>
+                    </div>
+                  )}
                   <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap break-words">{m.message}</p>
                 </div>
               ))}
               <div ref={messagesEndRef} />
             </div>
             {canWriteChat ? (
-              <SheetFooter className="p-3 border-t border-border flex-row gap-2">
-                <Input
-                  value={chatText}
-                  onChange={(e) => setChatText(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-                  placeholder="Напишіть повідомлення…"
-                  disabled={sending}
-                  className="flex-1"
-                />
-                <Button size="icon" onClick={sendMessage} disabled={sending || !chatText.trim()}>
-                  <Send className="w-4 h-4" />
-                </Button>
-              </SheetFooter>
+              <div className="border-t border-border">
+                {replyTarget && (
+                  <div className="flex items-center justify-between gap-2 px-3 pt-2 text-[11px]">
+                    <div className="min-w-0 pl-2 border-l-2 border-primary/40 text-muted-foreground">
+                      <span className="font-semibold text-foreground/70">↩ Відповідь {replyTarget.user_name}:</span>{' '}
+                      <span className="line-clamp-1">{replyTarget.message}</span>
+                    </div>
+                    <button type="button" onClick={() => setReplyTarget(null)} className="shrink-0 text-muted-foreground hover:text-foreground">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+                <SheetFooter className="p-3 flex-row gap-2">
+                  <Input
+                    value={chatText}
+                    onChange={(e) => setChatText(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                    placeholder="Напишіть повідомлення…"
+                    disabled={sending}
+                    className="flex-1"
+                  />
+                  <Button size="icon" onClick={sendMessage} disabled={sending || !chatText.trim()}>
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </SheetFooter>
+              </div>
             ) : (
               <div className="p-3 border-t border-border text-center text-[11px] text-muted-foreground">
                 Писати в чат можуть лише студенти та випускники ADSchool.

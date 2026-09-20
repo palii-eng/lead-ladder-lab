@@ -20,6 +20,9 @@ export type Database = {
           created_at: string
           id: string
           message: string
+          reply_to_id: string | null
+          reply_to_message: string | null
+          reply_to_user_name: string | null
           user_id: string
           user_level: string
           user_name: string
@@ -29,6 +32,9 @@ export type Database = {
           created_at?: string
           id?: string
           message: string
+          reply_to_id?: string | null
+          reply_to_message?: string | null
+          reply_to_user_name?: string | null
           user_id: string
           user_level: string
           user_name: string
@@ -38,11 +44,22 @@ export type Database = {
           created_at?: string
           id?: string
           message?: string
+          reply_to_id?: string | null
+          reply_to_message?: string | null
+          reply_to_user_name?: string | null
           user_id?: string
           user_level?: string
           user_name?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "community_chat_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "community_chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crm_boards: {
         Row: {
