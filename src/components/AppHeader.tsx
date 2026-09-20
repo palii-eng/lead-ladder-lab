@@ -69,7 +69,21 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
   const [chatLoading, setChatLoading] = useState(false);
   const [chatText, setChatText] = useState('');
   const [sending, setSending] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const chatOpenRef = useRef(chatOpen);
+  chatOpenRef.current = chatOpen;
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const lastSeenKey = user?.id ? `chat_last_seen_${user.id}` : null;
+  const readLastSeen = () => {
+    if (!lastSeenKey) return null;
+    try { return localStorage.getItem(lastSeenKey); } catch { return null; }
+  };
+  const markChatSeen = () => {
+    if (!lastSeenKey) return;
+    try { localStorage.setItem(lastSeenKey, new Date().toISOString()); } catch { /* ignore */ }
+    setUnreadCount(0);
+  };
 
   const loadMessages = async () => {
     setChatLoading(true);
@@ -82,9 +96,24 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
     setChatLoading(false);
   };
 
+  // Скільки повідомлень прийшло, поки юзер не дивився в чат — рахуємо
+  // одразу при заході в кабінет (не тільки коли панель відкрита), щоб
+  // бейдж на кнопці "Чат" був видний і без відкривання панелі.
   useEffect(() => {
-    if (!chatOpen || !canSeeChat) return;
-    loadMessages();
+    if (!canSeeChat || !user?.id) return;
+    (async () => {
+      const since = readLastSeen();
+      const query = supabase.from('community_chat_messages').select('id', { count: 'exact', head: true });
+      const { count } = since ? await query.gt('created_at', since) : await query;
+      setUnreadCount(count || 0);
+      if (!since) markChatSeen();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canSeeChat, user?.id]);
+
+  useEffect(() => {
+    if (!canSeeChat) return;
+    if (chatOpen) loadMessages();
     const channel = supabase
       .channel('community_chat_watch')
       .on(
@@ -92,6 +121,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
         { event: 'INSERT', schema: 'public', table: 'community_chat_messages' },
         (payload) => {
           setMessages(prev => [...prev, payload.new as ChatMessageRow]);
+          if (chatOpenRef.current) markChatSeen();
+          else setUnreadCount(c => c + 1);
         }
       )
       .on(
@@ -105,6 +136,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
     return () => { supabase.removeChannel(channel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatOpen, canSeeChat]);
+
+  useEffect(() => {
+    if (chatOpen) markChatSeen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatOpen]);
 
   useEffect(() => {
     if (chatOpen) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -154,6 +190,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
               title={canSeeChat ? 'Чат студентів' : 'Доступно тільки для студентів ADSchool'}
             >
               <MessageCircle className="w-4 h-4" /> Чат
+              {canSeeChat && unreadCount > 0 && (
+                <span className="min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </button>
             <button
               type="button"
