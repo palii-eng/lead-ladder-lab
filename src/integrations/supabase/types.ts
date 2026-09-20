@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       community_chat_messages: {
         Row: {
+          completed_projects: number
           created_at: string
           id: string
           message: string
@@ -24,6 +25,7 @@ export type Database = {
           user_name: string
         }
         Insert: {
+          completed_projects?: number
           created_at?: string
           id?: string
           message: string
@@ -32,6 +34,7 @@ export type Database = {
           user_name: string
         }
         Update: {
+          completed_projects?: number
           created_at?: string
           id?: string
           message?: string

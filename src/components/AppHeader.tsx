@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
+import { useScenarios } from '@/context/ScenariosContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -39,6 +40,7 @@ interface ChatMessageRow {
   user_id: string;
   user_name: string;
   user_level: string;
+  completed_projects: number;
   message: string;
   created_at: string;
 }
@@ -54,12 +56,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
   const [newsOpen, setNewsOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const { user, profile, isTester, isStaff, accessTier } = useAuth();
+  const { scenarios } = useScenarios();
 
   // Демо (tester) не бачить чат взагалі — тільки студенти/випускники
   // пишуть, staff читає для модерації.
   const canSeeChat = isStaff || accessTier === 'student' || accessTier === 'graduate';
   const canWriteChat = !isStaff && (accessTier === 'student' || accessTier === 'graduate');
   const levelLabel = accessTier === 'graduate' ? 'Випускник' : accessTier === 'student' ? 'Студент ADSchool' : '';
+  const completedProjectsCount = scenarios.filter(s => s.monthSurvived).length;
 
   const [messages, setMessages] = useState<ChatMessageRow[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
@@ -114,6 +118,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
       user_id: user.id,
       user_name: profile?.full_name || profile?.email || 'Студент',
       user_level: levelLabel,
+      completed_projects: completedProjectsCount,
       message: text,
     });
     setSending(false);
@@ -204,6 +209,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
                     <div className="flex items-center gap-1.5 min-w-0">
                       <span className="text-xs font-semibold text-foreground truncate">{m.user_name}</span>
                       {m.user_level && <Badge variant="outline" className="text-[9px] shrink-0">{m.user_level}</Badge>}
+                      {m.completed_projects > 0 && (
+                        <Badge variant="secondary" className="text-[9px] shrink-0">
+                          ✅ {m.completed_projects} {m.completed_projects === 1 ? 'проєкт' : 'проєктів'}
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <span className="text-[10px] text-muted-foreground">
