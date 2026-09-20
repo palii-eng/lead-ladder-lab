@@ -5936,6 +5936,7 @@ const ScenarioBuilder: React.FC = () => {
                         </div>
                       )}
 
+                      {(!onboardActive || savedAudiences.length === 0) && (
                       <button
                         type="button"
                         onClick={() => { setAudienceView('choose'); setAudienceName(''); setAudienceDescription(''); setAudienceTipsText(''); }}
@@ -5947,6 +5948,7 @@ const ScenarioBuilder: React.FC = () => {
                           <div className="text-xs text-muted-foreground">Опишіть самі або отримайте AI-поради</div>
                         </div>
                       </button>
+                      )}
                     </div>
                   )}
 
