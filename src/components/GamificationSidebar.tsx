@@ -143,11 +143,11 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
 
       <div className="px-4">
         <div className="flex flex-col items-center gap-3 py-6 border-b border-border">
-          <label className="relative w-20 h-20 rounded-full cursor-pointer group shrink-0">
+          <label className="relative w-24 h-24 rounded-full cursor-pointer group shrink-0">
             {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="" className="w-20 h-20 rounded-full object-cover" />
+              <img src={profile.avatar_url} alt="" className="w-24 h-24 rounded-full object-cover" />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-3xl font-bold">
+              <div className="w-24 h-24 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-3xl font-bold">
                 {initial}
               </div>
             )}
