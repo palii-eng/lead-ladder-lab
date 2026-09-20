@@ -627,14 +627,19 @@ const ScenarioBuilder: React.FC = () => {
   // which is not an opt-out and must not suppress this chain before it even
   // starts.
   const DASHBOARD_TOUR_SEEN_KEY_PREFIX = 'leadoslav_tour_seen_';
+  // Онбординг-ланцюжок скриптований під конкретного клієнта (Андрій
+  // Коваленко, день-1 куратований лід) — без цієї перевірки прапорець
+  // "ще не done" вмикав ті самі підказки на БУДЬ-ЯКОМУ сценарії, якщо юзер
+  // відкривав інший проєкт до завершення/скіпу навчання на першому.
+  const isOnboardingScenario = scenario?.clientBrief?.name === 'Андрій Коваленко';
   const [onboardActive, setOnboardActive] = useState(false);
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || !isOnboardingScenario) { setOnboardActive(false); return; }
     try {
       const raw = localStorage.getItem(`${ONBOARD_KEY_PREFIX}${user.id}`);
       setOnboardActive(raw !== 'done');
     } catch { setOnboardActive(false); }
-  }, [user?.id]);
+  }, [user?.id, isOnboardingScenario]);
   const skipOnboarding = () => {
     setOnboardActive(false);
     if (!user?.id) return;
