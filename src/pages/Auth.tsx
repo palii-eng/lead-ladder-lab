@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, MailCheck } from 'lucide-react';
 import adschoolLogo from '@/assets/adschool-logo.png';
 
 function getSafeNextUrl(searchParams: URLSearchParams): string | null {
@@ -63,6 +63,7 @@ const Auth: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [awaitingEmailConfirm, setAwaitingEmailConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && user) navigate(next ?? '/', { replace: true });
@@ -104,11 +105,7 @@ const Auth: React.FC = () => {
     setSubmitting(false);
     if (signInError) {
       // Найімовірніша причина — потрібне підтвердження email за посиланням.
-      toast({
-        title: 'Реєстрація успішна',
-        description: 'Перевірте пошту, щоб підтвердити email, а потім увійдіть.',
-      });
-      setTab('signin');
+      setAwaitingEmailConfirm(email);
       return;
     }
     toast({ title: 'Ласкаво просимо!', description: 'Акаунт створено, ви одразу в системі.' });
@@ -132,6 +129,27 @@ const Auth: React.FC = () => {
         </div>
 
         <div className="glass-card p-6 bg-white shadow-2xl" style={{ borderRadius: 20 }}>
+          {awaitingEmailConfirm ? (
+            <div className="flex flex-col items-center text-center gap-4 py-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <MailCheck className="w-8 h-8 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-foreground mb-1">Підтвердіть email</h2>
+                <p className="text-sm text-muted-foreground">
+                  Ми надіслали лист із підтвердженням на <span className="font-semibold text-foreground">{awaitingEmailConfirm}</span>.
+                  Перейдіть за посиланням у листі, а потім увійдіть у кабінет.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => { setAwaitingEmailConfirm(null); setTab('signin'); setPassword(''); }}
+              >
+                Повернутися до входу
+              </Button>
+            </div>
+          ) : (
           <Tabs value={tab} onValueChange={(v) => setTab(v as 'signin' | 'signup')}>
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="signin">Вхід</TabsTrigger>
@@ -206,6 +224,7 @@ const Auth: React.FC = () => {
               </form>
             </TabsContent>
           </Tabs>
+          )}
         </div>
       </div>
     </div>
