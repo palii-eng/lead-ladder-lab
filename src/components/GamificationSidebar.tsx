@@ -1,7 +1,9 @@
 import React from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, AccessTier, DEMO_ACCESS_DAYS } from '@/context/AuthContext';
 import { useScenarios } from '@/context/ScenariosContext';
-import { Trophy, TrendingUp, Lock, Check, ChevronLeft, ChevronRight, Unlock } from 'lucide-react';
+import { Trophy, TrendingUp, Lock, Check, ChevronLeft, ChevronRight, Sparkles, GraduationCap, Clock } from 'lucide-react';
+import { daysSinceRegistration } from '@/lib/daysSinceRegistration';
+import { getStudentQuotaStatus } from '@/lib/studentLimits';
 
 // Five levels — each defined by how many projects have to be launched AND
 // successfully sustained (scenario.monthSurvived === true), paired with a
@@ -55,10 +57,12 @@ interface GamificationSidebarProps {
 }
 
 export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collapsed, onToggle }) => {
-  const { profile, isTester } = useAuth();
+  const { profile, isTester, isStaff, accessTier, studentSince } = useAuth();
   const { scenarios } = useScenarios();
   const completedCount = scenarios.filter(s => s.monthSurvived).length;
   const { currentLevel, nextLevel, progressToNext } = getGamificationProgress(completedCount);
+  const demoDaysLeft = Math.max(0, DEMO_ACCESS_DAYS - daysSinceRegistration(profile?.created_at) + 1);
+  const studentQuota = getStudentQuotaStatus(accessTier === 'student' ? studentSince : null, scenarios);
   // Real earnings — sum of each successfully sustained project's actual
   // agreed price ($300-500, set when the marketer took it on), not the
   // interpolated milestone figure. Legacy projects without a stored price
@@ -143,53 +147,82 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
             <Trophy className="w-4 h-4 text-warning" />
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Рівні</span>
           </div>
-          {GAMIFICATION_LEVELS.map(lvl => {
-            const reached = completedCount >= lvl.projects;
-            const isCurrent = currentLevel?.level === lvl.level;
-            // Тестери бачать перший рівень як просто "доступний" (не
-            // заблокований і не "досягнутий") — решта рівнів лишаються
-            // заблокованими з підказкою, що це доступно тільки студентам
-            // AdSchool.
-            const isAvailableForTester = isTester && lvl.level === 1 && !reached;
-            const isLockedForTester = isTester && lvl.level > 1 && !reached;
-            return (
-              <div
-                key={lvl.level}
-                title={isLockedForTester ? 'Доступно тільки для студентів AdSchool' : undefined}
-                className={`flex items-center gap-3 p-3 rounded-lg border ${
-                  isCurrent ? 'border-primary bg-primary/5' : reached ? 'border-success/40 bg-success/5' : isAvailableForTester ? 'border-primary/40 bg-primary/5' : 'border-border bg-secondary/30'
-                }`}
-              >
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                    reached ? 'bg-success text-success-foreground' : isAvailableForTester ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                  }`}
-                >
-                  {reached ? <Check className="w-4 h-4" /> : isAvailableForTester ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground">Рівень {lvl.level} · {lvl.name}</p>
-                  {!reached && (
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {isAvailableForTester ? 'Доступно — виконайте умови:' : 'Щоб розблокувати цей рівень, виконайте умови:'}
-                    </p>
-                  )}
-                  <ul className="text-[11px] text-muted-foreground mt-1 space-y-0.5 list-none">
-                    <li className="flex items-center gap-1.5">
-                      <span className={reached ? 'text-success' : 'text-muted-foreground/60'}>•</span>
-                      {lvl.projects} успішно запущених проєктів
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <span className={reached ? 'text-success' : 'text-muted-foreground/60'}>•</span>
-                      ${lvl.earnings.toLocaleString()} заробітку
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            );
-          })}
+          {!isStaff && (
+            <AccessTierCard
+              tierKey="demo"
+              current={accessTier}
+              icon={Clock}
+              title="Демо режим"
+              status={
+                accessTier === 'demo'
+                  ? (demoDaysLeft > 0 ? `Лишилось ${demoDaysLeft} ${demoDaysLeft === 1 ? 'день' : 'дні(в)'}` : 'Доступ завершено')
+                  : undefined
+              }
+              bullets={['Повний доступ на 3 дні з моменту реєстрації', 'Далі — тільки для студентів ADSchool']}
+            />
+          )}
+          {!isStaff && (
+            <AccessTierCard
+              tierKey="student"
+              current={accessTier}
+              icon={Sparkles}
+              title="Студент ADSchool"
+              status={accessTier === 'student' ? `${studentQuota.remaining} з ${studentQuota.banked} проєктів доступно` : undefined}
+              bullets={['5 нових проєктів щодня (накопичуються)', 'Відкриває адміністратор/модератор після реєстрації']}
+            />
+          )}
+          {!isStaff && (
+            <AccessTierCard
+              tierKey="graduate"
+              current={accessTier}
+              icon={GraduationCap}
+              title="Пройшов симулятор"
+              bullets={['25 успішно запущених проєктів', 'Курс зараховано модератором/адміном']}
+            />
+          )}
         </div>
       </div>
     </aside>
+  );
+};
+
+const TIER_ORDER: AccessTier[] = ['demo', 'student', 'graduate'];
+
+const AccessTierCard: React.FC<{
+  tierKey: AccessTier;
+  current: AccessTier;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  status?: string;
+  bullets: string[];
+}> = ({ tierKey, current, icon: Icon, title, status, bullets }) => {
+  const isCurrent = tierKey === current;
+  const reached = TIER_ORDER.indexOf(tierKey) < TIER_ORDER.indexOf(current);
+  return (
+    <div
+      className={`flex items-center gap-3 p-3 rounded-lg border ${
+        isCurrent ? 'border-primary bg-primary/5' : reached ? 'border-success/40 bg-success/5' : 'border-border bg-secondary/30'
+      }`}
+    >
+      <div
+        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+          reached ? 'bg-success text-success-foreground' : isCurrent ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+        }`}
+      >
+        {reached ? <Check className="w-4 h-4" /> : isCurrent ? <Icon className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+        {status && <p className="text-[11px] text-primary font-medium mt-0.5">{status}</p>}
+        <ul className="text-[11px] text-muted-foreground mt-1 space-y-0.5 list-none">
+          {bullets.map((b, i) => (
+            <li key={i} className="flex items-center gap-1.5">
+              <span className={reached || isCurrent ? 'text-success' : 'text-muted-foreground/60'}>•</span>
+              {b}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 };

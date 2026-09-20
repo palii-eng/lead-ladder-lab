@@ -631,7 +631,9 @@ const ScenarioBuilder: React.FC = () => {
   // Коваленко, день-1 куратований лід) — без цієї перевірки прапорець
   // "ще не done" вмикав ті самі підказки на БУДЬ-ЯКОМУ сценарії, якщо юзер
   // відкривав інший проєкт до завершення/скіпу навчання на першому.
-  const isOnboardingScenario = scenario?.clientBrief?.name === 'Андрій Коваленко';
+  // Крім того, онбординг — лише для демо-рівня (tester); студенти й
+  // випускники його не проходять взагалі.
+  const isOnboardingScenario = isTester && scenario?.clientBrief?.name === 'Андрій Коваленко';
   const [onboardActive, setOnboardActive] = useState(false);
   useEffect(() => {
     if (!user?.id || !isOnboardingScenario) { setOnboardActive(false); return; }

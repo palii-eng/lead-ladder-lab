@@ -43,7 +43,9 @@ export type Database = {
           created_at: string
           email: string
           full_name: string | null
+          graduated_at: string | null
           id: string
+          is_graduate: boolean
           status: Database["public"]["Enums"]["approval_status"]
           updated_at: string
         }
@@ -51,7 +53,9 @@ export type Database = {
           created_at?: string
           email: string
           full_name?: string | null
+          graduated_at?: string | null
           id: string
+          is_graduate?: boolean
           status?: Database["public"]["Enums"]["approval_status"]
           updated_at?: string
         }
@@ -59,7 +63,9 @@ export type Database = {
           created_at?: string
           email?: string
           full_name?: string | null
+          graduated_at?: string | null
           id?: string
+          is_graduate?: boolean
           status?: Database["public"]["Enums"]["approval_status"]
           updated_at?: string
         }

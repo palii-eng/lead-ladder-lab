@@ -5,9 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { ArrowLeft, Check, X, RefreshCw, ExternalLink, Eye, Trash2, ShieldCheck, ShieldPlus, ShieldMinus } from 'lucide-react';
+import { ArrowLeft, Check, X, RefreshCw, ExternalLink, Eye, Trash2, ShieldCheck, ShieldPlus, ShieldMinus, GraduationCap, UserPlus } from 'lucide-react';
 
-type AppRole = 'admin' | 'moderator' | 'user';
+type AppRole = 'admin' | 'moderator' | 'user' | 'tester';
 
 interface UserRow {
   id: string;
@@ -18,6 +18,7 @@ interface UserRow {
   scenarios_count: number;
   reviewed_count: number;
   role: AppRole;
+  is_graduate: boolean;
 }
 
 interface ReviewRow {
@@ -75,7 +76,7 @@ const Admin: React.FC = () => {
         reviewedCounts.set(r.user_id, (reviewedCounts.get(r.user_id) || 0) + 1);
       });
 
-      const rolePriority: Record<AppRole, number> = { admin: 2, moderator: 1, user: 0 };
+      const rolePriority: Record<AppRole, number> = { admin: 3, moderator: 2, user: 1, tester: 0 };
       const roleByUser = new Map<string, AppRole>();
       (roleRows || []).forEach((r: { user_id: string; role: AppRole }) => {
         // A user can technically hold multiple rows; keep the highest tier.
@@ -94,6 +95,7 @@ const Admin: React.FC = () => {
         scenarios_count: counts.get(p.id) ?? 0,
         reviewed_count: reviewedCounts.get(p.id) ?? 0,
         role: roleByUser.get(p.id) ?? 'user',
+        is_graduate: !!p.is_graduate,
       })));
       setReviews((revs || []) as ReviewRow[]);
     } catch (e: unknown) {
@@ -199,6 +201,39 @@ const Admin: React.FC = () => {
     }
   };
 
+  // Демо (tester) → Студент ADSchool: знімає роль tester і ставить user,
+  // яка одразу відкриває другий рівень доступу (5 проєктів/день, без
+  // онбордингу). Доступно і модератору, і адміну.
+  const promoteToStudent = async (row: UserRow) => {
+    try {
+      const { error: delErr } = await supabase.from('user_roles').delete().eq('user_id', row.id).eq('role', 'tester');
+      if (delErr) throw delErr;
+      const { error: insErr } = await supabase.from('user_roles').insert({ user_id: row.id, role: 'user' });
+      if (insErr) throw insErr;
+      toast({ title: 'Підвищено до Студент ADSchool' });
+      load();
+    } catch (e: unknown) {
+      toast({ title: 'Помилка', description: (e as Error).message, variant: 'destructive' });
+    }
+  };
+
+  // Третій рівень — "пройшов симулятор". Виставляється вручну модератором
+  // чи адміном (зазвичай після ~25 успішних проєктів і завершення курсу),
+  // а не рахується автоматично.
+  const toggleGraduate = async (row: UserRow) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_graduate: !row.is_graduate, graduated_at: row.is_graduate ? null : new Date().toISOString() })
+        .eq('id', row.id);
+      if (error) throw error;
+      toast({ title: row.is_graduate ? 'Статус випускника знято' : 'Зараховано як випускника' });
+      load();
+    } catch (e: unknown) {
+      toast({ title: 'Помилка', description: (e as Error).message, variant: 'destructive' });
+    }
+  };
+
 
   if (authLoading) return null;
 
@@ -275,16 +310,24 @@ const Admin: React.FC = () => {
                         <div className="text-xs text-muted-foreground">{r.email}</div>
                       </td>
                       <td className="p-3">
-                        <Badge
-                          variant="outline"
-                          className={
-                            r.role === 'admin' ? 'border-primary text-primary' :
-                            r.role === 'moderator' ? 'border-accent-foreground text-accent-foreground' :
-                            'text-muted-foreground'
-                          }
-                        >
-                          {r.role === 'admin' ? 'Супер-адмін' : r.role === 'moderator' ? 'Модератор' : 'Студент'}
-                        </Badge>
+                        <div className="flex gap-1 flex-wrap">
+                          <Badge
+                            variant="outline"
+                            className={
+                              r.role === 'admin' ? 'border-primary text-primary' :
+                              r.role === 'moderator' ? 'border-accent-foreground text-accent-foreground' :
+                              r.role === 'tester' ? 'border-warning text-warning' :
+                              'text-muted-foreground'
+                            }
+                          >
+                            {r.role === 'admin' ? 'Супер-адмін' : r.role === 'moderator' ? 'Модератор' : r.role === 'tester' ? 'Демо' : 'Студент'}
+                          </Badge>
+                          {r.is_graduate && (
+                            <Badge className="bg-success text-success-foreground gap-1">
+                              <GraduationCap className="w-3 h-3" /> Випускник
+                            </Badge>
+                          )}
+                        </div>
                       </td>
                       <td className="p-3">
                         <Badge
@@ -317,6 +360,17 @@ const Admin: React.FC = () => {
                           {isAdmin && r.status !== 'rejected' && (
                             <Button size="sm" variant="outline" onClick={() => updateStatus(r.id, 'rejected')}>
                               <X className="w-3.5 h-3.5 mr-1" /> Відхилити
+                            </Button>
+                          )}
+                          {isStaff && r.role === 'tester' && (
+                            <Button size="sm" onClick={() => promoteToStudent(r)}>
+                              <UserPlus className="w-3.5 h-3.5 mr-1" /> Зробити студентом
+                            </Button>
+                          )}
+                          {isStaff && r.role !== 'admin' && r.role !== 'tester' && (
+                            <Button size="sm" variant={r.is_graduate ? 'outline' : 'default'} onClick={() => toggleGraduate(r)}>
+                              <GraduationCap className="w-3.5 h-3.5 mr-1" />
+                              {r.is_graduate ? 'Зняти статус випускника' : 'Зарахувати як випускника'}
                             </Button>
                           )}
                           {isAdmin && r.role !== 'admin' && (

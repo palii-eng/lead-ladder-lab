@@ -12,6 +12,7 @@ import { GamificationSidebar } from '@/components/GamificationSidebar';
 import { LeadOslavTour, markLeadOslavTourSeen } from '@/components/LeadOslavTour';
 import { pickAvailableLeads, AvailableLead } from '@/components/SimulationIntro';
 import { daysSinceRegistration } from '@/lib/daysSinceRegistration';
+import { getStudentQuotaStatus } from '@/lib/studentLimits';
 import { truncateForPreview } from '@/lib/truncateForPreview';
 import { DailyVideoCard, DailyVideo } from '@/components/DailyVideoCard';
 import { estimateClientBudgetUsd } from '@/lib/budgetEstimate';
@@ -68,7 +69,7 @@ const Dashboard: React.FC = () => {
   const { scenarios, loading, addScenario, updateScenario, deleteScenario } = useScenarios();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user, profile, isTester } = useAuth();
+  const { user, profile, isTester, isStaff, accessTier, studentSince } = useAuth();
 
   // Ручне скидання онбордингу LeadОслав через URL: додай ?resetOnboarding=1
   // до адреси дашборду — прибирає обидва ключі localStorage (дашборд +
@@ -106,6 +107,13 @@ const Dashboard: React.FC = () => {
   const [tourStep, setTourStep] = useState<0 | 1 | 2 | 3 | 4>(0);
   const tourActive = tourStep !== 0;
   const canTakeLead = tourStep === 0 || tourStep === 4;
+  // Квота нових проєктів для "Студент ADSchool" (tier 2) — 5/день,
+  // накопичуються з дня підвищення. Демо й випускники квоти не мають
+  // (studentSince === null для tester, staff тут взагалі не рендериться).
+  const studentQuota = useMemo(
+    () => getStudentQuotaStatus(accessTier === 'student' ? studentSince : null, scenarios),
+    [accessTier, studentSince, scenarios]
+  );
   const [gamificationCollapsed, setGamificationCollapsed] = useState(false);
   const createBtnRef = useRef<HTMLButtonElement>(null);
   const scenarioToDelete = deleteId ? scenarios.find(s => s.id === deleteId) : null;
@@ -213,6 +221,10 @@ const Dashboard: React.FC = () => {
   };
 
   const handleCreate = () => {
+    if (accessTier === 'student' && !studentQuota.canCreate) {
+      toast({ title: 'Денний ліміт вичерпано', description: 'Нові проєкти для студентів нараховуються по 5 щодня — спробуйте завтра.', variant: 'destructive' });
+      return;
+    }
     markLeadOslavTourSeen(user?.id);
     const defaultName = `Сценарій #${scenarios.length + 1}`;
     const s = addScenario(defaultName, '');
@@ -235,6 +247,10 @@ const Dashboard: React.FC = () => {
   // the same decomposition-budget + project-price logic ScenarioBuilder's
   // own onAccept uses, so the two entry points stay consistent.
   const handleTakeLead = (lead: AvailableLead, leadKey: string) => {
+    if (accessTier === 'student' && !studentQuota.canCreate) {
+      toast({ title: 'Денний ліміт вичерпано', description: 'Нові проєкти для студентів нараховуються по 5 щодня — спробуйте завтра.', variant: 'destructive' });
+      return;
+    }
     setTakingLeadKey(leadKey);
     markLeadOslavTourSeen(user?.id);
     const defaultName = lead.name && lead.niche ? `${lead.name} — ${lead.niche}` : `Сценарій #${scenarios.length + 1}`;
@@ -341,7 +357,7 @@ const Dashboard: React.FC = () => {
                       <Button
                         ref={createBtnRef}
                         size="sm"
-                        disabled={!!takingLeadKey || !canTakeLead}
+                        disabled={!!takingLeadKey || !canTakeLead || (accessTier === 'student' && !studentQuota.canCreate)}
                         onClick={() => handleTakeLead(lead, leadKey)}
                         className="flex-1 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-xs h-8"
                       >
