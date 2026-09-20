@@ -2586,11 +2586,21 @@ const ScenarioBuilder: React.FC = () => {
             />
             <SpotlightTip
               onSkipAll={skipOnboarding}
-              show={onboardStep === 7 && audienceOpen && audienceView !== 'choose' && !audienceTipsLoading}
+              show={onboardStep === 7 && audienceOpen && audienceView !== 'choose' && audienceView !== 'list' && !audienceTipsLoading}
               targetSelector='[data-tour="save-audience-btn"]'
               radius={12}
               lines={[
                 'Супер, тисни «Зберегти».',
+              ]}
+              hintNumber={12}
+            />
+            <SpotlightTip
+              onSkipAll={skipOnboarding}
+              show={onboardStep === 7 && audienceOpen && audienceView === 'list'}
+              targetSelector='[data-tour="audience-close-btn"]'
+              radius={12}
+              lines={[
+                'Гіпотезу збережено. Тепер натисни «Закрити», щоб продовжити.',
               ]}
               hintNumber={12}
             />
@@ -2604,6 +2614,16 @@ const ScenarioBuilder: React.FC = () => {
                 'Далі потрібно додати мінімум 2 крео (варіанти оголошення) в цю групу.',
                 'Щоб пришвидшити процес — попроси мене написати ТЗ, я сам зроблю всю чорнову роботу: заголовок, підзаголовок, опис зображення. Тобі залишиться тільки перевірити й підправити.',
                 'Натисни «+ Крео».',
+              ]}
+              hintNumber={13}
+            />
+            <SpotlightTip
+              onSkipAll={skipOnboarding}
+              show={onboardStep === 8 && creoOpen && creoFormat === 'video' && !creoVideoFormat}
+              targetSelector='[data-tour="creo-video-format-btns"]'
+              radius={12}
+              lines={[
+                'Оберіть формат відеокреативу.',
               ]}
               hintNumber={13}
             />
@@ -3779,7 +3799,7 @@ const ScenarioBuilder: React.FC = () => {
           </Button>
         )}
         <Button
-          data-tour={step === 2 ? 'save-lead-types-btn' : step === 4 ? 'decomp-save-btn' : step === 7 ? 'save-sales-btn' : undefined}
+          data-tour={step === 0 ? 'save-niche-btn' : step === 1 ? 'save-leadsource-btn' : step === 2 ? 'save-lead-types-btn' : step === 4 ? 'decomp-save-btn' : step === 7 ? 'save-sales-btn' : undefined}
           onClick={() => handleSaveStep(step)}
           disabled={saveDisabled}
           className={`gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold ${canSkip ? 'flex-1' : 'w-full'}`}
@@ -3819,12 +3839,17 @@ const ScenarioBuilder: React.FC = () => {
                 <div className="grid grid-cols-3 gap-1.5">
                   {NICHE_CARDS.map(({ label, Icon }) => {
                     const active = selected === label;
+                    // Онбординг скриптований під конкретний B2C-кейс — поки він
+                    // триває на цьому сценарії, решта карток заблоковані, щоб
+                    // юзер не міг випадково обрати щось інше й зламати сценарій.
+                    const lockedByOnboarding = onboardActive && label !== 'Послуги B2C';
                     return (
                       <button
                         key={label}
                         data-tour={label === 'Послуги B2C' ? 'niche-b2c-btn' : undefined}
+                        disabled={lockedByOnboarding}
                         onClick={() => update({ niche: label })}
-                        className={`h-[72px] flex flex-col items-center justify-center gap-1 p-2 rounded-lg border-2 transition-all ${active ? 'border-primary bg-primary/5' : 'border-border bg-secondary hover:border-primary/40'}`}
+                        className={`h-[72px] flex flex-col items-center justify-center gap-1 p-2 rounded-lg border-2 transition-all ${active ? 'border-primary bg-primary/5' : 'border-border bg-secondary hover:border-primary/40'} ${lockedByOnboarding ? 'opacity-40 cursor-not-allowed hover:border-border' : ''}`}
                       >
                         <Icon className={`w-4 h-4 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
                         <span className={`text-[10px] leading-tight font-semibold text-center ${active ? 'text-primary' : 'text-foreground'}`}>{label}</span>
@@ -3860,13 +3885,16 @@ const ScenarioBuilder: React.FC = () => {
               <div className="grid gap-2">
                 {LEAD_SOURCES.map(src => {
                   const LogoIcon = src.LogoComponent === 'meta' ? MetaIcon : src.LogoComponent === 'tiktok' ? TikTokIcon : GoogleIcon;
+                  // Онбординг веде до Meta — блокуємо TikTok, поки він триває,
+                  // щоб юзер не міг звернути зі скриптованого сценарію.
+                  const lockedByOnboarding = onboardActive && src.value !== 'meta';
                   return (
-                    <button key={src.value} data-tour={src.value === 'meta' ? 'leadsource-meta-btn' : undefined} disabled={src.soon} onClick={() => handleLeadSourceSelect(src.value)}
+                    <button key={src.value} data-tour={src.value === 'meta' ? 'leadsource-meta-btn' : undefined} disabled={src.soon || lockedByOnboarding} onClick={() => handleLeadSourceSelect(src.value)}
                       className={`p-3 rounded-lg border text-left text-sm transition-all flex items-center gap-3 ${
                         scenario.leadSource === src.value
                           ? 'border-primary bg-accent text-accent-foreground font-semibold'
                           : 'border-border bg-card text-foreground hover:border-primary/40'
-                      } ${src.soon ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                      } ${src.soon || lockedByOnboarding ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
                       <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
                         <LogoIcon className="w-5 h-5" />
                       </div>
@@ -6063,7 +6091,7 @@ const ScenarioBuilder: React.FC = () => {
                   ) : <span />}
                   <div className="flex gap-2">
                     {audienceView === 'list' && (
-                      <Button variant="outline" onClick={() => setAudienceOpen(false)}>Закрити</Button>
+                      <Button data-tour="audience-close-btn" variant="outline" onClick={() => setAudienceOpen(false)}>Закрити</Button>
                     )}
                     {audienceView === 'view' && (
                       <Button variant="outline" onClick={() => setAudienceOpen(false)}>Закрити</Button>
@@ -6401,7 +6429,7 @@ const ScenarioBuilder: React.FC = () => {
               };
               return (
                 <div className="space-y-4">
-                  <div>
+                  <div data-tour="creo-video-format-btns">
                     <label className="text-sm font-semibold text-foreground mb-1.5 block">Формат відео *</label>
                     <div className="grid grid-cols-2 gap-2">
                       {Object.entries(VIDEO_FORMATS).map(([key, v]) => (
