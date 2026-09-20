@@ -17,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import FlowNode from '@/components/FlowNode';
 import SimulationIntro from '@/components/SimulationIntro';
-import { ArrowLeft, ArrowRight, Check, ChevronRight, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, Dumbbell, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, Wrench, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward, AlertTriangle, Database, User, Send, Copy, Bitcoin, TrendingUp, TrendingDown, ExternalLink, Pencil, Trash2, Lock, MapPin, Target } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronRight, Download, Info, Loader2, Megaphone, MousePointerClick, MessageCircle, Filter, Users, ShoppingBag, Play, Save, Sparkles, X, Zap, Plus, Minus, Maximize2, Briefcase, Heart, Store, Home, GraduationCap, Instagram, BookOpen, UtensilsCrossed, Scale, Scissors, Sparkle, Cloud, HeartPulse, Plane, HardHat, FileText, DollarSign, SkipForward, AlertTriangle, Database, User, Send, Copy, Bitcoin, TrendingUp, TrendingDown, ExternalLink, Pencil, Trash2, Lock, MapPin, Target } from 'lucide-react';
 import { MetaIcon, TikTokIcon, GoogleIcon } from '@/components/BrandIcons';
 import { VideoBadge } from '@/components/VideoBadge';
 import { supabase } from '@/integrations/supabase/client';
@@ -334,6 +334,7 @@ const LEAD_TYPES_META = [
 // a form hosted on your own website, or collecting leads via Direct Message.
 const LEAD_TYPES_TIKTOK = [
   { value: 'leadform', label: 'Миттєва форма (Instant Form)', icon: '📋' },
+  { value: 'quiz', label: 'Квіз', icon: '❓' },
   { value: 'landing', label: 'Форма на сайті', icon: '🌐' },
   { value: 'dm', label: 'Повідомлення в директ', icon: '💬' },
 ];
@@ -573,6 +574,11 @@ const ScenarioBuilder: React.FC = () => {
   // apply once clicked — replaces a fixed setTimeout so the user reads the
   // outcome at their own pace instead of it auto-advancing after 1.8s.
   const pendingWeekAdvance = useRef<{ nextWeekNum: number; nextResults: (boolean | null)[]; finishedProblemType: LaunchProblemType } | null>(null);
+  // Ad sets the marketer chose to disable via the "Вимкнути" launch action —
+  // keyed as `${key}:${audienceId}` (matches LaunchStatsTable's row ids).
+  // Persists across weeks within one launch run so a disabled ad set stays
+  // disabled instead of reappearing as a normal row the following week.
+  const [disabledAdSetIds, setDisabledAdSetIds] = useState<Set<string>>(new Set());
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [videoDialogStep, setVideoDialogStep] = useState(0);
   const [skillsOpen, setSkillsOpen] = useState(false);
@@ -834,6 +840,7 @@ const ScenarioBuilder: React.FC = () => {
           clientBrief: scenario.clientBrief,
           previousAudiences: opts?.previousAudiences || [],
           audienceName: opts?.audienceName || '',
+          platform: scenario.leadSource || 'meta',
         }),
       });
 
@@ -1892,13 +1899,18 @@ const ScenarioBuilder: React.FC = () => {
       return Number(v.toFixed(dec));
     };
     const AGES = ['18–24', '25–34', '25–44', '30–45', '35–54'];
-    // Країна для всіх клієнтів у цьому тренажері — Україна (реальна географія
-    // з брифу конкретного клієнта лежить вільним текстом у getBriefForClient
-    // і тут не парситься, тож не варіюємо її по рядках). Місто — окрема
-    // колонка, що варіюється per-гіпотеза: одна аудиторія може таргетуватись
-    // на всю країну, інша — на конкретне місто клієнта.
+    // Країна для всіх клієнтів у цьому тренажері — Україна. Місто, натомість,
+    // має відповідати гео з брифу конкретного клієнта (напр. "Львів + область")
+    // — витягуємо відомі назви міст з поля "Географія показу реклами" замість
+    // випадкового загальнонаціонального пулу, щоб таблиця не суперечила брифу.
     const COUNTRY = '🇺🇦 Україна';
-    const CITIES = ['Вся країна', 'Київ', 'Львів', 'Одеса', 'Харків', 'Дніпро', 'Обласні центри 100k+'];
+    const KNOWN_CITIES = ['Київ', 'Львів', 'Одеса', 'Харків', 'Дніпро', 'Запоріжжя', 'Вінниця', 'Полтава', 'Чернігів', 'Черкаси', 'Суми', 'Житомир', 'Хмельницький', 'Рівне', 'Луцьк', 'Тернопіль', 'Івано-Франківськ', 'Ужгород', 'Чернівці', 'Миколаїв', 'Херсон', 'Кропивницький'];
+    const geoText = getBriefForClient(scenario.clientBrief).find(f => f.q === 'Географія показу реклами')?.a || '';
+    const geoCities = KNOWN_CITIES.filter(c => geoText.includes(c));
+    const isNationwideGeo = /вс[іюя]\s*укра[їі]н|по\s*укра[їі]н/i.test(geoText);
+    const CITIES = geoCities.length > 0
+      ? (isNationwideGeo ? [...geoCities, 'Вся країна'] : geoCities)
+      : ['Вся країна', 'Київ', 'Львів', 'Одеса', 'Харків', 'Дніпро', 'Обласні центри 100k+'];
 
     const keys: string[] =
       scenario.channel === 'leads' && (scenario.leadTypes?.length || 0) > 0
@@ -1927,7 +1939,7 @@ const ScenarioBuilder: React.FC = () => {
     };
     const resultUnit = RESULT_UNIT_BY_CHANNEL[scenario.channel || ''] || 'результатів';
 
-    type Row = { id: string; kind: 'aud'; label: string; sub?: string; creoCount: number; cpm: number; ctr: number; freq: number; age: string; country: string; city: string; result: number; bad?: boolean; rejected?: boolean };
+    type Row = { id: string; kind: 'aud'; label: string; sub?: string; creoCount: number; cpm: number; ctr: number; freq: number; age: string; country: string; city: string; result: number; bad?: boolean; rejected?: boolean; disabled?: boolean };
     const rows: Row[] = [];
 
     let adSetCounter = 0;
@@ -1940,12 +1952,19 @@ const ScenarioBuilder: React.FC = () => {
 
       audiences.forEach((a, idx) => {
         adSetCounter += 1;
+        // Таргетинг (вік/місто) — стабільний по цій аудиторії, не залежить
+        // від тижня: юзер не перенастроює аудиторію щотижня, тож ці колонки
+        // не мають "мигати" різними значеннями від тижня до тижня.
+        const targetingSeed = hash(`${key}:${a.id || idx}`);
+        const age = pick(AGES, targetingSeed);
+        const city = pick(CITIES, targetingSeed >> 3);
+        // Показники (CPM/CTR/частота/результат) — навпаки, реально змінюються
+        // тиждень до тижня, тож цей сід і далі враховує week.
         const seed = hash(`${key}:${a.id || idx}:${week}`);
-        const age = pick(AGES, seed);
-        const city = pick(CITIES, seed >> 3);
         const creoCount = creoList.filter(x => x.audienceId === a.id).length;
+        const rowId = `a-${key}-${a.id || idx}`;
         rows.push({
-          id: `a-${key}-${a.id || idx}`,
+          id: rowId,
           kind: 'aud',
           label: `Набір оголошень ${adSetCounter}`,
           sub: branchLabel,
@@ -1957,6 +1976,7 @@ const ScenarioBuilder: React.FC = () => {
           country: COUNTRY,
           city,
           result: Math.round(rand(seed >> 11, 8, 38, 0)),
+          disabled: disabledAdSetIds.has(`${key}:${a.id || idx}`),
         });
       });
     });
@@ -2005,7 +2025,7 @@ const ScenarioBuilder: React.FC = () => {
           </thead>
           <tbody>
             {rows.map(r => (
-              <tr key={r.id} className="border-t border-border/60">
+              <tr key={r.id} className={`border-t border-border/60 ${r.disabled ? 'opacity-50' : ''}`}>
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="text-[11px]">👥</span>
@@ -2016,7 +2036,13 @@ const ScenarioBuilder: React.FC = () => {
                     </span>
                   </div>
                 </td>
-                {r.rejected ? (
+                {r.disabled ? (
+                  <td colSpan={7} className="px-3 py-2 text-right">
+                    <span className="inline-flex items-center gap-1 text-muted-foreground font-semibold text-[11px]">
+                      🔕 Вимкнено
+                    </span>
+                  </td>
+                ) : r.rejected ? (
                   <td colSpan={7} className="px-3 py-2 text-right">
                     <span className="inline-flex items-center gap-1 text-destructive font-semibold text-[11px]">
                       ⛔ Відхилено модерацією
@@ -2906,7 +2932,11 @@ const ScenarioBuilder: React.FC = () => {
   // from, so the client's message, the stats table, and the "disable this
   // audience" action all agree on the same culprit.
   const attachLaunchTarget = (problem: LaunchProblem, week: number): LaunchProblem => {
-    const adSets = getAllAdSets();
+    // Only pick a live ad set as the culprit — one already disabled via the
+    // "Вимкнути" action shouldn't be blamed for a new problem the following
+    // week (numbering below still comes from the full list, unfiltered, so
+    // labels stay in sync with LaunchStatsTable's row numbers).
+    const adSets = getAllAdSets().filter(a => !disabledAdSetIds.has(`${a.key}:${a.audienceId}`));
     if (adSets.length === 0) return problem;
     const seed = launchHashSeed(`group:${week}:${problem.type}`);
     const target = adSets[seed % adSets.length];
@@ -2931,6 +2961,7 @@ const ScenarioBuilder: React.FC = () => {
     }
     setLaunchWeek(1);
     setLaunchWeekResults([null, null, null, null]);
+    setDisabledAdSetIds(new Set());
     setLaunchProblem(attachLaunchTarget(buildLaunchProblem('ctr_low'), 1));
     setLaunchFeedback(null);
     setLaunchPhase('launching');
@@ -2962,6 +2993,11 @@ const ScenarioBuilder: React.FC = () => {
       : (actionKey === 'continue' && problemAtResolution.type !== 'client_unhappy')
       ? false
       : LAUNCH_CORRECT_FIX[problemAtResolution.type].includes(actionKey);
+
+    if (actionKey === 'disable_audience' && problemAtResolution.targetKey && problemAtResolution.targetAudienceId) {
+      const disabledId = `${problemAtResolution.targetKey}:${problemAtResolution.targetAudienceId}`;
+      setDisabledAdSetIds(prev => new Set(prev).add(disabledId));
+    }
 
     const nextResults = [...launchWeekResults];
     nextResults[weekJustFinished - 1] = solved;
@@ -3053,6 +3089,14 @@ const ScenarioBuilder: React.FC = () => {
 
   const handleLeadSourceSelect = (value: string) => {
     if (scenario.leadSource === value) return;
+    if (value === 'tiktok' && scenario.niche === 'Локальний бізнес') {
+      toast({
+        title: 'TikTok не підходить для цього клієнта',
+        description: 'У TikTok Ads немає точного локального таргетингу (радіус навколо адреси) — для локального бізнесу цей канал не підходить. Оберіть Meta Ads.',
+        variant: 'destructive',
+      });
+      return;
+    }
     if (scenario.leadSource && hasDownstreamProgress()) {
       setPendingLeadSourceSwitch(value);
       return;
@@ -3828,10 +3872,8 @@ const ScenarioBuilder: React.FC = () => {
               { label: 'Нерухомість', Icon: Home },
               { label: 'Інфобізнес', Icon: GraduationCap },
               { label: 'Інстаграм-крамниця', Icon: Instagram },
-              { label: 'Фітнес-студія', Icon: Dumbbell },
-              
               { label: 'Бʼюті', Icon: Sparkle },
-              { label: 'Автосервіс', Icon: Wrench },
+              { label: 'Локальний бізнес', Icon: Store },
               { label: 'Туризм', Icon: Plane },
               { label: 'Будівництво', Icon: HardHat },
             ];
