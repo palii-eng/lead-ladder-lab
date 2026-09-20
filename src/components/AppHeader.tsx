@@ -55,14 +55,15 @@ interface AppHeaderProps {
 export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
   const [newsOpen, setNewsOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
-  const { user, profile, isTester, isStaff, accessTier } = useAuth();
+  const { user, profile, isTester, isStaff, isAdmin, isModerator, accessTier } = useAuth();
   const { scenarios } = useScenarios();
 
   // Демо (tester) не бачить чат взагалі — тільки студенти/випускники
-  // пишуть, staff читає для модерації.
+  // пишуть, а адмін/модератор і читають для модерації, і можуть самі писати
+  // (наприклад, відповісти студенту в чаті).
   const canSeeChat = isStaff || accessTier === 'student' || accessTier === 'graduate';
-  const canWriteChat = !isStaff && (accessTier === 'student' || accessTier === 'graduate');
-  const levelLabel = accessTier === 'graduate' ? 'Випускник' : accessTier === 'student' ? 'Студент ADSchool' : '';
+  const canWriteChat = isStaff || accessTier === 'student' || accessTier === 'graduate';
+  const levelLabel = isAdmin ? 'Адмін' : isModerator ? 'Модератор' : accessTier === 'graduate' ? 'Випускник' : accessTier === 'student' ? 'Студент ADSchool' : '';
   const completedProjectsCount = scenarios.filter(s => s.monthSurvived).length;
 
   const [messages, setMessages] = useState<ChatMessageRow[]>([]);
