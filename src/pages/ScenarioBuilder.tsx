@@ -5585,7 +5585,7 @@ const ScenarioBuilder: React.FC = () => {
             <SpotlightTip
               onSkipAll={skipOnboarding}
               show={onboardStep === 2 && filledBriefOpen}
-              targetSelector='a[title="Завантажити пустий шаблон брифа"], button[title="Закрити"]'
+              targetSelector='button[title="Закрити"]'
               radius={12}
               lines={[
                 'Супер! За підсумками міту в тебе тепер є бриф клієнта. У будь-який момент можеш повернутись до нього.',
