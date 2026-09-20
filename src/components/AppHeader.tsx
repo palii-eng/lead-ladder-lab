@@ -35,6 +35,31 @@ const MARKETING_NEWS: NewsItem[] = [
   },
 ];
 
+// Розбиває текст повідомлення на шматки, перетворюючи URL (http/https, або
+// голі домени на кшталт "keepincrm.com") у клікабельні посилання, що
+// відкриваються в новій вкладці — решта тексту лишається звичайним.
+const URL_SPLIT_PATTERN = /((?:https?:\/\/)[^\s]+|(?:www\.)[^\s]+\.[a-zA-Z]{2,}[^\s]*)/g;
+const URL_TEST_PATTERN = /^(?:https?:\/\/)[^\s]+$|^(?:www\.)[^\s]+\.[a-zA-Z]{2,}[^\s]*$/;
+const linkifyText = (text: string): React.ReactNode[] => {
+  const parts = text.split(URL_SPLIT_PATTERN);
+  return parts.map((part, i) => {
+    if (!part || !URL_TEST_PATTERN.test(part)) return <React.Fragment key={i}>{part}</React.Fragment>;
+    const href = part.startsWith('http') ? part : `https://${part}`;
+    return (
+      <a
+        key={i}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-primary underline underline-offset-2 hover:text-primary/80 break-all"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {part}
+      </a>
+    );
+  });
+};
+
 interface ChatMessageRow {
   id: string;
   user_id: string;
@@ -191,12 +216,16 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
           <div className="flex items-center gap-4">
             <button
               type="button"
+              // Навмисно БЕЗ атрибута disabled: у Chrome disabled-кнопки не
+              // отримують hover-подій, тож title-тултип на них не показується
+              // взагалі. Блокуємо клік логікою в onClick, а стан "недоступно"
+              // лишаємо тільки візуальним (колір/курсор), щоб tooltip працював.
               onClick={() => { if (canSeeChat) setChatOpen(true); }}
-              disabled={!canSeeChat}
+              aria-disabled={!canSeeChat}
               className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${
                 canSeeChat ? 'text-primary hover:text-primary/80 cursor-pointer' : 'text-muted-foreground/50 cursor-not-allowed'
               }`}
-              title={canSeeChat ? 'Чат студентів' : 'Доступно тільки для студентів ADSchool'}
+              title={canSeeChat ? 'Чат студентів' : 'Доступно тільки для студентів ADSchool — стань студентом, щоб отримати доступ'}
             >
               <MessageCircle className="w-4 h-4" /> Чат
               {canSeeChat && unreadCount > 0 && (
@@ -254,17 +283,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
                 <p className="text-xs text-muted-foreground text-center">Поки що тут порожньо — напишіть перше повідомлення.</p>
               )}
               {messages.map(m => (
-                <div
-                  key={m.id}
-                  role={canWriteChat ? 'button' : undefined}
-                  tabIndex={canWriteChat ? 0 : undefined}
-                  onClick={() => canWriteChat && setReplyTarget(m)}
-                  onKeyDown={(e) => { if (canWriteChat && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setReplyTarget(m); } }}
-                  title={canWriteChat ? 'Натисніть, щоб відповісти на це повідомлення' : undefined}
-                  className={`rounded-lg border border-border bg-secondary/30 p-2.5 group transition-colors ${
-                    canWriteChat ? 'cursor-pointer hover:border-primary/40 hover:bg-secondary/50' : ''
-                  }`}
-                >
+                <div key={m.id} className="rounded-lg border border-border bg-secondary/30 p-2.5 group">
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <span className="text-xs font-semibold text-foreground truncate">{m.user_name}</span>
@@ -280,14 +299,18 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
                         {new Date(m.created_at).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                       {canWriteChat && (
-                        <span className="opacity-0 group-hover:opacity-100 text-[10px] text-primary transition-opacity flex items-center gap-0.5">
+                        <button
+                          type="button"
+                          onClick={() => setReplyTarget(m)}
+                          className="opacity-0 group-hover:opacity-100 text-[10px] text-muted-foreground hover:text-primary transition-opacity flex items-center gap-0.5"
+                        >
                           <Reply className="w-3 h-3" /> Відповісти
-                        </span>
+                        </button>
                       )}
                       {isStaff && (
                         <button
                           type="button"
-                          onClick={(e) => { e.stopPropagation(); deleteMessage(m.id); }}
+                          onClick={() => deleteMessage(m.id)}
                           className="opacity-0 group-hover:opacity-100 text-[10px] text-muted-foreground hover:text-destructive transition-opacity"
                         >
                           Видалити
@@ -301,7 +324,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
                       <span className="line-clamp-1">{m.reply_to_message}</span>
                     </div>
                   )}
-                  <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap break-words">{m.message}</p>
+                  <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap break-words">{linkifyText(m.message)}</p>
                 </div>
               ))}
               <div ref={messagesEndRef} />
