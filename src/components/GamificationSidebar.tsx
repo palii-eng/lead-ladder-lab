@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth, AccessTier, DEMO_ACCESS_DAYS } from '@/context/AuthContext';
 import { useScenarios } from '@/context/ScenariosContext';
-import { Trophy, TrendingUp, Lock, Check, ChevronLeft, ChevronRight, Sparkles, GraduationCap, Clock } from 'lucide-react';
+import { Trophy, TrendingUp, Lock, Check, ChevronLeft, ChevronRight, Sparkles, GraduationCap, Clock, Camera, Loader2 } from 'lucide-react';
 import { daysSinceRegistration } from '@/lib/daysSinceRegistration';
 import { getStudentQuotaStatus } from '@/lib/studentLimits';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+
+const AVATAR_MAX_SIZE = 5 * 1024 * 1024;
 
 // Five levels — each defined by how many projects have to be launched AND
 // successfully sustained (scenario.monthSurvived === true), paired with a
@@ -57,8 +61,32 @@ interface GamificationSidebarProps {
 }
 
 export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collapsed, onToggle }) => {
-  const { profile, isTester, isStaff, accessTier, studentSince } = useAuth();
+  const { profile, isTester, isStaff, accessTier, studentSince, user, refreshProfile } = useAuth();
   const { scenarios } = useScenarios();
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const handleAvatarChange = async (file: File | null) => {
+    if (!file || !user?.id) return;
+    if (file.size > AVATAR_MAX_SIZE) {
+      toast({ title: 'Файл завеликий', description: 'Максимум 5 МБ.', variant: 'destructive' });
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+      if (uploadErr) throw uploadErr;
+      const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+      const { error: updateErr } = await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', user.id);
+      if (updateErr) throw updateErr;
+      await refreshProfile();
+    } catch (e: unknown) {
+      toast({ title: 'Не вдалося завантажити фото', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
   const completedCount = scenarios.filter(s => s.monthSurvived).length;
   const { currentLevel, nextLevel, progressToNext } = getGamificationProgress(completedCount);
   const demoDaysLeft = Math.max(0, DEMO_ACCESS_DAYS - daysSinceRegistration(profile?.created_at) + 1);
@@ -84,9 +112,13 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
         >
           <ChevronRight className="w-4 h-4" />
         </button>
-        <div className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
-          {initial}
-        </div>
+        {profile?.avatar_url ? (
+          <img src={profile.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover" />
+        ) : (
+          <div className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
+            {initial}
+          </div>
+        )}
         <div className="flex flex-col items-center gap-1 mt-1" title={currentLevel ? `Рівень ${currentLevel.level}` : 'Ще без рівня'}>
           <Trophy className="w-4 h-4 text-warning" />
           <span className="text-[10px] font-bold text-foreground">{currentLevel?.level ?? '—'}</span>
@@ -111,9 +143,29 @@ export const GamificationSidebar: React.FC<GamificationSidebarProps> = ({ collap
 
       <div className="px-4">
         <div className="flex flex-col items-center gap-3 py-6 border-b border-border">
-          <div className="w-20 h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-3xl font-bold">
-            {initial}
-          </div>
+          <label className="relative w-20 h-20 rounded-full cursor-pointer group shrink-0">
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="" className="w-20 h-20 rounded-full object-cover" />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-3xl font-bold">
+                {initial}
+              </div>
+            )}
+            <span className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+              {uploadingAvatar ? (
+                <Loader2 className="w-5 h-5 text-white animate-spin" />
+              ) : (
+                <Camera className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+              )}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={uploadingAvatar}
+              onChange={(e) => { handleAvatarChange(e.target.files?.[0] || null); e.target.value = ''; }}
+            />
+          </label>
           <div className="text-center">
             <p className="font-bold text-foreground">{profile?.full_name || profile?.email}</p>
             <p className="text-xs text-muted-foreground mt-0.5">

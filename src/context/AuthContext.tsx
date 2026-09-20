@@ -22,6 +22,7 @@ export interface Profile {
   created_at: string;
   is_graduate: boolean;
   graduated_at: string | null;
+  avatar_url: string | null;
 }
 
 // Три рівні доступу поверх ролі (tester/user/admin/moderator):
