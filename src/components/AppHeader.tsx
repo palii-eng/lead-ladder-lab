@@ -58,7 +58,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
   // Демо (tester) не бачить чат взагалі — тільки студенти/випускники
   // пишуть, staff читає для модерації.
   const canSeeChat = isStaff || accessTier === 'student' || accessTier === 'graduate';
-  const canWriteChat = accessTier === 'student' || accessTier === 'graduate';
+  const canWriteChat = !isStaff && (accessTier === 'student' || accessTier === 'graduate');
   const levelLabel = accessTier === 'graduate' ? 'Випускник' : accessTier === 'student' ? 'Студент ADSchool' : '';
 
   const [messages, setMessages] = useState<ChatMessageRow[]>([]);
