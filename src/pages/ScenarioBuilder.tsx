@@ -5627,12 +5627,12 @@ const ScenarioBuilder: React.FC = () => {
             <SpotlightTip
               onSkipAll={skipOnboarding}
               show={onboardStep === 2 && filledBriefOpen}
-              targetSelector='button[title="Закрити"]'
+              targetSelector='[data-tour="brief-continue-btn"]'
               radius={12}
               lines={[
                 'Супер! За підсумками міту в тебе тепер є бриф клієнта. У будь-який момент можеш повернутись до нього.',
                 'Також для своїх реальних проєктів можеш завантажити тут порожній шаблон із самими питаннями — це бриф, який використовують різні агенції на ринку.',
-                'Щоб продовжити, натисни на хрестик.',
+                'Щоб продовжити, натисни на кнопку «Продовжити» внизу.',
               ]}
               hintNumber={6}
             />
@@ -5667,6 +5667,15 @@ const ScenarioBuilder: React.FC = () => {
             })()}
           </div>
           <ClientFlagsPanel redFlags={scenario.clientBrief?.redFlags} greyFlags={scenario.clientBrief?.greyFlags} />
+          <div className="sticky bottom-0 bg-card pt-3 pb-1 -mx-6 px-6 border-t border-border mt-4 z-10">
+            <Button
+              data-tour="brief-continue-btn"
+              onClick={() => setFilledBriefOpen(false)}
+              className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+            >
+              <Check className="w-4 h-4" /> Продовжити
+            </Button>
+          </div>
         </SheetContent>
       </Sheet>
 
