@@ -133,16 +133,17 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ active }) => {
             <ModeSwitch active={active} />
           </div>
           <div className="flex items-center gap-4">
-            {canSeeChat && (
-              <button
-                type="button"
-                onClick={() => setChatOpen(true)}
-                className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
-                title="Чат студентів"
-              >
-                <MessageCircle className="w-4 h-4" /> Чат
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => { if (canSeeChat) setChatOpen(true); }}
+              disabled={!canSeeChat}
+              className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+                canSeeChat ? 'text-primary hover:text-primary/80 cursor-pointer' : 'text-muted-foreground/50 cursor-not-allowed'
+              }`}
+              title={canSeeChat ? 'Чат студентів' : 'Доступно тільки для студентів ADSchool'}
+            >
+              <MessageCircle className="w-4 h-4" /> Чат
+            </button>
             <button
               type="button"
               onClick={() => setNewsOpen(true)}
