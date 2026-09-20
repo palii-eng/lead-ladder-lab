@@ -49,10 +49,12 @@ export interface ClientBrief {
   source?: string;
   redFlags?: string[];
   greyFlags?: string[];
-  /** True for a scenario started via "Додати свій сценарій" — no real
-   *  curated client, marketer can add free-form context afterward via
-   *  ScenarioBuilder's "Додати інформацію" button. */
-  isCustom?: boolean;
+  /** True for a "мануал режим" (manual mode) scenario started via "Додати
+   *  свій сценарій" — no real curated client, no brief to collect. Marketer
+   *  can add free-form context themselves via ScenarioBuilder's "Додати
+   *  інформацію" button, and the "Провести міт та зібрати бриф" gate/button
+   *  is skipped entirely since there's nothing to "meet" about. */
+  isManual?: boolean;
 }
 
 export interface Scenario {

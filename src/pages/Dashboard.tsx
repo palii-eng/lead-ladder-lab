@@ -258,11 +258,13 @@ const Dashboard: React.FC = () => {
     setActiveLeadIdx(0);
   };
 
-  // "Додати свій сценарій" — клік одразу створює проєкт і відкриває воронку
-  // з вибору ніші, без реального клієнта. Мінімальний stub-бриф — той самий,
-  // який ScenarioBuilder уже вміє відкривати для legacy-сценаріїв без брифу.
-  // isCustom позначає проєкт як такий, щоб ScenarioBuilder показав кнопку
-  // "Додати інформацію" для довільного контексту клієнту/ніші.
+  // "Додати свій сценарій" (мануал режим) — клік одразу створює проєкт і
+  // відкриває воронку з вибору ніші, без реального клієнта. Мінімальний
+  // stub-бриф — той самий, який ScenarioBuilder уже вміє відкривати для
+  // legacy-сценаріїв без брифу. isManual позначає проєкт як такий: без
+  // кнопки "Провести міт та зібрати бриф" (нема з ким/що "зустрічатись") і
+  // з кнопкою "Додати інформацію" для довільного контексту клієнту/ніші.
+  // clientActions одразу проставлені — гейт воронки не блокує старт.
   const handleAddCustomScenario = () => {
     if (accessTier === 'student' && !studentQuota.canCreate) {
       toast({ title: 'Денний ліміт вичерпано', description: 'Нові проєкти для студентів нараховуються по 5 щодня — спробуйте завтра.', variant: 'destructive' });
@@ -271,8 +273,8 @@ const Dashboard: React.FC = () => {
     markLeadOslavTourSeen(user?.id);
     const defaultName = `Сценарій #${scenarios.length + 1}`;
     const s = addScenario(defaultName, '');
-    const brief: ClientBrief = { name: 'Клієнт', photo: '', task: '', niche: '', source: '', isCustom: true };
-    updateScenario(s.id, { clientBrief: brief });
+    const brief: ClientBrief = { name: 'Клієнт', photo: '', task: '', niche: '', source: '', isManual: true };
+    updateScenario(s.id, { clientBrief: brief, clientActions: ['brief', 'payment'] });
     navigate(`/scenario/${s.id}`);
   };
 

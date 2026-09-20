@@ -496,8 +496,8 @@ const ScenarioBuilder: React.FC = () => {
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [clientBriefOpen, setClientBriefOpen] = useState(false);
   const [filledBriefOpen, setFilledBriefOpen] = useState(false);
-  // "Додати інформацію" — для проєктів без реального клієнта
-  // (clientBrief.isCustom), дозволяє дописати довільний контекст, який іде в
+  // "Додати інформацію" — для проєктів у мануал режимі
+  // (clientBrief.isManual), дозволяє дописати довільний контекст, який іде в
   // ту саму clientBrief.task, яку вже читають AI-підказки (audience-tips,
   // creo-brief) для порад.
   const [customInfoOpen, setCustomInfoOpen] = useState(false);
@@ -1644,7 +1644,10 @@ const ScenarioBuilder: React.FC = () => {
     scenario.clientBrief = fallbackBrief;
   }
 
-  const hasCompletedClientGate = clientActions.has('brief') && clientActions.has('payment');
+  // Мануал режим не має брифу для "зустрічі" — гейт вважається пройденим
+  // одразу (clientActions теж seed'яться при створенні в Dashboard, це —
+  // додатковий запобіжник на випадок старих/побитих даних).
+  const hasCompletedClientGate = !!scenario.clientBrief?.isManual || (clientActions.has('brief') && clientActions.has('payment'));
 
   const openCustomInfo = () => {
     setCustomInfoText(scenario.clientBrief?.task || '');
@@ -1657,7 +1660,7 @@ const ScenarioBuilder: React.FC = () => {
   };
 
   const AddCustomInfoButton: React.FC = () => {
-    if (!scenario.clientBrief?.isCustom) return null;
+    if (!scenario.clientBrief?.isManual) return null;
     return (
       <button
         type="button"
@@ -1790,7 +1793,7 @@ const ScenarioBuilder: React.FC = () => {
   const ClientActionsColumn: React.FC = () => (
     <div className="flex flex-col items-center mt-3 select-none gap-2">
       <div className="w-px h-4 bg-border" />
-      {CLIENT_ACTIONS.map(({ key, label, doneIcon: DoneIcon }) => {
+      {(scenario.clientBrief?.isManual ? [] : CLIENT_ACTIONS).map(({ key, label, doneIcon: DoneIcon }) => {
         const done = clientActions.has(key);
         const onClick = (e: React.MouseEvent) => {
           e.stopPropagation();
@@ -5028,7 +5031,7 @@ const ScenarioBuilder: React.FC = () => {
 
           {/* Top-left plates */}
           <div className="absolute top-4 left-4 z-20 flex flex-wrap items-center gap-2">
-            {clientActions.has('brief') && scenario.clientBrief && (
+            {clientActions.has('brief') && scenario.clientBrief && !scenario.clientBrief.isManual && (
               <button
                 type="button"
                 onClick={() => setFilledBriefOpen(true)}
