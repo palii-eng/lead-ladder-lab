@@ -98,11 +98,13 @@ const LAUNCH_ACTIONS: { key: LaunchActionKey; label: string }[] = [
 
 // Контекстна дія, яка зʼявляється додатковою кнопкою тільки для свого типу
 // проблеми — щоб не захаращувати екран усіма 10 діями одразу щотижня.
+// client_unhappy навмисно без власної контекстної дії — "Написати клієнту з
+// поясненням цифр" дублювало б за змістом "Пояснити клієнту та продовжити
+// без змін", яка й так завжди доступна.
 const CONTEXTUAL_ACTION_BY_PROBLEM: Partial<Record<LaunchProblemType, { key: LaunchActionKey; label: string }>> = {
   ad_rejected: { key: 'edit_resubmit', label: 'Відредагувати та подати повторно' },
   bad_lead_quality: { key: 'qualify_leadform', label: 'Додати кваліфікаційні питання в лідформу' },
   learning_reset: { key: 'wait', label: 'Почекати кілька днів' },
-  client_unhappy: { key: 'message_client', label: 'Написати клієнту з поясненням цифр' },
 };
 
 // Which action(s) actually address each problem type. Disabling the exact
@@ -114,7 +116,7 @@ const LAUNCH_CORRECT_FIX: Record<LaunchProblemType, LaunchActionKey[]> = {
   ad_rejected: ['edit_resubmit', 'change_creo'],
   bad_lead_quality: ['qualify_leadform'],
   learning_reset: ['wait'],
-  client_unhappy: ['message_client'],
+  client_unhappy: ['continue'],
 };
 
 const LAUNCH_ACTION_SUCCESS_TEXT: Record<LaunchActionKey, string> = {
@@ -560,9 +562,9 @@ const ScenarioBuilder: React.FC = () => {
   // LAUNCH_CORRECT_FIX.freq_high), so this week is meant to actually be won.
   const showLaunchAction3Hint = launchWeek === 3 && launchIntroForOnboardingRef.current && launchProblem?.type === 'freq_high';
   // Week 4 is force-scripted to client_unhappy during onboarding — every
-  // action here is made to fail (see resolveWeekAction's isScriptedWeek4Loss)
+  // action here counts as success (see resolveWeekAction's isScriptedWeek4)
   // so nothing is disabled; the hint just frames the lesson and lets the
-  // student pick freely before the client leaves anyway.
+  // student pick freely before the client is reassured either way.
   const showLaunchAction4Hint = launchWeek === 4 && launchIntroForOnboardingRef.current && launchProblem?.type === 'client_unhappy';
   // One entry per week (index 0 = week 1) — null until that week's action is
   // resolved, then true/false for whether the problem was actually fixed.
@@ -2945,19 +2947,19 @@ const ScenarioBuilder: React.FC = () => {
   //    "fix" an ads problem — that would undercut the whole point of the
   //    simulation, which is to teach the correct action per problem type)
   //  - anything else → not solved
-  // After all 4 weeks, solving 2 or more counts as a successful launch.
+  // After all 4 weeks, solving 3 or more counts as a successful launch.
   const resolveWeekAction = (actionKey: LaunchActionKey) => {
     if (!launchProblem) return;
     const weekJustFinished = launchWeek;
     const problemAtResolution = launchProblem;
 
-    // Week 4's scripted onboarding lesson (see showLaunchAction4Hint) is
-    // that not every client can be saved — whatever the student picks here,
-    // it's meant to fail, ending in "client left" (month_failure).
-    const isScriptedWeek4Loss = launchIntroForOnboardingRef.current && weekJustFinished === 4 && problemAtResolution.type === 'client_unhappy';
-    const solved: boolean = isScriptedWeek4Loss
-      ? false
-      : actionKey === 'continue'
+    // Week 4's scripted onboarding lesson (see showLaunchAction4Hint) —
+    // whatever the student picks here counts as success (client explained
+    // and retained), regardless of the action chosen.
+    const isScriptedWeek4 = launchIntroForOnboardingRef.current && weekJustFinished === 4 && problemAtResolution.type === 'client_unhappy';
+    const solved: boolean = isScriptedWeek4
+      ? true
+      : (actionKey === 'continue' && problemAtResolution.type !== 'client_unhappy')
       ? false
       : LAUNCH_CORRECT_FIX[problemAtResolution.type].includes(actionKey);
 
@@ -2966,7 +2968,9 @@ const ScenarioBuilder: React.FC = () => {
     setLaunchWeekResults(nextResults);
     setLaunchWeekSolved(solved);
     setLaunchFeedback(
-      solved
+      isScriptedWeek4
+        ? 'Ви пояснили клієнту ситуацію та показали реальні цифри по кампанії — він заспокоївся і лишився з вами.'
+        : solved
         ? LAUNCH_ACTION_SUCCESS_TEXT[actionKey]
         : (actionKey === 'continue'
             ? 'Ви не втручались — ситуація так і лишилась проблемною.'
